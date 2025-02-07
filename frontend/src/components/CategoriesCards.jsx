@@ -1,20 +1,20 @@
-import React, { useState } from "react";  
-import dog from "../assets/dogCategory.png";  
-import cat from "../assets/CatCategory.png";  
-import other from "../assets/OtherCategory.png";  
-import veterinary from "../assets/PawCategory.png";  
+import React, { useState } from "react";
+import dog from "../assets/dogCategory.png";
+import cat from "../assets/CatCategory.png";
+import other from "../assets/OtherCategory.png";
+import veterinary from "../assets/PawCategory.png";
 
-const CategoriesCards = () => {  
-  const categories = [  
-    { name: "Dogs", icon: dog, description: "Find loyal companions" },  
-    { name: "Cats", icon: cat, description: "Discover feline friends" },  
-    { name: "Other Animals", icon: other, description: "Unique pets await" },  
-    { name: "Veterinaries", icon: veterinary, description: "Expert pet care" },  
-  ];  
+const CategoriesCards = () => {
+  const categories = [
+    { name: "Dogs", icon: dog, description: "Find loyal companions" },
+    { name: "Cats", icon: cat, description: "Discover feline friends" },
+    { name: "Other Animals", icon: other, description: "Unique pets await" },
+    { name: "Veterinaries", icon: veterinary, description: "Expert pet care" },
+  ];
 
-  const [hoveredIndex, setHoveredIndex] = useState(null);  
+  const [hoveredIndex, setHoveredIndex] = useState(null);
 
-  return (  
+  return (
     <div className="relative px-4 py-16 overflow-hidden bg-white">
       <div className="mx-auto mb-12 text-center max-w-7xl">
         <h1 className="text-4xl font-bold text-gray-900 mb-4 
@@ -69,7 +69,7 @@ const CategoriesCards = () => {
         rounded-full opacity-20 -z-10 animate-blob"></div>
       <div className="absolute w-48 h-48 bg-pink-100 rounded-full -bottom-10 -right-10 opacity-30 -z-10 animate-blob-reverse"></div>
     </div>
-  );  
-};  
+  );
+};
 
 export default CategoriesCards;

@@ -1,4 +1,4 @@
-import React from "react";  
+import React from "react";
 
 import about1 from "../assets/about-1.jpg";  
 import about1icon from "../assets/about-1-icon.png";  
@@ -39,10 +39,16 @@ const About = () => {
     <section className="relative py-16 overflow-hidden bg-white">
       <div className="px-4 mx-auto max-w-7xl">
         <div className="mb-12 text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4 
-            transform transition-all duration-700 hover:text-[#ffc929]">
+          <h2 
+            className="
+              text-4xl font-bold text-gray-900 mb-4 
+              transition-all duration-500 
+              hover:text-[#ffc929] 
+              hover:scale-[1.02]
+            "
+          >
             What We Can Do For You
-          </h1>
+          </h2>
           <p className="max-w-2xl mx-auto text-lg text-gray-600">
             Discover how PawFrindu supports you and your pets at every step of the journey
           </p>
@@ -51,38 +57,48 @@ const About = () => {
         {sections.map((section, index) => (
           <div 
             key={index} 
-            className={`flex items-center justify-between mb-16 
-              ${section.reverse ? 'flex-row-reverse' : 'flex-row'}
-              group`}
+            className={`
+              flex flex-col md:flex-row items-center justify-between mb-16 
+              ${section.reverse ? 'md:flex-row-reverse' : 'md:flex-row'}
+              group
+            `}
           >
-            <div className="w-1/2 p-4">
-              <img 
-                src={section.image} 
-                alt={section.title} 
-                className="w-full transition-transform duration-500 transform shadow-lg rounded-2xl group-hover:scale-105"
-              />
+            <div className="w-full p-4 md:w-1/2">
+              <div className="relative overflow-hidden shadow-lg rounded-2xl">
+                <img 
+                  src={section.image} 
+                  alt={section.title} 
+                  className="object-cover w-full transition-transform duration-500 transform  group-hover:scale-110"
+                />
+              </div>
             </div>
-            <div className="w-1/2 p-8">
-              <div className="flex flex-col items-center mb-6">
+            <div className="w-full p-8 text-center md:w-1/2 md:text-left">
+              <div className="flex flex-col items-center md:items-start">
                 <span 
-                  className={`flex justify-center items-center 
-                    ${section.bgColor} rounded-full w-20 h-20 mb-4
+                  className={`
+                    flex justify-center items-center 
+                    ${section.bgColor} 
+                    rounded-full w-20 h-20 mb-4
                     transition-all duration-500 
-                    group-hover:bg-[#ffc929]/20`}
+                    group-hover:bg-[#ffc929]/20
+                  `}
                 >
                   <img 
                     src={section.icon} 
                     alt="about-icon" 
-                    className="transition-transform transform max-w-10 group-hover:scale-110"
+                    className="transition-transform transform  max-w-10 group-hover:scale-110"
                   />
                 </span>
                 <h3 
-                  className="text-2xl font-semibold text-gray-900 mb-4 
-                  group-hover:text-[#ffc929] transition-colors text-center"
+                  className="
+                    text-2xl font-semibold text-gray-900 mb-4 
+                    group-hover:text-[#ffc929] 
+                    transition-colors
+                  "
                 >
                   {section.title}
                 </h3>
-                <p className="max-w-md text-base leading-relaxed text-center text-gray-600">
+                <p className="max-w-md text-base leading-relaxed text-gray-600">
                   {section.description}
                 </p>
               </div>

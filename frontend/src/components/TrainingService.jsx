@@ -1,4 +1,5 @@
-import React, { useState } from "react";  
+import React, { useState } from "react";
+import { ArrowRight } from 'lucide-react';
 import basicTrainingIcon from "../assets/service-3.png";  
 import medicalTrainingIcon from "../assets/service-5.png";  
 
@@ -7,77 +8,98 @@ export default function TrainingService() {
     {  
       name: "Basic Training",  
       icon: basicTrainingIcon,  
-      description:  
-        "Basic training for pets involves teaching essential commands and behaviors to establish good manners and communication between pets and their owners. This training typically includes commands such as sit, stay, come, and heel, helping pets understand expectations and build positive habits.",  
+      description: "Comprehensive training program focusing on essential obedience, socialization, and behavioral skills to help your pet become a well-mannered companion.",
       backgroundColor: "bg-[#fdf2d9]"
     },  
     {  
       name: "Medical Training",  
       icon: medicalTrainingIcon,  
-      description:  
-        "Medical training for pets focuses on familiarizing animals with veterinary procedures and handling to reduce stress during visits. This training covers basic health care skills, such as accepting vaccinations, handling exams, and maintaining calm during clinical assessments.",  
+      description: "Specialized training designed to help pets become comfortable with medical procedures, reducing stress during veterinary visits and medical treatments.",
       backgroundColor: "bg-[#e8f7fe]"
     },  
   ];  
 
-  const [activeCard, setActiveCard] = useState(null);  
+  const [hoveredCard, setHoveredCard] = useState(null);
 
   return (  
     <div className="relative py-16 overflow-hidden bg-white">
       <div className="px-4 mx-auto max-w-7xl">
         <div className="mb-12 text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4 
+          <h2 className="text-4xl font-bold text-gray-900 mb-4 
             transform transition-all duration-700 hover:text-[#ffc929]">
             Training Services
-          </h1>
+          </h2>
           <p className="max-w-2xl mx-auto text-lg text-gray-600">
             Specialized training to help your pet become a confident, well-adjusted companion
           </p>
         </div>
 
-        <div className="flex justify-center gap-8">
+        <div className="flex flex-col justify-center gap-8 md:flex-row">
           {trainingCategories.map((category, index) => (
             <div 
               key={index} 
               className={`
-                relative w-96 h-[500px] rounded-2xl shadow-lg 
-                transform transition-all duration-500 
-                ${activeCard === index 
-                  ? "scale-105 shadow-2xl z-10" 
-                  : "hover:scale-105 hover:shadow-xl"}
-                ${category.backgroundColor}
+                relative w-full md:w-96 h-[500px] rounded-2xl shadow-lg 
+                transition-all duration-500
+                ${hoveredCard === index ? "scale-105 shadow-2xl" : ""}
               `}
-              onMouseEnter={() => setActiveCard(index)}
-              onMouseLeave={() => setActiveCard(null)}
+              onMouseEnter={() => setHoveredCard(index)}
+              onMouseLeave={() => setHoveredCard(null)}
             >
-              <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
-                <div className="p-4 mb-6 bg-white rounded-full shadow-md">
-                  <img
-                    src={category.icon}
-                    alt={`${category.name} icon`}
-                    className="w-24 h-24 transition-transform duration-300 transform group-hover:scale-110"
-                  />
-                </div>
-                <h3 className="text-2xl font-semibold text-gray-900 mb-4 
-                  transform transition-transform duration-300 
-                  group-hover:text-[#ffc929]">
-                  {category.name}
-                </h3>
-                <p className="mb-6 text-base leading-relaxed text-gray-700">
-                  {category.description}
-                </p>
-                <button 
-                  className="bg-[#ffc929] text-gray-900 px-6 py-3 rounded-full 
-                  hover:bg-pink-500 hover:text-white 
-                  transition-all duration-300 
-                  transform hover:scale-110 
-                  flex items-center gap-2"
+              <div 
+                className={`
+                  absolute inset-0 
+                  transform transition-transform duration-500 
+                  ${hoveredCard === index ? 'rotate-y-180' : ''}
+                  ${category.backgroundColor}
+                  rounded-2xl
+                  flex flex-col items-center justify-center
+                  backface-visibility-hidden
+                `}
+              >
+                {/* Front of Card */}
+                <div 
+                  className={`
+                    absolute inset-0 flex flex-col items-center justify-center p-6 text-center
+                    ${hoveredCard === index ? 'opacity-0' : 'opacity-100'}
+                    transition-opacity duration-500
+                  `}
                 >
-                  Learn More
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
-                </button>
+                  <div className="p-4 mb-6 bg-white rounded-full shadow-md">
+                    <img
+                      src={category.icon}
+                      alt={`${category.name} icon`}
+                      className="w-24 h-24 transition-transform duration-300 transform"
+                    />
+                  </div>
+                  <h3 className="mb-4 text-2xl font-semibold text-gray-900">
+                    {category.name}
+                  </h3>
+                </div>
+
+                {/* Back of Card */}
+                <div 
+                  className={`
+                    absolute inset-0 flex flex-col items-center justify-center p-6 text-center
+                    ${hoveredCard === index ? 'opacity-100' : 'opacity-0'}
+                    transition-opacity duration-500
+                    rotate-y-180
+                  `}
+                >
+                  <p className="mb-6 text-base leading-relaxed text-gray-700">
+                    {category.description}
+                  </p>
+                  <button 
+                    className="bg-[#ffc929] text-gray-900 px-6 py-3 rounded-full 
+                    hover:bg-pink-500 hover:text-white 
+                    transition-all duration-300 
+                    transform hover:scale-110 
+                    flex items-center gap-2"
+                  >
+                    Learn More
+                    <ArrowRight className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
             </div>
           ))}

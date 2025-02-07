@@ -5,7 +5,22 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      transform: {
+        'rotate-y-180': 'rotateY(180deg)',
+      },
+      backfaceVisibility: {
+        hidden: 'hidden',
+      },
+      perspective: {
+        '1000': '1000px',
+      },
+    },
+  },
+  variants: {
+    extend: {
+      transform: ['hover'],
+    },
   },
   plugins: [],
 }

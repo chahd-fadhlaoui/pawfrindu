@@ -1,24 +1,37 @@
-import React, { useState } from 'react';  
-import logo from "../assets/LogoPawfrindu.png";  
+import React, { useState } from 'react';
+import { Menu, X } from 'lucide-react';
+import logo from "../assets/LogoPawfrindu.png";
 
-function Header() {  
+function Header() {
   const [activeLink, setActiveLink] = useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
-    { name: 'Adopt A Pet', href: '#adopt' },
-    { name: 'Lost Your Pet?', href: '#lost' },
-    { name: 'Train Your Pet', href: '#training' },
-    { name: 'Veterinary', href: '#veterinary' }
+    { name: 'Adopt A Pet', href: '#adopt', ariaLabel: 'Go to pet adoption section' },
+    { name: 'Lost Your Pet?', href: '#lost', ariaLabel: 'Get help finding a lost pet' },
+    { name: 'Train Your Pet', href: '#training', ariaLabel: 'Access pet training resources' },
+    { name: 'Veterinary', href: '#veterinary', ariaLabel: 'Find veterinary services' }
   ];
 
-  return (  
-    <header className="relative py-6 bg-white shadow-sm"> 
-      <div className="flex justify-between items-center max-w-[1400px] mx-auto px-6">  
-        <div className="transition-transform transform hover:scale-105">  
-          <img src={logo} className="h-[100px]" alt="PawFrindu Logo" />  
-        </div>
-        <nav>  
-          <ul className="flex p-0 m-0 list-none">  
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
+
+  return (
+    <header className="sticky top-0 z-50 bg-white shadow-sm">
+      <div className="relative flex justify-between items-center max-w-[1400px] mx-auto px-4 py-4 lg:px-6">
+        {/* Logo with improved accessibility */}
+        <a href="/" aria-label="Home">
+          <img 
+            src={logo} 
+            className="h-[80px] w-auto transition-transform transform hover:scale-105" 
+            alt="PawFrindu Logo" 
+          />
+        </a>
+
+        {/* Desktop Navigation */}
+        <nav className="hidden lg:block">
+          <ul className="flex p-0 m-0 list-none">
             {navLinks.map((link, index) => (
               <li 
                 key={index} 
@@ -28,6 +41,7 @@ function Header() {
               > 
                 <a 
                   href={link.href} 
+                  aria-label={link.ariaLabel}
                   className={`
                     text-gray-800 text-base font-medium 
                     transition-all duration-300 
@@ -49,27 +63,76 @@ function Header() {
             ))}
           </ul>  
         </nav>
-        <div>
-          <button className="
-            px-6 py-3 
-            text-gray-900 
-            bg-[#ffc929] 
-            rounded-full 
-            hover:bg-pink-500 
-            hover:text-white
-            transition-all 
-            duration-300 
-            transform 
-            hover:scale-110
-            shadow-md
-            hover:shadow-lg
-          ">
+
+        {/* Mobile Menu Toggle */}
+        <div className="lg:hidden">
+          <button 
+            onClick={toggleMobileMenu}
+            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+            className="text-gray-800 focus:outline-none"
+          >
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+
+        {/* CTA Button */}
+        <div className="hidden lg:block">
+          <button 
+            className="
+              px-6 py-3 
+              text-gray-900 
+              bg-[#ffc929] 
+              rounded-full 
+              hover:bg-pink-500 
+              hover:text-white
+              transition-all 
+              duration-300 
+              transform 
+              hover:scale-110
+              shadow-md
+              hover:shadow-lg
+            "
+            aria-label="Start adopting a pet"
+          >
             Get Started
           </button>
         </div>
-      </div>  
-    </header>  
-  );  
-}  
+
+        {/* Mobile Menu Overlay */}
+        {mobileMenuOpen && (
+          <div className="absolute left-0 w-full bg-white shadow-lg lg:hidden top-full">
+            <ul className="flex flex-col items-center py-4">
+              {navLinks.map((link, index) => (
+                <li key={index} className="my-2">
+                  <a 
+                    href={link.href} 
+                    className="text-gray-800 text-lg hover:text-[#ffc929]"
+                    onClick={toggleMobileMenu}
+                  >
+                    {link.name}
+                  </a>
+                </li>
+              ))}
+              <li className="mt-4">
+                <button 
+                  className="
+                    px-6 py-3 
+                    text-gray-900 
+                    bg-[#ffc929] 
+                    rounded-full 
+                    hover:bg-pink-500 
+                    hover:text-white
+                  "
+                >
+                  Get Started
+                </button>
+              </li>
+            </ul>
+          </div>
+        )}
+      </div>
+    </header>
+  );
+}
 
 export default Header;

@@ -1,35 +1,49 @@
-import React, { useState } from 'react';  
+import React from 'react';  
+import { Facebook, Instagram } from 'lucide-react';
 import fbicon from "../assets/Fb.png";   
 import instaicon from "../assets/insta.png";  
 import logo from "../assets/LogoPawfrindu.png";  
 
 const Footer = () => {   
-  const [email, setEmail] = useState('');
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Add newsletter signup logic here
-    console.log('Submitted email:', email);
-    setEmail('');
-  };
+  const quickLinks = ['Home', 'About Us', 'Adopt', 'Lost/Found', 'Training', 'Veterinary'];
 
   return (  
-    <footer className="relative py-16 bg-white">  
+    <footer className="relative py-16 overflow-hidden bg-white">  
       <div className="grid gap-8 px-4 mx-auto max-w-7xl md:grid-cols-4">  
-        <div>  
-          <img className="h-12 mb-6" src={logo} alt="PawFrindu Logo" />   
-          <p className="text-gray-600">
+        <div className="transform transition-transform hover:scale-[1.02]">  
+          <img 
+            className="h-12 mb-6 transition-transform hover:rotate-6" 
+            src={logo} 
+            alt="PawFrindu Logo" 
+          />   
+          <p className="text-gray-600 group-hover:text-[#ffc929] transition-colors">
             Connecting pets with loving homes and providing comprehensive pet care services.
           </p>
         </div>  
 
         <div>  
-          <h4 className="mb-4 text-xl font-semibold text-gray-900">Quick Links</h4>  
+          <h4 className="mb-4 text-xl font-semibold text-gray-900 animate-bounce-in-left">
+            Quick Links
+          </h4>  
           <ul className="space-y-3">  
-            {['Home', 'About Us', 'Adopt', 'Lost/Found', 'Training', 'Veterinary'].map((link) => (
-              <li key={link}>
-                <a href="#" className="text-gray-600 hover:text-[#ffc929] transition-colors">
+            {quickLinks.map((link, index) => (
+              <li 
+                key={link} 
+                className="transition-all duration-300 transform hover:translate-x-2"
+              >
+                <a 
+                  href="#" 
+                  className="
+                    text-gray-600 
+                    hover:text-[#ffc929] 
+                    transition-colors 
+                    group flex items-center
+                  "
+                >
                   {link}
+                  <span className="ml-2 transition-opacity opacity-0 group-hover:opacity-100">
+                    →
+                  </span>
                 </a>
               </li>
             ))}
@@ -37,52 +51,58 @@ const Footer = () => {
         </div>  
 
         <div>  
-          <h4 className="mb-4 text-xl font-semibold text-gray-900">Contact</h4>  
+          <h4 className="mb-4 text-xl font-semibold text-gray-900 animate-bounce-in-left">
+            Contact
+          </h4>  
           <ul className="space-y-3">  
-            <li className="text-gray-600">Tunisia</li>  
-            <li>
-              <a href="#" className="text-gray-600 hover:text-[#ffc929] transition-colors">
-                View on Maps
-              </a>
-            </li>
-            <li className="text-gray-600">+216 XX XXX XXX</li>
-            <li className="text-gray-600">info@pawfrindu.com</li>
+            {['Tunisia', '+216 XX XXX XXX', 'info@pawfrindu.com'].map((contact, index) => (
+              <li 
+                key={contact} 
+                className="
+                  text-gray-600 
+                  transform transition-all 
+                  duration-300 
+                  hover:translate-x-2 
+                  hover:text-[#ffc929]
+                "
+              >
+                {contact}
+              </li>
+            ))}
           </ul>  
         </div>  
 
-        <div>  
-          <h4 className="mb-4 text-xl font-semibold text-gray-900">Stay Connected</h4>  
-          <form onSubmit={handleSubmit} className="mb-6">  
-            <div className="flex pb-2 border-b border-gray-300">
-              <input 
-                type="email" 
-                placeholder="Your email" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full text-gray-600 bg-transparent outline-none" 
-                required
-              />
-              <button 
-                type="submit" 
-                className="bg-[#ffc929] text-gray-900 px-4 py-2 rounded-full hover:bg-pink-500 transition-colors"
-              >
-                Subscribe
-              </button>
-            </div>
-          </form>
-          
+        <div className="flex flex-col items-center justify-center">  
           <div className="flex items-center gap-4">  
-            <a href="#" className="transition-opacity hover:opacity-75">
-              <img className="w-8 h-8" src={fbicon} alt="Facebook" />   
-            </a>
-            <a href="#" className="transition-opacity hover:opacity-75">
-              <img className="w-8 h-8" src={instaicon} alt="Instagram" />
-            </a>
+            {[
+              { icon: Facebook, href: "#facebook" },
+              { icon: Instagram, href: "#instagram" }
+            ].map(({ icon: Icon, href }) => (
+              <a 
+                key={href}
+                href={href} 
+                className="
+                  p-2 
+                  bg-[#ffc929]/10 
+                  rounded-full 
+                  transition-all 
+                  duration-300 
+                  transform 
+                  hover:scale-125 
+                  hover:bg-[#ffc929]/20
+                "
+              >
+                <Icon 
+                  className="text-gray-700 hover:text-[#ffc929] transition-colors" 
+                  size={24} 
+                />
+              </a>
+            ))}
           </div>  
         </div>  
       </div>  
 
-      <div className="pt-6 mt-12 text-center border-t border-gray-200">
+      <div className="pt-6 mt-12 text-center border-t border-gray-200 animate-fade-in">
         <p className="text-gray-600">
           © {new Date().getFullYear()} PawFrindu. All rights reserved.
         </p>
