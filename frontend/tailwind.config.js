@@ -15,6 +15,9 @@ export default {
       perspective: {
         '1000': '1000px',
       },
+      gridTemplateColumns:{
+        'auto':'repeat(auto-fill,minmax(200px,1fr))'
+      }
     },
   },
   variants: {

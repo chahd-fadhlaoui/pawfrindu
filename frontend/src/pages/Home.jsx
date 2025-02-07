@@ -9,12 +9,10 @@ import TrainingService from '../components/TrainingService'
 export default function Home() {
   return (
     <div>
-      <Header/>
       <HeroSection/>
       <CategoriesCards/>
      <About/> 
      <TrainingService/>
-     <Footer/>
     </div>
   )
 }
