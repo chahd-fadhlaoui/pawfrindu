@@ -8,56 +8,86 @@ export default function TrainingService() {
       name: "Basic Training",  
       icon: basicTrainingIcon,  
       description:  
-        "Basic training for pets involves teaching essential commands and behaviors to establish good manners and communication between pets and their owners. This training typically includes commands such as sit, stay, come, and heel, helping pets understand expectations and build positive habits. Early socialization and positive reinforcement play crucial roles in ensuring pets become well-adjusted and obedient companions.",  
+        "Basic training for pets involves teaching essential commands and behaviors to establish good manners and communication between pets and their owners. This training typically includes commands such as sit, stay, come, and heel, helping pets understand expectations and build positive habits.",  
+      backgroundColor: "bg-[#fdf2d9]"
     },  
     {  
       name: "Medical Training",  
       icon: medicalTrainingIcon,  
       description:  
-        "Medical training for pets focuses on familiarizing animals with veterinary procedures and handling to reduce stress during visits. This training covers basic health care skills, such as accepting vaccinations, handling exams, and maintaining calm during medical assessments. By using positive reinforcement techniques, owners can help their pets feel comfortable and cooperative in a clinical setting.",  
+        "Medical training for pets focuses on familiarizing animals with veterinary procedures and handling to reduce stress during visits. This training covers basic health care skills, such as accepting vaccinations, handling exams, and maintaining calm during clinical assessments.",  
+      backgroundColor: "bg-[#e8f7fe]"
     },  
   ];  
 
-  const [flippedStates, setFlippedStates] = useState(Array(trainingCategories.length).fill(false));  
+  const [activeCard, setActiveCard] = useState(null);  
 
-  const handleFlip = (index) => {  
-    const newFlippedStates = [...flippedStates];  
-    newFlippedStates[index] = !newFlippedStates[index];  
-    setFlippedStates(newFlippedStates);  
-  };  
-  
   return (  
-    <div className="flex flex-col items-center p-5 bg-[#FDF2D9] min-h-screen">  
-      <h1 className="mb-1 text-3xl font-bold">Training Services</h1>  
-      <h2 className="mt-0 mb-4 text-xl">Choose your training type</h2>  
+    <div className="relative py-16 overflow-hidden bg-white">
+      <div className="px-4 mx-auto max-w-7xl">
+        <div className="mb-12 text-center">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4 
+            transform transition-all duration-700 hover:text-[#ffc929]">
+            Training Services
+          </h1>
+          <p className="max-w-2xl mx-auto text-lg text-gray-600">
+            Specialized training to help your pet become a confident, well-adjusted companion
+          </p>
+        </div>
 
-      <div className="flex justify-center gap-10 mt-4">  
-        {trainingCategories.map((category, index) => (  
-          <div key={index} className="relative w-80 h-80 bg-white border-2 border-[#efaeef] rounded-lg shadow-md overflow-hidden perspective">  
-            {/* Front Side */}  
-            <div className={`absolute w-full h-full transition-transform duration-700 transform ${flippedStates[index] ? "rotate-y-180" : ""}`}>  
-              <div className="flex flex-col justify-center items-center w-full h-full backface-hidden">  
-                <img  
-                  src={category.icon}  
-                  alt={`${category.name} icon`}  
-                  className="w-20 h-20 mb-3"  
-                />  
-                <h3 className="text-xl font-semibold">{category.name}</h3>  
-                <div className="mt-3 cursor-pointer text-2xl text-blue-500 hover:text-blue-700" onClick={() => handleFlip(index)}>  
-                  &#9654; {/* Flèche vers la droite */}  
-                </div>  
-              </div>  
-            </div>  
-            {/* Back Side */}  
-            <div className={`absolute w-full h-full transition-transform duration-700 transform ${flippedStates[index] ? "" : "rotate-y-180"} backface-hidden flex flex-col justify-center items-center`}>  
-              <p className="px-4 py-2 text-sm text-center">{category.description}</p>  
-              <div className="mt-3 cursor-pointer text-2xl text-blue-500 hover:text-blue-700" onClick={() => handleFlip(index)}>  
-                &#9664; {/* Flèche vers la gauche */}  
-              </div>  
-            </div>  
-          </div>  
-        ))}  
-      </div>  
-    </div>  
+        <div className="flex justify-center gap-8">
+          {trainingCategories.map((category, index) => (
+            <div 
+              key={index} 
+              className={`
+                relative w-96 h-[500px] rounded-2xl shadow-lg 
+                transform transition-all duration-500 
+                ${activeCard === index 
+                  ? "scale-105 shadow-2xl z-10" 
+                  : "hover:scale-105 hover:shadow-xl"}
+                ${category.backgroundColor}
+              `}
+              onMouseEnter={() => setActiveCard(index)}
+              onMouseLeave={() => setActiveCard(null)}
+            >
+              <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+                <div className="p-4 mb-6 bg-white rounded-full shadow-md">
+                  <img
+                    src={category.icon}
+                    alt={`${category.name} icon`}
+                    className="w-24 h-24 transition-transform duration-300 transform group-hover:scale-110"
+                  />
+                </div>
+                <h3 className="text-2xl font-semibold text-gray-900 mb-4 
+                  transform transition-transform duration-300 
+                  group-hover:text-[#ffc929]">
+                  {category.name}
+                </h3>
+                <p className="mb-6 text-base leading-relaxed text-gray-700">
+                  {category.description}
+                </p>
+                <button 
+                  className="bg-[#ffc929] text-gray-900 px-6 py-3 rounded-full 
+                  hover:bg-pink-500 hover:text-white 
+                  transition-all duration-300 
+                  transform hover:scale-110 
+                  flex items-center gap-2"
+                >
+                  Learn More
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Decorative background elements */}
+      <div className="absolute -top-10 -left-10 w-48 h-48 bg-[#ffc929] 
+        rounded-full opacity-20 -z-10 animate-blob"></div>
+      <div className="absolute w-48 h-48 bg-pink-100 rounded-full -bottom-10 -right-10 opacity-30 -z-10 animate-blob-reverse"></div>
+    </div>
   );  
 }

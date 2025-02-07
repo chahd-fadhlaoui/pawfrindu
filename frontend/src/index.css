@@ -1,7 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-/* Styles spécifiques pour retourner la carte */  
+
 .backface-hidden {  
   backface-visibility: hidden;  
 }  
@@ -13,3 +13,35 @@
 .perspective {  
   perspective: 1000px;  
 }  
+
+@keyframes fadeInLeft {
+  from { opacity: 0; transform: translateX(-50px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fadeInRight {
+  from { opacity: 0; transform: translateX(50px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes bounceIn {
+  0% { opacity: 0; transform: scale(0.3); }
+  50% { opacity: 1; transform: scale(1.05); }
+  70% { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+
+@keyframes blob {
+  0% { transform: translate(0px, 0px) scale(1); }
+  33% { transform: translate(30px, -50px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.9); }
+  100% { transform: translate(0px, 0px) scale(1); }
+}
+
+.animate-fade-in-left { animation: fadeInLeft 1s ease-out; }
+.animate-fade-in-right { animation: fadeInRight 1s ease-out; }
+.animate-bounce-in-left { animation: bounceIn 1s; }
+.animate-pulse-slow { animation: pulse 2s infinite; }
+.animate-bounce-x { animation: bounce 1s infinite; }
+.animate-blob { animation: blob 10s infinite; }
+.animate-blob-reverse { animation: blob 10s infinite reverse; }

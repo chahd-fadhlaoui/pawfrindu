@@ -1,10 +1,10 @@
 import React from 'react'
+import About from '../components/About'
+import CategoriesCards from '../components/CategoriesCards'
+import Footer from '../components/Footer'
 import Header from '../components/Header'
 import HeroSection from '../components/HeroSection'
-import CategoriesCards from '../components/CategoriesCards'
-import About from '../components/About'
 import TrainingService from '../components/TrainingService'
-import Footer from '../components/Footer'
 
 export default function Home() {
   return (
