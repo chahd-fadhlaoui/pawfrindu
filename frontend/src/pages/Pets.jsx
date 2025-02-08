@@ -1,49 +1,197 @@
-import React, { useContext, useEffect, useState } from 'react';  
-import { useParams } from 'react-router-dom';  
-import { AppContext } from '../context/AppContext';  
+import React, { useContext, useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { AppContext } from '../context/AppContext';
+import { Heart, PawPrint, MapPin, Coins } from 'lucide-react';
 
-export default function Pet() {  
-  const { category } = useParams();  
-  const { pets } = useContext(AppContext);  
+export default function Pet() {
+  const { category: urlCategory } = useParams();
+  const { pets } = useContext(AppContext);
 
-  const [filterPet, setFilterPet] = useState([]);  
+  const [filteredPets, setFilteredPets] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [races, setRaces] = useState([]);
+  const [breeds, setBreeds] = useState([]);
+  const [ages, setAges] = useState([]);
+  const [fees, setFees] = useState([]);
+  const [cities, setCities] = useState([]);
 
-  const applyFilter = () => {  
-    if (category) {  
-      setFilterPet(pets.filter(pet => pet.category === category));  
-    } else {  
-      setFilterPet(pets);  
-    }  
-  };  
+  // États des filtres
+  const [selectedCategory, setSelectedCategory] = useState(urlCategory || '');
+  const [selectedRace, setSelectedRace] = useState('');
+  const [selectedBreed, setSelectedBreed] = useState('');
+  const [selectedAge, setSelectedAge] = useState('');
+  const [selectedFee, setSelectedFee] = useState('');
+  const [selectedCity, setSelectedCity] = useState('');
 
-  useEffect(() => {  
-    applyFilter();  
-  }, [pets, category]);  
+  // Logique de filtrage étendue
+  useEffect(() => {
+    let filtered = pets;
 
-  return (  
-    <div className="p-4">  
-      <p className="mb-4">Browse through the pets categories.</p>  
-      <div>  
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">  
-          {filterPet.map((item, index) => (  
-            <div key={index} className="border border-blue-200 rounded-xl overflow-hidden cursor-pointer hover:translate-y-[-10px] transition-all duration-500">  
-              <img  
-                className="w-full h-48 object-contain m-auto" // Changed to object-contain for full visibility  
-                src={item.image}  
-                alt={item.name}  
-                onError={(e) => {  
-                  e.target.onerror = null;  
-                  e.target.src = 'path_to_placeholder_image';  // Replace with your placeholder image path  
-                }}  
-              />  
-              <div className='p-4'>  
-                <p className='text-gray-900 text-lg font-medium'>{item.name}</p>  
-                <p className='text-gray-600 text-sm'>{item.category}</p>  
-              </div>  
-            </div>  
-          ))}  
-        </div>  
-      </div>  
-    </div>  
-  );  
+    if (selectedCategory) filtered = filtered.filter(pet => pet.category === selectedCategory);
+    if (selectedRace) filtered = filtered.filter(pet => pet.race === selectedRace);
+    if (selectedBreed) filtered = filtered.filter(pet => pet.breed === selectedBreed);
+    if (selectedAge) filtered = filtered.filter(pet => pet.age === selectedAge);
+    if (selectedFee) filtered = filtered.filter(pet => pet.fee === selectedFee);
+    if (selectedCity) filtered = filtered.filter(pet => pet.city === selectedCity);
+
+    setFilteredPets(filtered);
+  }, [pets, selectedCategory, selectedRace, selectedBreed, selectedAge, selectedFee, selectedCity]);
+
+  // Extraction des options de filtres
+  useEffect(() => {
+    setCategories([...new Set(pets.map(pet => pet.category))]);
+    setRaces([...new Set(pets.map(pet => pet.race))]);
+    setBreeds([...new Set(pets.map(pet => pet.breed))]);
+    setAges([...new Set(pets.map(pet => pet.age))]);
+    setFees([...new Set(pets.map(pet => pet.fee))]);
+    setCities([...new Set(pets.map(pet => pet.city))]);
+  }, [pets]);
+
+  const FilterSelect = ({ label, value, onChange, options, icon: Icon }) => (
+    <div className="flex-1 min-w-0">
+      <select
+        className="w-full px-2 py-2 rounded-xl border-2 border-purple-100 
+        focus:ring-2 focus:ring-pink-200 focus:border-pink-300 transition-all 
+        text-purple-700 bg-white hover:border-pink-200 text-sm"
+        value={value}
+        onChange={onChange}
+      >
+        <option value="">{label}</option>
+        {options.map((option, index) => (
+          <option key={index} value={option}>{option}</option>
+        ))}
+      </select>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 py-12 px-4 relative">
+      {/* Décoration de fond */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-4 -left-4 w-24 h-24 text-pink-200 opacity-20">
+          <PawPrint size={96} />
+        </div>
+        <div className="absolute top-1/4 -right-4 w-24 h-24 text-purple-200 opacity-20">
+          <PawPrint size={96} />
+        </div>
+      </div>
+
+      <div className="container mx-auto max-w-6xl relative">
+        {/* Titre kawaii */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-purple-800 mb-2">
+            Trouvez Votre Ami Pour La Vie 
+            <Heart className="inline-block ml-2 text-pink-500" size={32} />
+          </h1>
+          <p className="text-purple-600 text-lg">Des compagnons adorables qui n'attendent que vous !</p>
+        </div>
+
+        {/* Section de filtres sur une ligne */}
+        <div className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-lg p-4 mb-12 border-2 border-pink-100">
+          <div className="flex gap-2">
+            <FilterSelect
+              label="Catégorie"
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              options={categories}
+            />
+            <FilterSelect
+              label="Race"
+              value={selectedRace}
+              onChange={(e) => setSelectedRace(e.target.value)}
+              options={races}
+            />
+            <FilterSelect
+              label="Breed"
+              value={selectedBreed}
+              onChange={(e) => setSelectedBreed(e.target.value)}
+              options={breeds}
+            />
+            <FilterSelect
+              label="Âge"
+              value={selectedAge}
+              onChange={(e) => setSelectedAge(e.target.value)}
+              options={ages}
+            />
+            <FilterSelect
+              label="Tarif"
+              value={selectedFee}
+              onChange={(e) => setSelectedFee(e.target.value)}
+              options={fees}
+            />
+            <FilterSelect
+              label="Ville"
+              value={selectedCity}
+              onChange={(e) => setSelectedCity(e.target.value)}
+              options={cities}
+            />
+          </div>
+        </div>
+
+        {/* Grille des animaux */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {filteredPets.length > 0 ? (
+            filteredPets.map((pet, index) => (
+              <div
+                key={index}
+                className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl 
+                transition-all duration-300 transform hover:-translate-y-2 group 
+                border-2 border-pink-100"
+              >
+                <div className="relative overflow-hidden h-64">
+                  <img
+                    src={pet.image}
+                    alt={pet.name}
+                    className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-300"  
+
+                    onError={(e) => {
+                      e.target.src = '/placeholder-animal.png';
+                    }}
+                  />
+                  <div className="absolute top-4 right-4">
+                    <Heart className="text-white drop-shadow-lg" size={24} />
+                  </div>
+                </div>
+
+                <div className="p-6 space-y-3">
+                  <h2 className="text-2xl font-bold text-purple-800">
+                    {pet.name}
+                  </h2>
+                  <div className="flex flex-col gap-2">
+                    <p className="text-purple-600 font-medium flex items-center">
+                      <PawPrint size={16} className="mr-1" />
+                      {pet.category} • {pet.breed}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-pink-600 bg-pink-50 px-4 py-1 
+                      rounded-full border border-pink-100">
+                        {pet.age}
+                      </span>
+                      <span className="text-sm text-purple-600 bg-purple-50 px-4 py-1 
+                      rounded-full border border-purple-100 flex items-center gap-1">
+                        <MapPin size={12} />
+                        {pet.city}
+                      </span>
+                    </div>
+                    <span className="text-sm text-green-600 bg-green-50 px-4 py-1 
+                    rounded-full border border-green-100 flex items-center gap-1 w-fit">
+                      <Coins size={12} />
+                      {pet.fee}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="col-span-full text-center py-12">
+              <PawPrint size={48} className="mx-auto text-purple-300 mb-4" />
+              <p className="text-purple-600 text-2xl font-light">
+                Aucun animal trouvé 🐾
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }
