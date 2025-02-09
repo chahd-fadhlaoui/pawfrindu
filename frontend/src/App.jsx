@@ -1,14 +1,18 @@
 import React from 'react'
 import { Route, Routes } from 'react-router-dom'
+import { posts } from './assets/posts'
+import CandidatesPage from './pages/CandidatesPage'
+import Footer from './components/Footer'
+import Header from './components/Header'
 import Home from './pages/Home'
-import Pets from './pages/Pets'
 import Login from './pages/Login'
 import Myprofile from './pages/Myprofile'
-import Header from './components/Header'
-import Footer from './components/Footer'
+import PetOwnerPosts from './pages/PetOwnerPosts'
+import Pets from './pages/Pets'
 
 
 export default function App() {
+
   return (
     <div className='mx-4 sm:max-[10%]:'>
       <Header/>
@@ -18,6 +22,9 @@ export default function App() {
         <Route path='/pets/:category' element={<Pets/>}/>
         <Route path='/login' element={<Login/>}/>
         <Route path='/myprofile' element={<Myprofile/>}/>
+        <Route path="/list" element={<PetOwnerPosts posts={posts} />} />
+        <Route path="/candidates/:petId" element={<CandidatesPage />} />
+
       </Routes> 
       <Footer/>
     </div>

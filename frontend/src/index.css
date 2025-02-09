@@ -37,6 +37,15 @@
   66% { transform: translate(-20px, 20px) scale(0.9); }
   100% { transform: translate(0px, 0px) scale(1); }
 }
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scale-in {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
 
 .animate-fade-in-left { animation: fadeInLeft 1s ease-out; }
 .animate-fade-in-right { animation: fadeInRight 1s ease-out; }
@@ -45,3 +54,6 @@
 .animate-bounce-x { animation: bounce 1s infinite; }
 .animate-blob { animation: blob 10s infinite; }
 .animate-blob-reverse { animation: blob 10s infinite reverse; }
+
+.animate-fade-in { animation: fade-in 0.2s ease-out; }
+.animate-scale-in { animation: scale-in 0.2s ease-out; }

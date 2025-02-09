@@ -1,9 +1,9 @@
-import React, { useState } from "react";
 import { Menu, X } from "lucide-react";
-import logo from "../assets/LogoPawfrindu.png";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import profile from "../assets/profile.png"
-import dropdown from "../assets/dropdown.png"
+import dropdown from "../assets/dropdown.png";
+import logo from "../assets/LogoPawfrindu.png";
+import profile from "../assets/profile.png";
 
 function Header() {
   const navigate = useNavigate();
@@ -102,17 +102,17 @@ function Header() {
         </div>
 
         {/* Create Account Button (Visible on both Mobile and Desktop) */}
-        <div className="ml-4 hidden lg:block">
+        <div className="hidden ml-4 lg:block">
         {
               token  ?
-              <div className="flex items-center gap-2 cursor-pointer group relative">
+              <div className="relative flex items-center gap-2 cursor-pointer group">
                 <img className='w-10 ' src={profile} />
                 <img className="w-8" src={dropdown}/>
-                <div className="absolute top-0 right-0 pt-14 text-base font-medium text-gray-600 z-20 hidden group-hover:block">
+                <div className="absolute top-0 right-0 z-20 hidden text-base font-medium text-gray-600 pt-14 group-hover:block">
                   <div className="min-w-48 bg-[#f2d7db] rounded flex flex-col gap-4 p-4 ">
-                  <p onClick={()=>navigate("myprofile")} className="hover:text-black cursor-pointer" >My profile</p>
-                  <p className="hover:text-black cursor-pointer" >My pets for adoption</p>
-                  <p onClick={()=>setToken(false)} className="hover:text-black cursor-pointer">Logout</p></div>
+                  <p onClick={()=>navigate("myprofile")} className="cursor-pointer hover:text-black" >My profile</p>
+                  <p onClick={()=>navigate("/list")} className="cursor-pointer hover:text-black" >My pets for adoption</p>
+                  <p onClick={()=>setToken(false)} className="cursor-pointer hover:text-black">Logout</p></div>
                 </div>
 
               </div>

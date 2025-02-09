@@ -1,8 +1,6 @@
-import React from 'react';  
 import { Facebook, Instagram } from 'lucide-react';
-import fbicon from "../assets/Fb.png";   
-import instaicon from "../assets/insta.png";  
-import logo from "../assets/LogoPawfrindu.png";  
+import React from 'react';
+import logo from "../assets/LogoPawfrindu.png";
 
 const Footer = () => {   
   const quickLinks = ['Home', 'About Us', 'Adopt', 'Lost/Found', 'Training', 'Veterinary'];
