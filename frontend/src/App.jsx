@@ -9,6 +9,7 @@ import Login from './pages/Login'
 import Myprofile from './pages/Myprofile'
 import PetOwnerPosts from './pages/PetOwnerPosts'
 import Pets from './pages/Pets'
+import PetDetails from './pages/PetDetails'
 
 
 export default function App() {
@@ -20,6 +21,8 @@ export default function App() {
         <Route path='/' element={<Home/>}/>
         <Route path='/pets' element={<Pets/>}/>
         <Route path='/pets/:category' element={<Pets/>}/>
+        <Route path='/petsdetails/:id' element={<PetDetails/>}/>
+
         <Route path='/login' element={<Login/>}/>
         <Route path='/myprofile' element={<Myprofile/>}/>
         <Route path="/list" element={<PetOwnerPosts posts={posts} />} />

@@ -1,9 +1,10 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { AppContext } from '../context/AppContext';
 import { Heart, PawPrint, MapPin, Coins } from 'lucide-react';
 
 export default function Pet() {
+  const navigate=useNavigate();
   const { category: urlCategory } = useParams();
   const { pets } = useContext(AppContext);
 
@@ -142,6 +143,7 @@ export default function Pet() {
           {filteredPets.length > 0 ? (
             filteredPets.map((pet, index) => (
               <div
+                onClick={()=>navigate(`/petsdetails/${pet._id}`)}
                 key={index}
                 className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl 
                 transition-all duration-300 transform hover:-translate-y-2 group 

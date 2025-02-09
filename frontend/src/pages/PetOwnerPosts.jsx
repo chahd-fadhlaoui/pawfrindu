@@ -254,6 +254,7 @@ const PetModal = ({ selectedPet, setSelectedPet }) => {
               alt={selectedPet.name}
               className="object-contain w-full h-full transition-transform duration-500 transform group-hover:scale-110"
             />
+              
             <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/50 to-transparent">
               <div className="flex items-center gap-2">
                 <Heart className="text-[#ffc929]" size={20} />
