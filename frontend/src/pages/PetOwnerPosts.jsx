@@ -59,7 +59,7 @@ const PetOwnerPosts = () => {
                         <img
                           src={pet.image}
                           alt={pet.name}
-                          className="absolute inset-0 object-cover w-full h-full transition-all duration-300 transform group-hover:scale-110"
+                          className="absolute inset-0 object-contain w-full h-full transition-all duration-300 transform group-hover:scale-110"
                         />
                       </div>
                     </td>
@@ -101,7 +101,7 @@ const PetOwnerPosts = () => {
                     <img
                       src={pet.image}
                       alt={pet.name}
-                      className="absolute inset-0 object-cover w-full h-full"
+                      className="absolute inset-0 object-contain w-full h-full"
                     />
                   </div>
                 </div>
@@ -159,7 +159,7 @@ const PetOwnerPosts = () => {
                   <img
                     src={selectedPet.image}
                     alt={selectedPet.name}
-                    className="object-cover w-full h-full transition-transform duration-500 transform group-hover:scale-110"
+                    className="object-contain w-full h-full transition-transform duration-500 transform group-hover:scale-110"
                   />
                   <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/50 to-transparent">
                     <div className="flex items-center gap-2">
