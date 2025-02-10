@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { Users, X, Edit, Trash2, Heart, Info } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { AppContext } from "../context/AppContext";
+import { useContext } from "react";
 
-const PetOwnerPosts = ({ posts }) => {
+const PetOwnerPosts = () => {
   const navigate = useNavigate();
   const [selectedPet, setSelectedPet] = useState(null);
-
+  const { pets } = useContext(AppContext);
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-[#ffc929]/5 to-pink-50">
       <div className="container p-4 mx-auto sm:p-8">
@@ -45,7 +47,7 @@ const PetOwnerPosts = ({ posts }) => {
                 </tr>
               </thead>
               <tbody>
-                {posts.map((pet, index) => (
+                {pets.map((pet, index) => (
                   <tr
                     key={index}
                     className="transition-all duration-300 border-b hover:bg-[#ffc929]/5 group cursor-pointer"
@@ -89,7 +91,7 @@ const PetOwnerPosts = ({ posts }) => {
 
         {/* Mobile view - Cards */}
         <div className="grid gap-4 md:hidden">
-          {posts.map((pet, index) => (
+          {pets.map((pet, index) => (
             <div
               key={index}
               className="p-4 transition-all duration-300 bg-white shadow-md cursor-pointer rounded-xl hover:shadow-lg"
@@ -150,11 +152,11 @@ const PetOwnerPosts = ({ posts }) => {
                 >
                   <Trash2 size={16} />
                 </button>
-                {pet.status !== "Completed" && (
+                {pet.fee === '0' && (
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      navigate(`/candidates/${pet.id}`);
+                      navigate(`/candidates/${pet._id}`);
                     }}
                     className="flex items-center gap-2 px-4 py-2 text-white rounded-lg bg-[#ffc929] shadow-sm hover:shadow-md transition-all duration-300"
                   >
@@ -218,9 +220,9 @@ const ActionButtons = ({ pet, navigate }) => {
       >
         <Trash2 size={16} />
       </button>
-      {pet.status !== "Completed" && (
+      {pet.fee === '0' && (
         <button
-          onClick={() => navigate(`/candidates/${pet.id}`)}
+          onClick={() => navigate(`/candidates/${pet._id}`)}
           className="flex items-center gap-2 px-4 py-2 text-white rounded-lg bg-[#ffc929] shadow-[0_4px_12px_rgba(255,201,41,0.2)] hover:shadow-[0_8px_16px_rgba(255,201,41,0.3)] transition-all duration-300 transform hover:scale-105 hover:rotate-2"
         >
           <Users size={16} />

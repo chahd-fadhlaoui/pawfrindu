@@ -16,10 +16,12 @@ export const pets = [
         city: 'New York',  
         gender: 'Male', 
         category:'Dog', 
-        fee: '150',  
+        fee: '0',  
+        status: 'Pending',
         isTrained: 'Yes',  
         image: pet1,  
-        description: 'Lucca is a friendly and energetic Labrador mix who loves to play fetch and go on long walks. He’s great with children and gets along well with other pets.'  
+        description: 'Lucca is a friendly and energetic Labrador mix who loves to play fetch and go on long walks. He’s great with children and gets along well with other pets.'  ,
+        candidates: []
     },  
     {  
         _id: 'pet2',  
@@ -32,8 +34,10 @@ export const pets = [
         category:'Cat', 
         fee: '200',  
         isTrained: 'Yes',  
+        status: 'Pending',
         image: pet2,  
-        description: 'Bella is a sweet and affectionate Shih Tzu who enjoys being pampered. She loves cuddling on the couch and is perfect for a family looking for a lap dog.'  
+        description: 'Bella is a sweet and affectionate Shih Tzu who enjoys being pampered. She loves cuddling on the couch and is perfect for a family looking for a lap dog.'  ,
+        candidates: []
     },  
     {  
         _id: 'pet3',  
@@ -44,10 +48,39 @@ export const pets = [
         city: 'Chicago',  
         gender: 'Male', 
         category:'Dog',  
-        fee: '180',  
+        fee: '0',  
         isTrained: 'Yes',  
+        status: 'Pending',
         image: pet3,  
-        description: 'Max is a loyal and protective German Shepherd. He is well-trained and excels in obedience. He enjoys outdoor activities and needs an active family to keep up with him.'  
+        description: 'Max is a loyal and protective German Shepherd. He is well-trained and excels in obedience. He enjoys outdoor activities and needs an active family to keep up with him.' ,
+        candidates: [
+            {
+                id: 1,
+                name: 'John Doe',
+                email: 'john@example.com',
+                phone: '+1234567890',
+                status: 'pending',
+                form: {
+                  experience: 'Previous dog owner for 5 years',
+                  housing: 'House with garden',
+                  occupation: 'Software Engineer',
+                  familySize: '3 members'
+                }
+              },
+              {
+                id: 2,
+                name: 'Jane Smith',
+                email: 'jane@example.com',
+                phone: '+1987654321',
+                status: 'pending',
+                form: {
+                  experience: 'First-time pet owner',
+                  housing: 'Spacious apartment',
+                  occupation: 'Teacher',
+                  familySize: 'Single'
+                }
+              }
+          ] 
     },  
     {  
         _id: 'pet4',  
@@ -60,8 +93,10 @@ export const pets = [
         category:'Dog',   
         fee: '120',  
         isTrained: 'No',  
+        status: 'Completed',
         image: pet4,  
-        description: 'Daisy is a playful and curious Beagle mix. Although she is not fully trained yet, she is eager to learn. She would thrive in a home with plenty of outdoor space to explore.'  
+        description: 'Daisy is a playful and curious Beagle mix. Although she is not fully trained yet, she is eager to learn. She would thrive in a home with plenty of outdoor space to explore.'  ,
+        candidates: []
     },  
     {  
         _id: 'pet5',  
@@ -72,11 +107,12 @@ export const pets = [
         city: 'Seattle',  
         gender: 'Male', 
         category:'Cat', 
- 
         fee: '75',  
         isTrained: 'Yes',  
+        status: 'Pending',
         image: pet5,  
-        description: 'Oliver is a playful and affectionate tabby cat who loves to chase after toys. He is litter trained and enjoys sunbathing by the window.'  
+        description: 'Oliver is a playful and affectionate tabby cat who loves to chase after toys. He is litter trained and enjoys sunbathing by the window.'  ,
+        candidates: []
     },  
     {  
         _id: 'pet6',  
@@ -87,10 +123,11 @@ export const pets = [
         city: 'Boston',  
         gender: 'Female', 
         category:'Cat', 
- 
-        fee: '250',  
+        fee: '0',  
         isTrained: 'Yes',  
+        status: 'Completed',
         image: pet6,  
-        description: 'Lucy is a gentle and majestic Maine Coon. She enjoys being around people and other pets. Her fluffy coat and friendly disposition make her a delightful companion.'  
+        description: 'Lucy is a gentle and majestic Maine Coon. She enjoys being around people and other pets. Her fluffy coat and friendly disposition make her a delightful companion.' ,
+        candidates: [] 
     }  
 ];

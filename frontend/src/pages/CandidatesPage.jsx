@@ -1,17 +1,16 @@
-import React, { useEffect, useState } from "react";
 import {
+  AlertCircle,
+  ArrowLeft,
   Mail,
   Phone,
+  Search,
   UserCheck,
   UserX,
-  Search,
-  ArrowLeft,
-  Filter,
-  AlertCircle,
-  X,
+  X
 } from "lucide-react";
-import { useParams, useNavigate } from "react-router-dom";
-import { mockCandidates } from "../assets/mockCandidates";
+import React, { useContext, useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { AppContext } from "../context/AppContext";
 
 const CandidateStatus = ({ status }) => {
   const styles = {
@@ -172,14 +171,23 @@ const CandidatesPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
-
+  const { pets} = useContext(AppContext);
+  const fetchPetInfo = async () => {
+    const petInfo = pets.find((pet) => pet._id === petId);
+    if (petInfo) {
+      setCandidates(petInfo.candidates || []);
+    }
+  };
   useEffect(() => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setCandidates(mockCandidates);
-      setIsLoading(false);
-    }, 500);
-  }, [petId]);
+    if (pets.length > 0) {
+      setIsLoading(true);
+      setTimeout(() => {
+        fetchPetInfo();
+        setIsLoading(false);
+      }, 500);
+    }
+  }, [pets, petId]);
+  
 
   const handleStatusChange = (candidateId, newStatus) => {
     setCandidates(
