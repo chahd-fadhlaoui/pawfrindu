@@ -18,6 +18,7 @@ export const pets = [
         category:'Dog', 
         fee: '150',  
         isTrained: 'Yes',  
+        status: 'Pending',
         image: pet1,  
         description: 'Lucca is a friendly and energetic Labrador mix who loves to play fetch and go on long walks. He’s great with children and gets along well with other pets.'  ,
         candidates: []
@@ -31,12 +32,26 @@ export const pets = [
         city: 'San Francisco',  
         gender: 'Female',  
         category:'Cat', 
-        fee: 200,  
+        fee: 0,  
         isTrained: 'Yes',  
         status: 'Pending',
         image: pet2,  
         description: 'Bella is a sweet and affectionate Shih Tzu who enjoys being pampered. She loves cuddling on the couch and is perfect for a family looking for a lap dog.'  ,
-        candidates: []
+        candidates: [
+            {
+                id: 1,
+                name: 'Chahd Fadhlaoui',
+                email: 'Chahd@example.com',
+                phone: '+1234567890',
+                status: 'pending',
+                form: {
+                  experience: 'Previous cat owner for 2 years',
+                  housing: 'House with garden',
+                  occupation: 'Software Engineer',
+                  familySize: '7 members'
+                }
+              },
+        ]
     },  
     {  
         _id: 'pet3',  
@@ -47,7 +62,7 @@ export const pets = [
         city: 'Chicago',  
         gender: 'Male', 
         category:'Dog',  
-        fee: '180',  
+        fee: '0',  
         isTrained: 'Yes',  
         status: 'Pending',
         image: pet3,  
