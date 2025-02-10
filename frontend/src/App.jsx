@@ -10,6 +10,7 @@ import Myprofile from './pages/Myprofile'
 import PetOwnerPosts from './pages/PetOwnerPosts'
 import Pets from './pages/Pets'
 import PetDetails from './pages/PetDetails'
+import Veteriniandetail from './pages/Veteriniandetail'
 
 
 export default function App() {
@@ -21,12 +22,15 @@ export default function App() {
         <Route path='/' element={<Home/>}/>
         <Route path='/pets' element={<Pets/>}/>
         <Route path='/pets/:category' element={<Pets/>}/>
-        <Route path='/petsdetails/:id' element={<PetDetails/>}/>
+        <Route path='/petsdetails/:petId' element={<PetDetails/>}/>
 
         <Route path='/login' element={<Login/>}/>
         <Route path='/myprofile' element={<Myprofile/>}/>
         <Route path="/list" element={<PetOwnerPosts posts={posts} />} />
         <Route path="/candidates/:petId" element={<CandidatesPage />} />
+
+
+        <Route path='/veterinian/:petId' element={<Veteriniandetail/>}/>
 
       </Routes> 
       <Footer/>

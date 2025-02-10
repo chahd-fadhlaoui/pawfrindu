@@ -3,25 +3,70 @@ import { useParams } from "react-router-dom";
 import { AppContext } from "../context/AppContext";
 import { Heart, PawPrint, MapPin, Coins, Clock, Calendar } from 'lucide-react';
 
-export default function PetDetails() {
+export default function Veteriniandetail() {
   const { petId } = useParams();
   const { pets, currencySymbol } = useContext(AppContext);
+  const dayOfWeek = ["LUN", "MAR", "MER", "JEU", "VEN", "SAM", "DIM"];
 
   const [petInfo, setPetInfo] = useState(null);
- 
+  const [Slots, setSlots] = useState([]);
+  const [slotIndex, setSlotIndex] = useState(0);
+  const [slotTime, setSlotTime] = useState("");
 
   const fetchPetInfo = async () => {
     const petInfo = pets.find((pet) => pet._id === petId);
     setPetInfo(petInfo);
   };
 
-  
-    
+  const getAvailableSlots = async () => {
+    setSlots([]);
+    let today = new Date();
+
+    for (let i = 0; i < 7; i++) {
+      let currentDate = new Date(today);
+      currentDate.setDate(today.getDate() + i);
+      let endTime = new Date();
+      endTime.setDate(today.getDate() + i);
+      endTime.setHours(21, 0, 0, 0);
+
+      if (today.getDate() === currentDate.getDate()) {
+        currentDate.setHours(
+          currentDate.getHours() > 10 ? currentDate.getHours() + 1 : 10
+        );
+        currentDate.setMinutes(currentDate.getMinutes() > 30 ? 30 : 0);
+      } else {
+        currentDate.setHours(10);
+        currentDate.setMinutes(0);
+      }
+
+      let timeSlots = [];
+
+      while (currentDate < endTime) {
+        let formattedTime = currentDate.toLocaleTimeString([], {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        timeSlots.push({
+          datetime: new Date(currentDate),
+          time: formattedTime,
+        });
+
+        currentDate.setMinutes(currentDate.getMinutes() + 30);
+      }
+
+      setSlots((prev) => [...prev, timeSlots]);
+    }
+  };
+
   useEffect(() => {
     fetchPetInfo();
   }, [pets, petId]);
 
- 
+  useEffect(() => {
+    if (petInfo) {
+      getAvailableSlots();
+    }
+  }, [petInfo]);
 
   return (
     petInfo && (
@@ -102,6 +147,65 @@ export default function PetDetails() {
                 </span>
               </div>
             </div>
+          </div>
+
+          {/* Section Réservation */}
+          <div className="bg-white/80 backdrop-blur-lg rounded-3xl p-6 mt-8 border-2 border-[#DBB2B8]/30">
+            <h2 className="text-2xl font-bold text-[#8B5D6B] mb-4 flex items-center gap-2">
+              <Calendar size={24} /> Créneaux de réservation
+            </h2>
+
+            {/* Sélection des jours */}
+            <div className="flex gap-3 items-center overflow-x-auto pb-4">
+              {Slots.length && Slots.map((item, index) => (
+                <div 
+                  key={index} 
+                  onClick={() => setSlotIndex(index)} 
+                  className={`text-center p-4 min-w-[80px] rounded-full cursor-pointer transition-all duration-300 ${
+                    slotIndex === index 
+                      ? 'bg-[#8B5D6B] text-white' 
+                      : 'bg-[#DBB2B8]/10 text-[#8B5D6B] hover:bg-[#DBB2B8]/20'
+                  }`}
+                >
+                  <p>{item[0] && dayOfWeek[item[0].datetime.getDay()]}</p>
+                  <p>{item[0] && item[0].datetime.getDate()}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Sélection des heures */}
+            <div className="flex gap-3 items-center overflow-x-auto mt-4 pb-4">
+              {Slots.length && Slots[slotIndex].map((item, index) => (
+                <span 
+                  key={index}
+                  onClick={() => setSlotTime(item.time)}
+                  className={`
+                    px-4 py-2 rounded-full cursor-pointer transition-all duration-300 text-sm
+                    ${item.time === slotTime 
+                      ? 'bg-[#8B5D6B] text-white' 
+                      : 'bg-[#DBB2B8]/10 text-[#8B5D6B] hover:bg-[#DBB2B8]/20'
+                    }
+                  `}
+                >
+                  <Clock size={16} className="inline-block mr-1" />
+                  {item.time.toLowerCase()}
+                </span>
+              ))}
+            </div>
+
+            <button 
+              className="
+                w-full mt-6 py-3 rounded-full 
+                bg-gradient-to-r from-[#DBB2B8] to-[#8B5D6B]
+                text-white font-bold 
+                hover:from-[#DBB2B8]/90 hover:to-[#8B5D6B]/90
+                transition-all duration-300
+                flex items-center justify-center gap-2
+              "
+            >
+              <Heart size={20} />
+              Réserver un rendez-vous
+            </button>
           </div>
         </div>
       </div>

@@ -4,8 +4,10 @@ import { pets } from "../assets/assets";
 export const AppContext = createContext()
 
 const AppcontextProvider=(props)=>{
+    const currencySymbol='dt'
     const value ={
-        pets
+        pets,
+        currencySymbol
     }
     return (
         <AppContext.Provider value={value}>
