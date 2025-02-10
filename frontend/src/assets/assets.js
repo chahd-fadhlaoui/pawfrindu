@@ -16,7 +16,7 @@ export const pets = [
         city: 'New York',  
         gender: 'Male', 
         category:'Dog', 
-        fee: '150',  
+        fee: 'free',  
         isTrained: 'Yes',  
         image: pet1,  
         description: 'Lucca is a friendly and energetic Labrador mix who loves to play fetch and go on long walks. He’s great with children and gets along well with other pets.'  
@@ -30,7 +30,7 @@ export const pets = [
         city: 'San Francisco',  
         gender: 'Female',  
         category:'Cat', 
-        fee: '200',  
+        fee: 200,  
         isTrained: 'Yes',  
         image: pet2,  
         description: 'Bella is a sweet and affectionate Shih Tzu who enjoys being pampered. She loves cuddling on the couch and is perfect for a family looking for a lap dog.'  
@@ -44,7 +44,7 @@ export const pets = [
         city: 'Chicago',  
         gender: 'Male', 
         category:'Dog',  
-        fee: '180',  
+        fee: 'free',  
         isTrained: 'Yes',  
         image: pet3,  
         description: 'Max is a loyal and protective German Shepherd. He is well-trained and excels in obedience. He enjoys outdoor activities and needs an active family to keep up with him.'  
@@ -58,7 +58,7 @@ export const pets = [
         city: 'Austin',  
         gender: 'Female',
         category:'Dog',   
-        fee: '120',  
+        fee: 120,  
         isTrained: 'No',  
         image: pet4,  
         description: 'Daisy is a playful and curious Beagle mix. Although she is not fully trained yet, she is eager to learn. She would thrive in a home with plenty of outdoor space to explore.'  
@@ -73,7 +73,7 @@ export const pets = [
         gender: 'Male', 
         category:'Cat', 
  
-        fee: '75',  
+        fee: 75,  
         isTrained: 'Yes',  
         image: pet5,  
         description: 'Oliver is a playful and affectionate tabby cat who loves to chase after toys. He is litter trained and enjoys sunbathing by the window.'  
@@ -88,7 +88,7 @@ export const pets = [
         gender: 'Female', 
         category:'Cat', 
  
-        fee: '250',  
+        fee: 'free',  
         isTrained: 'Yes',  
         image: pet6,  
         description: 'Lucy is a gentle and majestic Maine Coon. She enjoys being around people and other pets. Her fluffy coat and friendly disposition make her a delightful companion.'  
