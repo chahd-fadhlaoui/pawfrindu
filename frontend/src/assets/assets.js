@@ -32,7 +32,7 @@ export const pets = [
         city: 'San Francisco',  
         gender: 'Female',  
         category:'Cat', 
-        fee: 0,  
+        fee: '0',  
         isTrained: 'Yes',  
         status: 'Pending',
         image: pet2,  
