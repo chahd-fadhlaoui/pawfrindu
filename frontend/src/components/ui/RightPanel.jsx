@@ -12,7 +12,7 @@ const RightPanel = ({ mode, handleModeSwitch, isTransitioning, direction }) => {
               <Sparkles className="absolute w-6 h-6 text-yellow-300 -top-2 -right-2 animate-pulse" />
             </div>
           ),
-          title: "Welcome to PetPals!",
+          title: "Welcome to PawFrindu!",
           description: "Sign in to continue your journey in helping pets find their forever homes.",
           buttonText: "Create Account",
         };
