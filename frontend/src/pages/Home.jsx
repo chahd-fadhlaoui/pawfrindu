@@ -6,11 +6,11 @@ import TrainingService from "../components/TrainingService";
 
 export default function Home() {
   return (
-    <div>
+    <main>
       <HeroSection />
       <CategoriesCards />
       <About />
       <TrainingService />
-    </div>
+    </main>
   );
 }

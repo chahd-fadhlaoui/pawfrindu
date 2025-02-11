@@ -2,18 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-.backface-hidden {  
-  backface-visibility: hidden;  
-}  
-
-.rotate-y-180 {  
-  transform: rotateY(180deg);  
-}  
-
-.perspective {  
-  perspective: 1000px;  
-}  
-
 @keyframes fadeInLeft {
   from { opacity: 0; transform: translateX(-50px); }
   to { opacity: 1; transform: translateX(0); }
@@ -47,16 +35,17 @@
   to { transform: scale(1); opacity: 1; }
 }
 
-.animate-fade-in-left { animation: fadeInLeft 1s ease-out; }
-.animate-fade-in-right { animation: fadeInRight 1s ease-out; }
-.animate-bounce-in-left { animation: bounceIn 1s; }
-.animate-pulse-slow { animation: pulse 2s infinite; }
-.animate-bounce-x { animation: bounce 1s infinite; }
-.animate-blob { animation: blob 10s infinite; }
-.animate-blob-reverse { animation: blob 10s infinite reverse; }
+.backface-hidden {  
+  backface-visibility: hidden;  
+}  
 
-.animate-fade-in { animation: fade-in 0.2s ease-out; }
-.animate-scale-in { animation: scale-in 0.2s ease-out; }
+.rotate-y-180 {  
+  transform: rotateY(180deg);  
+}  
+
+.perspective {  
+  perspective: 1000px;  
+}  
 
 /* Personnalisation du scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
@@ -71,3 +60,26 @@
 .custom-scrollbar::-webkit-scrollbar-track {
   background-color: #ffe4e6; /* Rose clair */
 }
+
+.animate-fade-in-left { animation: fadeInLeft 1s ease-out; }
+.animate-fade-in-right { animation: fadeInRight 1s ease-out; }
+.animate-bounce-in-left { animation: bounceIn 1s; }
+.animate-pulse-slow { animation: pulse 2s infinite; }
+.animate-bounce-x { animation: bounce 1s infinite; }
+.animate-blob { animation: blob 10s infinite; }
+.animate-blob-reverse { animation: blob 10s infinite reverse; }
+
+.animate-fade-in { animation: fade-in 0.2s ease-out; }
+.animate-scale-in { animation: scale-in 0.2s ease-out; }
+.transition-all {
+  transition-property: all;
+}
+
+.duration-500 {
+  transition-duration: 500ms;
+}
+
+.ease-in-out {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+

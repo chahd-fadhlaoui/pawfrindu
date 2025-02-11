@@ -29,10 +29,10 @@ const HeroSection = () => {
           <div>
             <button 
               className="
-                bg-[#ffc929] text-gray-900 
+                bg-pink-500 text-white
                 px-6 py-3 rounded-full 
                 flex items-center gap-2
-                hover:bg-pink-500 hover:text-white
+                hover:bg-[#ffc929] hover:text-gray-900
                 transition-all duration-300
                 transform hover:scale-105
                 shadow-md hover:shadow-lg
@@ -41,7 +41,7 @@ const HeroSection = () => {
             >
               Join Us Today
               <ArrowRight 
-                className="transition-transform duration-300  group-hover:translate-x-1"
+                className="transition-transform duration-300 group-hover:translate-x-1"
               />
             </button>
           </div>
@@ -66,7 +66,7 @@ const HeroSection = () => {
             <img 
               src={dogsection} 
               alt="Pet Adoption" 
-              className="z-10 object-contain h-auto max-w-full transition-transform duration-500 transform  group-hover:scale-110 group-hover:rotate-3"
+              className="z-10 object-contain h-auto max-w-full transition-transform duration-500 transform group-hover:scale-110 group-hover:rotate-3"
             />
           </div>
         </div>
@@ -84,7 +84,7 @@ const HeroSection = () => {
           animate-blob"
       />
       <div 
-        className="absolute w-64 h-64 bg-pink-100 rounded-full opacity-50  -bottom-10 -right-10 -z-20 animate-blob-reverse"
+        className="absolute w-64 h-64 bg-pink-100 rounded-full opacity-50 -bottom-10 -right-10 -z-20 animate-blob-reverse"
       />
     </div>
   );

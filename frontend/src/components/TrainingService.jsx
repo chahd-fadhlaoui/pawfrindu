@@ -9,13 +9,13 @@ export default function TrainingService() {
       name: "Basic Training",  
       icon: basicTrainingIcon,  
       description: "Comprehensive training program focusing on essential obedience, socialization, and behavioral skills to help your pet become a well-mannered companion.",
-      backgroundColor: "bg-[#fdf2d9]"
+      backgroundColor: "bg-[#faeacf]"
     },  
     {  
       name: "Medical Training",  
       icon: medicalTrainingIcon,  
       description: "Specialized training designed to help pets become comfortable with medical procedures, reducing stress during veterinary visits and medical treatments.",
-      backgroundColor: "bg-[#e8f7fe]"
+      backgroundColor: "bg-[#ffbfca]"
     },  
   ];  
 
@@ -38,32 +38,26 @@ export default function TrainingService() {
           {trainingCategories.map((category, index) => (
             <div 
               key={index} 
-              className={`
-                relative w-full md:w-96 h-[500px] rounded-2xl shadow-lg 
+              className={`relative w-full md:w-96 h-[500px] rounded-2xl shadow-lg 
                 transition-all duration-500
-                ${hoveredCard === index ? "scale-105 shadow-2xl" : ""}
-              `}
+                ${hoveredCard === index ? "scale-105 shadow-2xl" : ""}`}
               onMouseEnter={() => setHoveredCard(index)}
               onMouseLeave={() => setHoveredCard(null)}
             >
               <div 
-                className={`
-                  absolute inset-0 
+                className={`absolute inset-0 
                   transform transition-transform duration-500 
                   ${hoveredCard === index ? 'rotate-y-180' : ''}
                   ${category.backgroundColor}
                   rounded-2xl
                   flex flex-col items-center justify-center
-                  backface-visibility-hidden
-                `}
+                  backface-visibility-hidden`}
               >
                 {/* Front of Card */}
                 <div 
-                  className={`
-                    absolute inset-0 flex flex-col items-center justify-center p-6 text-center
+                  className={`absolute inset-0 flex flex-col items-center justify-center p-6 text-center
                     ${hoveredCard === index ? 'opacity-0' : 'opacity-100'}
-                    transition-opacity duration-500
-                  `}
+                    transition-opacity duration-500`}
                 >
                   <div className="p-4 mb-6 bg-white rounded-full shadow-md">
                     <img
@@ -79,19 +73,17 @@ export default function TrainingService() {
 
                 {/* Back of Card */}
                 <div 
-                  className={`
-                    absolute inset-0 flex flex-col items-center justify-center p-6 text-center
+                  className={`absolute inset-0 flex flex-col items-center justify-center p-6 text-center
                     ${hoveredCard === index ? 'opacity-100' : 'opacity-0'}
                     transition-opacity duration-500
-                    rotate-y-180
-                  `}
+                    rotate-y-180`}
                 >
                   <p className="mb-6 text-base leading-relaxed text-gray-700">
                     {category.description}
                   </p>
                   <button 
-                    className="bg-[#ffc929] text-gray-900 px-6 py-3 rounded-full 
-                    hover:bg-pink-500 hover:text-white 
+                    className="bg-pink-500 text-white px-6 py-3 rounded-full 
+                    hover:bg-[#ffc929] hover:text-gray-900
                     transition-all duration-300 
                     transform hover:scale-110 
                     flex items-center gap-2"
