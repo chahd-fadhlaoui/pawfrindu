@@ -81,11 +81,11 @@ export default function Pet() {
       <div className="container mx-auto max-w-6xl relative">
         {/* Titre kawaii */}
         <div className="text-center mb-6 sm:mb-12">
-          <h1 className="text-2xl sm:text-4xl font-bold text-purple-800 mb-2">
+          <h1 className="text-2xl sm:text-4xl font-bold text-neutral-900 hover:text-[#ffc929] mb-2">
             Trouvez Votre Ami Pour La Vie 
             <Heart className="inline-block ml-2 text-pink-500" size={24} />
           </h1>
-          <p className="text-purple-600 text-base sm:text-lg">Des compagnons adorables qui n'attendent que vous !</p>
+          <p className="text-neutral-600 hover:text-pink-500 text-base sm:text-lg">Des compagnons adorables qui n'attendent que vous !</p>
         </div>
 
         {/* Bouton pour afficher/masquer les filtres sur mobile */}
@@ -164,11 +164,11 @@ export default function Pet() {
                 </div>
 
                 <div className="p-4 sm:p-6 space-y-3">
-                  <h2 className="text-xl sm:text-2xl font-bold text-purple-800">
+                  <h2 className="text-xl sm:text-2xl font-bold text-neutral-900">
                     {pet.name}
                   </h2>
                   <div className="flex flex-col gap-2">
-                    <p className="text-purple-600 font-medium flex items-center text-sm sm:text-base">
+                    <p className="text-[#ffc929] font-medium flex items-center text-sm sm:text-base">
                       <PawPrint size={16} className="mr-1" />
                       {pet.category} • {pet.breed}
                     </p>
@@ -177,7 +177,7 @@ export default function Pet() {
                       rounded-full border border-pink-100">
                         {pet.age}
                       </span>
-                      <span className="text-xs sm:text-sm text-purple-600 bg-purple-50 px-3 py-1 
+                      <span className="text-xs sm:text-sm text-[#ffc929] bg-purple-50 px-3 py-1 
                       rounded-full border border-purple-100 flex items-center gap-1">
                         <MapPin size={12} />
                         {pet.city}
