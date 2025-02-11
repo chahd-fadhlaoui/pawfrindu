@@ -6,7 +6,7 @@ import { Heart, PawPrint, MapPin, Coins } from 'lucide-react';
 export default function Pet() {
   const navigate=useNavigate();
   const { category: urlCategory } = useParams();
-  const { pets } = useContext(AppContext);
+  const { pets,currencySymbol } = useContext(AppContext);
 
   const [filteredPets, setFilteredPets] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -54,7 +54,7 @@ export default function Pet() {
       <select
         className="w-full px-2 py-2 rounded-xl border-2 border-purple-100 
         focus:ring-2 focus:ring-pink-200 focus:border-pink-300 transition-all 
-        text-purple-700 bg-white hover:border-pink-200 text-sm"
+        text-pink-700 bg-white hover:border-pink-200 text-sm"
         value={value}
         onChange={onChange}
       >
@@ -90,7 +90,7 @@ export default function Pet() {
 
         {/* Bouton pour afficher/masquer les filtres sur mobile */}
         <button
-          className="w-full md:hidden bg-purple-600 text-white py-2 px-4 rounded-xl mb-4"
+          className="w-full md:hidden bg-pink-500 text-white py-2 px-4 rounded-xl mb-4"
           onClick={() => setIsFilterOpen(!isFilterOpen)}
         >
           {isFilterOpen ? 'Masquer les filtres' : 'Afficher les filtres'}
@@ -168,25 +168,27 @@ export default function Pet() {
                     {pet.name}
                   </h2>
                   <div className="flex flex-col gap-2">
-                    <p className="text-[#ffc929] font-medium flex items-center text-sm sm:text-base">
+                    <p className="text-pink-500 font-medium flex items-center text-sm sm:text-base">
                       <PawPrint size={16} className="mr-1" />
                       {pet.category} • {pet.breed}
                     </p>
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-xs sm:text-sm text-pink-600 bg-pink-50 px-3 py-1 
+                      <span className="text-xs sm:text-sm text-pink-400 bg-pink-50 px-3 py-1 
                       rounded-full border border-pink-100">
                         {pet.age}
                       </span>
-                      <span className="text-xs sm:text-sm text-[#ffc929] bg-purple-50 px-3 py-1 
-                      rounded-full border border-purple-100 flex items-center gap-1">
+                      <span className="text-xs sm:text-sm text-pink-400  bg-pink-50 px-3 py-1 
+                      rounded-full border border-pink-100 flex items-center gap-1">
                         <MapPin size={12} />
+                        
                         {pet.city}
                       </span>
                     </div>
                     <span className="text-xs sm:text-sm text-green-600 bg-green-50 px-3 py-1 
                     rounded-full border border-green-100 flex items-center gap-1 w-fit">
                       <Coins size={12} />
-                      {pet.fee}
+                      
+                      {pet.fee === 0 ? "Free" : `${pet.fee}${currencySymbol}`}
                     </span>
                   </div>
                 </div>

@@ -57,3 +57,17 @@
 
 .animate-fade-in { animation: fade-in 0.2s ease-out; }
 .animate-scale-in { animation: scale-in 0.2s ease-out; }
+
+/* Personnalisation du scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px; /* Largeur du scrollbar */
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #f472b6; /* Rose */
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background-color: #ffe4e6; /* Rose clair */
+}
