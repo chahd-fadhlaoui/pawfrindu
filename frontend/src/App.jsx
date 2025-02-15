@@ -10,13 +10,16 @@ import PetDetails from './pages/PetDetails'
 import PetOwnerPosts from './pages/PetOwnerPosts'
 import Pets from './pages/Pets'
 import Veteriniandetail from './pages/Veteriniandetail'
+import AdminDashboard from './pages/admin/AdminDashboard'
 
 
 export default function App() {
 
+  const isAdminPage = location.pathname.startsWith('/admin');
+
   return (
     <div className='mx-4 sm:max-[10%]:'>
-      <Header/>
+      {!isAdminPage && <Header />} {/* Afficher le Header sauf sur /admin */}
       <Routes>
         <Route path='/' element={<Home/>}/>
         <Route path='/pets' element={<Pets/>}/>
@@ -28,7 +31,7 @@ export default function App() {
         <Route path="/list" element={<PetOwnerPosts/>} />
         <Route path="/candidates/:petId" element={<CandidatesPage />} />
 
-
+        <Route path='/admin' element={<AdminDashboard/>}/>
         <Route path='/veterinian/:petId' element={<Veteriniandetail/>}/>
 
       </Routes> 
