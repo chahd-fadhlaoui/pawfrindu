@@ -18,15 +18,13 @@ const register = async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Lors de la création de l'utilisateur, n'affectez pas les détails spécifiques
+        // Créer un nouvel utilisateur avec uniquement les champs de base
         const newUser = new User({
             fullName,
             email,
             password: hashedPassword,
             role,
-            petOwnerDetails: undefined, // Pas de détails pour PetOwner
-            trainerDetails: undefined,  // Pas de détails pour Trainer
-            veterinarianDetails: undefined, // Pas de détails pour Veterinarian
+            // Ne pas initialiser les détails spécifiques ici
         });
 
         await newUser.save();
@@ -36,10 +34,10 @@ const register = async (req, res) => {
         res.status(500).json({ message: "Failed to create account." });
     }
 };
-
 // 🚀 Étape 2: Complétion du profil et génération du token
 const createProfile = async (req, res) => {
-    const { userId, petOwnerDetails, trainerDetails, veterinarianDetails } = req.body;
+    const { userId } = req.body;
+    const { petOwnerDetails, trainerDetails, veterinarianDetails } = req.body;
 
     try {
         const user = await User.findById(userId);
@@ -47,24 +45,28 @@ const createProfile = async (req, res) => {
             return res.status(404).json({ message: "User not found." });
         }
 
-        // Compléter le profil en fonction du rôle de l'utilisateur
+        // Vérifier le rôle de l'utilisateur et remplir les détails spécifiques
         if (user.role === "PetOwner") {
             if (!petOwnerDetails?.address || !petOwnerDetails?.phone) {
                 return res.status(400).json({ message: "Address and phone are required for Pet Owner." });
             }
-            user.petOwnerDetails = petOwnerDetails; // Affecter les détails pour PetOwner
+            if (petOwnerDetails.petExperience && petOwnerDetails.petExperience._id) {
+                delete petOwnerDetails.petExperience._id;  // Suppression de l'ID
+            }
+            user.petOwnerDetails = petOwnerDetails;
         } else if (user.role === "Trainer") {
             if (!trainerDetails?.location || !trainerDetails?.certification) {
                 return res.status(400).json({ message: "Location and certification are required for Trainer." });
             }
-            user.trainerDetails = trainerDetails; // Affecter les détails pour Trainer
+            user.trainerDetails = trainerDetails;
         } else if (user.role === "Veterinarian") {
             if (!veterinarianDetails?.location || !veterinarianDetails?.degree) {
                 return res.status(400).json({ message: "Location and degree are required for Veterinarian." });
             }
-            user.veterinarianDetails = veterinarianDetails; // Affecter les détails pour Veterinarian
+            user.veterinarianDetails = veterinarianDetails;
         }
 
+        // Sauvegarder les modifications
         await user.save();
 
         // Génération du token après la complétion du profil
@@ -74,16 +76,15 @@ const createProfile = async (req, res) => {
             { expiresIn: "72h" }
         );
 
-        res.json({ 
-            message: "Profile completed successfully!", 
-            accessToken 
+        res.json({
+            message: "Profile completed successfully!",
+            accessToken,
         });
     } catch (error) {
         console.error("Profile Completion Error:", error);
         res.status(500).json({ message: "Failed to complete profile." });
     }
 };
-
 // 🚀 Étape 3: Connexion après enregistrement et complétion du profil
 const login = async (req, res) => {
     const { email, password } = req.body;
@@ -126,5 +127,4 @@ const login = async (req, res) => {
         res.status(500).json({ message: "Login failed" });
     }
 };
-
 export { register, createProfile , login };

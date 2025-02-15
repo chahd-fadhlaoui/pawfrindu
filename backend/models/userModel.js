@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-
 const userSchema = new mongoose.Schema(
   {
     fullName: { type: String, required: true },
@@ -17,59 +16,59 @@ const userSchema = new mongoose.Schema(
     image: String,
     lastLogin: Date,
     petOwnerDetails: {
-      currentPets: [], // the pets he adopted via our platform
-      address: String,
-      phone: String,
-      occupation: String, // Have money or not to take care of the pet
-      // Lifestyle (formulaire)
-      workSchedule: {
-        type: String,
-        enum: ["full-time", "part-time", "remote", "flexible", "other"],
-      },
-      // Living Situation (formulaire)
-      housing: {
-        type: {
+      type: {
+        currentPets: { type: Array, default: [] },
+        address: { type: String, required: function () { return this.role === "PetOwner"; } },
+        phone: { type: String, required: function () { return this.role === "PetOwner"; } },
+        occupation: String,
+        workSchedule: {
           type: String,
-          enum: ["villa", "house", "apartment", "condo", "other"],
+          enum: ["full-time", "part-time", "remote", "flexible", "other"],
         },
-        ownership: {
-          type: String,
-          enum: ["own", "rent"],
-        },
-        familySize: { type: Number, min: 1 },
-        landlordApproval: {
-          type: Boolean,
-          required: function () {
-            return this.housing?.ownership === "rent";
+        housing: {
+          type: {
+            type: String,
+            enum: ["villa", "house", "apartment", "condo", "other"],
+          },
+          ownership: {
+            type: String,
+            enum: ["own", "rent"],
+          },
+          familySize: { type: Number, min: 1 },
+          landlordApproval: {
+            type: Boolean,
+            required: function () {
+              return this.housing?.ownership === "rent";
+            },
           },
         },
-      },
-      // Pet Experience will appear in the creation of the profile if the user has hasPreviousPets set to true he will fill the yearsOfExperience and the experinece_description
-      petExperience: {
-        hasPreviousPets: {
-          type: Boolean,
+        petExperience: {
+          hasPreviousPets: Boolean,
+          yearsOfExperience: { type: Number, min: 0 },
+          experinece_description: String,
         },
-
-        yearsOfExperience: {
-          type: Number,
-          min: 0,
-        },
-        experinece_description: String, // Detailed description of pet experience
       },
+      default: undefined,
     },
     trainerDetails: {
-      location: String,
-      certification: String,
-      specialization: String,
-      experienceYears: { type: Number, min: 0 },
-      availableHours: String,
+      type: {
+        location: { type: String, required: function () { return this.role === "Trainer"; } },
+        certification: { type: String, required: function () { return this.role === "Trainer"; } },
+        specialization: String,
+        experienceYears: { type: Number, min: 0 },
+        availableHours: String,
+      },
+      default: undefined,
     },
     veterinarianDetails: {
-      location: String,
-      degree: String,
-      specialization: String,
-      experienceYears: { type: Number, min: 0 },
-      availableHours: String,
+      type: {
+        location: { type: String, required: function () { return this.role === "Veterinarian"; } },
+        degree: { type: String, required: function () { return this.role === "Veterinarian"; } },
+        specialization: String,
+        experienceYears: { type: Number, min: 0 },
+        availableHours: String,
+      },
+      default: undefined,
     },
   },
   { timestamps: true }
