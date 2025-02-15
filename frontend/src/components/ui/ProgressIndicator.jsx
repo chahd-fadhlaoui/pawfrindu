@@ -3,7 +3,7 @@ import config from "../../assets/config";
 
 const ProgressIndicator = ({ formStep }) => (
   <div className="flex items-center justify-center gap-2 mb-6">
-    {[0, 1, 2].map((step) => (
+    {[0, 1].map((step) => (
       <div
         key={step}
         className={`w-2 h-2 rounded-full ${config.transitions.baseClasses} ${

@@ -1,7 +1,7 @@
 import { Eye, EyeOff } from "lucide-react";
 import React, { useState } from "react";
 
-const InputField = ({ icon: Icon, type, placeholder, label }) => {
+const InputField = ({ icon: Icon, type, placeholder, label, value, onChange, error }) => {
   const [showPassword, setShowPassword] = useState(false);
   const inputType = type === "password" ? (showPassword ? "text" : "password") : type;
 
@@ -18,6 +18,8 @@ const InputField = ({ icon: Icon, type, placeholder, label }) => {
           type={inputType}
           className="w-full px-10 py-2 transition-all duration-300 border rounded-lg outline-none focus:border-[#ffc929] focus:ring-2 focus:ring-[#ffc929]/20"
           placeholder={placeholder}
+          value={value} 
+          onChange={onChange}  
         />
         {type === "password" && (
           <button
@@ -33,8 +35,10 @@ const InputField = ({ icon: Icon, type, placeholder, label }) => {
           </button>
         )}
       </div>
+      {error && <p className="text-sm text-red-500">{error}</p>}
     </div>
   );
 };
+
 
 export default InputField;

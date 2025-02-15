@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import InputField from "./InputField";
 import { Mail, Lock } from "lucide-react";
+import { validateEmail, validatePassword } from "../../utils/helper";
 
 const LoginForm = ({ handleModeSwitch, onLogin }) => {
   const [showPassword, setShowPassword] = useState(false);
@@ -9,15 +11,11 @@ const LoginForm = ({ handleModeSwitch, onLogin }) => {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formValid, setFormValid] = useState(false);
 
-  const validateEmail = (email) => {
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    return emailRegex.test(email);
-  };
-
-  const validatePassword = (password) => {
-    return password.length >= 8;
-  };
+  useEffect(() => {
+    setFormValid(!emailError && !passwordError);
+  }, [emailError, passwordError]);
 
   const handleEmailChange = (e) => {
     setEmail(e.target.value);
@@ -29,18 +27,16 @@ const LoginForm = ({ handleModeSwitch, onLogin }) => {
     setPasswordError(validatePassword(e.target.value) ? '' : 'Password must be at least 8 characters long');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!emailError && !passwordError && !isSubmitting) {
+    if (formValid && !isSubmitting) {
       setIsSubmitting(true);
-      onLogin(email, password)
-        .then(() => {
-          setIsSubmitting(false);
-        })
-        .catch((error) => {
-          setIsSubmitting(false);
-          console.error(error);
-        });
+      try {
+        await onLogin(email, password);
+      } catch (error) {
+        console.error(error);
+      }
+      setIsSubmitting(false);
     }
   };
 
@@ -76,7 +72,7 @@ const LoginForm = ({ handleModeSwitch, onLogin }) => {
       </div>
       <button
         onClick={handleSubmit}
-        disabled={isSubmitting}
+        disabled={!formValid || isSubmitting}
         className={`w-full py-2 text-white transition-all duration-300 transform rounded-lg bg-[#ffc929] hover:shadow-lg hover:shadow-[#ffc929]/25 hover:-translate-y-0.5 ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
       >
         {isSubmitting ? 'Signing In...' : 'Sign In'}
