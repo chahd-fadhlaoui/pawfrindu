@@ -61,7 +61,7 @@ function Header() {
           <img className="w-8" src={dropdown} alt="dropdown menu"/>
           <div className="absolute top-0 right-0 z-20 hidden text-base font-medium text-gray-600 pt-14 group-hover:block">
             <div className="min-w-48 bg-[#f2d7db] rounded flex flex-col gap-4 p-4 shadow-lg">
-              <p onClick={() => navigate("/myprofile")} className="cursor-pointer hover:text-black">
+              <p onClick={() => navigate("/profile")} className="cursor-pointer hover:text-black">
                 My profile
               </p>
               {user.role === 'PetOwner' && (
