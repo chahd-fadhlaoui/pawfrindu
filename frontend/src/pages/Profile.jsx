@@ -127,26 +127,26 @@ const Profile = ({ userType = 'pet-owner' }) => {
           {userData.adoptedPets.map((pet, index) => (  
             <div   
               key={pet.id}   
-              className="bg-white border rounded-lg shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md"  
+              className="overflow-hidden transition-all duration-300 bg-white border rounded-lg shadow-sm hover:shadow-md"  
             >  
-              <div className="relative h-48 w-full">  
+              <div className="relative w-full h-48">  
                 <img   
                   src={pet.image}   
                   alt={pet.name}   
-                  className="absolute inset-0 w-full h-full object-cover"  
+                  className="absolute inset-0 object-cover w-full h-full"  
                 />  
                 {isEditing ? (  
                   <input   
                     type="text"   
                     value={pet.image}  
                     onChange={(e) => handlePetChange(index, 'image', e.target.value)}  
-                    className="absolute bottom-0 left-0 right-0 w-full p-1 text-sm bg-black/50 text-white"  
+                    className="absolute bottom-0 left-0 right-0 w-full p-1 text-sm text-white bg-black/50"  
                     placeholder="Image URL"  
                   />  
                 ) : null}  
               </div>  
               <div className="p-4">  
-                <div className="flex justify-between items-center mb-2">  
+                <div className="flex items-center justify-between mb-2">  
                   <h3 className="text-xl font-bold">  
                     {isEditing ? (  
                       <input   
@@ -160,7 +160,7 @@ const Profile = ({ userType = 'pet-owner' }) => {
                     )}  
                   </h3>  
                   {pet.specialNeeds && (  
-                    <span className="px-2 py-1 text-xs bg-red-100 text-red-600 rounded-full">  
+                    <span className="px-2 py-1 text-xs text-red-600 bg-red-100 rounded-full">  
                       Special Needs  
                     </span>  
                   )}  
@@ -198,15 +198,15 @@ const Profile = ({ userType = 'pet-owner' }) => {
   ];  
 
   return (  
-    <div className="container mx-auto px-4 py-8">  
-      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg">  
+    <div className="container px-4 py-8 mx-auto">  
+      <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-xl">  
         <div className="p-6">  
           {/* Profile Header */}  
           <div className="flex items-center mb-6">  
             <img   
               src={userData.profileImage}   
               alt={userData.name}   
-              className="w-20 h-20 rounded-full object-cover mr-4"  
+              className="object-cover w-20 h-20 mr-4 rounded-full"  
             />  
             <div>  
               <h1 className="text-2xl font-bold text-neutral-800">{userData.name}</h1>  

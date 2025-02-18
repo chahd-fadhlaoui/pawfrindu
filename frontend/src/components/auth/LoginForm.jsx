@@ -1,16 +1,14 @@
-
 import React, { useState, useEffect } from "react";
 import InputField from "./InputField";
-import { Mail, Lock } from "lucide-react";
+import { Mail, Lock, Loader2 } from "lucide-react";
 import { validateEmail, validatePassword } from "../../utils/helper";
 
-const LoginForm = ({ handleModeSwitch, onLogin }) => {
+const LoginForm = ({ handleModeSwitch, onLogin, isLoading }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formValid, setFormValid] = useState(false);
 
   useEffect(() => {
@@ -29,14 +27,8 @@ const LoginForm = ({ handleModeSwitch, onLogin }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formValid && !isSubmitting) {
-      setIsSubmitting(true);
-      try {
-        await onLogin(email, password);
-      } catch (error) {
-        console.error(error);
-      }
-      setIsSubmitting(false);
+    if (formValid && !isLoading) {
+      await onLogin(email, password);
     }
   };
 
@@ -50,6 +42,7 @@ const LoginForm = ({ handleModeSwitch, onLogin }) => {
         value={email}
         onChange={handleEmailChange}
         error={emailError}
+        disabled={isLoading}
       />
       <InputField
         icon={Lock}
@@ -61,21 +54,24 @@ const LoginForm = ({ handleModeSwitch, onLogin }) => {
         error={passwordError}
         showPassword={showPassword}
         onTogglePassword={() => setShowPassword(!showPassword)}
+        disabled={isLoading}
       />
       <div className="flex items-center justify-between">
         <button
           onClick={() => handleModeSwitch("forgetPassword")}
           className="text-sm text-[#ffc929] hover:underline"
+          disabled={isLoading}
         >
           Forgot Password?
         </button>
       </div>
       <button
         onClick={handleSubmit}
-        disabled={!formValid || isSubmitting}
-        className={`w-full py-2 text-white transition-all duration-300 transform rounded-lg bg-[#ffc929] hover:shadow-lg hover:shadow-[#ffc929]/25 hover:-translate-y-0.5 ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+        disabled={!formValid || isLoading}
+        className={`w-full py-2 text-white transition-all duration-300 transform rounded-lg bg-[#ffc929] hover:shadow-lg hover:shadow-[#ffc929]/25 hover:-translate-y-0.5 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''} flex items-center justify-center gap-2`}
       >
-        {isSubmitting ? 'Signing In...' : 'Sign In'}
+        {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+        {isLoading ? 'Signing In...' : 'Sign In'}
       </button>
     </>
   );

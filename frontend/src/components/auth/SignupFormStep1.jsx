@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Lock, Mail, User } from 'lucide-react';
+import { Lock, Mail, User, Loader2 } from 'lucide-react';
 import InputField from './InputField';
 
-const SignupFormStep1 = ({ showPassword, onTogglePassword, onValidationChange }) => {
+const SignupFormStep1 = ({ showPassword, onTogglePassword, onValidationChange, isLoading }) => {
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -67,6 +67,8 @@ const SignupFormStep1 = ({ showPassword, onTogglePassword, onValidationChange })
   };
 
   const handleChange = (field) => (e) => {
+    if (isLoading) return; // Prevent changes while loading
+    
     const value = e.target.value;
     
     setFormData(prev => ({
@@ -101,6 +103,7 @@ const SignupFormStep1 = ({ showPassword, onTogglePassword, onValidationChange })
         value={formData.fullName}
         onChange={handleChange('fullName')}
         error={errors.fullName}
+        disabled={isLoading}
       />
 
       <InputField
@@ -111,6 +114,7 @@ const SignupFormStep1 = ({ showPassword, onTogglePassword, onValidationChange })
         value={formData.email}
         onChange={handleChange('email')}
         error={errors.email}
+        disabled={isLoading}
       />
 
       <InputField
@@ -121,6 +125,7 @@ const SignupFormStep1 = ({ showPassword, onTogglePassword, onValidationChange })
         value={formData.password}
         onChange={handleChange('password')}
         error={errors.password}
+        disabled={isLoading}
       />
 
       <InputField
@@ -131,7 +136,14 @@ const SignupFormStep1 = ({ showPassword, onTogglePassword, onValidationChange })
         value={formData.confirmPassword}
         onChange={handleChange('confirmPassword')}
         error={errors.confirmPassword}
+        disabled={isLoading}
       />
+
+      {isLoading && (
+        <div className="flex items-center justify-center text-[#ffc929]">
+          <Loader2 className="w-6 h-6 animate-spin" />
+        </div>
+      )}
     </div>
   );
 };

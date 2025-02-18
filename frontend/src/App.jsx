@@ -2,15 +2,16 @@ import React from 'react'
 import { Route, Routes } from 'react-router-dom'
 import Footer from './components/Footer'
 import Header from './components/Header'
+import AdminDashboard from './pages/admin/AdminDashboard'
 import CandidatesPage from './pages/CandidatesPage'
+import CreateProfile from './pages/CreateProfile'
 import Home from './pages/Home'
 import Login from './pages/Login'
-import Myprofile from './pages/Myprofile'
 import PetDetails from './pages/PetDetails'
 import PetOwnerPosts from './pages/PetOwnerPosts'
 import Pets from './pages/Pets'
+import Profile from './pages/Profile'
 import Veteriniandetail from './pages/Veteriniandetail'
-import AdminDashboard from './pages/admin/AdminDashboard'
 
 
 export default function App() {
@@ -27,9 +28,10 @@ export default function App() {
         <Route path='/petsdetails/:petId' element={<PetDetails/>}/>
 
         <Route path='/login' element={<Login/>}/>
-        <Route path='/myprofile' element={<Myprofile/>}/>
+        <Route path='/profile' element={<Profile/>}/>
         <Route path="/list" element={<PetOwnerPosts/>} />
         <Route path="/candidates/:petId" element={<CandidatesPage />} />
+        <Route path="/myprofile" element={<CreateProfile />}/>
 
         <Route path='/admin' element={<AdminDashboard/>}/>
         <Route path='/veterinian/:petId' element={<Veteriniandetail/>}/>

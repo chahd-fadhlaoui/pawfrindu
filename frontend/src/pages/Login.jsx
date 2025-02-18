@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useApp } from "../context/AppContext";
 import LoginForm from "../components/auth/LoginForm";
 import ResetPasswordForm from "../components/auth/ResetPasswordForm";
 import RoleSelector from "../components/auth/RoleSelector";
@@ -8,47 +9,29 @@ import FormHeader from "../components/ui/FormHeader";
 import NavigationButtons from "../components/ui/NavigationButtons";
 import ProgressIndicator from "../components/ui/ProgressIndicator";
 import RightPanel from "../components/ui/RightPanel";
-import axiosInstance from "../utils/axiosInstance";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { login, register, error, loading, clearError } = useApp();
   const [mode, setMode] = useState("login");
   const [selectedRole, setSelectedRole] = useState("pet-owner");
   const [showPassword, setShowPassword] = useState(false);
   const [formStep, setFormStep] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [signupData, setSignupData] = useState(null);
-  const [error, setError] = useState("");
 
   // Handle login submission
   const handleLogin = async (email, password) => {
-    try {
-      const response = await axiosInstance.post("/api/user/login", {
-        email,
-        password,
-      });
-
-      localStorage.setItem("token", response.data.accessToken);
-
-      const user = response.data.user;
-      const dash =
-        user.role === "PetOwner"
-          ? "/"
-          : user.role === "Trainer"
-          ? "/trainer"
-          : "/vet";
-
-      navigate(dash);
-    } catch (error) {
-      console.error("Login error:", error);
-      setError(error.response?.data?.message || "Error logging in");
+    const result = await login(email, password);
+    if (result.success) {
+      navigate(result.redirectTo);
     }
   };
 
   // Handle validation change from SignupFormStep1
   const handleValidationChange = (isValid, formData) => {
     setSignupData(formData);
-    setError(""); // Clear any previous errors
+    clearError(); // Use context's clearError instead of local state
   };
 
   // Format role for API
@@ -56,7 +39,7 @@ const Login = () => {
     const roleMap = {
       "pet-owner": "PetOwner",
       trainer: "Trainer",
-      vet: "Vet",
+      veterinaire: "Vet",
     };
     return roleMap[role] || role;
   };
@@ -64,54 +47,26 @@ const Login = () => {
   // Handle signup submission
   const handleSignup = async (formData) => {
     if (!formData) return;
-  
-    try {
-      const submitData = {
-        fullName: formData.fullName,
-        email: formData.email,
-        password: formData.password,
-        role: formatRole(selectedRole)
-      };
-  
-      console.log("Sending registration data:", submitData);
-  
-      const response = await axiosInstance.post("/api/user/register", submitData);
-      
-      // Check if the registration was successful
-      if (response.data && response.data.success) {
-        // Check if there's a token in the response
-        if (response.data.accessToken) {
-          localStorage.setItem("token", response.data.accessToken);
-          navigate("/myprofile");
-        } else {
-          // If registration is successful but no token, redirect to login
-          setMode("login");
-          setError("Registration successful! Please login to continue.");
-        }
-      } else {
-        throw new Error(response.data.message || "Registration failed");
-      }
-    } catch (error) {
-      console.error("Signup error:", error);
-      
-      if (error.response) {
-        const errorMessage = error.response.data.message || 
-          (error.response.data.errors && error.response.data.errors[0]?.msg) || 
-          "Error creating account";
-        setError(errorMessage);
-      } else if (error.request) {
-        setError("No response from server. Please check your connection.");
-      } else {
-        setError(error.message || "Error setting up request");
-      }
-    }
+
+    const submitData = {
+      fullName: formData.fullName,
+      email: formData.email,
+      password: formData.password,
+      role: formatRole(selectedRole),
+    };
+
+    const result = await register(submitData);
+    
+    if (result.success) {
+      navigate("/myprofile");
+    } 
   };
 
   const handleModeSwitch = (newMode) => {
     if (isTransitioning || mode === newMode) return;
 
     setIsTransitioning(true);
-    setError(""); // Clear any errors when switching modes
+    clearError(); // Use context's clearError
 
     setTimeout(() => {
       setMode(newMode);
@@ -166,6 +121,7 @@ const Login = () => {
                     <LoginForm
                       handleModeSwitch={handleModeSwitch}
                       onLogin={handleLogin}
+                      isLoading={loading}
                     />
                   )}
 
@@ -187,6 +143,7 @@ const Login = () => {
                             setShowPassword(!showPassword)
                           }
                           onValidationChange={handleValidationChange}
+                          isLoading={loading}
                         />
                       )}
 
@@ -195,6 +152,7 @@ const Login = () => {
                         setFormStep={setFormStep}
                         onSubmit={() => handleSignup(signupData)}
                         isValid={!!signupData}
+                        isLoading={loading}
                       />
                     </>
                   )}
@@ -211,7 +169,7 @@ const Login = () => {
                         handleModeSwitch(mode === "login" ? "signup" : "login")
                       }
                       className="text-[#ffc929] hover:underline focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ffc929] rounded-sm"
-                      disabled={isTransitioning}
+                      disabled={isTransitioning || loading}
                     >
                       {mode === "login" ? "Sign Up" : "Sign In"}
                     </button>
