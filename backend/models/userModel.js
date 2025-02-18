@@ -6,7 +6,7 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true },
     role: {
       type: String,
-      enum: ["PetOwner", "Trainer", "Veterinarian", "Admin"],
+      enum: ["PetOwner", "Trainer", "Vet", "Admin"],
       required: true,
     },
     isArchieve: {
@@ -62,8 +62,8 @@ const userSchema = new mongoose.Schema(
     },
     veterinarianDetails: {
       type: {
-        location: { type: String, required: function () { return this.role === "Veterinarian"; } },
-        degree: { type: String, required: function () { return this.role === "Veterinarian"; } },
+        location: { type: String, required: function () { return this.role === "Vet"; } },
+        degree: { type: String, required: function () { return this.role === "Vet"; } },
         specialization: String,
         experienceYears: { type: Number, min: 0 },
         availableHours: String,
