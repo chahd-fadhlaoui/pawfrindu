@@ -8,66 +8,103 @@ export const AppContext = createContext();
 const AppContextProvider = ({ children }) => {
   // App-wide state
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const currencySymbol = "Dt";
 
-  // Initialize auth check
-  useEffect(() => {
-    checkAuth();
-  }, []);
+// Initialize auth check
+useEffect(() => {
+  const initializeAuth = async () => {
+    setLoading(true);
+    try {
+      await checkAuth();
+    } catch (error) {
+      console.error("Initial auth check failed:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  initializeAuth();
+}, []);
+
 
   // Configure axios interceptor for token
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-    }
+    // Add request interceptor
+    const requestInterceptor = axiosInstance.interceptors.request.use(
+      (config) => {
+        const token = localStorage.getItem("token");
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+      },
+      (error) => {
+        return Promise.reject(error);
+      }
+    );
+
+    // Add response interceptor to handle 401 errors
+    const responseInterceptor = axiosInstance.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        if (error.response?.status === 401) {
+          // Clear auth state on 401 unauthorized
+          localStorage.removeItem("token");
+          setUser(null);
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    // Cleanup interceptors on unmount
     return () => {
-      delete axiosInstance.defaults.headers.common["Authorization"];
+      axiosInstance.interceptors.request.eject(requestInterceptor);
+      axiosInstance.interceptors.response.eject(responseInterceptor);
     };
   }, []);
 
   // Auth Functions
   const checkAuth = async () => {
     const token = localStorage.getItem("token");
-    if (token) {
-      try {
-        const response = await axiosInstance.get("/api/user/me");
-        setUser(response.data.user);
-        axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-      } catch (error) {
-        console.error("Auth check failed:", error);
-        localStorage.removeItem("token");
-        delete axiosInstance.defaults.headers.common["Authorization"];
-        setUser(null);
-      }
+    if (!token) {
+      setUser(null);
+      return false;
+    }
+
+    try {
+      const response = await axiosInstance.get("/api/user/me");
+      setUser(response.data.user);
+      return true;
+    } catch (error) {
+      console.error("Auth check failed:", error);
+      localStorage.removeItem("token");
+      setUser(null);
+      return false;
     }
   };
+
 
   const login = async (email, password) => {
     setLoading(true);
     setError("");
-
+  
     try {
       const response = await axiosInstance.post("/api/user/login", {
         email,
         password,
       });
-
+  
       const { accessToken, user } = response.data;
-      localStorage.setItem("token", accessToken);
-      axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
+      
+      // Use the new helper function
+      axiosInstance.setAuthToken(accessToken);
       setUser(user);
-
+  
       return {
         success: true,
-        redirectTo:
-          user.role === "PetOwner"
-            ? "/"
-            : user.role === "Trainer"
-            ? "/trainer"
-            : "/vet",
+        redirectTo: user.role === "PetOwner" ? "/" : user.role === "Trainer" ? "/trainer" : "/vet",
       };
     } catch (error) {
       const errorMessage = error.response?.data?.message || "Error logging in";
@@ -134,12 +171,10 @@ const AppContextProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    delete axiosInstance.defaults.headers.common["Authorization"];
-    setUser(null);
-  };
-
+const logout = () => {
+  axiosInstance.setAuthToken(null);
+  setUser(null);
+};
   // Helper Functions
   const clearError = () => {
     setError("");
@@ -177,6 +212,10 @@ const AppContextProvider = ({ children }) => {
     setError,
     setLoading
   };
+     // Don't render children until initial auth check is complete
+  if (loading) {
+    return null; // Or return a loading spinner
+  }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
