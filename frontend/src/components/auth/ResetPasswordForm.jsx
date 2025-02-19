@@ -1,50 +1,66 @@
-import React, { useState } from "react";
-import { Mail } from "lucide-react";
+import React, { useState, useCallback } from "react";
+import { Loader2, Mail } from "lucide-react";
 import InputField from "./InputField";
 import { useApp } from "../../context/AppContext";
 
 const ResetPasswordForm = () => {
   const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
-  const [messageType, setMessageType] = useState("");
+  const [message, setMessage] = useState({ text: "", type: "" });
   const [isLoading, setIsLoading] = useState(false);
   const { forgotPassword, clearError } = useApp();
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
-    if (!email) {
-      setMessage("Please enter your email address");
-      setMessageType("error");
+    
+    // Form validation
+    if (!email.trim()) {
+      setMessage({
+        text: "Please enter your email address",
+        type: "error"
+      });
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setMessage({
+        text: "Please enter a valid email address",
+        type: "error"
+      });
       return;
     }
 
     setIsLoading(true);
-    setMessage("");
+    setMessage({ text: "", type: "" });
     clearError();
 
     try {
       const result = await forgotPassword(email);
       
       if (result.success) {
-        setMessage("Password reset instructions have been sent to your email");
-        setMessageType("success");
-        setEmail(""); // Clear the form on success
+        setMessage({
+          text: "Password reset instructions have been sent to your email",
+          type: "success"
+        });
+        setEmail("");
       } else {
-        setMessage(result.error || "Failed to send reset instructions");
-        setMessageType("error");
+        setMessage({
+          text: result.error || "Failed to send reset instructions",
+          type: "error"
+        });
       }
     } catch (error) {
       console.error("Reset password error:", error);
-      setMessage("An unexpected error occurred. Please try again later.");
-      setMessageType("error");
+      setMessage({
+        text: "An unexpected error occurred. Please try again later.",
+        type: "error"
+      });
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [email, forgotPassword, clearError]);
 
   return (
-    <div className="space-y-6">
-
+    <form onSubmit={handleSubmit} className="space-y-6" noValidate>
       <div className="space-y-4">
         <InputField
           icon={Mail}
@@ -55,40 +71,53 @@ const ResetPasswordForm = () => {
           onChange={(e) => setEmail(e.target.value)}
           required
           autoComplete="email"
-          className="w-full"
+          disabled={isLoading}
+          className="w-full transition-all duration-300"
+          aria-label="Email address for password reset"
         />
         
-        {message && (
+        {message.text && (
           <div 
-            className={`p-4 rounded-lg text-sm ${
-              messageType === "success" 
+            role="alert"
+            className={`p-4 rounded-lg text-sm transition-all duration-300 transform ${
+              message.type === "success" 
                 ? "bg-green-50 text-green-600 border border-green-200" 
                 : "bg-red-50 text-red-500 border border-red-200"
             }`}
           >
-            {message}
+            {message.text}
           </div>
         )}
 
         <button 
-          onClick={handleSubmit}
+          type="submit"
           disabled={isLoading}
-          className="w-full py-3 text-white transition-all duration-300 transform rounded-lg bg-[#ffc929] hover:shadow-lg hover:shadow-[#ffc929]/25 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#ffc929] focus:ring-offset-2"
+          className={`
+            w-full py-3 text-white font-medium
+            transition-all duration-300 transform rounded-lg
+            bg-[#ffc929]
+            hover:shadow-lg hover:shadow-[#ffc929]/25 
+            hover:-translate-y-0.5 
+            disabled:opacity-50 disabled:cursor-not-allowed 
+            disabled:hover:translate-y-0 disabled:hover:shadow-none
+            focus:outline-none focus:ring-2 focus:ring-[#ffc929] 
+            focus:ring-offset-2
+          `}
+          aria-disabled={isLoading}
         >
-          {isLoading ? (
-            <span className="flex items-center justify-center">
-              <svg className="w-5 h-5 mr-2 animate-spin" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              Sending...
-            </span>
-          ) : (
-            "Reset Password"
-          )}
+          <span className="flex items-center justify-center">
+            {isLoading ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                <span>Sending...</span>
+              </>
+            ) : (
+              "Reset Password"
+            )}
+          </span>
         </button>
       </div>
-    </div>
+    </form>
   );
 };
 

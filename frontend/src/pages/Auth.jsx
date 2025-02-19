@@ -11,7 +11,7 @@ import ProgressIndicator from "../components/ui/ProgressIndicator";
 import RightPanel from "../components/ui/RightPanel";
 import LoadingWrapper from "../components/LoadingWrapper";
 
-const Login = () => {
+const Auth = () => {
   const navigate = useNavigate();
   const { login, register, error, loading, clearError } = useApp();
   const [mode, setMode] = useState("login");
@@ -175,4 +175,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Auth;
