@@ -7,12 +7,13 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import CandidatesPage from './pages/CandidatesPage';
 import CreateProfile from './pages/CreateProfile';
 import Home from './pages/Home';
-import Login from './pages/Login';
+import Login from './pages/Auth';
 import PetDetails from './pages/PetDetails';
 import PetOwnerPosts from './pages/PetOwnerPosts';
 import Pets from './pages/Pets';
 import Profile from './pages/Profile';
 import Veteriniandetail from './pages/Veteriniandetail';
+import ResetPasswordConfirmation from './components/auth/ResetPasswordConfirmation';
 
 // Create a layout component to handle the header and footer
 const Layout = ({ children }) => {
@@ -40,6 +41,7 @@ const AppRoutes = () => {
       <Route path='/profile' element={<Profile />} />
       <Route path="/list" element={<PetOwnerPosts />} />
       <Route path="/candidates/:petId" element={<CandidatesPage />} />
+      <Route path="/reset-password" element={<ResetPasswordConfirmation />} />
       <Route path="/myprofile" element={<CreateProfile />} />
       <Route path='/admin' element={<AdminDashboard />} />
       <Route path='/veterinian/:petId' element={<Veteriniandetail />} />

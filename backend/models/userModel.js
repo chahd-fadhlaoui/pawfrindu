@@ -4,6 +4,8 @@ const userSchema = new mongoose.Schema(
     fullName: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
+    resetPasswordToken: String,
+    resetPasswordExpiry: Date,
     role: {
       type: String,
       enum: ["PetOwner", "Trainer", "Vet", "Admin"],
@@ -18,8 +20,18 @@ const userSchema = new mongoose.Schema(
     petOwnerDetails: {
       type: {
         currentPets: { type: Array, default: [] },
-        address: { type: String, required: function () { return this.role === "PetOwner"; } },
-        phone: { type: String, required: function () { return this.role === "PetOwner"; } },
+        address: {
+          type: String,
+          required: function () {
+            return this.role === "PetOwner";
+          },
+        },
+        phone: {
+          type: String,
+          required: function () {
+            return this.role === "PetOwner";
+          },
+        },
         occupation: String,
         workSchedule: {
           type: String,
@@ -52,8 +64,18 @@ const userSchema = new mongoose.Schema(
     },
     trainerDetails: {
       type: {
-        location: { type: String, required: function () { return this.role === "Trainer"; } },
-        certification: { type: String, required: function () { return this.role === "Trainer"; } },
+        location: {
+          type: String,
+          required: function () {
+            return this.role === "Trainer";
+          },
+        },
+        certification: {
+          type: String,
+          required: function () {
+            return this.role === "Trainer";
+          },
+        },
         specialization: String,
         experienceYears: { type: Number, min: 0 },
         availableHours: String,
@@ -62,8 +84,18 @@ const userSchema = new mongoose.Schema(
     },
     veterinarianDetails: {
       type: {
-        location: { type: String, required: function () { return this.role === "Vet"; } },
-        degree: { type: String, required: function () { return this.role === "Vet"; } },
+        location: {
+          type: String,
+          required: function () {
+            return this.role === "Vet";
+          },
+        },
+        degree: {
+          type: String,
+          required: function () {
+            return this.role === "Vet";
+          },
+        },
         specialization: String,
         experienceYears: { type: Number, min: 0 },
         availableHours: String,
@@ -74,6 +106,6 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const userModel = mongoose.models.user || mongoose.model('user',userSchema)
+const userModel = mongoose.models.user || mongoose.model("user", userSchema);
 
-export default userModel
+export default userModel;

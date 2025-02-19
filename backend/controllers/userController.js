@@ -1,15 +1,20 @@
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import User from "../models/userModel.js";
-
-
-
-
+import { sendEmail } from "../services/emailService.js";
 // 🚀 Étape 1: Enregistrement de l'utilisateur sans détails spécifiques
 const register = async (req, res) => {
+  console.log("Received registration request with body:", req.body);
   const { fullName, email, password, role } = req.body;
 
   if (!fullName || !email || !password || !role) {
+    console.log("Missing fields:", {
+      hasFullName: !!fullName,
+      hasEmail: !!email,
+      hasPassword: !!password,
+      hasRole: !!role,
+    });
     return res.status(400).json({ message: "All fields are required." });
   }
 
@@ -21,7 +26,6 @@ const register = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create a new user with basic details
     const newUser = new User({
       fullName,
       email,
@@ -29,33 +33,48 @@ const register = async (req, res) => {
       role,
     });
 
-    // Save user and generate token
-    const savedUser = await newUser.save(); // Save user first
+    // Save user first
+    const savedUser = await newUser.save();
 
     if (!savedUser) {
       throw new Error("User not saved properly.");
     }
 
-    // Now generate the token after user is successfully saved
+    // Generate token after user is successfully saved
     const accessToken = jwt.sign(
       { userId: savedUser._id, role: savedUser.role },
       process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: "72h" }
     );
 
+    // Try to send welcome email, but don't let it block registration if it fails
+    try {
+      await sendEmail({
+        to: savedUser.email,
+        template: "welcome",
+        data: savedUser.fullName,
+      });
+    } catch (emailError) {
+      console.error("Failed to send welcome email:", emailError);
+      // Continue with registration even if email fails
+    }
+
     res.status(201).json({
       message: "Account created. Please complete your profile.",
-      accessToken, // Send the token back in response
+      accessToken,
       user: {
         _id: savedUser._id,
         fullName: savedUser.fullName,
         email: savedUser.email,
-        role: savedUser.role
-      }
+        role: savedUser.role,
+      },
     });
   } catch (error) {
     console.error("Signup Error:", error);
-    res.status(500).json({ message: "Failed to create account." });
+    res.status(500).json({
+      message: "Failed to create account.",
+      detail: error.message, // Add this for debugging
+    });
   }
 };
 
@@ -111,7 +130,6 @@ const createProfile = async (req, res) => {
       process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: "72h" }
     );
-
     res.json({
       message: "Profile completed successfully!",
       accessToken,
@@ -172,8 +190,8 @@ const login = async (req, res) => {
 // 🚀 Get current user profile
 const getCurrentUser = async (req, res) => {
   try {
-    const user = await User.findById(req.userId).select('-password');
-    
+    const user = await User.findById(req.userId).select("-password");
+
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -194,7 +212,7 @@ const getCurrentUser = async (req, res) => {
         trainerDetails: user.trainerDetails || undefined,
         veterinarianDetails: user.veterinarianDetails || undefined,
         isArchieve: user.isArchieve,
-      }
+      },
     });
   } catch (error) {
     console.error("Get Current User Error:", error);
@@ -203,10 +221,10 @@ const getCurrentUser = async (req, res) => {
 };
 
 // Middleware to verify token
- const verifyToken = async (req, res, next) => {
+const verifyToken = async (req, res, next) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
-    
+    const token = req.headers.authorization?.split(" ")[1];
+
     if (!token) {
       return res.status(401).json({ message: "No token provided" });
     }
@@ -220,4 +238,138 @@ const getCurrentUser = async (req, res) => {
     return res.status(401).json({ message: "Invalid or expired token" });
   }
 };
-export { register, createProfile, login, getCurrentUser, verifyToken };
+const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+  console.log("Received forgot password request for:", email);
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      console.log("User not found");
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const resetTokenExpiry = Date.now() + 3600000; // 1 hour
+
+    // Add resetPasswordToken and resetPasswordExpiry to your user model if not already present
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpiry = resetTokenExpiry;
+    await user.save();
+    console.log("Reset token:", resetToken);
+
+    await sendEmail({
+      to: email,
+      template: "passwordReset",
+      data: {
+        fullName: user.fullName,
+        resetToken: resetToken,
+      },
+    });
+    console.log("Password reset email sent");
+    res.json({
+      message: "Password reset instructions sent to your email",
+      emailSent: true,
+    });
+  } catch (error) {
+    console.error("Forgot Password Error:", error);
+    res.status(500).json({ message: "Failed to process password reset" });
+  }
+};
+const resetPassword = async (req, res) => {
+  const { token, newPassword } = req.body;
+
+  if (!token || !newPassword) {
+    return res.status(400).json({
+      message: "Token and new password are required",
+    });
+  }
+
+  try {
+    // Find user with valid reset token
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpiry: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        message: "Invalid or expired reset token",
+      });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update user document
+    user.password = hashedPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpiry = undefined;
+    await user.save();
+
+    // Optional: Send confirmation email
+    try {
+      await sendEmail({
+        to: user.email,
+        template: "passwordResetSuccess",
+        data: {
+          fullName: user.fullName,
+        },
+      });
+    } catch (emailError) {
+      console.error(
+        "Failed to send password reset confirmation email:",
+        emailError
+      );
+      // Continue with password reset even if email fails
+    }
+
+    res.json({
+      message: "Password successfully reset",
+      success: true,
+    });
+  } catch (error) {
+    console.error("Reset Password Error:", error);
+    res.status(500).json({
+      message: "Failed to reset password",
+      success: false,
+    });
+  }
+};
+const validateResetToken = async (req, res) => {
+  const { token } = req.params;
+
+  try {
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpiry: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        valid: false,
+        message: "Invalid or expired reset token",
+      });
+    }
+
+    res.json({
+      valid: true,
+      message: "Token is valid",
+    });
+  } catch (error) {
+    console.error("Token Validation Error:", error);
+    res.status(500).json({
+      valid: false,
+      message: "Failed to validate token",
+    });
+  }
+};
+export {
+  createProfile,
+  forgotPassword,
+  getCurrentUser,
+  login,
+  register,
+  resetPassword,
+  verifyToken,
+  validateResetToken,
+};

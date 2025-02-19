@@ -9,6 +9,7 @@ import FormHeader from "../components/ui/FormHeader";
 import NavigationButtons from "../components/ui/NavigationButtons";
 import ProgressIndicator from "../components/ui/ProgressIndicator";
 import RightPanel from "../components/ui/RightPanel";
+import LoadingWrapper from "../components/LoadingWrapper";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -28,13 +29,11 @@ const Login = () => {
     }
   };
 
-  // Handle validation change from SignupFormStep1
   const handleValidationChange = (isValid, formData) => {
     setSignupData(formData);
-    clearError(); // Use context's clearError instead of local state
+    clearError();
   };
 
-  // Format role for API
   const formatRole = (role) => {
     const roleMap = {
       "pet-owner": "PetOwner",
@@ -44,7 +43,6 @@ const Login = () => {
     return roleMap[role] || role;
   };
 
-  // Handle signup submission
   const handleSignup = async (formData) => {
     if (!formData) return;
 
@@ -56,17 +54,15 @@ const Login = () => {
     };
 
     const result = await register(submitData);
-    
     if (result.success) {
       navigate("/myprofile");
-    } 
+    }
   };
 
   const handleModeSwitch = (newMode) => {
     if (isTransitioning || mode === newMode) return;
-
     setIsTransitioning(true);
-    clearError(); // Use context's clearError
+    clearError();
 
     setTimeout(() => {
       setMode(newMode);
@@ -78,45 +74,30 @@ const Login = () => {
     }, 300);
   };
 
-  // Handle form step navigation
-  const handleNextStep = () => {
-    if (formStep === 1 && signupData) {
-      handleSignup(signupData);
-    } else {
-      setFormStep(formStep + 1);
-    }
-  };
-
   useEffect(() => {
     document.title = mode === "login" ? "Login" : "Sign Up";
   }, [mode]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-[#ffc929]/5 to-pink-50">
+      <LoadingWrapper loading={loading}>
       <div className="container flex items-center justify-center min-h-screen p-4 mx-auto">
         <div className="relative w-full max-w-5xl overflow-hidden bg-white shadow-xl rounded-2xl">
           <div className="flex flex-col md:flex-row h-[700px] md:h-[600px]">
-            {/* Form Container */}
-            <div
-              className={`w-full md:w-1/2 transition-transform duration-500 ease-out ${
-                mode === "signup" ? "order-last" : ""
-              }`}
-            >
+            <div className={`w-full md:w-1/2 transition-transform duration-500 ease-out ${
+              mode === "signup" ? "order-last" : ""
+            }`}>
               <div className="h-full p-8 overflow-y-auto">
                 <FormHeader mode={mode} />
                 {mode === "signup" && <ProgressIndicator formStep={formStep} />}
 
-                {/* Error Message */}
                 {error && (
                   <div className="p-3 mb-4 text-sm text-red-500 rounded-lg bg-red-50">
                     {error}
                   </div>
                 )}
 
-                <form
-                  className="space-y-6"
-                  onSubmit={(e) => e.preventDefault()}
-                >
+                <div className="space-y-6">
                   {mode === "login" && (
                     <LoginForm
                       handleModeSwitch={handleModeSwitch}
@@ -125,7 +106,9 @@ const Login = () => {
                     />
                   )}
 
-                  {mode === "forgetPassword" && <ResetPasswordForm />}
+                  {mode === "forgetPassword" && (
+                    <ResetPasswordForm onModeSwitch={handleModeSwitch} />
+                  )}
 
                   {mode === "signup" && (
                     <>
@@ -139,9 +122,7 @@ const Login = () => {
                       {formStep === 1 && (
                         <SignupFormStep1
                           showPassword={showPassword}
-                          onTogglePassword={() =>
-                            setShowPassword(!showPassword)
-                          }
+                          onTogglePassword={() => setShowPassword(!showPassword)}
                           onValidationChange={handleValidationChange}
                           isLoading={loading}
                         />
@@ -156,29 +137,29 @@ const Login = () => {
                       />
                     </>
                   )}
-                </form>
-
-                {/* Mode Switch Button */}
-                <div className="mt-6 text-center">
-                  <span className="text-sm text-neutral-600">
-                    {mode === "login"
-                      ? "Don't have an account? "
-                      : "Already have an account? "}
-                    <button
-                      onClick={() =>
-                        handleModeSwitch(mode === "login" ? "signup" : "login")
-                      }
-                      className="text-[#ffc929] hover:underline focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ffc929] rounded-sm"
-                      disabled={isTransitioning || loading}
-                    >
-                      {mode === "login" ? "Sign Up" : "Sign In"}
-                    </button>
-                  </span>
                 </div>
+
+                {mode !== "forgetPassword" && (
+                  <div className="mt-6 text-center">
+                    <span className="text-sm text-neutral-600">
+                      {mode === "login"
+                        ? "Don't have an account? "
+                        : "Already have an account? "}
+                      <button
+                        onClick={() =>
+                          handleModeSwitch(mode === "login" ? "signup" : "login")
+                        }
+                        className="text-[#ffc929] hover:underline focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ffc929] rounded-sm"
+                        disabled={isTransitioning || loading}
+                      >
+                        {mode === "login" ? "Sign Up" : "Sign In"}
+                      </button>
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Right Panel */}
             <div className="w-full transition-transform duration-500 ease-out md:w-1/2">
               <RightPanel
                 mode={mode}
@@ -189,6 +170,7 @@ const Login = () => {
           </div>
         </div>
       </div>
+      </LoadingWrapper>
     </div>
   );
 };

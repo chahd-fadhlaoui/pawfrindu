@@ -1,4 +1,3 @@
-// context/AppContext.js
 import { createContext, useContext, useState, useEffect } from "react";
 import { pets } from "../assets/assets";
 import axiosInstance from "../utils/axiosInstance";
@@ -12,22 +11,21 @@ const AppContextProvider = ({ children }) => {
   const [error, setError] = useState("");
   const currencySymbol = "Dt";
 
-// Initialize auth check
-useEffect(() => {
-  const initializeAuth = async () => {
-    setLoading(true);
-    try {
-      await checkAuth();
-    } catch (error) {
-      console.error("Initial auth check failed:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Initialize auth check
+  useEffect(() => {
+    const initializeAuth = async () => {
+      setLoading(true);
+      try {
+        await checkAuth();
+      } catch (error) {
+        console.error("Initial auth check failed:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  initializeAuth();
-}, []);
-
+    initializeAuth();
+  }, []);
 
   // Configure axios interceptor for token
   useEffect(() => {
@@ -85,46 +83,56 @@ useEffect(() => {
     }
   };
 
-
   const login = async (email, password) => {
+    if (loading) return; // Prevent multiple submissions
     setLoading(true);
     setError("");
-  
+
     try {
       const response = await axiosInstance.post("/api/user/login", {
         email,
         password,
       });
-  
+
       const { accessToken, user } = response.data;
-      
+
       // Use the new helper function
       axiosInstance.setAuthToken(accessToken);
       setUser(user);
-  
+
       return {
         success: true,
-        redirectTo: user.role === "PetOwner" ? "/" : user.role === "Trainer" ? "/trainer" : "/vet",
+        redirectTo:
+          user.role === "PetOwner"
+            ? "/"
+            : user.role === "Trainer"
+            ? "/trainer"
+            : "/vet",
       };
     } catch (error) {
       const errorMessage = error.response?.data?.message || "Error logging in";
       setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {
-      setLoading(false);
+      // Add a small delay before removing loading state to prevent flash
+      setTimeout(() => {
+        setLoading(false);
+      }, 300);
     }
   };
 
   const register = async (userData) => {
     setLoading(true);
     setError("");
-
+    console.log("Attempting to register with data:", userData);
     try {
       const response = await axiosInstance.post("/api/user/register", userData);
-      
+
       if (response.data.accessToken) {
         localStorage.setItem("token", response.data.accessToken);
-        axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${response.data.accessToken}`;
+        axiosInstance.defaults.headers.common[
+          "Authorization"
+        ] = `Bearer ${response.data.accessToken}`;
       }
 
       if (response.data.user) {
@@ -136,7 +144,9 @@ useEffect(() => {
         message: response.data.message,
       };
     } catch (error) {
-      const errorMessage = error.response?.data?.message || "Error creating account";
+      console.log("Full error response:", error.response);
+      const errorMessage =
+        error.response?.data?.message || "Error creating account";
       setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {
@@ -147,23 +157,24 @@ useEffect(() => {
   const createProfile = async (profileData) => {
     setLoading(true);
     setError("");
-  
+
     try {
       const response = await axiosInstance.post("/api/user/profile", {
         ...profileData,
-        userId: user._id  // Add the userId from context
+        userId: user._id, // Add the userId from context
       });
-      
+
       if (response.data.user) {
         setUser(response.data.user);
       }
-  
+
       return {
         success: true,
         message: response.data.message,
       };
     } catch (error) {
-      const errorMessage = error.response?.data?.message || "Error completing profile";
+      const errorMessage =
+        error.response?.data?.message || "Error completing profile";
       setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {
@@ -171,19 +182,77 @@ useEffect(() => {
     }
   };
 
-const logout = () => {
-  axiosInstance.setAuthToken(null);
-  setUser(null);
-};
+  const forgotPassword = async (email) => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await axiosInstance.post("/api/user/forgot-password", {
+        email,
+      });
+
+      return {
+        success: true,
+        message: response.data.message,
+      };
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || "Failed to process password reset";
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+  const validateResetToken = async (token) => {
+    try {
+      const response = await axiosInstance.get(
+        `/api/user/validate-reset-token/${token}`
+      );
+      return { success: true, data: response.data };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || "Invalid or expired token",
+      };
+    }
+  };
+  const resetPassword = async (token, newPassword) => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await axiosInstance.post("/api/user/reset-password", {
+        token,
+        newPassword,
+      });
+
+      return {
+        success: true,
+        message: response.data.message,
+      };
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || "Failed to reset password";
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+  const logout = () => {
+    axiosInstance.setAuthToken(null);
+    setUser(null);
+  };
   // Helper Functions
   const clearError = () => {
     setError("");
   };
 
   const updateUser = (userData) => {
-    setUser(prevUser => ({
+    setUser((prevUser) => ({
       ...prevUser,
-      ...userData
+      ...userData,
     }));
   };
 
@@ -192,30 +261,29 @@ const logout = () => {
     user,
     loading,
     error,
-    
+
     // App Data
     pets,
     currencySymbol,
-    
+
     // Auth Functions
     login,
     register,
+    forgotPassword,
     logout,
     createProfile,
     checkAuth,
-    
+    resetPassword,
+    validateResetToken,
+
     // Helper Functions
     clearError,
     updateUser,
-    
+
     // Direct State Access (use carefully)
     setError,
-    setLoading
+    setLoading,
   };
-     // Don't render children until initial auth check is complete
-  if (loading) {
-    return null; // Or return a loading spinner
-  }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
