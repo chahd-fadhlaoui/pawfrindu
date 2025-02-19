@@ -14,6 +14,7 @@ import PetOwnerPosts from './pages/PetOwnerPosts';
 import Pets from './pages/Pets';
 import Profile from './pages/Profile';
 import Veteriniandetail from './pages/Veteriniandetail';
+import CreatePet from './pages/CreatePet';
 
 // Create a layout component to handle the header and footer
 const Layout = ({ children }) => {
@@ -34,6 +35,8 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path='/' element={<Home />} />
+      <Route path='/addPet' element={<CreatePet/>} />
+
       <Route path='/pets' element={<Pets />} />
       <Route path='/pets/:category' element={<Pets />} />
       <Route path='/petsdetails/:petId' element={<PetDetails />} />

@@ -9,24 +9,40 @@ const AppContextProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [pets, setPets] = useState([]);
   const currencySymbol = "Dt";
 
-  // Initialize auth check
-  useEffect(() => {
-    const initializeAuth = async () => {
-      setLoading(true);
-      try {
-        await checkAuth();
-      } catch (error) {
-        console.error("Initial auth check failed:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+// Initialize auth check
+// Vérifie l'authentification et charge les animaux
+useEffect(() => {
+  const initialize = async () => {
+    setLoading(true);
+    try {
+      await checkAuth(); // Vérifie l'authentification
+    } catch (error) {
+      console.error("Initial auth check failed:", error);
+    } finally {
+      setLoading(false);
+    }
+    fetchPets(); // Récupère les animaux après la vérification d'auth
+  };
 
-    initializeAuth();
-  }, []);
+  initialize();
+}, []);
+useEffect(() => {
+  fetchPets(); // Récupérer les animaux dès le montage du composant
+}, []);
 
+  // Nouvelle fonction pour récupérer les pets
+  const fetchPets = async () => {
+    try {
+      const response = await axiosInstance.get("/api/pet/allpets");
+      setPets(response.data.data); // Supposant que l'API renvoie { data: [...pets] }
+    } catch (error) {
+      console.error("Error fetching pets:", error);
+      setError("Failed to fetch pets");
+    }
+  };
   // Configure axios interceptor for token
   useEffect(() => {
     // Add request interceptor
@@ -265,7 +281,7 @@ const AppContextProvider = ({ children }) => {
     // App Data
     pets,
     currencySymbol,
-
+    
     // Auth Functions
     login,
     register,

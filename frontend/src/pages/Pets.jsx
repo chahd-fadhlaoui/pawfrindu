@@ -6,7 +6,7 @@ import { Heart, PawPrint, MapPin, Coins } from 'lucide-react';
 export default function Pet() {
   const navigate=useNavigate();
   const { category: urlCategory } = useParams();
-  const { pets,currencySymbol } = useContext(AppContext);
+  const { pets, currencySymbol, loading, error } = useContext(AppContext);
 
   const [filteredPets, setFilteredPets] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -65,6 +65,30 @@ export default function Pet() {
       </select>
     </div>
   );
+
+  // Ajouter les conditions de loading et error ICI, avant le return principal
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <PawPrint size={48} className="mx-auto text-pink-500 animate-bounce" />
+          <p className="mt-4 text-purple-600">Chargement des animaux...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <PawPrint size={48} className="mx-auto text-red-500 mb-4" />
+          <p className="text-red-600">Une erreur est survenue lors du chargement des animaux.</p>
+        </div>
+      </div>
+    );
+  }
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 py-6 sm:py-12 px-4 relative">
@@ -175,7 +199,7 @@ export default function Pet() {
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-xs sm:text-sm text-pink-400 bg-pink-50 px-3 py-1 
                       rounded-full border border-pink-100">
-                        {pet.age}
+                        {pet.age} years
                       </span>
                       <span className="text-xs sm:text-sm text-pink-400  bg-pink-50 px-3 py-1 
                       rounded-full border border-pink-100 flex items-center gap-1">

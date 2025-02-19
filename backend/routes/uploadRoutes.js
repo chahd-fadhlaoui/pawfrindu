@@ -1,12 +1,9 @@
 import express from 'express';
-import fileUpload from 'express-fileupload';
 import { uploadImage } from '../controllers/uploadController.js';
+import { upload } from '../config/multerConfig.js';
 
 const uploadRouter = express.Router();
 
-uploadRouter.post('/upload', fileUpload({
-  useTempFiles: true,
-  tempFileDir: '/tmp/'
-}), uploadImage);
+uploadRouter.post('/upload',upload.single('image'),uploadImage);
 
 export default uploadRouter;

@@ -32,6 +32,11 @@ function Header() {
       to: "#veterinary",
       ariaLabel: "Find veterinary services",
     },
+    {
+      name: "Add a friend",
+      to: "/addPet",
+      ariaLabel: "Find veterinary services",
+    },
   ];
 
   const toggleMobileMenu = () => {
