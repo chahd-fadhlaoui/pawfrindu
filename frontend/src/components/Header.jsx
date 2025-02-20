@@ -43,38 +43,51 @@ function Header() {
     setMobileMenuOpen(!mobileMenuOpen);
   };
 
-  const defaultProfileImage = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSIxMDAiIGZpbGw9IiNFNUU3RUIiLz4KICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSI4MCIgcj0iNDAiIGZpbGw9IiM5Q0EzQUYiLz4KICA8cGF0aCBkPSJNMTYwIDE4MEgzOUM0MSAxNDAgODAgMTIwIDEwMCAxMjBDMTIwIDEyMCAxNTggMTQwIDE2MCAxODBaIiBmaWxsPSIjOUNBM0FGIi8+Cjwvc3ZnPg==';
+  const defaultProfileImage =
+    "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSIxMDAiIGZpbGw9IiNFNUU3RUIiLz4KICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSI4MCIgcj0iNDAiIGZpbGw9IiM5Q0EzQUYiLz4KICA8cGF0aCBkPSJNMTYwIDE4MEgzOUM0MSAxNDAgODAgMTIwIDEwMCAxMjBDMTIwIDEyMCAxNTggMTQwIDE2MCAxODBaIiBmaWxsPSIjOUNBM0FGIi8+Cjwvc3ZnPg==";
 
   const handleLogout = () => {
     logout();
-    navigate('/');
+    navigate("/");
   };
 
   const renderAuthSection = () => {
     if (user) {
       return (
         <div className="relative flex items-center gap-2 cursor-pointer group">
-          <img 
+          <img
             className="object-cover w-10 h-10 rounded-full"
             src={user.image || defaultProfileImage}
             alt={user.fullName}
-            onError={(e) => e.target.src = defaultProfileImage}
+            onError={(e) => {
+              console.log("Error loading image:", user.image);
+              e.target.src = defaultProfileImage;
+            }}
           />
           <span className="hidden font-medium text-gray-800 md:block">
             {user.fullName}
           </span>
-          <img className="w-8" src={dropdown} alt="dropdown menu"/>
+          <img className="w-8" src={dropdown} alt="dropdown menu" />
           <div className="absolute top-0 right-0 z-20 hidden text-base font-medium text-gray-600 pt-14 group-hover:block">
             <div className="min-w-48 bg-[#f2d7db] rounded flex flex-col gap-4 p-4 shadow-lg">
-              <p onClick={() => navigate("/profile")} className="cursor-pointer hover:text-black">
+              <p
+                onClick={() => navigate("/profile")}
+                className="cursor-pointer hover:text-black"
+              >
                 My profile
               </p>
-              {user.role === 'PetOwner' && (
-                <p onClick={() => navigate("/list")} className="cursor-pointer hover:text-black">
+              {user.role === "PetOwner" && (
+                <p
+                  onClick={() => navigate("/list")}
+                  className="cursor-pointer hover:text-black"
+                >
                   My pets for adoption
                 </p>
               )}
-              <p onClick={handleLogout} className="cursor-pointer hover:text-black">
+              <p
+                onClick={handleLogout}
+                className="cursor-pointer hover:text-black"
+              >
                 Logout
               </p>
             </div>
@@ -127,9 +140,13 @@ function Header() {
                   to={link.to}
                   aria-label={link.ariaLabel}
                   className={`text-gray-800 text-base font-medium transition-all duration-300 relative ${
-                    activeLink === index ? "text-[#ffc929] scale-110" : "hover:text-[#ffc929]"
+                    activeLink === index
+                      ? "text-[#ffc929] scale-110"
+                      : "hover:text-[#ffc929]"
                   } after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:bg-[#ffc929] after:transition-all after:duration-300 ${
-                    activeLink === index ? "after:w-full" : "after:w-0 hover:after:w-full"
+                    activeLink === index
+                      ? "after:w-full"
+                      : "after:w-0 hover:after:w-full"
                   }`}
                 >
                   {link.name}
@@ -151,9 +168,7 @@ function Header() {
         </div>
 
         {/* Auth Section */}
-        <div className="hidden lg:block">
-          {renderAuthSection()}
-        </div>
+        <div className="hidden lg:block">{renderAuthSection()}</div>
 
         {/* Mobile Menu Overlay */}
         {mobileMenuOpen && (
@@ -177,9 +192,11 @@ function Header() {
                       className="object-cover w-10 h-10 rounded-full"
                       src={user.image || defaultProfileImage}
                       alt={user.fullName}
-                      onError={(e) => e.target.src = defaultProfileImage}
+                      onError={(e) => (e.target.src = defaultProfileImage)}
                     />
-                    <span className="font-medium text-gray-800">{user.fullName}</span>
+                    <span className="font-medium text-gray-800">
+                      {user.fullName}
+                    </span>
                     <button
                       className="px-6 py-2 text-gray-900 bg-[#ffc929] rounded-full hover:bg-pink-500 hover:text-white"
                       onClick={handleLogout}
