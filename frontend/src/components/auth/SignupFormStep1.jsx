@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Lock, Mail, User, Loader2 } from 'lucide-react';
+import { Loader2, Lock, Mail, User } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import InputField from './InputField';
 
 const SignupFormStep1 = ({ showPassword, onTogglePassword, onValidationChange, isLoading }) => {

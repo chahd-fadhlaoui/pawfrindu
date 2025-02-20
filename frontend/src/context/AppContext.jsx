@@ -1,5 +1,4 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { pets } from "../assets/assets";
 import axiosInstance from "../utils/axiosInstance";
 
 export const AppContext = createContext();
@@ -12,26 +11,30 @@ const AppContextProvider = ({ children }) => {
   const [pets, setPets] = useState([]);
   const currencySymbol = "Dt";
 
-// Initialize auth check
-// Vérifie l'authentification et charge les animaux
-useEffect(() => {
-  const initialize = async () => {
-    setLoading(true);
-    try {
-      await checkAuth(); // Vérifie l'authentification
-    } catch (error) {
-      console.error("Initial auth check failed:", error);
-    } finally {
-      setLoading(false);
-    }
-    fetchPets(); // Récupère les animaux après la vérification d'auth
-  };
+  // Initialize auth check
+  // Vérifie l'authentification et charge les animaux
+  useEffect(() => {
+    const initialize = async () => {
+      setLoading(true);
+      try {
+        await checkAuth(); // Vérifie l'authentification
+        // Only fetch pets if authentication was successful
+        if (user) {
+          await getMyPets();
+        }
+      } catch (error) {
+        console.error("Initial auth check failed:", error);
+      } finally {
+        setLoading(false);
+      }
+      fetchPets();
+    };
 
-  initialize();
-}, []);
-useEffect(() => {
-  fetchPets(); // Récupérer les animaux dès le montage du composant
-}, []);
+    initialize();
+  }, [user?._id]);
+  useEffect(() => {
+    fetchPets(); // Récupérer les animaux dès le montage du composant
+  }, []);
 
   // Nouvelle fonction pour récupérer les pets
   const fetchPets = async () => {
@@ -271,7 +274,75 @@ useEffect(() => {
       ...userData,
     }));
   };
+// Add pet
+/* const createPet = async (petData) => {
+  try {
+    const response = await axiosInstance.post("/api/pet/addpet", petData);
+    await fetchPets(); // Refresh pets after creation
+    return { success: true, data: response.data };
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || "Error creating pet";
+    setError(errorMessage);
+    return { success: false, error: errorMessage };
+  }
+}; */
+  
 
+// Update pet
+  const updatePet = async (petId, updateData) => {
+    try {
+      const response = await axiosInstance.put(
+        `/api/pet/updatedPet/${petId}`,
+        updateData
+      );
+      await fetchPets(); // Refresh pets after update
+      return { success: true, data: response.data };
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || "Error updating pet";
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  };
+
+  // Delete pet
+  const deletePet = async (petId) => {
+    try {
+      await axiosInstance.delete(`/api/pet/deletePet/${petId}`);
+      await fetchPets(); // Refresh pets after deletion
+      return { success: true };
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || "Error deleting pet";
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  };
+
+  // Get my pets
+  const getMyPets = async () => {
+    try {
+      const response = await axiosInstance.get("/api/pet/mypets");
+      console.log("API Response for getMyPets:", response.data);
+      // Update the pets state
+      setPets(response.data.data || []);
+      // Return the data in a consistent format
+      return {
+        success: true,
+        data: response.data.data || [], // Make sure we always return an array
+      };
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || "Error fetching your pets";
+      setError(errorMessage);
+      console.error("Error fetching your pets:", error);
+      return {
+        success: false,
+        error: errorMessage,
+        data: [], // Return empty array on error
+      };
+    }
+  };
   const value = {
     // Auth State
     user,
@@ -281,7 +352,7 @@ useEffect(() => {
     // App Data
     pets,
     currencySymbol,
-    
+
     // Auth Functions
     login,
     register,
@@ -291,6 +362,12 @@ useEffect(() => {
     checkAuth,
     resetPassword,
     validateResetToken,
+
+    // Pet Functions
+    //createPet,
+    updatePet,
+    deletePet,
+    getMyPets,
 
     // Helper Functions
     clearError,
