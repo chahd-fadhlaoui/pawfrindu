@@ -1,6 +1,15 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import axiosInstance from "../utils/axiosInstance";
 
+// Définir l'URL de l'image par défaut une seule fois
+const DEFAULT_PROFILE_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSIxMDAiIGZpbGw9IiNFNUU3RUIiLz4KICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSI4MCIgcj0iNDAiIGZpbGw9IiM5Q0EzQUYiLz4KICA8cGF0aCBkPSJNMTYwIDE4MEgzOUM0MSAxNDAgODAgMTIwIDEwMCAxMjBDMTIwIDEyMCAxNTggMTQwIDE2MCAxODBaIiBmaWxsPSIjOUNBM0FGIi8+Cjwvc3ZnPg==';
+const ensureUserHasImage = (user) => {
+  if (!user.image) {
+    return { ...user, image: DEFAULT_PROFILE_IMAGE };
+  }
+  return user;
+};
+
 export const AppContext = createContext();
 
 const AppContextProvider = ({ children }) => {
@@ -11,30 +20,26 @@ const AppContextProvider = ({ children }) => {
   const [pets, setPets] = useState([]);
   const currencySymbol = "Dt";
 
-  // Initialize auth check
-  // Vérifie l'authentification et charge les animaux
-  useEffect(() => {
-    const initialize = async () => {
-      setLoading(true);
-      try {
-        await checkAuth(); // Vérifie l'authentification
-        // Only fetch pets if authentication was successful
-        if (user) {
-          await getMyPets();
-        }
-      } catch (error) {
-        console.error("Initial auth check failed:", error);
-      } finally {
-        setLoading(false);
-      }
-      fetchPets();
-    };
+// Initialize auth check
+// Vérifie l'authentification et charge les animaux
+useEffect(() => {
+  const initialize = async () => {
+    setLoading(true);
+    try {
+      await checkAuth(); // Vérifie l'authentification
+    } catch (error) {
+      console.error("Initial auth check failed:", error);
+    } finally {
+      setLoading(false);
+    }
+    fetchPets(); // Récupère les animaux après la vérification d'auth
+  };
 
-    initialize();
-  }, [user?._id]);
-  useEffect(() => {
-    fetchPets(); // Récupérer les animaux dès le montage du composant
-  }, []);
+  initialize();
+}, []);
+useEffect(() => {
+  fetchPets(); // Récupérer les animaux dès le montage du composant
+}, []);
 
   // Nouvelle fonction pour récupérer les pets
   const fetchPets = async () => {
@@ -46,6 +51,7 @@ const AppContextProvider = ({ children }) => {
       setError("Failed to fetch pets");
     }
   };
+  
   // Configure axios interceptor for token
   useEffect(() => {
     // Add request interceptor
@@ -92,7 +98,8 @@ const AppContextProvider = ({ children }) => {
 
     try {
       const response = await axiosInstance.get("/api/user/me");
-      setUser(response.data.user);
+      // S'assurer que l'utilisateur a une image
+      setUser(ensureUserHasImage(response.data.user));
       return true;
     } catch (error) {
       console.error("Auth check failed:", error);
@@ -117,7 +124,8 @@ const AppContextProvider = ({ children }) => {
 
       // Use the new helper function
       axiosInstance.setAuthToken(accessToken);
-      setUser(user);
+      // S'assurer que l'utilisateur a une image
+      setUser(ensureUserHasImage(user));
 
       return {
         success: true,
@@ -140,22 +148,64 @@ const AppContextProvider = ({ children }) => {
     }
   };
 
+  const fetchUserProfile = async () => {
+    setLoading(true);
+    try {
+      const response = await axiosInstance.get("/api/user/me");
+      console.log("Réponse API :", response.data);
+  
+      const userData = response.data.user;
+      
+      // S'assurer que toute la structure est correctement formée
+      const formattedUser = {
+        name: userData.fullName || userData.name,
+        image: userData.image || DEFAULT_PROFILE_IMAGE,
+        email: userData.email,
+        role: userData.role === "PetOwner" ? "Pet Owner" : 
+              userData.role === "Vet" ? "Veterinarian" : "Pet Trainer",
+        about: userData.about || "No bio available.",
+        petOwnerDetails: {
+          address: userData.petOwnerDetails?.address || "Not provided",
+          phone: userData.petOwnerDetails?.phone || "Not provided"
+        },
+        createdAt: userData.createdAt
+      };
+      
+      setUser(formattedUser);
+      return formattedUser;
+    } catch (error) {
+      console.error("Failed to fetch profile:", error);
+      setError(error.response?.data?.message || "Failed to fetch user profile");
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
   const register = async (userData) => {
     setLoading(true);
     setError("");
-    console.log("Attempting to register with data:", userData);
+    
+    // Ajouter l'image par défaut aux données d'enregistrement
+    const dataToSend = {
+      ...userData,
+      image: userData.image || DEFAULT_PROFILE_IMAGE
+    };
+    
+    console.log("Attempting to register with data:", dataToSend);
+    
     try {
-      const response = await axiosInstance.post("/api/user/register", userData);
+      const response = await axiosInstance.post("/api/user/register", dataToSend);
 
       if (response.data.accessToken) {
         localStorage.setItem("token", response.data.accessToken);
         axiosInstance.defaults.headers.common[
           "Authorization"
-        ] = `Bearer ${response.data.accessToken}`;
+        ] = `Bearer ${response.data.accessToken}`;  
       }
 
       if (response.data.user) {
-        setUser(response.data.user);
+        // S'assurer que l'utilisateur a une image
+        setUser(ensureUserHasImage(response.data.user));
       }
 
       return {
@@ -184,7 +234,8 @@ const AppContextProvider = ({ children }) => {
       });
 
       if (response.data.user) {
-        setUser(response.data.user);
+        // S'assurer que l'utilisateur a une image
+        setUser(ensureUserHasImage(response.data.user));
       }
 
       return {
@@ -223,6 +274,7 @@ const AppContextProvider = ({ children }) => {
       setLoading(false);
     }
   };
+  
   const validateResetToken = async (token) => {
     try {
       const response = await axiosInstance.get(
@@ -236,6 +288,7 @@ const AppContextProvider = ({ children }) => {
       };
     }
   };
+  
   const resetPassword = async (token, newPassword) => {
     setLoading(true);
     setError("");
@@ -259,17 +312,19 @@ const AppContextProvider = ({ children }) => {
       setLoading(false);
     }
   };
+  
   const logout = () => {
     axiosInstance.setAuthToken(null);
     setUser(null);
   };
+  
   // Helper Functions
   const clearError = () => {
     setError("");
   };
 
   const updateUser = (userData) => {
-    setUser((prevUser) => ({
+    setUser((prevUser) => ensureUserHasImage({
       ...prevUser,
       ...userData,
     }));
@@ -352,19 +407,20 @@ const AppContextProvider = ({ children }) => {
     // App Data
     pets,
     currencySymbol,
-
+    
     // Auth Functions
     login,
     register,
     forgotPassword,
     logout,
+    fetchUserProfile,
     createProfile,
     checkAuth,
     resetPassword,
     validateResetToken,
 
     // Pet Functions
-    //createPet,
+    fetchPets,
     updatePet,
     deletePet,
     getMyPets,
