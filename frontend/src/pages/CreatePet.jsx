@@ -121,7 +121,7 @@ const CreatePet = () => {
       
       if (result.success) {
         await fetchPets();
-        navigate("/pets");
+        navigate("/list");
       }
     } catch (error) {
       clearError();
@@ -133,35 +133,35 @@ const CreatePet = () => {
     <div className="flex flex-col items-center mb-8">
       <div className="relative w-40 h-40 mb-6">
         {imagePreview ? (
-          <div className="relative w-full h-full overflow-hidden rounded-full border-4 border-pink-200 shadow-lg">
+          <div className="relative w-full h-full overflow-hidden border-4 border-pink-200 rounded-full shadow-lg">
             <img
               src={imagePreview}
               alt="Pet preview"
               className="object-cover w-full h-full transition-transform duration-300 hover:scale-110"
             />
-            <div className="absolute inset-0 rounded-full border-8 border-white border-opacity-30"></div>
+            <div className="absolute inset-0 border-8 border-white rounded-full border-opacity-30"></div>
           </div>
         ) : (
-          <div className="flex items-center justify-center w-full h-full overflow-hidden bg-gradient-to-r from-pink-50 to-purple-50 rounded-full border-4 border-dashed border-pink-200">
+          <div className="flex items-center justify-center w-full h-full overflow-hidden border-4 border-pink-200 border-dashed rounded-full bg-gradient-to-r from-pink-50 to-purple-50">
             <Camera className="w-16 h-16 text-pink-300" />
           </div>
         )}
         {uploadLoading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 rounded-full">
+          <div className="absolute inset-0 flex items-center justify-center bg-black rounded-full bg-opacity-40">
             <div className="w-10 h-10 border-4 border-white rounded-full border-t-transparent animate-spin"></div>
           </div>
         )}
         
         {/* Decorative paw prints */}
-        <div className="absolute -top-4 -left-4 text-pink-200 transform rotate-45">
+        <div className="absolute text-pink-200 transform rotate-45 -top-4 -left-4">
           <PawPrint size={20} />
         </div>
-        <div className="absolute -bottom-4 -right-4 text-pink-200 transform -rotate-45">
+        <div className="absolute text-pink-200 transform -rotate-45 -bottom-4 -right-4">
           <PawPrint size={20} />
         </div>
       </div>
       
-      <label className="px-5 py-3 text-sm font-medium text-white transition-all duration-300 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full hover:shadow-lg hover:from-pink-600 hover:to-purple-600 cursor-pointer flex items-center space-x-2 transform hover:-translate-y-1">
+      <label className="flex items-center px-5 py-3 space-x-2 text-sm font-medium text-white transition-all duration-300 transform rounded-full cursor-pointer bg-gradient-to-r from-pink-500 to-purple-500 hover:shadow-lg hover:from-pink-600 hover:to-purple-600 hover:-translate-y-1">
         <Upload size={16} />
         <span>Upload Pet Photo</span>
         <input
@@ -176,29 +176,29 @@ const CreatePet = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 py-8 px-4">
+    <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-purple-50 to-pink-50">
       {/* Background decorations */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-        <PawPrint size={48} className="absolute top-20 left-10 text-pink-200 opacity-20 transform rotate-12" />
-        <PawPrint size={36} className="absolute top-40 right-20 text-purple-200 opacity-20 transform -rotate-12" />
-        <PawPrint size={64} className="absolute bottom-20 left-40 text-pink-200 opacity-10 transform rotate-45" />
-        <PawPrint size={52} className="absolute bottom-40 right-10 text-purple-200 opacity-10 transform -rotate-45" />
+        <PawPrint size={48} className="absolute text-pink-200 transform top-20 left-10 opacity-20 rotate-12" />
+        <PawPrint size={36} className="absolute text-purple-200 transform top-40 right-20 opacity-20 -rotate-12" />
+        <PawPrint size={64} className="absolute text-pink-200 transform rotate-45 bottom-20 left-40 opacity-10" />
+        <PawPrint size={52} className="absolute text-purple-200 transform -rotate-45 bottom-40 right-10 opacity-10" />
       </div>
       
-      <div className="container mx-auto max-w-2xl relative">
+      <div className="container relative max-w-2xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-8">
+        <div className="mb-8 text-center">
           <div className="flex items-center justify-center mb-4">
-            <PawPrint size={36} className="text-pink-500 mr-3" />
+            <PawPrint size={36} className="mr-3 text-pink-500" />
             <Heart size={24} className="text-pink-400" />
           </div>
           <h1 className="text-3xl font-bold text-gray-800">Add Your Furry Friend</h1>
           <p className="mt-2 text-gray-600">Share the details about your special companion</p>
         </div>
         
-        <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl p-8 border-2 border-pink-100">
+        <div className="p-8 border-2 border-pink-100 shadow-xl bg-white/90 backdrop-blur-sm rounded-3xl">
           {error && (
-            <div className="p-4 mb-6 text-sm text-red-600 rounded-xl bg-red-50 border border-red-100 flex items-start">
+            <div className="flex items-start p-4 mb-6 text-sm text-red-600 border border-red-100 rounded-xl bg-red-50">
               <Info size={18} className="text-red-500 mr-3 mt-0.5 flex-shrink-0" />
               <p>{error}</p>
             </div>
@@ -207,19 +207,19 @@ const CreatePet = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             {renderImageUpload()}
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               {/* Pet Name */}
               <div className="md:col-span-2">
                 <div className="relative">
                   <input
                     type="text"
                     placeholder="Pet Name"
-                    className="w-full px-5 py-4 pl-12 text-gray-700 bg-pink-50 border-2 border-pink-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-300 focus:border-pink-300 transition-all placeholder-gray-400"
+                    className="w-full px-5 py-4 pl-12 text-gray-700 placeholder-gray-400 transition-all border-2 border-pink-100 bg-pink-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-300 focus:border-pink-300"
                     value={formData.name}
                     onChange={(e) => handleInputChange("name", e.target.value)}
                     required
                   />
-                  <Heart size={18} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-pink-400" />
+                  <Heart size={18} className="absolute text-pink-400 transform -translate-y-1/2 left-4 top-1/2" />
                 </div>
               </div>
               
@@ -228,24 +228,24 @@ const CreatePet = () => {
                 <input
                   type="text"
                   placeholder="Race"
-                  className="w-full px-5 py-4 pl-12 text-gray-700 bg-purple-50 border-2 border-purple-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-purple-300 transition-all placeholder-gray-400"
+                  className="w-full px-5 py-4 pl-12 text-gray-700 placeholder-gray-400 transition-all border-2 border-purple-100 bg-purple-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-purple-300"
                   value={formData.race}
                   onChange={(e) => handleInputChange("race", e.target.value)}
                   required
                 />
-                <PawPrint size={18} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-purple-400" />
+                <PawPrint size={18} className="absolute text-purple-400 transform -translate-y-1/2 left-4 top-1/2" />
               </div>
               
               <div className="relative">
                 <input
                   type="text"
                   placeholder="Breed"
-                  className="w-full px-5 py-4 pl-12 text-gray-700 bg-purple-50 border-2 border-purple-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-purple-300 transition-all placeholder-gray-400"
+                  className="w-full px-5 py-4 pl-12 text-gray-700 placeholder-gray-400 transition-all border-2 border-purple-100 bg-purple-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-purple-300"
                   value={formData.breed}
                   onChange={(e) => handleInputChange("breed", e.target.value)}
                   required
                 />
-                <PawPrint size={18} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-purple-400" />
+                <PawPrint size={18} className="absolute text-purple-400 transform -translate-y-1/2 left-4 top-1/2" />
               </div>
               
               {/* Age and City */}
@@ -254,12 +254,12 @@ const CreatePet = () => {
                   type="number"
                   placeholder="Age (months)"
                   min="0"
-                  className="w-full px-5 py-4 pl-12 text-gray-700 bg-pink-50 border-2 border-pink-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-300 focus:border-pink-300 transition-all placeholder-gray-400"
+                  className="w-full px-5 py-4 pl-12 text-gray-700 placeholder-gray-400 transition-all border-2 border-pink-100 bg-pink-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-300 focus:border-pink-300"
                   value={formData.age}
                   onChange={(e) => handleInputChange("age", e.target.value)}
                   required
                 />
-                <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-pink-400 font-medium">
+                <span className="absolute font-medium text-pink-400 transform -translate-y-1/2 left-4 top-1/2">
                   #
                 </span>
               </div>
@@ -268,18 +268,18 @@ const CreatePet = () => {
                 <input
                   type="text"
                   placeholder="City"
-                  className="w-full px-5 py-4 pl-12 text-gray-700 bg-pink-50 border-2 border-pink-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-300 focus:border-pink-300 transition-all placeholder-gray-400"
+                  className="w-full px-5 py-4 pl-12 text-gray-700 placeholder-gray-400 transition-all border-2 border-pink-100 bg-pink-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-300 focus:border-pink-300"
                   value={formData.city}
                   onChange={(e) => handleInputChange("city", e.target.value)}
                   required
                 />
-                <MapPin size={18} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-pink-400" />
+                <MapPin size={18} className="absolute text-pink-400 transform -translate-y-1/2 left-4 top-1/2" />
               </div>
               
               {/* Gender and Category */}
               <div className="relative">
                 <select
-                  className="w-full px-5 py-4 pl-12 text-gray-700 bg-purple-50 border-2 border-purple-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-purple-300 transition-all appearance-none"
+                  className="w-full px-5 py-4 pl-12 text-gray-700 transition-all border-2 border-purple-100 appearance-none bg-purple-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-purple-300"
                   value={formData.gender}
                   onChange={(e) => handleInputChange("gender", e.target.value)}
                   required
@@ -288,19 +288,19 @@ const CreatePet = () => {
                   <option value="male">Male</option>
                   <option value="female">Female</option>
                 </select>
-                <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                <div className="absolute transform -translate-y-1/2 pointer-events-none right-4 top-1/2">
                   <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
                   </svg>
                 </div>
-                <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-purple-400 font-medium">
+                <span className="absolute font-medium text-purple-400 transform -translate-y-1/2 left-4 top-1/2">
                   ♂︎
                 </span>
               </div>
               
               <div className="relative">
                 <select
-                  className="w-full px-5 py-4 pl-12 text-gray-700 bg-purple-50 border-2 border-purple-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-purple-300 transition-all appearance-none"
+                  className="w-full px-5 py-4 pl-12 text-gray-700 transition-all border-2 border-purple-100 appearance-none bg-purple-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-purple-300"
                   value={formData.category}
                   onChange={(e) => handleInputChange("category", e.target.value)}
                   required
@@ -313,12 +313,12 @@ const CreatePet = () => {
                   <option value="reptile">Reptile</option>
                   <option value="other">Other</option>
                 </select>
-                <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                <div className="absolute transform -translate-y-1/2 pointer-events-none right-4 top-1/2">
                   <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
                   </svg>
                 </div>
-                <PawPrint size={18} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-purple-400" />
+                <PawPrint size={18} className="absolute text-purple-400 transform -translate-y-1/2 left-4 top-1/2" />
               </div>
               
               {/* Fee */}
@@ -326,7 +326,7 @@ const CreatePet = () => {
                 <input
                   type="number"
                   placeholder="Fee (if for adoption)"
-                  className="w-full px-5 py-4 pl-12 text-gray-700 bg-pink-50 border-2 border-pink-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-300 focus:border-pink-300 transition-all placeholder-gray-400"
+                  className="w-full px-5 py-4 pl-12 text-gray-700 placeholder-gray-400 transition-all border-2 border-pink-100 bg-pink-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-300 focus:border-pink-300"
                   value={formData.fee}
                   onChange={(e) => handleInputChange("fee", e.target.value)}
                   min="0"
@@ -340,12 +340,12 @@ const CreatePet = () => {
               
               {/* Trained Checkbox */}
               <div className="md:col-span-2">
-                <label className="flex items-center space-x-3 p-4 bg-purple-50 rounded-xl border-2 border-purple-100 cursor-pointer hover:bg-purple-100 transition-colors">
+                <label className="flex items-center p-4 space-x-3 transition-colors border-2 border-purple-100 cursor-pointer bg-purple-50 rounded-xl hover:bg-purple-100">
                   <div className="relative">
                     <input
                       type="checkbox"
                       id="isTrained"
-                      className="opacity-0 absolute h-6 w-6"
+                      className="absolute w-6 h-6 opacity-0"
                       checked={formData.isTrained}
                       onChange={(e) => handleInputChange("isTrained", e.target.checked)}
                     />
@@ -358,7 +358,7 @@ const CreatePet = () => {
               </div>
               
               {/* Description */}
-              <div className="md:col-span-2 relative">
+              <div className="relative md:col-span-2">
                 <textarea
                   placeholder="Description (health, behavior, preferences, etc.)"
                   className="w-full px-5 py-4 text-gray-700 bg-purple-50 border-2 border-purple-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-purple-300 transition-all min-h-[120px] placeholder-gray-400"
@@ -372,11 +372,11 @@ const CreatePet = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full px-6 py-4 mt-6 text-base font-medium text-white transition-all duration-300 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl hover:shadow-lg hover:from-pink-600 hover:to-purple-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 disabled:from-gray-300 disabled:to-gray-400 transform hover:-translate-y-1 flex items-center justify-center"
+              className="flex items-center justify-center w-full px-6 py-4 mt-6 text-base font-medium text-white transition-all duration-300 transform bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl hover:shadow-lg hover:from-pink-600 hover:to-purple-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 disabled:from-gray-300 disabled:to-gray-400 hover:-translate-y-1"
             >
               {loading ? (
                 <>
-                  <div className="w-5 h-5 border-2 border-white rounded-full border-t-transparent animate-spin mr-3"></div>
+                  <div className="w-5 h-5 mr-3 border-2 border-white rounded-full border-t-transparent animate-spin"></div>
                   Creating Pet Profile...
                 </>
               ) : (

@@ -5,6 +5,8 @@ import EmptyState from "../components/EmptyState";
 import LoadingWrapper from "../components/LoadingWrapper";
 import { useApp } from "../context/AppContext";
 import { Alert } from "../components/Alert";
+import ImageUpload from "../components/ImageUpload";
+import EditForm from "../components/EditForm";
 
 // Constants
 const PET_CATEGORIES = [
@@ -83,138 +85,6 @@ const ActionButtons = ({
       </button>
     )}
   </div>
-);
-
-// Form fields component
-const EditForm = ({ formData, onChange, onSubmit, onCancel, loading }) => (
-  <form onSubmit={onSubmit} className="space-y-4">
-    <div className="grid grid-cols-2 gap-4">
-      <input
-        type="text"
-        value={formData.name}
-        onChange={(e) => onChange("name", e.target.value)}
-        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#ffc929]"
-        placeholder="Pet Name"
-        required
-      />
-      <input
-        type="text"
-        value={formData.race}
-        onChange={(e) => onChange("race", e.target.value)}
-        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#ffc929]"
-        placeholder="Race"
-        required
-      />
-    </div>
-
-    <div className="grid grid-cols-2 gap-4">
-      <input
-        type="text"
-        value={formData.breed}
-        onChange={(e) => onChange("breed", e.target.value)}
-        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#ffc929]"
-        placeholder="Breed"
-        required
-      />
-      <input
-        type="number"
-        value={formData.age}
-        onChange={(e) => onChange("age", e.target.value)}
-        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#ffc929]"
-        placeholder="Age"
-        required
-        min="0"
-      />
-    </div>
-
-    <div className="grid grid-cols-2 gap-4">
-      <input
-        type="text"
-        value={formData.city}
-        onChange={(e) => onChange("city", e.target.value)}
-        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#ffc929]"
-        placeholder="City"
-        required
-      />
-      <select
-        value={formData.gender}
-        onChange={(e) => onChange("gender", e.target.value)}
-        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#ffc929]"
-        required
-      >
-        <option value="">Select Gender</option>
-        {GENDER_OPTIONS.map(({ value, label }) => (
-          <option key={value} value={value}>
-            {label}
-          </option>
-        ))}
-      </select>
-    </div>
-
-    <div className="grid grid-cols-2 gap-4">
-      <select
-        value={formData.category}
-        onChange={(e) => onChange("category", e.target.value)}
-        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#ffc929]"
-        required
-      >
-        <option value="">Select Category</option>
-        {PET_CATEGORIES.map(({ value, label }) => (
-          <option key={value} value={value}>
-            {label}
-          </option>
-        ))}
-      </select>
-      <input
-        type="number"
-        value={formData.fee}
-        onChange={(e) => onChange("fee", e.target.value)}
-        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#ffc929]"
-        placeholder="Fee"
-        min="0"
-        required
-      />
-    </div>
-
-    <div className="flex items-center">
-      <input
-        type="checkbox"
-        id="isTrained"
-        checked={formData.isTrained}
-        onChange={(e) => onChange("isTrained", e.target.checked)}
-        className="w-4 h-4 border rounded focus:ring-2 focus:ring-[#ffc929]"
-      />
-      <label htmlFor="isTrained" className="ml-2">
-        Is Trained
-      </label>
-    </div>
-
-    <textarea
-      value={formData.description}
-      onChange={(e) => onChange("description", e.target.value)}
-      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#ffc929]"
-      placeholder="Description"
-      rows={4}
-      required
-    />
-
-    <div className="flex justify-end gap-4 mt-6">
-      <button
-        type="button"
-        onClick={onCancel}
-        className="px-4 py-2 text-gray-700 transition-colors border rounded-lg hover:bg-gray-100"
-      >
-        Cancel
-      </button>
-      <button
-        type="submit"
-        disabled={loading}
-        className="px-4 py-2 text-white transition-colors rounded-lg bg-[#ffc929] hover:bg-[#e6b625] disabled:bg-gray-300"
-      >
-        {loading ? "Saving..." : "Save Changes"}
-      </button>
-    </div>
-  </form>
 );
 
 // PetDetails component
@@ -325,8 +195,9 @@ const PetOwnerPosts = () => {
       gender: pet.gender,
       category: pet.category,
       fee: pet.fee,
-      isTrained: pet.isTrained,
+      isTrained: pet.isTrained === true || pet.isTrained === "true",
       description: pet.description,
+      image: pet.image,
     });
   }, []);
 
@@ -353,7 +224,14 @@ const PetOwnerPosts = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const result = await updatePet(selectedPet._id, editFormData);
+      // Convert isTrained to string for API
+      const updatedData = {
+        ...editFormData,
+        isTrained: editFormData.isTrained,
+        image: editFormData.image,
+      };
+      // Use updatedData instead of editFormData
+      const result = await updatePet(selectedPet._id, updatedData);
       if (result.success) {
         fetchUserPets();
         handleCloseModal();
@@ -392,31 +270,32 @@ const PetOwnerPosts = () => {
       <div className="min-h-screen bg-gradient-to-br from-white via-[#ffc929]/5 to-pink-50">
         <div className="container p-4 mx-auto max-w-7xl sm:p-6 lg:p-8">
           {/* Header */}
-          <div className="flex justify-between mb-8">
+          <div className="mb-8">
             <div className="space-y-4 transition-all duration-500 transform hover:translate-x-2">
               <h1 className="text-2xl font-bold tracking-tight text-neutral-900 transition-colors duration-300 sm:text-3xl lg:text-4xl hover:text-[#ffc929]">
                 Pet Adoption Posts
               </h1>
-              <p className="mt-2 text-sm text-black transition-colors duration-300 hover:text-pink-500 sm:text-base lg:text-lg">
-                Manage your adoption posts and track potential candidates all in
-                one place.
-              </p>
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-black transition-colors duration-300 hover:text-pink-500 sm:text-base lg:text-lg">
+                  Manage your adoption posts and track potential candidates all
+                  in one place.
+                </p>
+                {userPets.length > 0 && (
+                  <button
+                    onClick={() => navigate("/addPet")}
+                    className="flex items-center gap-1 px-4 py-1.5 text-sm text-white transition-all duration-300 transform rounded-lg bg-[#ffc929] hover:bg-[#e6b625] hover:scale-105"
+                  >
+                    <Plus size={16} />
+                    <span>Add New Post</span>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
-          {userPets.length > 0 && (
-            <button
-              onClick={() => navigate("/addPet")}
-              className="flex items-center gap-1 px-4 py-1.5 text-sm text-white transition-all duration-300 transform rounded-lg bg-[#ffc929] hover:bg-[#e6b625] hover:scale-105"
-            >
-              <Plus size={16} />
-              <span>Add New Post</span>
-            </button>
-          )}
 
-          {/* Error Display */}
+          {/* Rest of the component remains the same */}
           {error && <Alert message={error} onClose={clearError} />}
 
-          {/* Empty State */}
           {userPets.length === 0 ? (
             <EmptyState
               message="You haven't created any pet adoption posts yet. Start by adding your first pet!"
@@ -450,7 +329,7 @@ const PetOwnerPosts = () => {
                               <img
                                 src={pet.image}
                                 alt={pet.name}
-                                className="object-cover w-full h-full"
+                                className="absolute inset-0 object-contain w-full h-full"
                               />
                             </div>
                           </td>
