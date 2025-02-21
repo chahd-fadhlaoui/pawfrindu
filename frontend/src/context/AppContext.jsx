@@ -420,7 +420,7 @@ useEffect(() => {
     validateResetToken,
 
     // Pet Functions
-    //createPet,
+    fetchPets,
     updatePet,
     deletePet,
     getMyPets,

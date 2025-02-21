@@ -331,7 +331,11 @@ const CreatePet = () => {
                   onChange={(e) => handleInputChange("fee", e.target.value)}
                   min="0"
                 />
-                <DollarSign size={18} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-pink-400" />
+                 {/* Ajouter le symbole DT */}
+    <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-pink-400 font-medium mr-[550px]">
+      DT
+    </span>
+                
               </div>
               
               {/* Trained Checkbox */}
