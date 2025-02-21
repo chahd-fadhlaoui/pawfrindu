@@ -68,7 +68,7 @@ const About = () => {
                 <img 
                   src={section.image} 
                   alt={section.title} 
-                  className="object-cover w-full transition-transform duration-500 transform  group-hover:scale-110"
+                  className="object-cover w-full transition-transform duration-500 transform group-hover:scale-110"
                 />
               </div>
             </div>
@@ -86,7 +86,7 @@ const About = () => {
                   <img 
                     src={section.icon} 
                     alt="about-icon" 
-                    className="transition-transform transform  max-w-10 group-hover:scale-110"
+                    className="transition-transform transform max-w-10 group-hover:scale-110"
                   />
                 </span>
                 <h3 

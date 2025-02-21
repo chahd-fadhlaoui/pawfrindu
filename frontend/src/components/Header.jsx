@@ -108,7 +108,7 @@ function Header() {
         <Link to="/" aria-label="Home">
           <img
             src={logo}
-            className="h-[80px] w-auto transition-transform transform hover:scale-105"
+            className="h-[50px] w-auto transition-transform transform hover:scale-105"
             alt="PawFrindu Logo"
           />
         </Link>
