@@ -434,32 +434,85 @@ const PetOwnerPosts = () => {
 
           {/* Modal */}
           {selectedPet && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-              <div className="w-full max-w-lg bg-white rounded-xl">
-                <div className="flex items-center justify-between p-4 border-b">
-                  <h2 className="text-xl font-bold">
-                    {editMode ? "Edit Pet" : selectedPet.name}
-                  </h2>
-                  <button
-                    onClick={handleCloseModal}
-                    className="p-2 rounded-full hover:bg-gray-100"
-                  >
-                    <X size={20} />
-                  </button>
-                </div>
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto bg-black/50 backdrop-blur-sm">
+              <div className="relative w-full max-w-lg my-8 bg-white rounded-xl">
+                {/* Close button moved outside for better visibility */}
+                <button
+                  onClick={() => {
+                    setSelectedPet(null);
+                    setEditMode(false);
+                    setEditFormData(null);
+                    clearError();
+                  }}
+                  className="absolute z-10 p-2 rounded-full right-2 top-2 hover:bg-gray-100"
+                >
+                  <X size={20} />
+                </button>
 
-                <div className="p-4">
-                  {editMode ? (
-                    <EditForm
-                      formData={editFormData}
-                      onChange={handleInputChange}
-                      onSubmit={handleUpdate}
-                      onCancel={handleCloseModal}
-                      loading={loading}
-                    />
-                  ) : (
-                    <PetDetails pet={selectedPet} onEdit={handleEdit} />
-                  )}
+                <div className="max-h-[80vh] overflow-y-auto">
+                  <div className="p-6 border-b">
+                    <h2 className="pr-8 text-xl font-bold">
+                      {editMode ? "Edit Pet" : selectedPet.name}
+                    </h2>
+                  </div>
+
+                  <div className="p-6">
+                    {editMode ? (
+                      <EditForm
+                        formData={editFormData}
+                        onChange={handleInputChange} // Use the existing handler
+                        onSubmit={handleUpdate}
+                        onCancel={handleCloseModal} // Use the existing handler
+                        loading={loading}
+                      />
+                    ) : (
+                      <div className="space-y-6">
+                        <div className="relative overflow-hidden rounded-lg aspect-video">
+                          <img
+                            src={selectedPet.image}
+                            alt={selectedPet.name}
+                            className="absolute inset-0 object-cover w-full h-full"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="p-4 rounded-lg bg-[#ffc929]/5">
+                            <p className="text-sm text-gray-600">Race</p>
+                            <p className="font-medium">{selectedPet.race}</p>
+                          </div>
+                          <div className="p-4 rounded-lg bg-[#ffc929]/5">
+                            <p className="text-sm text-gray-600">Age</p>
+                            <p className="font-medium">
+                              {selectedPet.age} months
+                            </p>
+                          </div>
+                          <div className="p-4 rounded-lg bg-[#ffc929]/5">
+                            <p className="text-sm text-gray-600">City</p>
+                            <p className="font-medium">{selectedPet.city}</p>
+                          </div>
+                          <div className="p-4 rounded-lg bg-[#ffc929]/5">
+                            <p className="text-sm text-gray-600">Status</p>
+                            <StatusBadge status={selectedPet.status} />
+                          </div>
+                        </div>
+
+                        <div className="p-4 rounded-lg bg-[#ffc929]/5">
+                          <p className="text-sm text-gray-600">Description</p>
+                          <p className="mt-1">{selectedPet.description}</p>
+                        </div>
+
+                        {/* Action buttons in a fixed position */}
+                        <div className="flex justify-end gap-2 pt-4">
+                          <button
+                            onClick={() => handleEdit(selectedPet)}
+                            className="px-6 py-2 text-white bg-[#ffc929] rounded-lg hover:bg-[#e6b625] transition-all duration-300"
+                          >
+                            Edit Pet
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
