@@ -363,6 +363,27 @@ const validateResetToken = async (req, res) => {
     });
   }
 };
+// 🚀 Get all users - simple version
+const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find({ isArchieve: false })
+      .select('-password -resetPasswordToken -resetPasswordExpiry');
+
+    res.json({
+      success: true,
+      count: users.length,
+      users
+    });
+  } catch (error) {
+    console.error("Get All Users Error:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Failed to fetch users" 
+    });
+  }
+};
+
+
 export {
   createProfile,
   forgotPassword,
@@ -370,6 +391,7 @@ export {
   login,
   register,
   resetPassword,
+  getAllUsers,
   verifyToken,
   validateResetToken,
 };

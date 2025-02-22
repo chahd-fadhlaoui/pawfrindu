@@ -92,35 +92,24 @@ export const getPetById = async (req, res) => {
   }
 };
 
-// Update pet
+// Update pet - modified version without admin check
 export const updatePet = async (req, res) => {
   try {
     const { id } = req.params;
     const updateData = req.body;
-    
-    // Find pet first to check ownership
-    const pet = await Pet.findById(id);
-    
-    if (!pet) {
-      return res.status(404).json({
-        success: false,
-        message: 'Pet not found'
-      });
-    }
-    
-    // Check if user is the owner of the pet
-    if (pet.owner.toString() !== req.user._id.toString() && req.user.role !== 'Admin') {
-      return res.status(403).json({
-        success: false,
-        message: 'Unauthorized: You can only update your own pets'
-      });
-    }
     
     const updatedPet = await Pet.findByIdAndUpdate(
       id,
       updateData,
       { new: true }
     );
+    
+    if (!updatedPet) {
+      return res.status(404).json({
+        success: false,
+        message: 'Pet not found'
+      });
+    }
     
     return res.status(200).json({
       success: true,
@@ -151,13 +140,7 @@ export const deletePet = async (req, res) => {
       });
     }
     
-    // Check if user is the owner of the pet
-    if (pet.owner.toString() !== req.user._id.toString() && req.user.role !== 'Admin') {
-      return res.status(403).json({
-        success: false,
-        message: 'Unauthorized: You can only delete your own pets'
-      });
-    }
+    
     
     await Pet.findByIdAndDelete(id);
     

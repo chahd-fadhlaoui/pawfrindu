@@ -10,7 +10,7 @@ const petSchema = new mongoose.Schema({
   category: { type: String, required: true },
   fee: { type: Number, required: true },
   isTrained: { type: String, required: true },
-  status: { type: String, enum: ['pending', 'available', 'adopted', 'sold'], default: 'pending' },
+  status: { type: String, enum: ['pending', 'accepted', 'adopted', 'sold'], default: 'pending' },
   image: { type: String, required: true },
   description: { type: String, required: true },
   candidates: [{ type: mongoose.Schema.Types.ObjectId, ref: 'user' }],  // Référence aux utilisateurs qui postulent pour adopter

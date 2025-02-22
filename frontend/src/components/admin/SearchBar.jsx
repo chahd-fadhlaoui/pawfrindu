@@ -1,9 +1,11 @@
 import { Search } from "lucide-react";
 
-const SearchBar = () => (
+const SearchBar = ({ value, onChange }) => (
   <div className="relative">
     <input
       type="text"
+      value={value}
+      onChange={onChange}
       placeholder="Rechercher..."
       className="w-full px-4 py-2 rounded-xl border-2 border-amber-100 focus:border-teal-400 focus:ring focus:ring-teal-200 focus:ring-opacity-50 transition-colors"
     />
@@ -24,4 +26,5 @@ const SearchBar = () => (
     </button>
   </div>
 );
-  export default SearchBar
+
+export default SearchBar;
