@@ -54,7 +54,9 @@ const AppContextProvider = ({ children }) => {
 
     try {
       const response = await axiosInstance.get("/api/user/me");
+      console.log("API response:", response.data); // Debug the raw response
       const authenticatedUser = ensureUserHasImage(response.data.user);
+      console.log("Processed user:", authenticatedUser); // Debug the processed user
       setUser(authenticatedUser);
       return true;
     } catch (error) {
@@ -62,6 +64,9 @@ const AppContextProvider = ({ children }) => {
       localStorage.removeItem("token");
       setUser(null);
       return false;
+    }
+    finally {
+      setLoading(false); // Move this to finally to ensure it always runs
     }
   }, []);
 
@@ -92,23 +97,26 @@ const AppContextProvider = ({ children }) => {
     const initialize = async () => {
       if (!isMounted) return;
       setLoading(true);
-
+      console.log("Initializing app...");
+      
       try {
         // First fetch all pets (public data)
         await fetchPets();
-
+        console.log("Pets fetched");
         // Then check authentication
         const isAuthenticated = await checkAuth();
-
+        console.log("Auth checked:", isAuthenticated);
         // If authenticated, fetch user's pets
         if (isAuthenticated && isMounted) {
           await getMyPets();
+          console.log("User pets fetched");
         }
       } catch (error) {
         console.error("Initialization failed:", error);
       } finally {
         if (isMounted) {
           setLoading(false);
+          console.log("Loading complete");
         }
       }
     };
@@ -118,7 +126,7 @@ const AppContextProvider = ({ children }) => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [fetchPets, checkAuth, getMyPets]);
 
   // Axios interceptors
   useEffect(() => {
@@ -170,7 +178,7 @@ const AppContextProvider = ({ children }) => {
       axiosInstance.setAuthToken(accessToken);
       setUser(authenticatedUser);
       await fetchPets();
-
+      await checkAuth(); // Force re-check to ensure consistency
       return {
         success: true,
         redirectTo:

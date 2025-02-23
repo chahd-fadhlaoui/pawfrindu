@@ -7,11 +7,12 @@ import logo from "../assets/LogoPawfrindu.png";
 function Header() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useApp();
+  const { user, loading, logout } = useApp();
+  const [forceRender, setForceRender] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
-
+  const DEFAULT_PROFILE_IMAGE = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSIxMDAiIGZpbGw9IiNFNUU3RUIiLz4KICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSI4MCIgcj0iNDAiIGZpbGw9IiM5Q0EzQUYiLz4KICA8cGF0aCBkPSJNMTYwIDE4MEgzOUM0MSAxNDAgODAgMTIwIDEwMCAxMjBDMTIwIDEyMCAxNTggMTQwIDE2MCAxODBaIiBmaWxsPSIjOUNBM0FGIi8+Cjwvc3ZnPg==";
   const navLinks = [
     {
       name: "Adopt A Pet",
@@ -40,6 +41,14 @@ function Header() {
       protected: true,
     },
   ];
+// Debug user and loading changes
+useEffect(() => {
+  if (user && !loading) {
+    setForceRender((prev) => prev + 1); // Trigger re-render when user is set
+  }
+  console.log("Header - User:", user);
+  console.log("Header - Loading:", loading);
+}, [user, loading]);
 
   useEffect(() => {
     setMobileMenuOpen(false);
@@ -63,6 +72,11 @@ function Header() {
   };
   // Memoize the auth section to prevent unnecessary re-renders
   const authSection = useMemo(() => {
+    if (loading) {
+      return (
+        <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse" />
+      ); // Placeholder for loading state
+    }
     if (!user) {
       return (
         <div className="flex gap-4">
@@ -72,15 +86,13 @@ function Header() {
           >
             Login
           </button>
-          <button
-            className="px-6 py-2.5 text-gray-900 bg-white border-2 border-[#ffc929] rounded-full hover:bg-[#fff5d9] transition-all duration-300 transform hover:-translate-y-0.5 shadow-md hover:shadow-lg font-medium text-sm"
-            onClick={() => navigate("/register")}
-          >
-            Create account
-          </button>
         </div>
       );
     }
+    // Determine the image source based on whether it's a data URL
+    const imageSrc = user.image?.startsWith("data:")
+      ? user.image // No cache buster for data URLs
+      : `${user.image}?t=${Date.now()}`; // Cache buster for HTTP URLs
 
     return (
       <div className="relative flex items-center gap-2" ref={dropdownRef}>
@@ -93,11 +105,11 @@ function Header() {
           <div className="relative w-10 h-10 overflow-hidden rounded-full ring-2 ring-[#ffc929]">
             <img
               className="object-cover w-full h-full"
-              src={user.image}
-              alt={user.fullName}
+              src={imageSrc || DEFAULT_PROFILE_IMAGE}
+              alt={user.fullName || "User"}
+              key={user?.id || user?.email || "default"}
               onError={(e) => {
-                e.target.src =
-                  "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSIxMDAiIGZpbGw9IiNFNUU3RUIiLz4KICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSI4MCIgcj0iNDAiIGZpbGw9IiM5Q0EzQUYiLz4KICA8cGF0aCBkPSJNMTYwIDE4MEgzOUM0MSAxNDAgODAgMTIwIDEwMCAxMjBDMTIwIDEyMCAxNTggMTQwIDE2MCAxODBaIiBmaWxsPSIjOUNBM0FGIi8+Cjwvc3ZnPg==";
+                e.target.src = DEFAULT_PROFILE_IMAGE;
               }}
             />
           </div>
@@ -145,9 +157,8 @@ function Header() {
         )}
       </div>
     );
-  }, [user, dropdownOpen, navigate]);
+  }, [user, loading, dropdownOpen, navigate, forceRender]);
 
-  
   return (
     <header className="sticky top-0 z-50 bg-white shadow-sm">
       <div className="relative flex items-center justify-between max-w-[1400px] mx-auto px-4 py-3 lg:px-6">
