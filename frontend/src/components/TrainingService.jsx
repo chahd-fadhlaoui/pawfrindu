@@ -1,36 +1,49 @@
 import React, { useState } from "react";
-import { ArrowRight } from 'lucide-react';
-import basicTrainingIcon from "../assets/service-3.png";  
-import medicalTrainingIcon from "../assets/service-5.png";  
+import { ArrowRight, GraduationCap } from 'lucide-react';
 
-export default function TrainingService() {  
+const TrainingService = () => {  
   const trainingCategories = [  
     {  
       name: "Basic Training",  
-      icon: basicTrainingIcon,  
       description: "Comprehensive training program focusing on essential obedience, socialization, and behavioral skills to help your pet become a well-mannered companion.",
-      backgroundColor: "bg-[#faeacf]"
+      backgroundColor: "bg-pink-50",
+      metrics: "500+ Trained Pets"
     },  
     {  
       name: "Medical Training",  
-      icon: medicalTrainingIcon,  
       description: "Specialized training designed to help pets become comfortable with medical procedures, reducing stress during veterinary visits and medical treatments.",
-      backgroundColor: "bg-[#ffbfca]"
+      backgroundColor: "bg-yellow-50",
+      metrics: "98% Success Rate"
     },  
   ];  
 
   const [hoveredCard, setHoveredCard] = useState(null);
 
   return (  
-    <div className="relative py-16 overflow-hidden bg-white">
-      <div className="px-4 mx-auto max-w-7xl">
-        <div className="mb-12 text-center">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4 
-            transform transition-all duration-700 hover:text-[#ffc929]">
-            Training Services
+    <section className="relative py-20 bg-white">
+      {/* Decorative background elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute text-6xl text-pink-200 transform top-20 left-10 opacity-20 -rotate-12">🐾</div>
+        <div className="absolute text-6xl text-yellow-200 transform rotate-45 top-40 right-20 opacity-20">🐾</div>
+        
+        <div className="absolute top-0 left-0 bg-pink-200 rounded-full w-72 h-72 mix-blend-multiply filter blur-xl opacity-10 animate-blob" />
+        <div className="absolute bottom-0 right-0 bg-yellow-200 rounded-full w-72 h-72 mix-blend-multiply filter blur-xl opacity-10 animate-blob-reverse" />
+      </div>
+
+      <div className="relative px-4 mx-auto max-w-7xl">
+        <div className="mb-16 space-y-6 text-center">
+          <span className="inline-flex items-center px-4 py-2 text-sm font-semibold text-pink-500 bg-white border border-pink-100 rounded-full shadow-sm">
+            <GraduationCap className="w-4 h-4 mr-2 text-[#ffc929]" />
+            Professional Training
+          </span>
+
+          <h2 className="text-4xl font-bold tracking-tight text-gray-900 md:text-5xl group">
+            <span className="block">Expert Training</span>
+            <span className="block mt-2 text-pink-500">For Every Pet</span>
           </h2>
-          <p className="max-w-2xl mx-auto text-lg text-gray-600">
-            Specialized training to help your pet become a confident, well-adjusted companion
+
+          <p className="max-w-2xl mx-auto text-xl leading-relaxed text-gray-600">
+            Transform your pet into a well-behaved companion with our specialized training programs
           </p>
         </div>
 
@@ -60,15 +73,14 @@ export default function TrainingService() {
                     transition-opacity duration-500`}
                 >
                   <div className="p-4 mb-6 bg-white rounded-full shadow-md">
-                    <img
-                      src={category.icon}
-                      alt={`${category.name} icon`}
-                      className="w-24 h-24 transition-transform duration-300 transform"
-                    />
+                    <GraduationCap className="w-24 h-24 text-gray-700 transition-transform duration-300 transform" />
                   </div>
                   <h3 className="mb-4 text-2xl font-semibold text-gray-900">
                     {category.name}
                   </h3>
+                  <span className="inline-flex items-center px-4 py-2 text-sm font-semibold text-pink-500 bg-white rounded-full">
+                    {category.metrics}
+                  </span>
                 </div>
 
                 {/* Back of Card */}
@@ -78,7 +90,7 @@ export default function TrainingService() {
                     transition-opacity duration-500
                     rotate-y-180`}
                 >
-                  <p className="mb-6 text-base leading-relaxed text-gray-700">
+                  <p className="mb-6 text-lg leading-relaxed text-gray-700">
                     {category.description}
                   </p>
                   <button 
@@ -97,11 +109,8 @@ export default function TrainingService() {
           ))}
         </div>
       </div>
-
-      {/* Decorative background elements */}
-      <div className="absolute -top-10 -left-10 w-48 h-48 bg-[#ffc929] 
-        rounded-full opacity-20 -z-10 animate-blob"></div>
-      <div className="absolute w-48 h-48 bg-pink-100 rounded-full -bottom-10 -right-10 opacity-30 -z-10 animate-blob-reverse"></div>
-    </div>
+    </section>
   );  
-}
+};
+
+export default TrainingService;

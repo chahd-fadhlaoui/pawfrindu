@@ -1,64 +1,63 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Loader2 } from 'lucide-react';
-import dog from "../assets/dogCategory.png";
-import cat from "../assets/CatCategory.png";
-import other from "../assets/OtherCategory.png";
-import veterinary from "../assets/PawCategory.png";
+import { ArrowRight, HandHeartIcon, Heart, Dog, Cat, Bird, Stethoscope } from 'lucide-react';
 
-// Reusable Category Card Component
 const CategoryCard = ({ category, isHovered, onHover }) => {
   return (
     <Link
       to={`/pets/${category.slug}`}
       className={`
         group relative overflow-hidden
-        bg-white rounded-2xl p-6 md:p-8
+        bg-white rounded-3xl p-8
         transform transition-all duration-500
-        hover:scale-102 hover:shadow-lg
-        border-2 border-neutral-100
-        ${!category.isActive ? 'opacity-60 cursor-not-allowed' : 'hover:border-[#ffc929]'}
+        hover:scale-[1.02]
+        border border-gray-100
+        ${!category.isActive ? 'opacity-60 cursor-not-allowed' : 'hover:border-pink-200'}
+        shadow-sm hover:shadow-lg
       `}
       onMouseEnter={() => onHover(category.id)}
       onMouseLeave={() => onHover(null)}
       aria-disabled={!category.isActive}
     >
       {/* Background Animation */}
-      <div className="absolute inset-0 transition-opacity duration-500 opacity-0 bg-gradient-to-r from-neutral-50/50 to-transparent group-hover:opacity-100" />
-      
+      <div className="absolute inset-0 transition-all duration-500 opacity-0 bg-gradient-to-r from-yellow-50/30 via-pink-50/30 to-yellow-50/30 group-hover:opacity-100 group-hover:bg-[length:200%_200%] animate-gradient" />
+       
       <div className="relative z-10 space-y-6">
         {/* Icon Container */}
-        <div className="w-16 h-16 rounded-full bg-neutral-50 p-3 transition-colors duration-300 group-hover:bg-[#ffc929]/10">
-          <img
-            src={category.icon}
-            alt=""
-            role="presentation"
-            className="object-contain w-full h-full transition-transform duration-500 group-hover:scale-110"
-          />
+        <div className="relative">
+          <div className="w-16 h-16 transition-all duration-500 rounded-full bg-gradient-to-br from-yellow-50 to-pink-50 p-3.5 group-hover:from-yellow-100 group-hover:to-pink-100 group-hover:rotate-6 transform">
+            <div className="transition-transform duration-500 group-hover:scale-110">
+              {category.icon}
+            </div>
+          </div>
+         {/* Floating sparkle decoration */}
+         <div className="absolute transition-all duration-300 -right-2 -top-2">
+            <span className="absolute transition-all duration-500 opacity-0 group-hover:opacity-100 animate-ping">✨</span>
+            <span className="transition-all duration-500 opacity-0 group-hover:opacity-100">✨</span>
+          </div>
         </div>
 
-        {/* Content */}
-        <div className="space-y-2">
+       {/* Enhanced Content with Animation */}
+       <div className="space-y-2 transition-all duration-300 transform group-hover:translate-y-[-2px]">
           <div className="flex items-center gap-2">
-            <h3 className="text-xl font-semibold text-neutral-900 group-hover:text-[#ffc929] transition-colors">
+            <h3 className="text-xl font-semibold text-gray-800 transition-colors duration-300 group-hover:text-pink-500">
               {category.category}
             </h3>
             {category.totalPets && (
-              <span className="text-sm text-neutral-500">
+              <span className="text-sm text-gray-500 transition-all duration-300 group-hover:text-pink-400">
                 ({category.totalPets})
               </span>
             )}
           </div>
-          <p className="text-sm text-neutral-600 md:text-base">
+          <p className="text-gray-600 transition-colors duration-300 group-hover:text-gray-700">
             {category.description}
           </p>
         </div>
-
-        {/* Action Button */}
+        {/* Enhanced Action Button with Animation */}
         {category.isActive && (
-          <div className="flex items-center text-[#ffc929] opacity-0 transform translate-x-4 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0">
+          <div className="flex items-center text-gray-600 transition-all duration-500 transform translate-x-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-0 group-hover:text-pink-500">
             <span className="font-medium">Browse Category</span>
-            <ArrowRight className="w-4 h-4 ml-2 transition-transform duration-300 group-hover:translate-x-2" />
+            <ArrowRight className="w-4 h-4 ml-2 transition-all duration-300 group-hover:translate-x-2 group-hover:scale-110" />
           </div>
         )}
       </div>
@@ -66,19 +65,17 @@ const CategoryCard = ({ category, isHovered, onHover }) => {
   );
 };
 
-// Loading Skeleton Component
 const CategorySkeleton = () => (
-  <div className="p-8 bg-white border-2 rounded-2xl border-neutral-100 animate-pulse">
-    <div className="w-16 h-16 mb-6 rounded-full bg-neutral-200" />
+  <div className="p-8 bg-white border border-gray-100 shadow-sm animate-pulse rounded-3xl">
+    <div className="w-16 h-16 mb-6 bg-gray-100 rounded-full" />
     <div className="mb-6 space-y-2">
-      <div className="w-1/2 h-6 rounded bg-neutral-200" />
-      <div className="w-3/4 h-4 rounded bg-neutral-200" />
+      <div className="w-1/2 h-6 bg-gray-100 rounded" />
+      <div className="w-3/4 h-4 bg-gray-100 rounded" />
     </div>
-    <div className="w-1/4 h-4 rounded bg-neutral-200" />
+    <div className="w-1/4 h-4 bg-gray-100 rounded" />
   </div>
 );
 
-// Main Component
 const CategoriesSection = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -88,12 +85,11 @@ const CategoriesSection = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        // Simulated API call
         const data = [
           {
             id: '1',
             category: "Dogs",
-            icon: dog,
+            icon: <Dog className="w-full h-full text-gray-700" />,
             description: "Find your loyal companion",
             slug: "dogs",
             totalPets: 156,
@@ -102,7 +98,7 @@ const CategoriesSection = () => {
           {
             id: '2',
             category: "Cats",
-            icon: cat,
+            icon: <Cat className="w-full h-full text-gray-700" />,
             description: "Discover your perfect feline friend",
             slug: "cats",
             totalPets: 142,
@@ -111,7 +107,7 @@ const CategoriesSection = () => {
           {
             id: '3',
             category: "Other Pets",
-            icon: other,
+            icon: <Bird className="w-full h-full text-gray-700" />,
             description: "Explore unique companion animals",
             slug: "other-pets",
             totalPets: 45,
@@ -120,7 +116,7 @@ const CategoriesSection = () => {
           {
             id: '4',
             category: "Veterinary Care",
-            icon: veterinary,
+            icon: <Stethoscope className="w-full h-full text-gray-700" />,
             description: "Professional pet healthcare services",
             slug: "veterinary",
             isActive: true
@@ -138,45 +134,47 @@ const CategoriesSection = () => {
     fetchCategories();
   }, []);
 
-  // Error State
-  if (error) {
-    return (
-      <div className="py-20 text-center">
-        <p className="mb-4 text-red-600">{error}</p>
-        <button 
-          onClick={() => window.location.reload()}
-          className="text-[#ffc929] hover:underline focus:outline-none"
-        >
-          Retry
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <section className="relative py-20 overflow-hidden bg-gradient-to-b from-neutral-50 to-white">
+    <section className="relative py-20 bg-white">
+      {/* Decorative elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        {/* Paw prints and blobs */}
+        <div className="absolute text-6xl text-pink-200 transform top-20 left-10 opacity-20 -rotate-12">🐾</div>
+        <div className="absolute text-6xl text-yellow-200 transform rotate-45 top-40 right-20 opacity-20">🐾</div>
+        <div className="absolute text-6xl text-pink-200 transform bottom-20 left-1/4 opacity-20 rotate-12">🐾</div>
+        
+        {/* Gradient blobs */}
+        <div className="absolute top-0 left-0 bg-pink-200 rounded-full w-72 h-72 mix-blend-multiply filter blur-xl opacity-10 animate-blob" />
+        <div className="absolute bottom-0 right-0 bg-yellow-200 rounded-full w-72 h-72 mix-blend-multiply filter blur-xl opacity-10 animate-blob-reverse" />
+      </div>
+
       {/* Content Container */}
       <div className="relative px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-16 space-y-6 text-center">
-          <h2 className="text-4xl font-bold tracking-tight md:text-5xl text-neutral-900">
+          <span className="inline-flex items-center px-4 py-2 text-sm font-semibold text-pink-500 bg-white border border-pink-100 rounded-full shadow-sm">
+            <HandHeartIcon className="w-4 h-4 mr-2 text-[#ffc929]" />
+            Find Your Perfect Match
+          </span>
+
+          <h2 className="text-4xl font-bold tracking-tight text-gray-900 md:text-5xl group">
             <span className="block">Explore Pet Categories</span>
-            <span className="block mt-2 text-[#ffc929]">Find Your Perfect Match</span>
+            <span className="block mt-2 text-pink-500">Choose Your Companion</span>
           </h2>
-          <p className="max-w-2xl mx-auto text-lg text-neutral-600">
-            Browse through our carefully curated categories to discover your new companion
+
+          <p className="max-w-2xl mx-auto text-xl leading-relaxed text-gray-600">
+            Browse through our carefully curated categories to discover your new furry friend
+            and learn about our professional pet care services.
           </p>
         </div>
 
         {/* Categories Grid */}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4 md:gap-8">
           {loading ? (
-            // Loading State
             Array(4).fill(null).map((_, i) => (
               <CategorySkeleton key={`skeleton-${i}`} />
             ))
           ) : (
-            // Loaded Categories
             categories.map((category) => (
               <CategoryCard
                 key={category.id}
@@ -188,10 +186,6 @@ const CategoriesSection = () => {
           )}
         </div>
       </div>
-
-      {/* Decorative Elements */}
-      <div className="absolute top-0 left-0 w-72 h-72 bg-[#ffc929] rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob" />
-      <div className="absolute bottom-0 right-0 rounded-full w-72 h-72 bg-neutral-200 mix-blend-multiply filter blur-xl opacity-10 animate-blob-reverse" />
     </section>
   );
 };

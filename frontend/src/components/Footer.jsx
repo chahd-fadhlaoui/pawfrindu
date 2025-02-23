@@ -1,5 +1,7 @@
-import { Facebook, Instagram, ArrowRight } from 'lucide-react';
+import { Facebook, Instagram, ArrowRight, Mail, Phone, MapPin } from 'lucide-react';
 import React from 'react';
+
+// Note: Update this import path based on your project structure
 import logo from "../assets/LogoPawfrindu.png";
 
 const PawIcon = ({ className, style }) => (
@@ -24,17 +26,16 @@ const Footer = () => {
   ];
 
   const contactInfo = [
-    { name: 'Tunisia', href: '#' },
-    { name: '+216 XX XXX XXX', href: '#' },
-    { name: 'info@pawfrindu.com', href: '#' },
+    { icon: MapPin, text: 'Tunisia', href: '#' },
+    { icon: Phone, text: '+216 XX XXX XXX', href: 'tel:+216XXXXXXXX' },
+    { icon: Mail, text: 'info@pawfrindu.com', href: 'mailto:info@pawfrindu.com' },
   ];
 
   const socialMedia = [
-    { icon: Facebook, href: "#facebook" },
-    { icon: Instagram, href: "#instagram" },
+    { icon: Facebook, href: "#facebook", label: "Follow us on Facebook" },
+    { icon: Instagram, href: "#instagram", label: "Follow us on Instagram" },
   ];
 
-  // Floating paw background (similar to hero section)
   const PawBackground = () => {
     return Array(8).fill(null).map((_, index) => (
       <PawIcon
@@ -92,7 +93,7 @@ const Footer = () => {
               >
                 <a
                   href={link.href}
-                  className="group flex items-center text-gray-600 hover:text-[#ffc929]"
+                  className="group flex items-center text-gray-600 hover:text-[#ffc929] focus:outline-none focus:text-[#ffc929]"
                 >
                   {link.name}
                   <ArrowRight className="w-4 h-4 ml-2 transition-all duration-300 opacity-0 group-hover:opacity-100 group-hover:translate-x-1" />
@@ -108,13 +109,14 @@ const Footer = () => {
             Contact
           </h4>
           <ul className="space-y-3">
-            {contactInfo.map((contact) => (
+            {contactInfo.map((item) => (
               <li
-                key={contact.name}
-                className="text-gray-600 transition-all duration-300 group hover:translate-x-2"
+                key={item.text}
+                className="flex items-center gap-2 text-gray-600 transition-all duration-300 group hover:translate-x-2"
               >
-                <a href={contact.href} className="hover:text-[#ffc929] transition-colors">
-                  {contact.name}
+                <item.icon className="w-4 h-4 text-gray-400" />
+                <a href={item.href} className="hover:text-[#ffc929] transition-colors focus:outline-none focus:text-[#ffc929]">
+                  {item.text}
                 </a>
               </li>
             ))}
@@ -124,13 +126,15 @@ const Footer = () => {
         {/* Social Media */}
         <div className="flex flex-col items-center justify-center">
           <div className="flex items-center gap-4">
-            {socialMedia.map(({ icon: Icon, href }) => (
+            {socialMedia.map(({ icon: Icon, href, label }) => (
               <a
                 key={href}
                 href={href}
+                aria-label={label}
+                title={label}
                 className="p-3 bg-gradient-to-br from-pink-100 to-[#ffc929]/20 rounded-full
                   transition-all duration-300 transform hover:scale-110 hover:rotate-6
-                  hover:shadow-lg hover:shadow-[#ffc929]/20"
+                  hover:shadow-lg hover:shadow-[#ffc929]/20 focus:outline-none focus:ring-2 focus:ring-[#ffc929]"
               >
                 <Icon className="w-6 h-6 text-gray-700 hover:text-[#ffc929] transition-colors" />
               </a>

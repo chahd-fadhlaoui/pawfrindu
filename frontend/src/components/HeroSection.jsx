@@ -1,7 +1,6 @@
 import { ArrowRight, HandHeartIcon, Heart } from "lucide-react";
 import React from "react";
-import dogsection from "../assets/dogHero.png";
-
+import dogImage from '../assets/dogHero.png'
 const PawIcon = ({ className, style }) => (
   <svg
     viewBox="0 0 24 24"
@@ -61,15 +60,15 @@ const HeroSection = () => {
         {/* Content Section */}
         <div className="flex flex-col justify-center order-2 space-y-8 md:order-1 animate-fade-in-left">
           <div className="space-y-4">
-            <span className="inline-flex items-center px-4 py-2 text-sm font-semibold text-pink-500 border border-[#f5abc8] rounded-full">
-              <HandHeartIcon className="w-4 h-4 mr-2 text-[#ffc929] " />
+            <span className="inline-flex items-center px-4 py-2 text-sm font-semibold text-pink-500 bg-white border border-[#f5abc8] rounded-full">
+              <HandHeartIcon className="w-4 h-4 mr-2 text-[#ffc929]" />
               Find Your Perfect Companion
             </span>
 
             <h1 className="text-5xl font-bold tracking-tight text-gray-900 md:text-5xl group">
-              <span className="block transition-all duration-300 ">
+              <span className="block transition-all duration-300">
                 Welcome To{" "}
-                <i className="block mt-2 transition-all duration-300 group-hover:scale-105">
+                <i className="block mt-2 text-pink-500 transition-all duration-300 group-hover:scale-105">
                   PawFrindu
                 </i>
               </span>
@@ -87,7 +86,7 @@ const HeroSection = () => {
               className="relative flex items-center gap-3 px-8 py-4 overflow-hidden text-white bg-pink-500 rounded-full group animate-pulse-slow"
               aria-label="Join PawFrindu Community"
             >
-              <span className="relative z-10 transition-transform duration-300 group-hover:translate-x-1 ">
+              <span className="relative z-10 transition-transform duration-300 group-hover:translate-x-1">
                 Join Us Today
               </span>
               <ArrowRight className="relative z-10 transition-transform duration-300 group-hover:translate-x-2" />
@@ -109,7 +108,7 @@ const HeroSection = () => {
             <div className="absolute bottom-0 left-0 bg-purple-300 rounded-full w-72 h-72 mix-blend-multiply filter blur-xl opacity-20 animate-blob" />
 
             <img
-              src={dogsection}
+              src={dogImage}
               alt="Happy dog ready for adoption"
               className="relative z-10 object-contain w-full h-auto transition-all duration-500 group-hover:scale-105 group-hover:rotate-2 drop-shadow-2xl"
             />
