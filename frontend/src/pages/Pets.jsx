@@ -47,7 +47,7 @@ export default function Pet() {
   const [selectedCity, setSelectedCity] = useState("");
 
   useEffect(() => {
-    let filtered = pets;
+    let filtered = pets.filter(pet => pet.status === "accepted");
     if (selectedCategory)
       filtered = filtered.filter((pet) => pet.category === selectedCategory);
     if (selectedRace)
@@ -73,6 +73,8 @@ export default function Pet() {
   ]);
 
   useEffect(() => {
+    const acceptedPets = pets.filter(pet => pet.status === "accepted");
+
     setCategories([...new Set(pets.map((pet) => pet.category))]);
     setRaces([...new Set(pets.map((pet) => pet.race))]);
     setBreeds([...new Set(pets.map((pet) => pet.breed))]);

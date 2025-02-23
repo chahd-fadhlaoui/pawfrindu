@@ -4,7 +4,7 @@ import Pet from '../models/petModel.js'
 export const createPet = async (req, res) => {
   try {
     const { 
-      name, race, breed, age, city, gender, 
+      name,breed, age, city, gender, 
       category, fee, isTrained, image, description 
     } = req.body;
     
@@ -14,7 +14,6 @@ export const createPet = async (req, res) => {
     // Create new pet
     const newPet = new Pet({
       name,
-      race,
       breed,
       age,
       city,
@@ -92,8 +91,9 @@ export const getPetById = async (req, res) => {
   }
 };
 
+
 // Update pet - modified version without admin check
-export const updatePet = async (req, res) => {
+export const modifyPetStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const updateData = req.body;
@@ -125,6 +125,50 @@ export const updatePet = async (req, res) => {
   }
 };
 
+// Update pet
+export const updatePet = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+    
+    // Find pet first to check ownership
+    const pet = await Pet.findById(id);
+    
+    if (!pet) {
+      return res.status(404).json({
+        success: false,
+        message: 'Pet not found'
+      });
+    }
+    
+    // Check if user is the owner of the pet
+    if (pet.owner.toString() !== req.user._id.toString() && req.user.role !== 'Admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized: You can only update your own pets'
+      });
+    }
+    
+    const updatedPet = await Pet.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true }
+    );
+    
+    return res.status(200).json({
+      success: true,
+      message: 'Pet updated successfully',
+      data: updatedPet
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Error updating pet',
+      error: error.message
+    });
+  }
+};
+
 // Delete pet
 export const deletePet = async (req, res) => {
   try {
@@ -140,7 +184,13 @@ export const deletePet = async (req, res) => {
       });
     }
     
-    
+    // Check if user is the owner of the pet
+    if (pet.owner.toString() !== req.user._id.toString() && req.user.role !== 'Admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized: You can only delete your own pets'
+      });
+    }
     
     await Pet.findByIdAndDelete(id);
     
@@ -157,6 +207,38 @@ export const deletePet = async (req, res) => {
   }
 };
 
+
+// Delete pet
+export const deleteAdminPet = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Find pet first to check ownership
+    const pet = await Pet.findById(id);
+    
+    if (!pet) {
+      return res.status(404).json({
+        success: false,
+        message: 'Pet not found'
+      });
+    }
+    
+  
+    
+    await Pet.findByIdAndDelete(id);
+    
+    return res.status(200).json({
+      success: true,
+      message: 'Pet deleted successfully'
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Error deleting pet',
+      error: error.message
+    });
+  }
+};
 // Get pets by owner (my pets)
 export const getMyPets = async (req, res) => {
   try {

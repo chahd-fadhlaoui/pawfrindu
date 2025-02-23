@@ -10,6 +10,8 @@ import {
   approvePet,
   getPetsByStatus,
   approveAdoption,
+  modifyPetStatus,
+  deleteAdminPet,
 } from '../controllers/petController.js'
 import { authenticate, authorize } from '../middlewares/authMiddleware.js'
 
@@ -18,9 +20,9 @@ const petRouter = express.Router();
 // Routes publiques
 petRouter.get('/allpets', getAllPets);  // Récupérer tous les pets
 petRouter.get('/pets/:id', getPetById);  // Récupérer un pet par ID
+petRouter.put('/modifyStatus/:id', modifyPetStatus);  // Récupérer un pet par ID
+petRouter.delete('/deletePetAdmin/:id', deleteAdminPet);  // Supprimer un pet
 
-petRouter.put('/updatePet/:id', updatePet);  // Mettre à jour un pet
-petRouter.delete('/deletePet/:id', deletePet);  // Supprimer un pet
 
 // Routes protégées (authentification requise)
 petRouter.use(authenticate);  // Appliquer le middleware d'authentification à toutes les routes suivantes
@@ -28,7 +30,8 @@ petRouter.use(authenticate);  // Appliquer le middleware d'authentification à t
 // Routes pour les pet owners 
 petRouter.post('/addpet', authorize('PetOwner'), createPet);  // Vérifier que l'utilisateur est un PetOwner avant de créer un pet
 petRouter.get('/mypets', getMyPets);  // Récupérer les pets de l'utilisateur connecté
-
+petRouter.put('/updatedPet/:id', updatePet);  // Mettre à jour un pet
+petRouter.delete('/deletePet/:id', deletePet);  // Supprimer un pet
 petRouter.post('/pets/:petId/apply', applyToAdopt);  // Postuler pour adopter un pet
 petRouter.post('/pets/:petId/approve-adoption/:adopterId', approveAdoption);  // Approuver une adoption
 

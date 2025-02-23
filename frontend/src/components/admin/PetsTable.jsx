@@ -16,7 +16,7 @@ const PetsTable = () => {
     try {
       setActionLoading(true);
       setActionError(null);
-      const response = await axiosInstance.put(`/api/pet/updatePet/${petId}`, {
+      const response = await axiosInstance.put(`/api/pet/modifyStatus/${petId}`, {
         status: "accepted",
       });
       if (response.data.success) {
@@ -35,7 +35,7 @@ const PetsTable = () => {
     try {
       setActionLoading(true);
       setActionError(null);
-      const response = await axiosInstance.delete(`/api/pet/deletePet/${petId}`);
+      const response = await axiosInstance.delete(`/api/pet/deletePetAdmin/${petId}`);
       if (response.data.success) {
         fetchPets();
       } else {
@@ -85,7 +85,7 @@ const PetsTable = () => {
       case "accepted":
         return {
           icon: Heart,
-          text: "Adopté",
+          text: "Accepted",
           bgClass: "bg-gradient-to-r from-rose-100 to-pink-100",
           textClass: "text-rose-700",
           iconClass: "text-rose-500",
@@ -125,7 +125,7 @@ const PetsTable = () => {
         <div className="p-4 bg-gradient-to-r from-rose-50 to-pink-50 border-b-2 border-rose-100">
           <div className="flex items-center space-x-2">
             <PawPrint className="w-6 h-6 text-rose-500" />
-            <h2 className="text-lg font-semibold text-rose-700">Pet Adoption Center</h2>
+            <h2 className="text-lg font-semibold text-rose-700">Pet Adoption table</h2>
           </div>
         </div>
         <div className="overflow-x-auto">

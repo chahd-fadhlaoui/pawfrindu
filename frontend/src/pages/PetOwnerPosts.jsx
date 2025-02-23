@@ -27,7 +27,7 @@ const TABLE_HEADERS = [
   "Pet",
   "Name",
   "Description",
-  "Race",
+  "breed",
   "Age",
   "Fee",
   "Status",
@@ -100,7 +100,7 @@ const PetDetails = ({ pet, onEdit }) => (
 
     <div className="grid grid-cols-2 gap-4">
       {[
-        { label: "Race", value: pet.race },
+        { label: "breed", value: pet.breed },
         { label: "Age", value: `${pet.age} months` },
         { label: "City", value: pet.city },
         { label: "Status", value: <StatusBadge status={pet.status} /> },
@@ -188,7 +188,6 @@ const PetOwnerPosts = () => {
     setSelectedPet(pet);
     setEditFormData({
       name: pet.name,
-      race: pet.race,
       breed: pet.breed,
       age: pet.age,
       city: pet.city,
@@ -337,7 +336,7 @@ const PetOwnerPosts = () => {
                           <td className="max-w-xs px-4 py-4 truncate">
                             {pet.description}
                           </td>
-                          <td className="px-4 py-4">{pet.race}</td>
+                          <td className="px-4 py-4">{pet.breed}</td>
                           <td className="px-4 py-4">{pet.age}</td>
                           <td className="px-4 py-4">
                             {pet.fee === 0
@@ -394,8 +393,8 @@ const PetOwnerPosts = () => {
                         </p>
                         <div className="grid grid-cols-2 gap-2">
                           <div className="text-sm truncate">
-                            <span className="font-medium">Race:</span>{" "}
-                            {pet.race}
+                            <span className="font-medium">breed:</span>{" "}
+                            {pet.breed}
                           </div>
                           <div className="text-sm truncate">
                             <span className="font-medium">Age:</span> {pet.age}{" "}
@@ -477,8 +476,8 @@ const PetOwnerPosts = () => {
 
                         <div className="grid grid-cols-2 gap-4">
                           <div className="p-4 rounded-lg bg-[#ffc929]/5">
-                            <p className="text-sm text-gray-600">Race</p>
-                            <p className="font-medium">{selectedPet.race}</p>
+                            <p className="text-sm text-gray-600">breed</p>
+                            <p className="font-medium">{selectedPet.breed}</p>
                           </div>
                           <div className="p-4 rounded-lg bg-[#ffc929]/5">
                             <p className="text-sm text-gray-600">Age</p>

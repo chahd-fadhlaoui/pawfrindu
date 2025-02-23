@@ -28,7 +28,6 @@ const CreatePet = () => {
   const { user, error, loading, clearError, setError, fetchPets } = useApp();
   const [formData, setFormData] = useState({
     name: "",
-    race: "",
     breed: "",
     age: "",
     city: "",
@@ -88,10 +87,7 @@ const CreatePet = () => {
       setError("Pet name is required");
       return false;
     }
-    if (!formData.race.trim()) {
-      setError("Race is required");
-      return false;
-    }
+ 
     if (!formData.breed.trim()) {
       setError("Breed is required");
       return false;
@@ -224,19 +220,6 @@ const CreatePet = () => {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3 text-gray-600">
-                  <div className="flex items-center gap-2 bg-[#ffc929]/10 px-3 py-1.5 rounded-full border border-[#ffc929]/20">
-                    <PawPrint size={14} />
-                    <input
-                      type="text"
-                      placeholder="Race"
-                      className="w-24 placeholder-gray-400 bg-transparent border-none focus:outline-none focus:ring-0"
-                      value={formData.race}
-                      onChange={(e) =>
-                        handleInputChange("race", e.target.value)
-                      }
-                      required
-                    />
-                  </div>
                   <div className="flex items-center gap-2 bg-[#ffc929]/10 px-3 py-1.5 rounded-full border border-[#ffc929]/20">
                     <Star size={14} />
                     <input
