@@ -48,25 +48,25 @@ const AppContextProvider = ({ children }) => {
     const token = localStorage.getItem("token");
     if (!token) {
       setUser(null);
-      setLoading(false); // Make sure to set loading to false when there's no token
+      setLoading(false);
       return false;
     }
-
+  
     try {
       const response = await axiosInstance.get("/api/user/me");
-      console.log("API response:", response.data); // Debug the raw response
+      console.log("CheckAuth response:", response.data);
       const authenticatedUser = ensureUserHasImage(response.data.user);
-      console.log("Processed user:", authenticatedUser); // Debug the processed user
       setUser(authenticatedUser);
       return true;
     } catch (error) {
-      console.error("Auth check failed:", error);
-      localStorage.removeItem("token");
-      setUser(null);
+      console.error("Auth check failed:", error.message, error.response?.status);
+      if (error.response?.status === 401) {
+        localStorage.removeItem("token");
+        setUser(null);
+      }
       return false;
-    }
-    finally {
-      setLoading(false); // Move this to finally to ensure it always runs
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -164,21 +164,18 @@ const AppContextProvider = ({ children }) => {
     if (loading) return;
     setLoading(true);
     setError("");
-
+  
     try {
-      const response = await axiosInstance.post("/api/user/login", {
-        email,
-        password,
-      });
-
+      const response = await axiosInstance.post("/api/user/login", { email, password });
       const { accessToken, user: userData } = response.data;
       const authenticatedUser = ensureUserHasImage(userData);
-
+  
       localStorage.setItem("token", accessToken);
-      axiosInstance.setAuthToken(accessToken);
-      setUser(authenticatedUser);
+      axiosInstance.setAuthToken(accessToken); // Assuming this method exists
+      setUser(authenticatedUser); // Set user directly from login response
       await fetchPets();
-      await checkAuth(); // Force re-check to ensure consistency
+      await checkAuth();
+      console.log("Login successful, user:", authenticatedUser);
       return {
         success: true,
         redirectTo:
@@ -186,11 +183,20 @@ const AppContextProvider = ({ children }) => {
             ? "/"
             : userData.role === "Trainer"
             ? "/trainer"
-            : "/vet",
+            : userData.role === "Vet"
+            ? "/vet"
+            : userData.role === "Admin"
+            ? "/admin"
+            : "/login", // Fallback, though unlikely
       };
     } catch (error) {
-      const errorMessage = error.response?.data?.message || "Error logging in";
+      const errorMessage =
+        error.response?.data?.message ||
+        (error.code === "ECONNREFUSED"
+          ? "Cannot connect to server"
+          : "Error logging in");
       setError(errorMessage);
+      console.error("Login error:", error);
       return { success: false, error: errorMessage };
     } finally {
       setLoading(false);

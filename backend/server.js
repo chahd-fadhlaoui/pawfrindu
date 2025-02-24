@@ -22,6 +22,7 @@ app.use(cors());
 
 // api endpoints
 app.use('/api/user',userRouter)
+console.log('User router mounted at /api/user');
 import fs from 'fs';
 
 // Créer le dossier 'uploads' s'il n'existe pas

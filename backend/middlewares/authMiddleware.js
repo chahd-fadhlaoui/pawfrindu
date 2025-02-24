@@ -1,6 +1,6 @@
-// authMiddleware.js
+// backend/middleware/authMiddleware.js
 import jwt from 'jsonwebtoken';
-import User from '../models/userModel.js'
+import User from '../models/userModel.js';
 
 // Middleware d'authentification
 export const authenticate = async (req, res, next) => {  
@@ -21,7 +21,7 @@ export const authenticate = async (req, res, next) => {
     req.user = user;  
     next();  
   } catch (error) {  
-    console.error('Authentication error:', error.message); // Affiche l'erreur  
+    console.error('Authentication error:', error.message);
     res.status(401).json({  
       success: false,  
       message: 'Authentication failed',  
@@ -30,12 +30,12 @@ export const authenticate = async (req, res, next) => {
   }  
 };
 
-// Middleware d'autorisation
-export const authorize = (role) => (req, res, next) => {
-  if (req.user.role !== role) {
+// Middleware d'autorisation (supports multiple roles)
+export const authorize = (...allowedRoles) => (req, res, next) => {
+  if (!allowedRoles.includes(req.user.role)) {
     return res.status(403).json({
       success: false,
-      message: `Unauthorized: Only ${role}s can access this route`,
+      message: `Unauthorized: Only ${allowedRoles.join(' or ')} can access this route`,
     });
   }
   next();
