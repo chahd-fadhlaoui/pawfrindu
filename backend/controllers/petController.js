@@ -209,36 +209,34 @@ export const deletePet = async (req, res) => {
   try {
     const { id } = req.params;
     
-    // Find pet first to check ownership
     const pet = await Pet.findById(id);
     
     if (!pet) {
-      return res.status(404).json({
-        success: false,
-        message: 'Pet not found'
-      });
+      return res.status(404).json({ success: false, message: 'Pet not found' });
     }
     
-    // Check if user is the owner of the pet
-    if (pet.owner.toString() !== req.user._id.toString() && req.user.role !== 'Admin') {
-      return res.status(403).json({
-        success: false,
-        message: 'Unauthorized: You can only delete your own pets'
-      });
+    // Vérifie si l'utilisateur est le propriétaire et pas un admin
+    if (pet.owner.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: 'Unauthorized: You can only delete your own pets' });
     }
-    
-    await Pet.findByIdAndDelete(id);
-    
-    return res.status(200).json({
-      success: true,
-      message: 'Pet deleted successfully'
-    });
+
+    // Suppression si status est "pending" ou "accepted"
+    if (pet.status === 'pending' || pet.status === 'accepted') {
+      await Pet.findByIdAndDelete(id);
+      return res.status(200).json({ success: true, message: 'Pet deleted successfully' });
+    }
+
+    // Archivage si status est "adopted" ou "sold"
+    if (pet.status === 'adopted' || pet.status === 'sold') {
+      pet.isArchived = true; // Correction : utilisation de "isArchived"
+      await pet.save();
+      return res.status(200).json({ success: true, message: 'Pet archived successfully' });
+    }
+
+    return res.status(400).json({ success: false, message: 'Invalid action for this pet status' });
+
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: 'Error deleting pet',
-      error: error.message
-    });
+    return res.status(500).json({ success: false, message: 'Error processing request', error: error.message });
   }
 };
 
@@ -248,30 +246,39 @@ export const deleteAdminPet = async (req, res) => {
   try {
     const { id } = req.params;
     
-    // Find pet first to check ownership
     const pet = await Pet.findById(id);
     
     if (!pet) {
-      return res.status(404).json({
-        success: false,
-        message: 'Pet not found'
-      });
+      return res.status(404).json({ success: false, message: 'Pet not found' });
     }
     
-  
-    
-    await Pet.findByIdAndDelete(id);
-    
-    return res.status(200).json({
-      success: true,
-      message: 'Pet deleted successfully'
-    });
+    /*  Vérifie si l'utilisateur est un admin
+    if (req.user.role !== 'Admin') {
+      return res.status(403).json({ success: false, message: 'Unauthorized: Admin access required' });
+    }
+ */
+    // Suppression si status est "pending"
+    if (pet.status === 'pending') {
+      await Pet.findByIdAndDelete(id);
+      return res.status(200).json({ success: true, message: 'Pet deleted successfully' });
+    }
+
+    // Archivage si status est "adopted" ou "sold"
+    if (pet.status === 'adopted' || pet.status === 'sold') {
+      pet.isArchived = true; // Correction : utilisation de "isArchived"
+      await pet.save();
+      return res.status(200).json({ success: true, message: 'Pet archived successfully' });
+    }
+
+    // Erreur explicite si status est "accepted"
+    if (pet.status === 'accepted') {
+      return res.status(403).json({ success: false, message: 'Admin cannot delete an accepted pet' });
+    }
+
+    return res.status(400).json({ success: false, message: 'Invalid action for this pet status' });
+
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: 'Error deleting pet',
-      error: error.message
-    });
+    return res.status(500).json({ success: false, message: 'Error processing request', error: error.message });
   }
 };
 // Get pets by owner (my pets)
@@ -462,6 +469,36 @@ export const approveAdoption = async (req, res) => {
       success: false,
       message: 'Error approving adoption',
       error: error.message
+    });
+  }
+};
+export const unarchivePet = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const pet = await Pet.findById(id);
+    if (!pet) {
+      return res.status(404).json({ success: false, message: 'Pet not found' });
+    }
+
+    // Vérifie si l'utilisateur est un admin (si nécessaire)
+    // if (req.user.role !== 'Admin') {
+    //   return res.status(403).json({ success: false, message: 'Unauthorized: Admin access required' });
+    // }
+
+    if (!pet.isArchived) {
+      return res.status(400).json({ success: false, message: 'Pet is not archived' });
+    }
+
+    pet.isArchived = false;
+    await pet.save();
+
+    return res.status(200).json({ success: true, message: 'Pet unarchived successfully' });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Error unarchiving pet',
+      error: error.message,
     });
   }
 };

@@ -3,11 +3,12 @@ import Sidebar from "../../components/admin/Sidebar";
 import SearchBar from "../../components/admin/SearchBar";
 import UsersTable from "../../components/admin/UsersTable";
 import PetsTable from "../../components/admin/PetsTable";
+import ArchivedPetsTable from "../../components/admin/ArchivedPetsTable"; // Nouveau composant
 import { useApp } from "../../context/AppContext";
 import axiosInstance from "../../utils/axiosInstance";
 
 const AdminDashboard = () => {
-  const { pets, fetchPets, updatePet } = useApp();
+  const { pets, fetchPets } = useApp();
   const [activeTab, setActiveTab] = useState('pets');
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredData, setFilteredData] = useState([]);
@@ -15,12 +16,10 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Fetch pets when component mounts
   useEffect(() => {
     fetchPets();
-  }, []);
+  }, [fetchPets]);
 
-  // Fetch users when needed
   const fetchUsers = async () => {
     try {
       setLoading(true);
@@ -29,20 +28,17 @@ const AdminDashboard = () => {
       console.log('Fetching users...');
       const response = await axiosInstance.get('/api/user/getAllUsers');
       
-      // Log the response to see what we're getting
       console.log('API Response:', response);
       
       if (!response.data) {
         throw new Error('No data received from API');
       }
       
-      // Ensure we have an array, even if empty
       const userData = Array.isArray(response.data) ? response.data : 
                       Array.isArray(response.data.users) ? response.data.users : [];
       
       console.log('Processed users data:', userData);
       setUsers(userData);
-      
     } catch (err) {
       const errorMessage = err.response?.data?.message || err.message || 'Unknown error';
       setError('Failed to fetch users: ' + errorMessage);
@@ -57,21 +53,28 @@ const AdminDashboard = () => {
     }
   };
 
-  // Fetch users when switching to users tab
   useEffect(() => {
     if (activeTab === 'users') {
       fetchUsers();
     }
   }, [activeTab]);
 
-  // Handle search functionality with debouncing
   useEffect(() => {
     const debounceTimeout = setTimeout(() => {
       if (activeTab === 'pets' && Array.isArray(pets)) {
         const filtered = pets.filter(pet => 
-          (pet.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (pet.race || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (pet.city || '').toLowerCase().includes(searchTerm.toLowerCase())
+          !pet.isArchived && // Exclure les pets archivés dans l'onglet "Pets"
+          ((pet.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (pet.breed || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (pet.city || '').toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+        setFilteredData(filtered);
+      } else if (activeTab === 'archived' && Array.isArray(pets)) {
+        const filtered = pets.filter(pet => 
+          pet.isArchived && // Inclure uniquement les pets archivés dans l'onglet "Archived"
+          ((pet.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (pet.breed || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (pet.city || '').toLowerCase().includes(searchTerm.toLowerCase()))
         );
         setFilteredData(filtered);
       } else if (activeTab === 'users' && Array.isArray(users)) {
@@ -84,32 +87,11 @@ const AdminDashboard = () => {
       } else {
         setFilteredData([]);
       }
-    }, 300); // 300ms debounce delay
+    }, 300);
 
     return () => clearTimeout(debounceTimeout);
   }, [searchTerm, pets, users, activeTab]);
 
-  // Handle pet acceptance
-  const handleAccept = async (petId) => {
-    try {
-      await updatePet(petId, { status: 'accepted' });
-      fetchPets();
-    } catch (error) {
-      console.error('Error accepting pet:', error);
-    }
-  };
-
-  // Handle pet rejection
-  const handleReject = async (petId) => {
-    try {
-      await updatePet(petId, { status: 'rejected' });
-      fetchPets();
-    } catch (error) {
-      console.error('Error rejecting pet:', error);
-    }
-  };
-
-  // Get the current data to display
   const getCurrentData = () => {
     if (loading) return [];
     return filteredData.length > 0 ? filteredData : (activeTab === 'users' ? users : pets) || [];
@@ -123,12 +105,16 @@ const AdminDashboard = () => {
         <div className="max-w-7xl mx-auto">
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-neutral-900 hover:text-[#ffc929]">
-              {activeTab === 'users' ? 'Gestion des Utilisateurs' : 'Gestion des Animaux'}
+              {activeTab === 'users' ? 'Gestion des Utilisateurs' : 
+               activeTab === 'pets' ? 'Gestion des Animaux' : 
+               'Animaux Archivés'}
             </h1>
             <p className="text-amber-700">
               {activeTab === 'users'
                 ? 'Gérez les utilisateurs de la plateforme'
-                : 'Gérez les profils des animaux en attente d\'adoption'}
+                : activeTab === 'pets' 
+                ? 'Gérez les profils des animaux en attente d\'adoption'
+                : 'Visualisez et gérez les animaux archivés'}
             </p>
           </div>
 
@@ -136,7 +122,11 @@ const AdminDashboard = () => {
             <SearchBar
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder={activeTab === 'users' ? 'Rechercher un utilisateur...' : 'Rechercher un animal...'}
+              placeholder={
+                activeTab === 'users' ? 'Rechercher un utilisateur...' : 
+                activeTab === 'pets' ? 'Rechercher un animal...' : 
+                'Rechercher un animal archivé...'
+              }
             />
           </div>
 
@@ -153,12 +143,10 @@ const AdminDashboard = () => {
                 loading={loading}
                 error={error}
               />
+            ) : activeTab === 'pets' ? (
+              <PetsTable pets={getCurrentData()} />
             ) : (
-              <PetsTable
-                pets={getCurrentData()}
-                onAccept={handleAccept}
-                onReject={handleReject}
-              />
+              <ArchivedPetsTable pets={getCurrentData()} />
             )}
           </div>
         </div>

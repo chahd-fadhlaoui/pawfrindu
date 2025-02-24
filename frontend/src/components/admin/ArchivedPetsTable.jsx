@@ -152,8 +152,10 @@ const ArchivedPetsTable = ({ pets }) => {
                   <td className="px-4 py-4 text-gray-700">{pet.species}</td>
                   <td className="px-4 py-4">
                     <span className="font-medium text-rose-600">
-                      {pet.fee === 0 ? "Free" : `${pet.fee}dt`}
-                    </span>{" "}
+                      <span className="font-medium text-rose-600">
+                        {pet.fee === 0 ? "Free" : `${pet.fee}dt`}
+                      </span>
+                    </span>
                   </td>
                   <td className="px-4 py-4">
                     <span

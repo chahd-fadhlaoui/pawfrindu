@@ -12,6 +12,7 @@ import {
   approveAdoption,
   modifyPetStatus,
   deleteAdminPet,
+  unarchivePet,
 } from '../controllers/petController.js'
 import { authenticate, authorize } from '../middlewares/authMiddleware.js'
 
@@ -21,7 +22,8 @@ const petRouter = express.Router();
 petRouter.get('/allpets', getAllPets);  // Récupérer tous les pets
 petRouter.get('/pets/:id', getPetById);  // Récupérer un pet par ID
 petRouter.put('/modifyStatus/:id', modifyPetStatus);  // Récupérer un pet par ID
-petRouter.delete('/deletePetAdmin/:id', deleteAdminPet);  // Supprimer un pet
+petRouter.delete('/deleteAdminPet/:id', deleteAdminPet);  // Supprimer un pet
+petRouter.put('/unarchivePet/:id',unarchivePet); // Ajoutez cette route
 
 
 // Routes protégées (authentification requise)

@@ -2,7 +2,8 @@ import React from 'react';
 import { 
   Users, 
   PawPrint,
-  Heart
+  Heart,
+  Archive // Nouvelle icône pour les pets archivés
 } from 'lucide-react';
 
 const Sidebar = ({ activeTab, setActiveTab }) => (
@@ -27,7 +28,7 @@ const Sidebar = ({ activeTab, setActiveTab }) => (
       </button>
       <button
         onClick={() => setActiveTab('pets')}
-        className={`w-full flex items-center space-x-2 p-3 rounded-xl transition-all ${
+        className={`w-full flex items-center space-x-2 p-3 rounded-xl mb-3 transition-all ${
           activeTab === 'pets' 
             ? 'bg-orange-100 text-black'  
             : 'text-amber-700 hover:bg-amber-100/70'
@@ -36,7 +37,19 @@ const Sidebar = ({ activeTab, setActiveTab }) => (
         <Heart className="w-5 h-5" />
         <span className="font-medium">Animaux</span>
       </button>
+      <button
+        onClick={() => setActiveTab('archived')}
+        className={`w-full flex items-center space-x-2 p-3 rounded-xl transition-all ${
+          activeTab === 'archived' 
+            ? 'bg-orange-100 text-black'  
+            : 'text-amber-700 hover:bg-amber-100/70'
+        }`}
+      >
+        <Archive className="w-5 h-5" />
+        <span className="font-medium">Animaux Archivés</span>
+      </button>
     </nav>
   </div>
 );
+
 export default Sidebar;

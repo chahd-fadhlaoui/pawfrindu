@@ -22,7 +22,8 @@ const petSchema = new mongoose.Schema({
   description: { type: String, required: true },
   candidates: [{ type: mongoose.Schema.Types.ObjectId, ref: "user" }],
   owner: { type: mongoose.Schema.Types.ObjectId, ref: "user", required: true },
-  isApproved: { type: Boolean, default: false }
+  isApproved: { type: Boolean, default: false },
+  isArchived: { type: Boolean, default: false } // Nouveau champ pour l'archivage
 }, { timestamps: true });
 
 const Pet = mongoose.models.Pet || mongoose.model("Pet", petSchema);

@@ -1,5 +1,14 @@
 import { useEffect, useState } from "react";
-import { Check, X, Loader2, PawPrint, Heart, Clock, Ban } from "lucide-react";
+import {
+  Check,
+  X,
+  Loader2,
+  PawPrint,
+  Heart,
+  Clock,
+  Ban,
+  Archive,
+} from "lucide-react";
 import { useApp } from "../../context/AppContext";
 import axiosInstance from "../../utils/axiosInstance";
 
@@ -10,15 +19,17 @@ const PetsTable = () => {
 
   useEffect(() => {
     fetchPets();
-  }, []);
-
+  }, [fetchPets, pets]); // Ajout de pets comme dépendance
   const handleAccept = async (petId) => {
     try {
       setActionLoading(true);
       setActionError(null);
-      const response = await axiosInstance.put(`/api/pet/modifyStatus/${petId}`, {
-        status: "accepted",
-      });
+      const response = await axiosInstance.put(
+        `/api/pet/modifyStatus/${petId}`,
+        {
+          status: "accepted",
+        }
+      );
       if (response.data.success) {
         fetchPets();
       } else {
@@ -35,14 +46,35 @@ const PetsTable = () => {
     try {
       setActionLoading(true);
       setActionError(null);
-      const response = await axiosInstance.delete(`/api/pet/deletePetAdmin/${petId}`);
+      const response = await axiosInstance.delete(
+        `/api/pet/deleteAdminPet/${petId}`
+      );
       if (response.data.success) {
         fetchPets();
       } else {
-        throw new Error(response.data.message || "Failed to delete pet");
+        throw new Error(response.data.message || "Failed to process pet");
       }
     } catch (err) {
-      setActionError(err.response?.data?.message || "Failed to delete pet");
+      setActionError(err.response?.data?.message || "Failed to process pet");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleArchive = async (petId) => {
+    try {
+      setActionLoading(true);
+      setActionError(null);
+      const response = await axiosInstance.delete(
+        `/api/pet/deleteAdminPet/${petId}`
+      );
+      if (response.data.success) {
+        fetchPets();
+      } else {
+        throw new Error(response.data.message || "Failed to archive pet");
+      }
+    } catch (err) {
+      setActionError(err.response?.data?.message || "Failed to archive pet");
     } finally {
       setActionLoading(false);
     }
@@ -63,7 +95,9 @@ const PetsTable = () => {
   if (error) {
     return (
       <div className="w-full p-8 bg-red-50 border-2 border-red-200 rounded-xl">
-        <p className="text-red-600 text-center font-medium">Error loading pets: {error}</p>
+        <p className="text-red-600 text-center font-medium">
+          Error loading pets: {error}
+        </p>
       </div>
     );
   }
@@ -80,7 +114,17 @@ const PetsTable = () => {
     );
   }
 
-  const getStatusConfig = (status) => {
+  const getStatusConfig = (status, isArchived) => {
+    if (isArchived) {
+      return {
+        icon: Archive,
+        text: "Archived",
+        bgClass: "bg-gradient-to-r from-gray-100 to-gray-200",
+        textClass: "text-gray-700",
+        iconClass: "text-gray-500",
+        borderClass: "border-gray-300",
+      };
+    }
     switch (status) {
       case "accepted":
         return {
@@ -89,25 +133,26 @@ const PetsTable = () => {
           bgClass: "bg-gradient-to-r from-rose-100 to-pink-100",
           textClass: "text-rose-700",
           iconClass: "text-rose-500",
-          borderClass: "border-rose-200"
+          borderClass: "border-rose-200",
         };
-      case "rejected":
+      case "adopted":
+      case "sold":
         return {
-          icon: Ban,
-          text: "Non Retenu",
-          bgClass: "bg-gradient-to-r from-slate-100 to-gray-100",
-          textClass: "text-slate-700",
-          iconClass: "text-slate-500",
-          borderClass: "border-slate-200"
+          icon: Heart,
+          text: status.charAt(0).toUpperCase() + status.slice(1),
+          bgClass: "bg-gradient-to-r from-green-100 to-teal-100",
+          textClass: "text-green-700",
+          iconClass: "text-green-500",
+          borderClass: "border-green-200",
         };
-      default:
+      default: // pending
         return {
           icon: Clock,
           text: "En Attente",
           bgClass: "bg-gradient-to-r from-amber-50 to-yellow-50",
           textClass: "text-amber-700",
           iconClass: "text-amber-500",
-          borderClass: "border-amber-200"
+          borderClass: "border-amber-200",
         };
     }
   };
@@ -120,12 +165,14 @@ const PetsTable = () => {
           <p className="text-red-700">{actionError}</p>
         </div>
       )}
-      
+
       <div className="bg-white rounded-xl shadow-lg border-2 border-rose-100 overflow-hidden">
         <div className="p-4 bg-gradient-to-r from-rose-50 to-pink-50 border-b-2 border-rose-100">
           <div className="flex items-center space-x-2">
             <PawPrint className="w-6 h-6 text-rose-500" />
-            <h2 className="text-lg font-semibold text-rose-700">Pet Adoption table</h2>
+            <h2 className="text-lg font-semibold text-rose-700">
+              Pet Adoption Table
+            </h2>
           </div>
         </div>
         <div className="overflow-x-auto">
@@ -135,7 +182,7 @@ const PetsTable = () => {
                 {[
                   "Photo",
                   "Nom",
-                  "Race",
+                  "Breed",
                   "Âge",
                   "Ville",
                   "Genre",
@@ -156,9 +203,19 @@ const PetsTable = () => {
             </thead>
             <tbody className="divide-y divide-rose-100">
               {pets.map((pet) => {
-                const statusConfig = getStatusConfig(pet.status);
+                const statusConfig = getStatusConfig(
+                  pet.status,
+                  pet.isArchived
+                );
+                const isAccepted = pet.status === "accepted";
+                const canArchive =
+                  pet.status === "adopted" || pet.status === "sold";
+
                 return (
-                  <tr key={pet._id} className="hover:bg-rose-50/30 transition-all duration-200">
+                  <tr
+                    key={pet._id}
+                    className="hover:bg-rose-50/30 transition-all duration-200"
+                  >
                     <td className="px-4 py-4">
                       <div className="relative group">
                         <img
@@ -175,13 +232,17 @@ const PetsTable = () => {
                         {pet.name}
                       </p>
                     </td>
-                    <td className="px-4 py-4 text-gray-700">{pet.race}</td>
-                    <td className="px-4 py-4 text-gray-700">{pet.age} ans</td>
+                    <td className="px-4 py-4 text-gray-700">{pet.breed}</td>
+                    <td className="px-4 py-4 text-gray-700">{pet.age}</td>
                     <td className="px-4 py-4 text-gray-700">{pet.city}</td>
                     <td className="px-4 py-4 text-gray-700">{pet.gender}</td>
-                    <td className="px-4 py-4 text-gray-700">{pet.category}</td>
+                    <td className="px-4 py-4 text-gray-700">{pet.species}</td>
                     <td className="px-4 py-4">
-                      <span className="font-medium text-rose-600">{pet.fee}dt</span>
+                      <span className="font-medium text-rose-600">
+                        <span className="font-medium text-rose-600">
+                          {pet.fee === 0 ? "Free" : `${pet.fee}dt`}
+                        </span>{" "}
+                      </span>
                     </td>
                     <td className="px-4 py-4">
                       <span
@@ -195,9 +256,15 @@ const PetsTable = () => {
                       </span>
                     </td>
                     <td className="px-4 py-4">
-                      <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg ${statusConfig.bgClass} border ${statusConfig.borderClass}`}>
-                        <statusConfig.icon className={`w-4 h-4 ${statusConfig.iconClass}`} />
-                        <span className={`text-sm font-medium ${statusConfig.textClass}`}>
+                      <div
+                        className={`flex items-center space-x-2 px-3 py-2 rounded-lg ${statusConfig.bgClass} border ${statusConfig.borderClass}`}
+                      >
+                        <statusConfig.icon
+                          className={`w-4 h-4 ${statusConfig.iconClass}`}
+                        />
+                        <span
+                          className={`text-sm font-medium ${statusConfig.textClass}`}
+                        >
                           {statusConfig.text}
                         </span>
                       </div>
@@ -206,18 +273,34 @@ const PetsTable = () => {
                       <div className="flex items-center justify-center gap-2">
                         <button
                           onClick={() => handleAccept(pet._id)}
-                          disabled={actionLoading || pet.status === "accepted"}
+                          disabled={
+                            actionLoading || isAccepted || pet.isArchived
+                          }
                           className="p-2 rounded-full text-green-500 hover:text-green-700 hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 group"
+                          title="Accept Pet"
                         >
                           <Check className="w-5 h-5 group-hover:scale-110 transition-transform" />
                         </button>
-                        <button
-                          onClick={() => handleReject(pet._id)}
-                          disabled={actionLoading || pet.status === "rejected"}
-                          className="p-2 rounded-full text-red-500 hover:text-red-700 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 group"
-                        >
-                          <X className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                        </button>
+                        {!isAccepted &&
+                          (canArchive ? (
+                            <button
+                              onClick={() => handleArchive(pet._id)}
+                              disabled={actionLoading || pet.isArchived}
+                              className="p-2 rounded-full text-yellow-500 hover:text-yellow-700 hover:bg-yellow-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 group"
+                              title="Archive Pet"
+                            >
+                              <Archive className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleReject(pet._id)}
+                              disabled={actionLoading || pet.isArchived}
+                              className="p-2 rounded-full text-red-500 hover:text-red-700 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 group"
+                              title="Delete Pet"
+                            >
+                              <X className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                            </button>
+                          ))}
                       </div>
                     </td>
                   </tr>
