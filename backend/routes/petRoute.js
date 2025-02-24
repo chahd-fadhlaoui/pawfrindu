@@ -39,7 +39,8 @@ petRouter.post('/pets/:petId/approve-adoption/:adopterId', approveAdoption);  //
 
 // Routes pour l'admin
 petRouter.use(authorize('Admin'));  // Appliquer le middleware d'autorisation pour les routes suivantes
-petRouter.patch('/pets/:id/approve', approvePet);  // Approuver un pet (admin)
-petRouter.get('/pets/status/:status', getPetsByStatus);  // Récupérer les pets par statut
+petRouter.put('/modifyStatus/:id', modifyPetStatus);  // Récupérer un pet par ID
+petRouter.delete('/deleteAdminPet/:id', deleteAdminPet);  // Supprimer un pet
+petRouter.put('/unarchivePet/:id',unarchivePet); // Ajoutez cette route
 
 export default petRouter;

@@ -3,7 +3,7 @@ import Sidebar from "../../components/admin/Sidebar";
 import SearchBar from "../../components/admin/SearchBar";
 import UsersTable from "../../components/admin/UsersTable";
 import PetsTable from "../../components/admin/PetsTable";
-import ArchivedPetsTable from "../../components/admin/ArchivedPetsTable"; // Nouveau composant
+import ArchivedPetsTable from "../../components/admin/ArchivedPetsTable";
 import { useApp } from "../../context/AppContext";
 import axiosInstance from "../../utils/axiosInstance";
 
@@ -15,6 +15,7 @@ const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0); // Ajouté pour déclencher le rafraîchissement
 
   useEffect(() => {
     fetchPets();
@@ -24,29 +25,20 @@ const AdminDashboard = () => {
     try {
       setLoading(true);
       setError(null);
-      
       console.log('Fetching users...');
       const response = await axiosInstance.get('/api/user/getAllUsers');
-      
       console.log('API Response:', response);
-      
       if (!response.data) {
         throw new Error('No data received from API');
       }
-      
       const userData = Array.isArray(response.data) ? response.data : 
                       Array.isArray(response.data.users) ? response.data.users : [];
-      
       console.log('Processed users data:', userData);
       setUsers(userData);
     } catch (err) {
       const errorMessage = err.response?.data?.message || err.message || 'Unknown error';
       setError('Failed to fetch users: ' + errorMessage);
-      console.error('Error fetching users:', {
-        error: err,
-        response: err.response,
-        message: errorMessage
-      });
+      console.error('Error fetching users:', { error: err, response: err.response, message: errorMessage });
       setUsers([]);
     } finally {
       setLoading(false);
@@ -61,32 +53,32 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     const debounceTimeout = setTimeout(() => {
+      let filtered = [];
       if (activeTab === 'pets' && Array.isArray(pets)) {
-        const filtered = pets.filter(pet => 
-          !pet.isArchived && // Exclure les pets archivés dans l'onglet "Pets"
-          ((pet.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (pet.breed || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (pet.city || '').toLowerCase().includes(searchTerm.toLowerCase()))
-        );
-        setFilteredData(filtered);
+        filtered = pets.filter(pet => !pet.isArchived); // Pets non archivés
       } else if (activeTab === 'archived' && Array.isArray(pets)) {
-        const filtered = pets.filter(pet => 
-          pet.isArchived && // Inclure uniquement les pets archivés dans l'onglet "Archived"
-          ((pet.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (pet.breed || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (pet.city || '').toLowerCase().includes(searchTerm.toLowerCase()))
-        );
-        setFilteredData(filtered);
+        filtered = pets.filter(pet => pet.isArchived); // Pets archivés
       } else if (activeTab === 'users' && Array.isArray(users)) {
-        const filtered = users.filter(user =>
-          (user.fullName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (user.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (user.role || '').toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        setFilteredData(filtered);
-      } else {
-        setFilteredData([]);
+        filtered = users;
       }
+
+      // Filtrer uniquement par recherche pour les onglets "users" et "archived"
+      filtered = filtered.filter(item => {
+        if (activeTab === 'users') {
+          return (
+            (item.fullName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (item.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (item.role || '').toLowerCase().includes(searchTerm.toLowerCase())
+          );
+        } else {
+          return (
+            (item.name || '').toLowerCase().includes(searchTerm.toLowerCase())
+          );
+        }
+      });
+
+      setFilteredData(filtered);
+      console.log('Filtered Data in AdminDashboard:', filtered);
     }, 300);
 
     return () => clearTimeout(debounceTimeout);
@@ -95,6 +87,12 @@ const AdminDashboard = () => {
   const getCurrentData = () => {
     if (loading) return [];
     return filteredData.length > 0 ? filteredData : (activeTab === 'users' ? users : pets) || [];
+  };
+
+  // Fonction pour signaler un rafraîchissement (à appeler après ajout d'un pet)
+  const handlePetChange = () => {
+    setRefreshTrigger(prev => prev + 1); // Incrémente pour déclencher useEffect dans PetsTable
+    fetchPets(); // Met à jour les pets dans AppContext
   };
 
   return (
@@ -144,9 +142,21 @@ const AdminDashboard = () => {
                 error={error}
               />
             ) : activeTab === 'pets' ? (
-              <PetsTable pets={getCurrentData()} />
+              <PetsTable 
+                pets={getCurrentData()} 
+                loading={loading} 
+                error={error} 
+                fetchPets={fetchPets}
+                refreshTrigger={refreshTrigger} // Passer le déclencheur à PetsTable
+                onPetChange={handlePetChange} // Passer la fonction pour signaler les changements
+              />
             ) : (
-              <ArchivedPetsTable pets={getCurrentData()} />
+              <ArchivedPetsTable 
+                pets={getCurrentData()} 
+                loading={loading} 
+                error={error} 
+                fetchPets={fetchPets}
+              />
             )}
           </div>
         </div>
