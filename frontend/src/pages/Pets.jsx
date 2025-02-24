@@ -21,17 +21,49 @@ const PawIcon = ({ className, style }) => (
   </svg>
 );
 
+// Predefined breed lists from CreatePet
+const dogBreeds = [
+  "German Shepherd",
+  "Labrador Retriever",
+  "Golden Retriever",
+  "Bulldog",
+  "Rottweiler",
+  "Beagle",
+  "Poodle",
+  "Siberian Husky",
+  "Boxer",
+  "Great Dane",
+];
+
+const catBreeds = [
+  "Persian",
+  "Siamese",
+  "Maine Coon",
+  "British Shorthair",
+  "Ragdoll",
+  "Bengal",
+  "Sphynx",
+  "Russian Blue",
+  "American Shorthair",
+  "Scottish Fold",
+];
+
+// Predefined lists from schema
+const allSpecies = ["dog", "cat", "other"];
+const allAges = ["puppy", "kitten", "young", "adult", "senior"];
+const feeOptions = ["Free", "With Money"]; // Static fee filter options
+const sortOptions = ["Ascending", "Descending"]; // Sort options for "With Money"
+
 export default function Pet() {
   const navigate = useNavigate();
-  const { category: urlCategory } = useParams();
+  const { species: urlSpecies } = useParams();
   const { pets, currencySymbol, loading, error } = useContext(AppContext);
 
   const [filteredPets, setFilteredPets] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [races, setRaces] = useState([]);
+  const [speciesList] = useState(allSpecies);
   const [breeds, setBreeds] = useState([]);
-  const [ages, setAges] = useState([]);
-  const [fees, setFees] = useState([]);
+  const [ages] = useState(allAges);
+  const [fees] = useState(feeOptions); // Use static options
   const [cities, setCities] = useState([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
@@ -39,49 +71,100 @@ export default function Pet() {
   const [petsPerPage] = useState(9);
   const [isAnimating, setIsAnimating] = useState(false);
 
-  const [selectedCategory, setSelectedCategory] = useState(urlCategory || "");
-  const [selectedRace, setSelectedRace] = useState("");
+  const [selectedSpecies, setSelectedSpecies] = useState(urlSpecies || "");
   const [selectedBreed, setSelectedBreed] = useState("");
   const [selectedAge, setSelectedAge] = useState("");
   const [selectedFee, setSelectedFee] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
+  const [sortOrder, setSortOrder] = useState(""); // For ascending/descending sort
 
+  // Filter and sort pets based on selections
   useEffect(() => {
-    let filtered = pets.filter(pet => pet.status === "accepted");
-    if (selectedCategory)
-      filtered = filtered.filter((pet) => pet.category === selectedCategory);
-    if (selectedRace)
-      filtered = filtered.filter((pet) => pet.race === selectedRace);
+    let filtered = pets.filter((pet) => pet.status === "accepted");
+
+    if (selectedSpecies)
+      filtered = filtered.filter((pet) => pet.species === selectedSpecies);
     if (selectedBreed)
       filtered = filtered.filter((pet) => pet.breed === selectedBreed);
     if (selectedAge)
       filtered = filtered.filter((pet) => pet.age === selectedAge);
-    if (selectedFee)
-      filtered = filtered.filter((pet) => pet.fee === selectedFee);
+    if (selectedFee === "Free")
+      filtered = filtered.filter((pet) => pet.fee === 0);
+    else if (selectedFee === "With Money")
+      filtered = filtered.filter((pet) => pet.fee > 0);
     if (selectedCity)
       filtered = filtered.filter((pet) => pet.city === selectedCity);
+
+    // Apply sorting when "With Money" is selected
+    if (selectedFee === "With Money" && sortOrder) {
+      filtered.sort((a, b) =>
+        sortOrder === "Ascending" ? a.fee - b.fee : b.fee - a.fee
+      );
+    }
+
     setFilteredPets(filtered);
     setCurrentPage(1);
+
+    console.log("Filtered Pets:", filtered);
   }, [
     pets,
-    selectedCategory,
-    selectedRace,
+    selectedSpecies,
     selectedBreed,
     selectedAge,
     selectedFee,
     selectedCity,
+    sortOrder,
   ]);
 
+  // Populate dynamic filter options (breeds, cities)
   useEffect(() => {
-    const acceptedPets = pets.filter(pet => pet.status === "accepted");
+    const acceptedPets = pets.filter((pet) => pet.status === "accepted");
 
-    setCategories([...new Set(pets.map((pet) => pet.category))]);
-    setRaces([...new Set(pets.map((pet) => pet.race))]);
-    setBreeds([...new Set(pets.map((pet) => pet.breed))]);
-    setAges([...new Set(pets.map((pet) => pet.age))]);
-    setFees([...new Set(pets.map((pet) => pet.fee))]);
-    setCities([...new Set(pets.map((pet) => pet.city))]);
-  }, [pets]);
+    // Set breeds based on selectedSpecies
+    let availableBreeds = [];
+    if (selectedSpecies === "dog") {
+      availableBreeds = dogBreeds;
+    } else if (selectedSpecies === "cat") {
+      availableBreeds = catBreeds;
+    } else if (selectedSpecies === "other") {
+      availableBreeds = acceptedPets
+        .filter((pet) => pet.species === "other" && pet.breed)
+        .map((pet) => pet.breed);
+      if (availableBreeds.length === 0) {
+        availableBreeds = ["Custom Breed"];
+      }
+    } else {
+      availableBreeds = [...dogBreeds, ...catBreeds];
+      if (acceptedPets.length > 0) {
+        const otherBreeds = acceptedPets
+          .filter((pet) => pet.species === "other" && pet.breed)
+          .map((pet) => pet.breed);
+        availableBreeds = [...new Set([...availableBreeds, ...otherBreeds])];
+      }
+    }
+    setBreeds(availableBreeds);
+
+    // Set cities from data (empty if no data)
+    setCities(
+      [...new Set(acceptedPets.map((pet) => pet.city))].filter(Boolean)
+    );
+
+    // Reset sort order if "With Money" isn't selected
+    if (selectedFee !== "With Money") {
+      setSortOrder("");
+    }
+
+    // Debugging logs
+    console.log("All Pets:", pets);
+    console.log("Accepted Pets:", acceptedPets);
+    console.log("Selected Species:", selectedSpecies);
+    console.log("Species List:", speciesList);
+    console.log("Breeds:", availableBreeds);
+    console.log("Ages:", ages);
+    console.log("Fee Option:", selectedFee);
+    console.log("Sort Order:", sortOrder);
+    console.log("Cities:", cities);
+  }, [pets, selectedSpecies, selectedFee]);
 
   const indexOfLastPet = currentPage * petsPerPage;
   const indexOfFirstPet = indexOfLastPet - petsPerPage;
@@ -115,7 +198,6 @@ export default function Pet() {
     </div>
   );
 
-  // Background paw prints
   const PawBackground = () => {
     return Array(8)
       .fill(null)
@@ -176,16 +258,12 @@ export default function Pet() {
 
   return (
     <div className="relative min-h-screen px-4 py-6 overflow-hidden bg-gradient-to-b from-white to-pink-50 sm:py-12">
-      {" "}
-      {/* Animated Background */}
       <div className="absolute inset-0 overflow-hidden">
         <PawBackground />
       </div>
-      {/* Blob Decorations */}
       <div className="absolute top-0 left-0 w-64 h-64 bg-[#ffc929] rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob" />
       <div className="absolute bottom-0 right-0 w-64 h-64 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob-reverse" />
       <div className="container relative max-w-6xl mx-auto">
-        {/* Title section */}
         <div className="mb-6 text-center">
           <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 hover:text-[#ffc929] mb-2 transition-colors duration-300">
             Find Your Forever Friend
@@ -199,7 +277,6 @@ export default function Pet() {
           </p>
         </div>
 
-        {/* Results summary moved to top */}
         {filteredPets.length > 0 && (
           <div className="mb-6 text-center">
             <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 backdrop-blur-sm border-2 border-[#ffc929]/20 text-gray-600 shadow-sm hover:shadow-md transition-all duration-300 hover:border-[#ffc929]/30">
@@ -208,7 +285,7 @@ export default function Pet() {
             </span>
           </div>
         )}
-        {/* Mobile filter toggle */}
+
         <button
           className="w-full md:hidden bg-[#ffc929] text-white py-2 px-4 rounded-xl mb-4 hover:bg-[#ffc929]/90 transition-colors duration-300"
           onClick={() => setIsFilterOpen(!isFilterOpen)}
@@ -221,19 +298,12 @@ export default function Pet() {
             !isFilterOpen && "hidden md:block"
           }`}
         >
-          {" "}
           <div className="flex flex-col gap-2 sm:flex-row">
             <FilterSelect
-              label="Category"
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              options={categories}
-            />
-            <FilterSelect
-              label="Race"
-              value={selectedRace}
-              onChange={(e) => setSelectedRace(e.target.value)}
-              options={races}
+              label="Species"
+              value={selectedSpecies}
+              onChange={(e) => setSelectedSpecies(e.target.value)}
+              options={speciesList}
             />
             <FilterSelect
               label="Breed"
@@ -253,6 +323,14 @@ export default function Pet() {
               onChange={(e) => setSelectedFee(e.target.value)}
               options={fees}
             />
+            {selectedFee === "With Money" && (
+              <FilterSelect
+                label="Sort Fee"
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value)}
+                options={sortOptions}
+              />
+            )}
             <FilterSelect
               label="City"
               value={selectedCity}
@@ -303,18 +381,19 @@ export default function Pet() {
                         size={16}
                         className="mr-1 transition-transform duration-300 group-hover:rotate-12"
                       />
-                      {pet.category} • {pet.breed}
+                      {pet.species.charAt(0).toUpperCase() + pet.species.slice(1)}{" "}
+                      {pet.breed && `• ${pet.breed}`}
                     </p>
                     <div className="flex flex-wrap items-center gap-2">
                       <span
                         className="text-xs sm:text-sm text-gray-600 bg-[#ffc929]/10 px-3 py-1 
-                      rounded-full border border-[#ffc929]/20 group-hover:bg-[#ffc929]/20 transition-colors duration-300"
+                        rounded-full border border-[#ffc929]/20 group-hover:bg-[#ffc929]/20 transition-colors duration-300"
                       >
-                        {pet.age} years
+                        {pet.age.charAt(0).toUpperCase() + pet.age.slice(1)}
                       </span>
                       <span
                         className="text-xs sm:text-sm text-gray-600 bg-[#ffc929]/10 px-3 py-1 
-                      rounded-full border border-[#ffc929]/20 flex items-center gap-1 group-hover:bg-[#ffc929]/20 transition-colors duration-300"
+                        rounded-full border border-[#ffc929]/20 flex items-center gap-1 group-hover:bg-[#ffc929]/20 transition-colors duration-300"
                       >
                         <MapPin size={12} />
                         {pet.city}
@@ -322,7 +401,7 @@ export default function Pet() {
                     </div>
                     <span
                       className="text-xs sm:text-sm text-gray-600 bg-[#ffc929]/10 px-3 py-1 
-                    rounded-full border border-[#ffc929]/20 flex items-center gap-1 w-fit group-hover:bg-[#ffc929]/20 transition-colors duration-300"
+                      rounded-full border border-[#ffc929]/20 flex items-center gap-1 w-fit group-hover:bg-[#ffc929]/20 transition-colors duration-300"
                     >
                       <Coins size={12} />
                       {pet.fee === 0 ? "Free" : `${pet.fee}${currencySymbol}`}
@@ -367,7 +446,6 @@ export default function Pet() {
                   pageNumber === 1 ||
                   pageNumber === totalPages;
 
-                // Show ellipsis for breaks in pagination
                 if (!isNearCurrent) {
                   if (
                     pageNumber === currentPage - 2 ||

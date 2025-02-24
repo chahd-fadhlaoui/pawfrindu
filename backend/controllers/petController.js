@@ -4,10 +4,34 @@ import Pet from '../models/petModel.js'
 export const createPet = async (req, res) => {
   try {
     const { 
-      name,breed, age, city, gender, 
-      category, fee, isTrained, image, description 
+      name, breed, age, city, gender, 
+      species, fee, isTrained, image, description 
     } = req.body;
     
+    // Manual validation
+    if (!name || !age || !city || !gender || !species || !image || !description) {
+      return res.status(400).json({
+        success: false,
+        message: 'All required fields must be provided'
+      });
+    }
+
+    const validSpecies = ["dog", "cat", "other"];
+    if (!validSpecies.includes(species)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid species value'
+      });
+    }
+
+    const validAges = ["puppy", "kitten", "young", "adult", "senior"];
+    if (!validAges.includes(age)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid age value'
+      });
+    }
+
     // Get owner ID from authenticated user
     const ownerId = req.user._id;
     
@@ -18,9 +42,9 @@ export const createPet = async (req, res) => {
       age,
       city,
       gender,
-      category,
+      species,
       fee,
-      isTrained,
+      isTrained: Boolean(isTrained),
       image,
       description,
       owner: ownerId,
@@ -48,11 +72,22 @@ export const getAllPets = async (req, res) => {
   try {
     const pets = await Pet.find()
       .populate('owner', 'fullName email');
-      
+
+    // Sanitize the pet data
+    const sanitizedPets = pets.map(pet => ({
+      ...pet._doc, // Spread the document properties
+      species: pet.species || pet.category || "unknown", // Fallback for missing species or legacy category
+      age: pet.age || "unknown", // Fallback for missing age
+      breed: pet.breed || "", // Ensure breed is a string
+      city: pet.city || "Unknown", // Fallback for missing city
+      fee: pet.fee !== undefined ? pet.fee : 0, // Default to 0 if fee is missing
+      status: pet.status || "pending", // Default status if missing
+    }));
+
     return res.status(200).json({
       success: true,
-      count: pets.length,
-      data: pets
+      count: sanitizedPets.length,
+      data: sanitizedPets
     });
   } catch (error) {
     return res.status(500).json({
