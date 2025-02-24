@@ -165,17 +165,16 @@ export const updatePet = async (req, res) => {
   try {
     const { id } = req.params;
     const updateData = req.body;
-    
-    // Find pet first to check ownership
+
+    // Find pet first to check ownership and current state
     const pet = await Pet.findById(id);
-    
     if (!pet) {
       return res.status(404).json({
         success: false,
         message: 'Pet not found'
       });
     }
-    
+
     // Check if user is the owner of the pet
     if (pet.owner.toString() !== req.user._id.toString() && req.user.role !== 'Admin') {
       return res.status(403).json({
@@ -183,16 +182,27 @@ export const updatePet = async (req, res) => {
         message: 'Unauthorized: You can only update your own pets'
       });
     }
-    
-    const updatedPet = await Pet.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true }
+
+    // Define significant fields that require re-approval
+    const significantFields = ["description", "image", "fee", "species", "breed", "name", "gender", "isTrained"];
+    const requiresApproval = significantFields.some(field => 
+      updateData[field] !== undefined && updateData[field] !== pet[field]
     );
-    
+
+    // If significant changes are made and not by an admin, reset status to pending
+    if (requiresApproval && req.user.role !== 'Admin') {
+      updateData.status = 'pending';
+      updateData.isApproved = false; // Reset approval status
+    }
+
+    // Update the pet
+    const updatedPet = await Pet.findByIdAndUpdate(id, updateData, { new: true });
+
     return res.status(200).json({
       success: true,
-      message: 'Pet updated successfully',
+      message: requiresApproval && req.user.role !== 'Admin' 
+        ? 'Pet updated successfully, pending admin approval' 
+        : 'Pet updated successfully',
       data: updatedPet
     });
   } catch (error) {

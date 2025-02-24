@@ -10,15 +10,15 @@ import axiosInstance from "../utils/axiosInstance";
 const DEFAULT_PROFILE_IMAGE =
   "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSIxMDAiIGZpbGw9IiNFNUU3RUIiLz4KICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSI4MCIgcj0iNDAiIGZpbGw9IiM5Q0EzQUYiLz4KICA8cGF0aCBkPSJNMTYwIDE4MEgzOUM0MSAxNDAgODAgMTIwIDEwMCAxMjBDMTIwIDEyMCAxNTggMTQwIDE2MCAxODBaIiBmaWxsPSIjOUNBM0FGIi8+Cjwvc3ZnPg==";
 
-  const ensureUserHasImage = (user) => {
-    if (!user) return null;
-    // Ensure image is set before returning the user
-    const processedUser = {
-      ...user,
-      image: user.image || DEFAULT_PROFILE_IMAGE
-    };
-    return processedUser;
+const ensureUserHasImage = (user) => {
+  if (!user) return null;
+  // Ensure image is set before returning the user
+  const processedUser = {
+    ...user,
+    image: user.image || DEFAULT_PROFILE_IMAGE,
   };
+  return processedUser;
+};
 
 export const AppContext = createContext();
 
@@ -51,7 +51,7 @@ const AppContextProvider = ({ children }) => {
       setLoading(false);
       return false;
     }
-  
+
     try {
       const response = await axiosInstance.get("/api/user/me");
       console.log("CheckAuth response:", response.data);
@@ -59,7 +59,11 @@ const AppContextProvider = ({ children }) => {
       setUser(authenticatedUser);
       return true;
     } catch (error) {
-      console.error("Auth check failed:", error.message, error.response?.status);
+      console.error(
+        "Auth check failed:",
+        error.message,
+        error.response?.status
+      );
       if (error.response?.status === 401) {
         localStorage.removeItem("token");
         setUser(null);
@@ -98,7 +102,7 @@ const AppContextProvider = ({ children }) => {
       if (!isMounted) return;
       setLoading(true);
       console.log("Initializing app...");
-      
+
       try {
         // First fetch all pets (public data)
         await fetchPets();
@@ -164,12 +168,15 @@ const AppContextProvider = ({ children }) => {
     if (loading) return;
     setLoading(true);
     setError("");
-  
+
     try {
-      const response = await axiosInstance.post("/api/user/login", { email, password });
+      const response = await axiosInstance.post("/api/user/login", {
+        email,
+        password,
+      });
       const { accessToken, user: userData } = response.data;
       const authenticatedUser = ensureUserHasImage(userData);
-  
+
       localStorage.setItem("token", accessToken);
       axiosInstance.setAuthToken(accessToken); // Assuming this method exists
       setUser(authenticatedUser); // Set user directly from login response
@@ -377,7 +384,11 @@ const AppContextProvider = ({ children }) => {
       if (user) {
         await getMyPets();
       }
-      return { success: true, data: response.data };
+      return {
+        success: true,
+        data: response.data,
+        message: response.data.message, // Pass the message from backend
+      };
     } catch (error) {
       const errorMessage =
         error.response?.data?.message || "Error updating pet";

@@ -147,7 +147,8 @@ const PetOwnerPosts = () => {
   const [editFormData, setEditFormData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [userPets, setUserPets] = useState([]);
-
+  const [approvalMessage, setApprovalMessage] = useState(""); // New state for approval feedback
+  
   const fetchUserPets = useCallback(async () => {
     setLoading(true);
     try {
@@ -169,19 +170,9 @@ const PetOwnerPosts = () => {
 
   useEffect(() => {
     let mounted = true;
-
-    const fetchData = async () => {
-      if (user?._id && mounted) {
-        await fetchUserPets();
-      }
-    };
-
-    fetchData();
-
-    return () => {
-      mounted = false;
-    };
-  }, [user?._id]);
+    if (user?._id && mounted) fetchUserPets();
+    return () => { mounted = false; };
+  }, [user?._id, fetchUserPets]);
 
   const handleEdit = useCallback((pet) => {
     setEditMode(true);
@@ -192,7 +183,7 @@ const PetOwnerPosts = () => {
       age: pet.age,
       city: pet.city,
       gender: pet.gender,
-      category: pet.category,
+      species: pet.species,
       fee: pet.fee,
       isTrained: pet.isTrained === true || pet.isTrained === "true",
       description: pet.description,
@@ -226,13 +217,15 @@ const PetOwnerPosts = () => {
       // Convert isTrained to string for API
       const updatedData = {
         ...editFormData,
-        isTrained: editFormData.isTrained,
-        image: editFormData.image,
+        //image: editFormData.image,
       };
       // Use updatedData instead of editFormData
       const result = await updatePet(selectedPet._id, updatedData);
       if (result.success) {
         fetchUserPets();
+        if (result.message.includes("pending admin approval")) {
+          setApprovalMessage(result.message); // Show approval message
+        }
         handleCloseModal();
       }
     } catch (err) {
@@ -268,7 +261,6 @@ const PetOwnerPosts = () => {
     <LoadingWrapper loading={loading}>
       <div className="min-h-screen bg-gradient-to-br from-white via-[#ffc929]/5 to-pink-50">
         <div className="container p-4 mx-auto max-w-7xl sm:p-6 lg:p-8">
-          {/* Header */}
           <div className="mb-8">
             <div className="space-y-4 transition-all duration-500 transform hover:translate-x-2">
               <h1 className="text-2xl font-bold tracking-tight text-neutral-900 transition-colors duration-300 sm:text-3xl lg:text-4xl hover:text-[#ffc929]">
@@ -276,8 +268,7 @@ const PetOwnerPosts = () => {
               </h1>
               <div className="flex items-center justify-between">
                 <p className="text-sm text-black transition-colors duration-300 hover:text-pink-500 sm:text-base lg:text-lg">
-                  Manage your adoption posts and track potential candidates all
-                  in one place.
+                  Manage your adoption posts and track potential candidates all in one place.
                 </p>
                 {userPets.length > 0 && (
                   <button
@@ -292,8 +283,14 @@ const PetOwnerPosts = () => {
             </div>
           </div>
 
-          {/* Rest of the component remains the same */}
           {error && <Alert message={error} onClose={clearError} />}
+          {approvalMessage && (
+            <Alert
+              message={approvalMessage}
+              type="info"
+              onClose={() => setApprovalMessage("")}
+            />
+          )}
 
           {userPets.length === 0 ? (
             <EmptyState
@@ -310,9 +307,7 @@ const PetOwnerPosts = () => {
                     <thead className="text-xs text-neutral-700 uppercase bg-gradient-to-r from-[#ffc929]/10 to-white">
                       <tr>
                         {TABLE_HEADERS.map((header) => (
-                          <th key={header} className="px-4 py-4 font-medium">
-                            {header}
-                          </th>
+                          <th key={header} className="px-4 py-4 font-medium">{header}</th>
                         ))}
                       </tr>
                     </thead>
@@ -325,39 +320,22 @@ const PetOwnerPosts = () => {
                         >
                           <td className="px-4 py-4">
                             <div className="relative w-16 h-16 overflow-hidden rounded-lg">
-                              <img
-                                src={pet.image}
-                                alt={pet.name}
-                                className="absolute inset-0 object-contain w-full h-full"
-                              />
+                              <img src={pet.image} alt={pet.name} className="absolute inset-0 object-contain w-full h-full" />
                             </div>
                           </td>
                           <td className="px-4 py-4">{pet.name}</td>
-                          <td className="max-w-xs px-4 py-4 truncate">
-                            {pet.description}
-                          </td>
+                          <td className="max-w-xs px-4 py-4 truncate">{pet.description}</td>
                           <td className="px-4 py-4">{pet.breed}</td>
                           <td className="px-4 py-4">{pet.age}</td>
-                          <td className="px-4 py-4">
-                            {pet.fee === 0
-                              ? "Free"
-                              : `${pet.fee} ${currencySymbol}`}
-                          </td>
-                          <td className="px-4 py-4">
-                            <StatusBadge status={pet.status} />
-                          </td>
-                          <td
-                            className="px-4 py-4"
-                            onClick={(e) => e.stopPropagation()}
-                          >
+                          <td className="px-4 py-4">{pet.fee === 0 ? "Free" : `${pet.fee} ${currencySymbol}`}</td>
+                          <td className="px-4 py-4"><StatusBadge status={pet.status} /></td>
+                          <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}>
                             <ActionButtons
                               pet={pet}
                               onEdit={handleEdit}
                               onDelete={handleDelete}
-                              onViewCandidates={(id) =>
-                                navigate(`/candidates/${id}`)
-                              }
-                              disabled={loading}
+                              onViewCandidates={(id) => navigate(`/candidates/${id}`)}
+                              disabled={loading || pet.status === 'pending'} // Disable edit if pending
                             />
                           </td>
                         </tr>
@@ -377,52 +355,29 @@ const PetOwnerPosts = () => {
                   >
                     <div className="flex flex-col sm:flex-row sm:space-x-4">
                       <div className="relative w-full h-48 mb-4 overflow-hidden rounded-lg sm:w-24 sm:h-24 sm:mb-0">
-                        <img
-                          src={pet.image}
-                          alt={pet.name}
-                          className="object-cover w-full h-full"
-                        />
+                        <img src={pet.image} alt={pet.name} className="object-cover w-full h-full" />
                       </div>
                       <div className="flex-1 space-y-3">
                         <div className="flex items-start justify-between">
                           <h3 className="text-lg font-medium">{pet.name}</h3>
                           <StatusBadge status={pet.status} />
                         </div>
-                        <p className="text-sm text-gray-600 line-clamp-2 sm:line-clamp-1">
-                          {pet.description}
-                        </p>
+                        <p className="text-sm text-gray-600 line-clamp-2 sm:line-clamp-1">{pet.description}</p>
                         <div className="grid grid-cols-2 gap-2">
-                          <div className="text-sm truncate">
-                            <span className="font-medium">breed:</span>{" "}
-                            {pet.breed}
-                          </div>
-                          <div className="text-sm truncate">
-                            <span className="font-medium">Age:</span> {pet.age}{" "}
-                            months
-                          </div>
-                          <div className="text-sm truncate">
-                            <span className="font-medium">Fee:</span>{" "}
-                            {pet.fee === 0
-                              ? "Free"
-                              : `${pet.fee} ${currencySymbol}`}
-                          </div>
-                          <div className="text-sm truncate">
-                            <span className="font-medium">Category:</span>{" "}
-                            {pet.category}
-                          </div>
+                          <div className="text-sm truncate"><span className="font-medium">breed:</span> {pet.breed}</div>
+                          <div className="text-sm truncate"><span className="font-medium">Age:</span> {pet.age}</div>
+                          <div className="text-sm truncate"><span className="font-medium">Fee:</span> {pet.fee === 0 ? "Free" : `${pet.fee} ${currencySymbol}`}</div>
+                          <div className="text-sm truncate"><span className="font-medium">Species:</span> {pet.species}</div>
                         </div>
                       </div>
                     </div>
-                    <div
-                      className="flex justify-end pt-3 mt-4 border-t"
-                      onClick={(e) => e.stopPropagation()}
-                    >
+                    <div className="flex justify-end pt-3 mt-4 border-t" onClick={(e) => e.stopPropagation()}>
                       <ActionButtons
                         pet={pet}
                         onEdit={handleEdit}
                         onDelete={handleDelete}
                         onViewCandidates={(id) => navigate(`/candidates/${id}`)}
-                        disabled={loading}
+                        disabled={loading || pet.status === 'pending'} // Disable edit if pending
                       />
                     </div>
                   </div>
@@ -435,81 +390,24 @@ const PetOwnerPosts = () => {
           {selectedPet && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto bg-black/50 backdrop-blur-sm">
               <div className="relative w-full max-w-lg my-8 bg-white rounded-xl">
-                {/* Close button moved outside for better visibility */}
-                <button
-                  onClick={() => {
-                    setSelectedPet(null);
-                    setEditMode(false);
-                    setEditFormData(null);
-                    clearError();
-                  }}
-                  className="absolute z-10 p-2 rounded-full right-2 top-2 hover:bg-gray-100"
-                >
+                <button onClick={handleCloseModal} className="absolute z-10 p-2 rounded-full right-2 top-2 hover:bg-gray-100">
                   <X size={20} />
                 </button>
-
                 <div className="max-h-[80vh] overflow-y-auto">
                   <div className="p-6 border-b">
-                    <h2 className="pr-8 text-xl font-bold">
-                      {editMode ? "Edit Pet" : selectedPet.name}
-                    </h2>
+                    <h2 className="pr-8 text-xl font-bold">{editMode ? "Edit Pet" : selectedPet.name}</h2>
                   </div>
-
                   <div className="p-6">
                     {editMode ? (
                       <EditForm
                         formData={editFormData}
-                        onChange={handleInputChange} // Use the existing handler
+                        onChange={handleInputChange}
                         onSubmit={handleUpdate}
-                        onCancel={handleCloseModal} // Use the existing handler
+                        onCancel={handleCloseModal}
                         loading={loading}
                       />
                     ) : (
-                      <div className="space-y-6">
-                        <div className="relative overflow-hidden rounded-lg aspect-video">
-                          <img
-                            src={selectedPet.image}
-                            alt={selectedPet.name}
-                            className="absolute inset-0 object-cover w-full h-full"
-                          />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="p-4 rounded-lg bg-[#ffc929]/5">
-                            <p className="text-sm text-gray-600">breed</p>
-                            <p className="font-medium">{selectedPet.breed}</p>
-                          </div>
-                          <div className="p-4 rounded-lg bg-[#ffc929]/5">
-                            <p className="text-sm text-gray-600">Age</p>
-                            <p className="font-medium">
-                              {selectedPet.age} months
-                            </p>
-                          </div>
-                          <div className="p-4 rounded-lg bg-[#ffc929]/5">
-                            <p className="text-sm text-gray-600">City</p>
-                            <p className="font-medium">{selectedPet.city}</p>
-                          </div>
-                          <div className="p-4 rounded-lg bg-[#ffc929]/5">
-                            <p className="text-sm text-gray-600">Status</p>
-                            <StatusBadge status={selectedPet.status} />
-                          </div>
-                        </div>
-
-                        <div className="p-4 rounded-lg bg-[#ffc929]/5">
-                          <p className="text-sm text-gray-600">Description</p>
-                          <p className="mt-1">{selectedPet.description}</p>
-                        </div>
-
-                        {/* Action buttons in a fixed position */}
-                        <div className="flex justify-end gap-2 pt-4">
-                          <button
-                            onClick={() => handleEdit(selectedPet)}
-                            className="px-6 py-2 text-white bg-[#ffc929] rounded-lg hover:bg-[#e6b625] transition-all duration-300"
-                          >
-                            Edit Pet
-                          </button>
-                        </div>
-                      </div>
+                      <PetDetails pet={selectedPet} onEdit={handleEdit} />
                     )}
                   </div>
                 </div>
