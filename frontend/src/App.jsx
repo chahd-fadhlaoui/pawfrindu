@@ -25,26 +25,22 @@ import Forbidden from './pages/Forbidden';
 
 const Layout = ({ children }) => {
   const location = useLocation();
-  const { user, loading } = useApp();
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  const { user } = useApp(); // Remove loading check here
 
   const isAdminPage = location.pathname.startsWith('/admin');
   const isTrainerPage = location.pathname.startsWith('/trainer');
   const isVetPage = location.pathname.startsWith('/vet');
   const isHomePage = location.pathname === '/';
-  const isForbiddenPage = location.pathname === '/forbidden'; // Check for forbidden page
+  const isForbiddenPage = location.pathname === '/forbidden';
 
-  // Show Header and Footer only for non-authenticated users or PetOwner on home page, and not on /forbidden
   const showHeaderFooter = 
     (!user || user.role === "PetOwner") && 
     !isAdminPage && 
     !isTrainerPage && 
     !isVetPage && 
-    !isForbiddenPage; // Exclude /forbidden
+    !isForbiddenPage;
 
+  // No loading check; let routes handle it
   return (
     <div className='mx-4 sm:max-[10%]'>
       {showHeaderFooter && <Header />}
@@ -57,59 +53,22 @@ const Layout = ({ children }) => {
 const AppRoutes = () => {
   return (
     <Routes>
-      {/* Public Routes - Only non-authenticated or PetOwner */}
-      <Route
-        path="/"
-        element={
-          <PublicRoute>
-            <Home />
-          </PublicRoute>
-        }
-      />
+      <Route path="/" element={<PublicRoute><Home /></PublicRoute>} />
       <Route path="/pets" element={<Pets />} />
       <Route path="/pets/:category" element={<Pets />} />
       <Route path="/petsdetails/:petId" element={<PetDetails />} />
       <Route path="/login" element={<Auth />} />
       <Route path="/reset-password" element={<ResetPasswordConfirmation />} />
       <Route path="/forbidden" element={<Forbidden />} />
-
-      {/* Protected Routes */}
-      <Route
-        path="/admin"
-        element={<ProtectedRoute allowedRoles={["Admin"]}><AdminDashboard /></ProtectedRoute>}
-      />
-      <Route
-        path="/trainer"
-        element={<ProtectedRoute allowedRoles={["Trainer"]}><TrainerDashboard /></ProtectedRoute>}
-      />
-      <Route
-        path="/vet"
-        element={<ProtectedRoute allowedRoles={["Vet"]}><VetDashboard /></ProtectedRoute>}
-      />
-      <Route
-        path="/addPet"
-        element={<ProtectedRoute allowedRoles={["PetOwner"]}><CreatePet /></ProtectedRoute>}
-      />
-      <Route
-        path="/list"
-        element={<ProtectedRoute allowedRoles={["PetOwner"]}><PetOwnerPosts /></ProtectedRoute>}
-      />
-      <Route
-        path="/profile"
-        element={<ProtectedRoute allowedRoles={["PetOwner", "Trainer", "Vet"]}><Profile /></ProtectedRoute>}
-      />
-      <Route
-        path="/myprofile"
-        element={<ProtectedRoute allowedRoles={["PetOwner", "Trainer", "Vet"]}><CreateProfile /></ProtectedRoute>}
-      />
-      <Route
-        path="/candidates/:petId"
-        element={<ProtectedRoute allowedRoles={["PetOwner", "Trainer", "Vet"]}><CandidatesPage /></ProtectedRoute>}
-      />
-      <Route
-        path="/veterinian/:petId"
-        element={<ProtectedRoute allowedRoles={["Vet"]}><Veteriniandetail /></ProtectedRoute>}
-      />
+      <Route path="/admin" element={<ProtectedRoute allowedRoles={["Admin"]}><AdminDashboard /></ProtectedRoute>} />
+      <Route path="/trainer" element={<ProtectedRoute allowedRoles={["Trainer"]}><TrainerDashboard /></ProtectedRoute>} />
+      <Route path="/vet" element={<ProtectedRoute allowedRoles={["Vet"]}><VetDashboard /></ProtectedRoute>} />
+      <Route path="/addPet" element={<ProtectedRoute allowedRoles={["PetOwner"]}><CreatePet /></ProtectedRoute>} />
+      <Route path="/list" element={<ProtectedRoute allowedRoles={["PetOwner"]}><PetOwnerPosts /></ProtectedRoute>} />
+      <Route path="/profile" element={<ProtectedRoute allowedRoles={["PetOwner", "Trainer", "Vet"]}><Profile /></ProtectedRoute>} />
+      <Route path="/myprofile" element={<ProtectedRoute allowedRoles={["PetOwner", "Trainer", "Vet"]}><CreateProfile /></ProtectedRoute>} />
+      <Route path="/candidates/:petId" element={<ProtectedRoute allowedRoles={["PetOwner", "Trainer", "Vet"]}><CandidatesPage /></ProtectedRoute>} />
+      <Route path="/veterinian/:petId" element={<ProtectedRoute allowedRoles={["Vet"]}><Veteriniandetail /></ProtectedRoute>} />
     </Routes>
   );
 };

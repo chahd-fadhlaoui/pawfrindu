@@ -2,12 +2,13 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import LoadingWrapper from './LoadingWrapper'; // Import your LoadingWrapper
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useApp();
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <LoadingWrapper loading={loading}><div /></LoadingWrapper>; // Use LoadingWrapper
   }
 
   if (!user) {
