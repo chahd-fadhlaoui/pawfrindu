@@ -38,7 +38,6 @@ export default function PetDetails() {
     setShowForm(false);
   };
 
-  // Background paw prints
   const PawBackground = () => {
     return Array(8).fill(null).map((_, index) => (
       <PawIcon
@@ -77,25 +76,22 @@ export default function PetDetails() {
       <div className="absolute inset-0 overflow-hidden">
         <PawBackground />
       </div>
-      {/* Blob Decorations */}
       <div className="absolute top-0 left-0 w-64 h-64 bg-[#ffc929] rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob" />
       <div className="absolute bottom-0 right-0 w-64 h-64 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob-reverse" />
 
       <div className="container relative max-w-4xl mx-auto">
         <div className="bg-white rounded-3xl overflow-hidden shadow-xl border-2 border-[#ffc929]/20 flex flex-col md:flex-row transform hover:scale-[1.01] transition-all duration-300">
           <div className="relative md:w-1/2 group">
-                {/* Return Button */}
-      <button
-        onClick={() => navigate(-1)}
-        className="fixed top-4 left-4 z-50 group flex items-center gap-2 bg-white/80 backdrop-blur-sm 
-        px-4 py-2 rounded-full shadow-lg border-2 border-[#ffc929]/20 
-        hover:border-[#ffc929] transition-all duration-300 hover:scale-105"
-      >
-        <ArrowLeft className="w-4 h-4 text-[#ffc929] transition-transform duration-300 transform group-hover:-translate-x-1" />
-        <span className="text-gray-700 group-hover:text-[#ffc929] transition-colors duration-300">Back</span>
-      </button>
+            <button
+              onClick={() => navigate(-1)}
+              className="fixed top-4 left-4 z-50 group flex items-center gap-2 bg-white/80 backdrop-blur-sm 
+              px-4 py-2 rounded-full shadow-lg border-2 border-[#ffc929]/20 
+              hover:border-[#ffc929] transition-all duration-300 hover:scale-105"
+            >
+              <ArrowLeft className="w-4 h-4 text-[#ffc929] transition-transform duration-300 transform group-hover:-translate-x-1" />
+              <span className="text-gray-700 group-hover:text-[#ffc929] transition-colors duration-300">Back</span>
+            </button>
             <div className="h-96 md:h-full overflow-hidden bg-gradient-to-br from-[#ffc929]/5 to-pink-50/5">
-            
               <img
                 src={petInfo.image}
                 alt={petInfo.name}
@@ -195,7 +191,15 @@ export default function PetDetails() {
         </div>
       </div>
 
-      {showForm && <PetApplicationForm onClose={handleCloseForm} pet={petInfo}/>}
+      {/* Passer petId explicitement */}
+      {showForm && (
+        <PetApplicationForm 
+          petId={petInfo._id} 
+          petName={petInfo.name} 
+          petImage={petInfo.image} 
+          onClose={handleCloseForm} 
+        />
+      )}
     </div>
   );
 }

@@ -17,7 +17,7 @@ const petSchema = new mongoose.Schema({
   },
   fee: { type: Number, required: true },
   isTrained: { type: Boolean, required: true }, // Changed to Boolean for consistency
-  status: { type: String, enum: ["pending", "accepted", "adopted", "sold"], default: "pending" },
+  status: { type: String, enum: ["pending", "accepted","adoptionPending","adopted", "sold"], default: "pending" },
   image: { type: String, required: true },
   description: { type: String, required: true },
   candidates: [{ type: mongoose.Schema.Types.ObjectId, ref: "user" }],

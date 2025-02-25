@@ -32,6 +32,7 @@ const userSchema = new mongoose.Schema(
             return this.role === "PetOwner";
           },
         },
+        about:String,
         occupation: String,
         workSchedule: {
           type: String,
@@ -59,6 +60,11 @@ const userSchema = new mongoose.Schema(
           yearsOfExperience: { type: Number, min: 0 },
           experience_description: String,
         },
+        reasonForAdoption: String, // Nouveau champ
+        readiness: {
+          type: String,
+          enum: ["immediate", "within_a_month", "later"],
+        }, // Nouveau champ
       },
       default: undefined,
     },

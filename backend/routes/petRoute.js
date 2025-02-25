@@ -34,8 +34,8 @@ petRouter.post('/addpet', authorize('PetOwner'), createPet);  // Vérifier que l
 petRouter.get('/mypets', getMyPets);  // Récupérer les pets de l'utilisateur connecté
 petRouter.put('/updatedPet/:id', updatePet);  // Mettre à jour un pet
 petRouter.delete('/deletePet/:id', verifyToken, deletePet); // Supprimer un pet
-petRouter.post('/pets/:petId/apply', applyToAdopt);  // Postuler pour adopter un pet
-petRouter.post('/pets/:petId/approve-adoption/:adopterId', approveAdoption);  // Approuver une adoption
+petRouter.post('/:petId/apply', applyToAdopt);  // Postuler pour adopter un pet
+petRouter.post('/:petId/approve-adoption/:adopterId', approveAdoption);  // Approuver une adoption
 
 // Routes pour l'admin
 petRouter.use(authorize('Admin'));  // Appliquer le middleware d'autorisation pour les routes suivantes
