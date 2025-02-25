@@ -3,50 +3,33 @@ import { BASE_URL } from './constants';
 
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
-  timeout: 30000,
-  headers: {
-    'Content-Type': 'application/json',
-  }
+  timeout: 10000, // Reduce to 10 seconds
+  headers: { 'Content-Type': 'application/json' },
 });
 
-// Request interceptor to add token to every request
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+    if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Response interceptor for handling auth errors
 axiosInstance.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-
-    // Handle 401 errors but prevent infinite loops
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      
-      // Clear token
+  (error) => {
+    if (error.response?.status === 401 && !error.config._retry) {
+      error.config._retry = true;
       localStorage.removeItem('token');
-      
-      // Only redirect to login if we're not already there
       if (!window.location.pathname.includes('/login')) {
         window.location.href = '/login';
       }
     }
-
     return Promise.reject(error);
   }
 );
 
-// Function to set token after login/registration
 axiosInstance.setAuthToken = (token) => {
   if (token) {
     localStorage.setItem('token', token);
@@ -57,10 +40,7 @@ axiosInstance.setAuthToken = (token) => {
   }
 };
 
-// Initialize auth header if token exists
 const token = localStorage.getItem('token');
-if (token) {
-  axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-}
+if (token) axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
 export default axiosInstance;

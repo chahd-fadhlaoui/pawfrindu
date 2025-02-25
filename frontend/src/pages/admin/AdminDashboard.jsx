@@ -99,8 +99,8 @@ const AdminDashboard = () => {
     <div className="flex h-screen bg-amber-50/30">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
       
-      <div className="flex-1 overflow-auto p-8">
-        <div className="max-w-7xl mx-auto">
+      <div className="flex-1 p-8 overflow-auto">
+        <div className="mx-auto max-w-7xl">
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-neutral-900 hover:text-[#ffc929]">
               {activeTab === 'users' ? 'Gestion des Utilisateurs' : 
@@ -129,12 +129,12 @@ const AdminDashboard = () => {
           </div>
 
           {error && (
-            <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
+            <div className="p-4 mb-4 text-red-700 bg-red-100 rounded-lg">
               {error}
             </div>
           )}
 
-          <div className="bg-white rounded-xl shadow-sm border-2 border-amber-100">
+          <div className="bg-white border-2 shadow-sm rounded-xl border-amber-100">
             {activeTab === 'users' ? (
               <UsersTable 
                 users={getCurrentData()} 
@@ -142,21 +142,9 @@ const AdminDashboard = () => {
                 error={error}
               />
             ) : activeTab === 'pets' ? (
-              <PetsTable 
-                pets={getCurrentData()} 
-                loading={loading} 
-                error={error} 
-                fetchPets={fetchPets}
-                refreshTrigger={refreshTrigger} // Passer le déclencheur à PetsTable
-                onPetChange={handlePetChange} // Passer la fonction pour signaler les changements
-              />
+<PetsTable refreshTrigger={refreshTrigger} onPetChange={handlePetChange} />
             ) : (
-              <ArchivedPetsTable 
-                pets={getCurrentData()} 
-                loading={loading} 
-                error={error} 
-                fetchPets={fetchPets}
-              />
+              <ArchivedPetsTable />
             )}
           </div>
         </div>

@@ -2,26 +2,27 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import LoadingWrapper from './LoadingWrapper'; // Import your LoadingWrapper
+import LoadingWrapper from './LoadingWrapper';
 
 const PublicRoute = ({ children, restrictedRoles = [] }) => {
   const { user, loading } = useApp();
 
   if (loading) {
-    return <LoadingWrapper loading={loading}><div /></LoadingWrapper>; // Use LoadingWrapper
+    return <LoadingWrapper loading={loading}><div /></LoadingWrapper>;
   }
 
   if (user) {
-    // If authenticated but not PetOwner, redirect to role-specific dashboard
-    if (user.role !== "PetOwner") {
+    // Normalize role for comparison
+    const normalizedRole = user.role === "Pet Owner" ? "PetOwner" : user.role;
+    if (normalizedRole !== "PetOwner") {
       console.log(`PublicRoute: User role ${user.role} not allowed, redirecting`);
       return <Navigate to={{
         "Admin": "/admin",
         "Trainer": "/trainer",
         "Vet": "/vet"
-      }[user.role] || "/login"} replace />;
+      }[normalizedRole] || "/login"} replace />;
     }
-    // PetOwner can stay
+    // PetOwner (raw or formatted) can stay
     return children;
   }
 
