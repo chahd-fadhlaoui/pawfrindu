@@ -57,7 +57,7 @@ const userSchema = new mongoose.Schema(
         petExperience: {
           hasPreviousPets: Boolean,
           yearsOfExperience: { type: Number, min: 0 },
-          experinece_description: String,
+          experience_description: String,
         },
       },
       default: undefined,
