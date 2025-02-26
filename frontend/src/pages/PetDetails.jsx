@@ -42,7 +42,7 @@ const PawBackground = () => {
 export default function PetDetails() {
   const navigate = useNavigate();
   const { petId } = useParams();
-  const { pets, currencySymbol } = useContext(AppContext);
+  const { pets, currencySymbol, user, loading } = useContext(AppContext); // Ajouter user et loading
   const [petInfo, setPetInfo] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
@@ -54,11 +54,18 @@ export default function PetDetails() {
     }
   }, [pets, petId]);
 
+  useEffect(() => {
+    // Logs pour débogage
+    console.log("PetDetails - user:", user);
+    console.log("PetDetails - petInfo:", petInfo);
+    console.log("PetDetails - isOwner:", user && petInfo?.owner?._id && petInfo.owner._id === user._id);
+  }, [user, petInfo]);
+
   const handleApplyNowClick = () => setShowForm(true);
   const handleCloseForm = () => setShowForm(false);
   const toggleLike = () => setIsLiked((prev) => !prev);
 
-  if (!petInfo) {
+  if (!petInfo || loading) {
     return (
       <div className="relative flex items-center justify-center min-h-screen overflow-hidden bg-gradient-to-br from-white to-pink-50">
         <div className="absolute inset-0 overflow-hidden">
@@ -73,6 +80,9 @@ export default function PetDetails() {
       </div>
     );
   }
+
+  // Vérifier si l'utilisateur est le propriétaire
+  const isOwner = user && petInfo.owner && petInfo.owner._id === user._id;
 
   return (
     <div className="relative min-h-screen px-4 py-12 overflow-hidden sm:py-20 sm:px-6 lg:px-8 bg-gradient-to-br from-white to-pink-50">
@@ -220,20 +230,26 @@ export default function PetDetails() {
 
               {/* CTA Button */}
               <div className="pt-4">
-                <button
-                  onClick={handleApplyNowClick}
-                  className="relative flex items-center justify-center w-full gap-2 py-4 overflow-hidden text-white font-bold bg-gradient-to-r from-[#ffc929] to-[#ffa726] rounded-xl shadow-md hover:from-[#ffa726] hover:to-[#ffc929] transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/30 disabled:opacity-50"
-                >
-                  <span>{petInfo.fee === 0 ? "Apply Now" : "Proceed to Payment"}</span>
-                  <ChevronRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
-                </button>
+                {!isOwner ? (
+                  <button
+                    onClick={handleApplyNowClick}
+                    className="relative flex items-center justify-center w-full gap-2 py-4 overflow-hidden text-white font-bold bg-gradient-to-r from-[#ffc929] to-[#ffa726] rounded-xl shadow-md hover:from-[#ffa726] hover:to-[#ffc929] transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/30 disabled:opacity-50"
+                  >
+                    <span>{petInfo.fee === 0 ? "Apply Now" : "Proceed to Payment"}</span>
+                    <ChevronRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
+                  </button>
+                ) : (
+                  <div className="w-full text-center py-4 rounded-xl font-bold text-gray-500 bg-gray-200 cursor-not-allowed">
+                    Your Pet
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {showForm && (
+      {showForm && !isOwner && (
         <PetApplicationForm
           petId={petInfo._id}
           petName={petInfo.name}
