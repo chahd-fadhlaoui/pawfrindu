@@ -13,7 +13,6 @@ import CandidatesPage from './pages/CandidatesPage';
 import CreateProfile from './pages/CreateProfile';
 import Home from './pages/Home';
 import PetDetails from './pages/PetDetails';
-import PetOwnerPosts from './pages/PetOwnerPosts';
 import Pets from './pages/Pets';
 import Profile from './pages/Profile';
 import Veteriniandetail from './pages/Veteriniandetail';
@@ -22,6 +21,7 @@ import TrainerDashboard from './pages/Trainer/TrainerDashboard';
 import { VetDashboard } from './pages/Vet/VetDashboard';
 import { useApp } from './context/AppContext';
 import Forbidden from './pages/Forbidden';
+import PetOwnerPosts from './pages/PetOwnerPosts';
 
 const Layout = ({ children }) => {
   const location = useLocation();

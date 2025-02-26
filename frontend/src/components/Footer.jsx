@@ -1,7 +1,5 @@
-import { Facebook, Instagram, ArrowRight, Mail, Phone, MapPin } from 'lucide-react';
-import React from 'react';
-
-// Note: Update this import path based on your project structure
+import { Facebook, Instagram, ArrowRight, Mail, Phone, MapPin } from "lucide-react";
+import React from "react";
 import logo from "../assets/LogoPawfrindu.png";
 
 const PawIcon = ({ className, style }) => (
@@ -17,18 +15,18 @@ const PawIcon = ({ className, style }) => (
 
 const Footer = () => {
   const quickLinks = [
-    { name: 'Home', href: '#' },
-    { name: 'About Us', href: '#' },
-    { name: 'Adopt', href: '#' },
-    { name: 'Lost/Found', href: '#' },
-    { name: 'Training', href: '#' },
-    { name: 'Veterinary', href: '#' },
+    { name: "Home", href: "#" },
+    { name: "About Us", href: "#" },
+    { name: "Adopt", href: "#" },
+    { name: "Lost/Found", href: "#" },
+    { name: "Training", href: "#" },
+    { name: "Veterinary", href: "#" },
   ];
 
   const contactInfo = [
-    { icon: MapPin, text: 'Tunisia', href: '#' },
-    { icon: Phone, text: '+216 XX XXX XXX', href: 'tel:+216XXXXXXXX' },
-    { icon: Mail, text: 'info@pawfrindu.com', href: 'mailto:info@pawfrindu.com' },
+    { icon: MapPin, text: "Tunisia", href: "#" },
+    { icon: Phone, text: "+216 XX XXX XXX", href: "tel:+216XXXXXXXX" },
+    { icon: Mail, text: "info@pawfrindu.com", href: "mailto:info@pawfrindu.com" },
   ];
 
   const socialMedia = [
@@ -37,35 +35,31 @@ const Footer = () => {
   ];
 
   const PawBackground = () => {
-    return Array(8).fill(null).map((_, index) => (
-      <PawIcon
-        key={index}
-        className={`
-          absolute w-8 h-8 opacity-5
-          animate-float
-          text-pink-300
-          ${index % 2 === 0 ? 'text-[#ffc929]' : 'text-pink-300'}
-          ${index % 3 === 0 ? "top-1/4" : index % 3 === 1 ? "top-1/2" : "top-3/4"}
-          ${index % 4 === 0 ? "left-1/4" : index % 4 === 1 ? "left-1/2" : "left-3/4"}
-        `}
-        style={{
-          animationDelay: `${index * 0.5}s`,
-          transform: `rotate(${index * 45}deg)`,
-        }}
-      />
-    ));
+    return Array(8)
+      .fill(null)
+      .map((_, index) => (
+        <PawIcon
+          key={index}
+          className={`
+            absolute w-8 h-8 opacity-5 animate-float
+            ${index % 2 === 0 ? "text-[#ffc929]" : "text-[#ffb800]"}
+            ${index % 3 === 0 ? "top-1/4" : index % 3 === 1 ? "top-1/2" : "top-3/4"}
+            ${index % 4 === 0 ? "left-1/4" : index % 4 === 1 ? "left-1/2" : "left-3/4"}
+          `}
+          style={{
+            animationDelay: `${index * 0.5}s`,
+            transform: `rotate(${index * 45}deg)`,
+          }}
+        />
+      ));
   };
 
   return (
-    <footer className="relative py-16 overflow-hidden bg-gradient-to-b from-white to-pink-50">
+    <footer className="relative py-16 overflow-hidden bg-white border-t border-[#ffc929]/20">
       {/* Animated Background */}
-      <div className="absolute inset-0 overflow-hidden">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <PawBackground />
       </div>
-
-      {/* Blob Decorations */}
-      <div className="absolute top-0 left-0 w-64 h-64 bg-[#ffc929] rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob" />
-      <div className="absolute bottom-0 right-0 w-64 h-64 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob-reverse" />
 
       <div className="relative grid gap-8 px-4 mx-auto max-w-7xl md:grid-cols-4">
         {/* Logo Section */}
@@ -82,9 +76,7 @@ const Footer = () => {
 
         {/* Quick Links */}
         <div>
-          <h4 className="mb-6 text-xl font-semibold text-gray-900">
-            Quick Links
-          </h4>
+          <h4 className="mb-6 text-xl font-semibold text-gray-800">Quick Links</h4>
           <ul className="space-y-3">
             {quickLinks.map((link) => (
               <li
@@ -96,7 +88,7 @@ const Footer = () => {
                   className="group flex items-center text-gray-600 hover:text-[#ffc929] focus:outline-none focus:text-[#ffc929]"
                 >
                   {link.name}
-                  <ArrowRight className="w-4 h-4 ml-2 transition-all duration-300 opacity-0 group-hover:opacity-100 group-hover:translate-x-1" />
+                  <ArrowRight className="w-4 h-4 ml-2 text-[#ffc929] transition-all duration-300 opacity-0 group-hover:opacity-100 group-hover:translate-x-1" />
                 </a>
               </li>
             ))}
@@ -105,17 +97,18 @@ const Footer = () => {
 
         {/* Contact Info */}
         <div>
-          <h4 className="mb-6 text-xl font-semibold text-gray-900">
-            Contact
-          </h4>
+          <h4 className="mb-6 text-xl font-semibold text-gray-800">Contact</h4>
           <ul className="space-y-3">
             {contactInfo.map((item) => (
               <li
                 key={item.text}
                 className="flex items-center gap-2 text-gray-600 transition-all duration-300 group hover:translate-x-2"
               >
-                <item.icon className="w-4 h-4 text-gray-400" />
-                <a href={item.href} className="hover:text-[#ffc929] transition-colors focus:outline-none focus:text-[#ffc929]">
+                <item.icon className="w-4 h-4 text-[#ffc929]" />
+                <a
+                  href={item.href}
+                  className="hover:text-[#ffc929] transition-colors focus:outline-none focus:text-[#ffc929]"
+                >
                   {item.text}
                 </a>
               </li>
@@ -132,9 +125,7 @@ const Footer = () => {
                 href={href}
                 aria-label={label}
                 title={label}
-                className="p-3 bg-gradient-to-br from-pink-100 to-[#ffc929]/20 rounded-full
-                  transition-all duration-300 transform hover:scale-110 hover:rotate-6
-                  hover:shadow-lg hover:shadow-[#ffc929]/20 focus:outline-none focus:ring-2 focus:ring-[#ffc929]"
+                className="p-3 bg-[#ffc929]/10 rounded-full transition-all duration-300 transform hover:scale-110 hover:shadow-md hover:shadow-[#ffc929]/20 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/30"
               >
                 <Icon className="w-6 h-6 text-gray-700 hover:text-[#ffc929] transition-colors" />
               </a>
@@ -144,7 +135,7 @@ const Footer = () => {
       </div>
 
       {/* Copyright */}
-      <div className="relative pt-8 mt-12 text-center border-t border-gray-200">
+      <div className="relative pt-8 mt-12 text-center border-t border-[#ffc929]/20">
         <p className="text-gray-600">
           © {new Date().getFullYear()} PawFrindu. All rights reserved.
         </p>

@@ -12,7 +12,8 @@ function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
-  const DEFAULT_PROFILE_IMAGE = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSIxMDAiIGZpbGw9IiNFNUU3RUIiLz4KICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSI4MCIgcj0iNDAiIGZpbGw9IiM5Q0EzQUYiLz4KICA8cGF0aCBkPSJNMTYwIDE4MEgzOUM0MSAxNDAgODAgMTIwIDEwMCAxMjBDMTIwIDEyMCAxNTggMTQwIDE2MCAxODBaIiBmaWxsPSIjOUNBM0FGIi8+Cjwvc3ZnPg==";
+  const DEFAULT_PROFILE_IMAGE =
+    "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSIxMDAiIGZpbGw9IiNFNUU3RUIiLz4KICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSI4MCIgcj0iNDAiIGZpbGw9IiM5Q0EzQUYiLz4KICA8cGF0aCBkPSJNMTYwIDE4MEgzOUM0MSAxNDAgODAgMTIwIDEwMCAxMjBDMTIwIDEyMCAxNTggMTQwIDE2MCAxODBaIiBmaWxsPSIjOUNBM0FGIi8+Cjwvc3ZnPg==";
   const navLinks = [
     {
       name: "Adopt A Pet",
@@ -41,14 +42,14 @@ function Header() {
       protected: true,
     },
   ];
-// Debug user and loading changes
-useEffect(() => {
-  if (user && !loading) {
-    setForceRender((prev) => prev + 1); // Trigger re-render when user is set
-  }
-  console.log("Header - User:", user);
-  console.log("Header - Loading:", loading);
-}, [user, loading]);
+
+  useEffect(() => {
+    if (user && !loading) {
+      setForceRender((prev) => prev + 1);
+    }
+    console.log("Header - User:", user);
+    console.log("Header - Loading:", loading);
+  }, [user, loading]);
 
   useEffect(() => {
     setMobileMenuOpen(false);
@@ -60,7 +61,6 @@ useEffect(() => {
         setDropdownOpen(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
@@ -70,18 +70,18 @@ useEffect(() => {
     setDropdownOpen(false);
     navigate("/");
   };
-  // Memoize the auth section to prevent unnecessary re-renders
+
   const authSection = useMemo(() => {
     if (loading) {
       return (
         <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse" />
-      ); // Placeholder for loading state
+      );
     }
     if (!user) {
       return (
         <div className="flex gap-4">
           <button
-            className="px-6 py-2.5 text-gray-900 bg-[#ffc929] rounded-full hover:bg-[#ffb800] transition-all duration-300 transform hover:-translate-y-0.5 shadow-md hover:shadow-lg font-medium text-sm"
+            className="px-6 py-2.5 text-white font-semibold bg-gradient-to-r from-[#ffc929] to-[#ffa726] rounded-xl shadow-md hover:from-[#ffa726] hover:to-[#ffc929] transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/30"
             onClick={() => navigate("/login")}
           >
             Login
@@ -89,20 +89,20 @@ useEffect(() => {
         </div>
       );
     }
-    // Determine the image source based on whether it's a data URL
+
     const imageSrc = user.image?.startsWith("data:")
-      ? user.image // No cache buster for data URLs
-      : `${user.image}?t=${Date.now()}`; // Cache buster for HTTP URLs
+      ? user.image
+      : `${user.image}?t=${Date.now()}`;
 
     return (
       <div className="relative flex items-center gap-2" ref={dropdownRef}>
         <button
-          className="flex items-center gap-3 px-3 py-2 rounded-full transition-all duration-300 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#ffc929]"
+          className="flex items-center gap-3 px-3 py-2 rounded-full transition-all duration-300 hover:bg-[#ffc929]/10 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/30"
           onClick={() => setDropdownOpen(!dropdownOpen)}
           aria-expanded={dropdownOpen}
           aria-label="User menu"
         >
-          <div className="relative w-10 h-10 overflow-hidden rounded-full ring-2 ring-[#ffc929]">
+          <div className="relative w-10 h-10 overflow-hidden rounded-full border-2 border-[#ffc929]/20">
             <img
               className="object-cover w-full h-full"
               src={imageSrc || DEFAULT_PROFILE_IMAGE}
@@ -117,21 +117,21 @@ useEffect(() => {
             {user.fullName}
           </span>
           <ChevronDown
-            className={`w-5 h-5 transition-transform duration-300 ${
+            className={`w-5 h-5 text-gray-600 transition-transform duration-300 ${
               dropdownOpen ? "rotate-180" : ""
             }`}
           />
         </button>
 
         {dropdownOpen && (
-          <div className="absolute right-0 z-20 w-48 mt-2 overflow-hidden bg-white rounded-lg shadow-lg top-full ring-1 ring-black ring-opacity-5">
+          <div className="absolute right-0 z-20 w-48 mt-2 overflow-hidden bg-white rounded-xl shadow-lg border border-[#ffc929]/20 top-full">
             <div className="py-1">
               <button
                 onClick={() => {
                   navigate("/profile");
                   setDropdownOpen(false);
                 }}
-                className="flex w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                className="flex w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-[#ffc929]/5 hover:text-gray-900 transition-all duration-300"
               >
                 My Profile
               </button>
@@ -141,14 +141,14 @@ useEffect(() => {
                     navigate("/list");
                     setDropdownOpen(false);
                   }}
-                  className="flex w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                  className="flex w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-[#ffc929]/5 hover:text-gray-900 transition-all duration-300"
                 >
                   My Pets for Adoption
                 </button>
               )}
               <button
                 onClick={handleLogout}
-                className="flex w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50"
+                className="flex w-full px-4 py-2 text-sm text-left text-red-600 transition-all duration-300 hover:bg-red-50 hover:text-red-700"
               >
                 Logout
               </button>
@@ -160,7 +160,7 @@ useEffect(() => {
   }, [user, loading, dropdownOpen, navigate, forceRender]);
 
   return (
-    <header className="sticky top-0 z-50 bg-white shadow-sm">
+    <header className="sticky top-0 z-50 bg-white border-b border-[#ffc929]/20 shadow-sm">
       <div className="relative flex items-center justify-between max-w-[1400px] mx-auto px-4 py-3 lg:px-6">
         <Link
           to="/"
@@ -186,8 +186,7 @@ useEffect(() => {
                         location.pathname === link.to
                           ? "text-[#ffc929] after:w-full"
                           : ""
-                      }
-                    `}
+                      }`}
                     >
                       {link.name}
                     </Link>
@@ -201,7 +200,7 @@ useEffect(() => {
 
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="p-2 text-gray-600 transition-colors duration-300 rounded-md hover:bg-gray-100 lg:hidden"
+          className="p-2 text-gray-600 transition-all duration-300 rounded-full hover:bg-[#ffc929]/10 hover:text-[#ffc929] lg:hidden focus:outline-none focus:ring-2 focus:ring-[#ffc929]/30"
           aria-expanded={mobileMenuOpen}
           aria-label="Toggle menu"
         >
@@ -209,7 +208,7 @@ useEffect(() => {
         </button>
 
         {mobileMenuOpen && (
-          <div className="absolute left-0 right-0 z-20 bg-white shadow-lg top-full">
+          <div className="absolute left-0 right-0 z-20 bg-white shadow-lg border-t border-[#ffc929]/20 top-full">
             <nav className="px-4 py-3">
               <ul className="space-y-1">
                 {navLinks.map(
@@ -218,13 +217,12 @@ useEffect(() => {
                       <li key={link.to}>
                         <Link
                           to={link.to}
-                          className={`block py-2 px-3 rounded-md text-gray-800 hover:bg-gray-50 hover:text-[#ffc929] transition-colors duration-300
+                          className={`block py-2 px-3 rounded-xl text-gray-800 hover:bg-[#ffc929]/10 hover:text-[#ffc929] transition-all duration-300
                           ${
                             location.pathname === link.to
-                              ? "bg-[#fff5d9] text-[#ffc929]"
+                              ? "bg-[#ffc929]/10 text-[#ffc929]"
                               : ""
-                          }
-                        `}
+                          }`}
                           onClick={() => setMobileMenuOpen(false)}
                         >
                           {link.name}
@@ -232,7 +230,7 @@ useEffect(() => {
                       </li>
                     )
                 )}
-                <li className="pt-4 mt-4 border-t">
+                <li className="pt-4 mt-4 border-t border-[#ffc929]/20">
                   <div className="flex flex-col space-y-2">{authSection}</div>
                 </li>
               </ul>

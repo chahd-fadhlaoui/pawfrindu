@@ -1,8 +1,10 @@
+// components/admin/PetsTable.jsx
 import { useState, useEffect } from "react";
-import { Check, X, Loader2, PawPrint, Heart, Clock, Archive } from "lucide-react";
-import { useApp } from "../../context/AppContext";
+import { Check, X, Loader2, PawPrint, Heart, Clock, Archive, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { useApp } from "../../context/AppContext"; 
 import axiosInstance from "../../utils/axiosInstance";
 import ConfirmationModal from "../ConfirmationModal";
+import SearchBar from "../SearchBar"; // Import the new SearchBar component
 
 const PetsTable = ({ refreshTrigger, onPetChange }) => {
   const { fetchPets, loading, error, pets } = useApp();
@@ -10,6 +12,7 @@ const PetsTable = ({ refreshTrigger, onPetChange }) => {
   const [actionError, setActionError] = useState(null);
   const [filteredPets, setFilteredPets] = useState([]);
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, action: '', petId: null, petName: '' });
+  const [searchQuery, setSearchQuery] = useState(''); // Search state
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -26,13 +29,25 @@ const PetsTable = ({ refreshTrigger, onPetChange }) => {
   const [trainedFilter, setTrainedFilter] = useState('');
 
   // Dynamic list of cities
-  const uniqueCities = Array.from(new Set(filteredPets.map(pet => (pet.city || '').toLowerCase()))).sort();
+  const uniqueCities = Array.from(new Set(pets.map(pet => (pet.city || '').toLowerCase()))).sort();
 
-  // Apply filters whenever dependencies change
+  // Apply filters and search whenever dependencies change
   useEffect(() => {
     const applyFilters = () => {
       let filtered = pets.filter(pet => !pet.isArchived); // Only non-archived pets
 
+      // Apply search filter
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase().trim();
+        filtered = filtered.filter(pet => 
+          pet.name.toLowerCase().includes(query) || 
+          (pet.breed && pet.breed.toLowerCase().includes(query)) || 
+          (pet.city && pet.city.toLowerCase().includes(query)) || 
+          (pet.species && pet.species.toLowerCase().includes(query))
+        );
+      }
+
+      // Apply other filters
       filtered = filtered.filter(pet => {
         return (
           (!statusFilter || pet.status === statusFilter) &&
@@ -61,7 +76,7 @@ const PetsTable = ({ refreshTrigger, onPetChange }) => {
 
     fetchPets(true); // Fetch fresh data
     applyFilters();  // Apply filters to the fetched data
-  }, [fetchPets, pets, sortByDate, statusFilter, feeFilter, cityFilter, speciesFilter, ageFilter, genderFilter, trainedFilter, refreshTrigger]);
+  }, [fetchPets, pets, sortByDate, statusFilter, feeFilter, cityFilter, speciesFilter, ageFilter, genderFilter, trainedFilter, refreshTrigger, searchQuery]);
 
   // Pagination logic
   const totalPages = Math.ceil(filteredPets.length / petsPerPage);
@@ -70,7 +85,7 @@ const PetsTable = ({ refreshTrigger, onPetChange }) => {
   const currentPets = filteredPets.slice(indexOfFirstPet, indexOfLastPet);
 
   const handlePageChange = (page) => {
-    if (page >= 1 && page <= totalPages) { // Ensure page is within bounds
+    if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
     }
   };
@@ -165,50 +180,83 @@ const PetsTable = ({ refreshTrigger, onPetChange }) => {
     setAgeFilter('');
     setGenderFilter('');
     setTrainedFilter('');
-    setCurrentPage(1); // Reset to page 1 only on filter reset
+    setSearchQuery(''); // Reset search as well
+    setCurrentPage(1);
   };
 
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center w-full p-12 space-y-4 bg-white shadow-lg rounded-xl">
-        <div className="relative">
-          <Loader2 className="w-8 h-8 text-amber-600 animate-spin" />
-          <PawPrint className="absolute bottom-0 right-0 w-4 h-4 text-amber-400 animate-bounce" />
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <div className="flex flex-col items-center justify-center w-full p-12 space-y-4 bg-white shadow-lg rounded-2xl">
+          <div className="relative">
+            <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
+            <PawPrint className="absolute bottom-0 right-0 w-4 h-4 text-amber-300 animate-bounce" />
+          </div>
+          <p className="text-lg font-medium text-amber-600">Loading Pets...</p>
         </div>
-        <p className="font-medium text-amber-600">Loading precious pets...</p>
-      </div>
-    );
-  }
+      );
+    }
 
-  if (error) {
-    return (
-      <div className="w-full p-8 border-2 border-red-200 bg-red-50 rounded-xl">
-        <p className="font-medium text-center text-red-600">Error loading pets: {error}</p>
-      </div>
-    );
-  }
-
-  if (!filteredPets.length) {
-    return (
-      <div className="flex flex-col items-center justify-center w-full p-12 space-y-4 bg-white shadow-lg rounded-xl">
-        <div className="relative">
-          <PawPrint className="w-12 h-12 text-amber-300" />
-          <Heart className="absolute w-6 h-6 text-amber-400 -top-2 -right-2 animate-pulse" />
+    if (error) {
+      return (
+        <div className="w-full p-8 border border-red-200 shadow-lg bg-red-50 rounded-2xl">
+          <div className="flex items-center justify-center space-x-2 text-red-600">
+            <AlertCircle className="w-6 h-6" />
+            <p className="text-lg font-medium">Error: {error}</p>
+          </div>
         </div>
-        <p className="font-medium text-amber-600">No active pets found</p>
-      </div>
+      );
+    }
+
+    return (
+      <>
+        {/* Search Bar */}
+        <SearchBar
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search by name, breed, city, or species..."
+        />
+
+        {/* Filter Bar */}
+        <div className="grid grid-cols-1 gap-4 p-4 bg-white border shadow-inner sm:grid-cols-2 lg:grid-cols-4 rounded-xl border-amber-100">
+          <div className="flex flex-col gap-1"><label className="text-sm font-medium text-gray-700">Sort by Date</label><select value={sortByDate} onChange={(e) => setSortByDate(e.target.value)} className="w-full px-3 py-2 text-sm text-gray-700 transition-all bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-300 focus:border-amber-400"><option value="desc">Descending</option><option value="asc">Ascending</option></select></div>
+          <div className="flex flex-col gap-1"><label className="text-sm font-medium text-gray-700">Status</label><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-full px-3 py-2 text-sm text-gray-700 transition-all bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-300 focus:border-amber-400"><option value="">All</option><option value="pending">Pending</option><option value="accepted">Accepted</option><option value="adopted">Adopted</option><option value="sold">Sold</option></select></div>
+          <div className="flex flex-col gap-1"><label className="text-sm font-medium text-gray-700">Fee</label><select value={feeFilter} onChange={(e) => setFeeFilter(e.target.value)} className="w-full px-3 py-2 text-sm text-gray-700 transition-all bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-300 focus:border-amber-400"><option value="">All</option><option value="free">Free</option><option value="paid">Paid</option></select></div>
+          <div className="flex flex-col gap-1"><label className="text-sm font-medium text-gray-700">City</label><select value={cityFilter} onChange={(e) => setCityFilter(e.target.value)} className="w-full px-3 py-2 text-sm text-gray-700 transition-all bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-300 focus:border-amber-400"><option value="">All</option>{uniqueCities.map(city => (<option key={city} value={city}>{city.charAt(0).toUpperCase() + city.slice(1)}</option>))}</select></div>
+          <div className="flex flex-col gap-1"><label className="text-sm font-medium text-gray-700">Species</label><select value={speciesFilter} onChange={(e) => setSpeciesFilter(e.target.value)} className="w-full px-3 py-2 text-sm text-gray-700 transition-all bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-300 focus:border-amber-400"><option value="">All</option><option value="dog">Dog</option><option value="cat">Cat</option><option value="bird">Bird</option><option value="other">Other</option></select></div>
+          <div className="flex flex-col gap-1"><label className="text-sm font-medium text-gray-700">Age</label><select value={ageFilter} onChange={(e) => setAgeFilter(e.target.value)} className="w-full px-3 py-2 text-sm text-gray-700 transition-all bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-300 focus:border-amber-400"><option value="">All</option><option value="puppy">Puppy</option><option value="kitten">Kitten</option><option value="adult">Adult</option><option value="senior">Senior</option></select></div>
+          <div className="flex flex-col gap-1"><label className="text-sm font-medium text-gray-700">Gender</label><select value={genderFilter} onChange={(e) => setGenderFilter(e.target.value)} className="w-full px-3 py-2 text-sm text-gray-700 transition-all bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-300 focus:border-amber-400"><option value="">All</option><option value="male">Male</option><option value="female">Female</option></select></div>
+          <div className="flex flex-col gap-1"><label className="text-sm font-medium text-gray-700">Trained</label><select value={trainedFilter} onChange={(e) => setTrainedFilter(e.target.value)} className="w-full px-3 py-2 text-sm text-gray-700 transition-all bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-300 focus:border-amber-400"><option value="">All</option><option value="true">Yes</option><option value="false">No</option></select></div>
+          <div className="flex items-end justify-end sm:col-span-2 lg:col-span-4"><button onClick={resetFilters} className="w-full px-4 py-2 text-sm font-medium transition-all rounded-lg shadow-sm sm:w-auto text-amber-600 bg-amber-100 hover:bg-amber-200 hover:shadow-md">Reset Filters</button></div>
+        </div>
+
+        {/* Table Content */}
+        {filteredPets.length === 0 ? (
+          <div className="flex flex-col items-center justify-center w-full p-12 mt-4 space-y-4 bg-white border shadow-lg rounded-2xl border-amber-100">
+            <div className="relative"><PawPrint className="w-12 h-12 text-amber-300" /><Heart className="absolute top-0 right-0 w-6 h-6 text-amber-400 animate-pulse" /></div>
+            <p className="text-lg font-medium text-amber-600">No Active Pets Found</p>
+            <p className="text-sm text-gray-500">Try adjusting your filters or search to see more pets.</p>
+          </div>
+        ) : (
+          <div className="mt-4 overflow-hidden bg-white border shadow-lg rounded-xl border-amber-100">
+            <div className="sticky top-0 z-10 flex items-center p-4 space-x-2 border-b bg-gradient-to-r from-amber-50 to-white border-amber-100"><PawPrint className="w-6 h-6 text-amber-500" /><h2 className="text-xl font-semibold text-amber-700">Pet Adoption Table</h2><span className="ml-2 text-sm text-gray-500">({filteredPets.length} pets)</span></div>
+            <div className="overflow-x-auto max-h-[60vh] relative"><table className="w-full text-sm text-left border-collapse"><thead className="sticky top-0 z-10 text-xs font-semibold tracking-wide uppercase border-b shadow-sm bg-amber-50 border-amber-100 text-amber-700"><tr>{["Photo", "Name", "Breed", "Age", "City", "Gender", "Species", "Fee", "Trained", "Status", "Actions"].map((header) => (<th key={header} className="px-4 py-3 whitespace-nowrap">{header}</th>))}</tr></thead><tbody className="text-gray-700 divide-y divide-amber-100">{currentPets.map((pet) => {const statusConfig = getStatusConfig(pet.status, pet.isArchived);const isAccepted = pet.status === "accepted";const canArchive = pet.status === "adopted" || pet.status === "sold";return (<tr key={pet._id} className="transition-all duration-200 hover:bg-amber-50 group"><td className="w-16 px-4 py-3"><div className="relative w-12 h-12 overflow-hidden transition-transform duration-200 border rounded-full group-hover:scale-105 border-amber-200"><img src={pet.image || "/api/placeholder/48/48"} alt={pet.name} className="object-cover w-full h-full" /></div></td><td className="px-4 py-3 font-medium transition-colors text-amber-700 group-hover:text-amber-900">{pet.name}</td><td className="px-4 py-3">{pet.breed || '-'}</td><td className="px-4 py-3">{pet.age}</td><td className="px-4 py-3">{pet.city}</td><td className="px-4 py-3">{pet.gender}</td><td className="px-4 py-3">{pet.species}</td><td className="px-4 py-3 font-medium text-amber-600">{pet.fee === 0 ? "Free" : `${pet.fee}dt`}</td><td className="px-4 py-3"><span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${pet.isTrained ? "bg-amber-100 text-amber-700" : "bg-gray-100 text-gray-600"}`}>{pet.isTrained ? "Yes" : "No"}</span></td><td className="px-4 py-3"><div className={`inline-flex items-center space-x-2 px-3 py-1 rounded-full ${statusConfig.bgClass} border ${statusConfig.borderClass}`}><statusConfig.icon className={`w-4 h-4 ${statusConfig.iconClass}`} /><span className={`text-xs font-medium ${statusConfig.textClass}`}>{statusConfig.text}</span></div></td><td className="px-4 py-3"><div className="flex items-center justify-center gap-2">{!canArchive && (<button onClick={() => openConfirmModal("accept", pet._id, pet.name)} disabled={actionLoading || isAccepted || pet.isArchived} className={`p-2 rounded-full transition-all duration-200 ${actionLoading || isAccepted || pet.isArchived ? "text-gray-400 cursor-not-allowed" : "text-green-500 hover:bg-green-50 hover:text-green-700 hover:shadow-md"}`} title="Accept Pet"><Check className="w-5 h-5" /></button>)} {!isAccepted && (canArchive ? (<button onClick={() => openConfirmModal("archive", pet._id, pet.name)} disabled={actionLoading || pet.isArchived} className={`p-2 rounded-full transition-all duration-200 ${actionLoading || pet.isArchived ? "text-gray-400 cursor-not-allowed" : "text-yellow-500 hover:bg-yellow-50 hover:text-yellow-700 hover:shadow-md"}`} title="Archive Pet"><Archive className="w-5 h-5" /></button>) : (<button onClick={() => openConfirmModal("delete", pet._id, pet.name)} disabled={actionLoading || pet.isArchived} className={`p-2 rounded-full transition-all duration-200 ${actionLoading || pet.isArchived ? "text-gray-400 cursor-not-allowed" : "text-red-500 hover:bg-red-50 hover:text-red-700 hover:shadow-md"}`} title="Delete Pet"><X className="w-5 h-5" /></button>))}</div></td></tr>);})}</tbody></table></div>
+            {totalPages > 1 && (<div className="sticky bottom-0 z-10 flex items-center justify-between p-4 border-t shadow-inner bg-gradient-to-r from-amber-50 to-white border-amber-100"><button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className={`px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium transition-all duration-200 ${currentPage === 1 ? "text-gray-400 cursor-not-allowed" : "text-amber-600 hover:bg-amber-100 hover:text-amber-700"}`}><ChevronLeft className="w-4 h-4" /> Previous</button><div className="flex items-center gap-2">{Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (<button key={page} onClick={() => handlePageChange(page)} className={`w-10 h-10 rounded-full text-sm font-medium transition-all duration-200 ${currentPage === page ? "bg-amber-500 text-white shadow-md" : "text-amber-600 hover:bg-amber-100"}`}>{page}</button>))}</div><button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className={`px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium transition-all duration-200 ${currentPage === totalPages ? "text-gray-400 cursor-not-allowed" : "text-amber-600 hover:bg-amber-100 hover:text-amber-700"}`}>Next <ChevronRight className="w-4 h-4" /></button></div>)}
+          </div>
+        )}
+      </>
     );
-  }
+  };
 
   const getStatusConfig = (status, isArchived) => {
     if (isArchived) {
       return {
         icon: Archive,
         text: "Archived",
-        bgClass: "bg-gradient-to-r from-gray-100 to-gray-200",
-        textClass: "text-gray-700",
+        bgClass: "bg-gray-100",
+        textClass: "text-gray-600",
         iconClass: "text-gray-500",
-        borderClass: "border-gray-300",
+        borderClass: "border-gray-200",
       };
     }
     switch (status) {
@@ -216,107 +264,42 @@ const PetsTable = ({ refreshTrigger, onPetChange }) => {
         return {
           icon: Heart,
           text: "Accepted",
-          bgClass: "bg-gradient-to-r from-amber-100 to-amber-200",
+          bgClass: "bg-amber-100",
           textClass: "text-amber-700",
           iconClass: "text-amber-500",
-          borderClass: "border-amber-300",
+          borderClass: "border-amber-200",
         };
       case "adopted":
       case "sold":
         return {
           icon: Heart,
           text: status.charAt(0).toUpperCase() + status.slice(1),
-          bgClass: "bg-gradient-to-r from-green-100 to-teal-100",
+          bgClass: "bg-green-100",
           textClass: "text-green-700",
           iconClass: "text-green-500",
-          borderClass: "border-green-300",
+          borderClass: "border-green-200",
         };
       default: // pending
         return {
           icon: Clock,
-          text: "En Attente",
-          bgClass: "bg-gradient-to-r from-gray-100 to-gray-200",
-          textClass: "text-gray-700",
+          text: "Pending",
+          bgClass: "bg-gray-100",
+          textClass: "text-gray-600",
           iconClass: "text-gray-500",
-          borderClass: "border-gray-300",
+          borderClass: "border-gray-200",
         };
     }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="p-6 space-y-6 border shadow-lg bg-gradient-to-br from-amber-50 to-white rounded-2xl border-amber-100">
       {actionError && (
-        <div className="flex items-center p-4 space-x-3 border-l-4 border-red-500 rounded-lg bg-red-50">
+        <div className="flex items-center p-4 space-x-3 border-l-4 border-red-500 rounded-lg shadow-inner bg-red-50">
           <X className="flex-shrink-0 w-5 h-5 text-red-500" />
-          <p className="text-red-700">{actionError}</p>
+          <p className="text-sm text-red-700">{actionError}</p>
         </div>
       )}
-
-      {/* Filter Bar */}
-      <div className="p-4 border-2 shadow-md bg-gradient-to-r from-gray-50 to-amber-50 rounded-xl border-amber-100">
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2">
-            <label className="flex items-center gap-1 text-sm font-medium text-gray-700 whitespace-nowrap"><Clock className="w-4 h-4 text-amber-500" /> Date</label>
-            <select value={sortByDate} onChange={(e) => setSortByDate(e.target.value)} className="block text-sm text-gray-800 bg-white border-gray-300 rounded-md shadow-sm w-28 focus:border-amber-400 focus:ring-amber-300"><option value="desc">Desc</option><option value="asc">Asc</option></select>
-          </div>
-          <div className="flex items-center gap-2">
-            <label className="flex items-center gap-1 text-sm font-medium text-gray-700 whitespace-nowrap"><Heart className="w-4 h-4 text-amber-500" /> Status</label>
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="block text-sm text-gray-800 bg-white border-gray-300 rounded-md shadow-sm w-28 focus:border-amber-400 focus:ring-amber-300"><option value="">All</option><option value="pending">Pending</option><option value="accepted">Accepted</option><option value="adopted">Adopted</option><option value="sold">Sold</option></select>
-          </div>
-          <div className="flex items-center gap-2">
-            <label className="flex items-center gap-1 text-sm font-medium text-gray-700 whitespace-nowrap"><PawPrint className="w-4 h-4 text-amber-500" /> Fee</label>
-            <select value={feeFilter} onChange={(e) => setFeeFilter(e.target.value)} className="block text-sm text-gray-800 bg-white border-gray-300 rounded-md shadow-sm w-28 focus:border-amber-400 focus:ring-amber-300"><option value="">All</option><option value="free">Free</option><option value="paid">Paid</option></select>
-          </div>
-          <div className="flex items-center gap-2">
-            <label className="flex items-center gap-1 text-sm font-medium text-gray-700 whitespace-nowrap"><PawPrint className="w-4 h-4 text-amber-500" /> City</label>
-            <select value={cityFilter} onChange={(e) => setCityFilter(e.target.value)} className="block text-sm text-gray-800 bg-white border-gray-300 rounded-md shadow-sm w-28 focus:border-amber-400 focus:ring-amber-300"><option value="">All</option>{uniqueCities.map(city => (<option key={city} value={city}>{city.charAt(0).toUpperCase() + city.slice(1)}</option>))}</select>
-          </div>
-          <div className="flex items-center gap-2">
-            <label className="flex items-center gap-1 text-sm font-medium text-gray-700 whitespace-nowrap"><PawPrint className="w-4 h-4 text-amber-500" /> Species</label>
-            <select value={speciesFilter} onChange={(e) => setSpeciesFilter(e.target.value)} className="block text-sm text-gray-800 bg-white border-gray-300 rounded-md shadow-sm w-28 focus:border-amber-400 focus:ring-amber-300"><option value="">All</option><option value="dog">Dog</option><option value="cat">Cat</option><option value="bird">Bird</option><option value="other">Other</option></select>
-          </div>
-          <div className="flex items-center gap-2">
-            <label className="flex items-center gap-1 text-sm font-medium text-gray-700 whitespace-nowrap"><Heart className="w-4 h-4 text-amber-500" /> Age</label>
-            <select value={ageFilter} onChange={(e) => setAgeFilter(e.target.value)} className="block text-sm text-gray-800 bg-white border-gray-300 rounded-md shadow-sm w-28 focus:border-amber-400 focus:ring-amber-300"><option value="">All</option><option value="puppy">Puppy</option><option value="kitten">Kitten</option><option value="adult">Adult</option><option value="senior">Senior</option></select>
-          </div>
-          <div className="flex items-center gap-2">
-            <label className="flex items-center gap-1 text-sm font-medium text-gray-700 whitespace-nowrap"><PawPrint className="w-4 h-4 text-amber-500" /> Gender</label>
-            <select value={genderFilter} onChange={(e) => setGenderFilter(e.target.value)} className="block text-sm text-gray-800 bg-white border-gray-300 rounded-md shadow-sm w-28 focus:border-amber-400 focus:ring-amber-300"><option value="">All</option><option value="male">Male</option><option value="female">Female</option></select>
-          </div>
-          <div className="flex items-center gap-2">
-            <label className="flex items-center gap-1 text-sm font-medium text-gray-700 whitespace-nowrap"><Check className="w-4 h-4 text-amber-500" /> Trained</label>
-            <select value={trainedFilter} onChange={(e) => setTrainedFilter(e.target.value)} className="block text-sm text-gray-800 bg-white border-gray-300 rounded-md shadow-sm w-28 focus:border-amber-400 focus:ring-amber-300"><option value="">All</option><option value="true">Yes</option><option value="false">No</option></select>
-          </div>
-          <button onClick={resetFilters} className="flex items-center gap-2 px-4 py-2 transition-all duration-200 rounded-md shadow-sm bg-gradient-to-r from-amber-100 to-amber-200 text-amber-700 hover:from-amber-200 hover:to-amber-300"><X className="w-4 h-4" /> Reset</button>
-        </div>
-      </div>
-
-      {/* Pets Table */}
-      <div className="bg-white border-2 shadow-lg rounded-xl border-amber-100">
-        <div className="p-4 border-b-2 bg-gradient-to-r from-gray-50 to-amber-50 border-amber-100">
-          <div className="flex items-center space-x-2"><PawPrint className="w-6 h-6 text-amber-500" /><h2 className="text-lg font-semibold text-amber-700">Pet Adoption Table</h2></div>
-        </div>
-        <div>
-          <table className="w-full">
-            <thead className="bg-gradient-to-r from-gray-50 to-amber-50"><tr>{["Photo", "Nom", "Breed", "Âge", "Ville", "Genre", "Catégorie", "Tarif", "Dressé", "Status", "Actions"].map((header) => (<th key={header} className="px-4 py-4 text-sm font-semibold text-left text-amber-700">{header}</th>))}</tr></thead>
-            <tbody className="divide-y divide-amber-100">{currentPets.map((pet) => {const statusConfig = getStatusConfig(pet.status, pet.isArchived);const isAccepted = pet.status === "accepted";const canArchive = pet.status === "adopted" || pet.status === "sold";return (<tr key={pet._id} className="transition-all duration-200 hover:bg-amber-50/30"><td className="px-4 py-4"><div className="relative group"><img src={pet.image || "/api/placeholder/48/48"} alt={pet.name} className="object-cover transition-all duration-200 border-2 rounded-full w-14 h-14 border-amber-200 group-hover:border-amber-400" /><div className="absolute inset-0 transition-all duration-200 bg-opacity-0 rounded-full bg-amber-400 group-hover:bg-opacity-10" /><Heart className="absolute w-4 h-4 transition-all duration-200 opacity-0 text-amber-400 -top-1 -right-1 group-hover:opacity-100" /></div></td><td className="px-4 py-4"><p className="font-medium transition-colors text-amber-700 hover:text-amber-900">{pet.name}</p></td><td className="px-4 py-4 text-gray-700">{pet.breed}</td><td className="px-4 py-4 text-gray-700">{pet.age}</td><td className="px-4 py-4 text-gray-700">{pet.city}</td><td className="px-4 py-4 text-gray-700">{pet.gender}</td><td className="px-4 py-4 text-gray-700">{pet.species}</td><td className="px-4 py-4"><span className="font-medium text-amber-600">{pet.fee === 0 ? "Free" : `${pet.fee}dt`}</span></td><td className="px-4 py-4"><span className={`px-3 py-1.5 rounded-full text-sm font-medium ${pet.isTrained ? "bg-amber-100 text-amber-700 ring-1 ring-amber-400" : "bg-gray-100 text-gray-700 ring-1 ring-gray-400"}`}>{pet.isTrained ? "Oui" : "Non"}</span></td><td className="px-4 py-4"><div className={`flex items-center space-x-2 px-3 py-2 rounded-lg ${statusConfig.bgClass} border ${statusConfig.borderClass}`}><statusConfig.icon className={`w-4 h-4 ${statusConfig.iconClass}`} /><span className={`text-sm font-medium ${statusConfig.textClass}`}>{statusConfig.text}</span></div></td><td className="px-4 py-4"><div className="flex items-center justify-center gap-2">{!canArchive && (<button onClick={() => openConfirmModal("accept", pet._id, pet.name)} disabled={actionLoading || isAccepted || pet.isArchived} className="p-2 text-green-500 transition-all duration-200 rounded-full hover:text-green-700 hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed group" title="Accept Pet"><Check className="w-5 h-5 transition-transform group-hover:scale-110" /></button>)} {!isAccepted && (canArchive ? (<button onClick={() => openConfirmModal("archive", pet._id, pet.name)} disabled={actionLoading || pet.isArchived} className="p-2 text-yellow-500 transition-all duration-200 rounded-full hover:text-yellow-700 hover:bg-yellow-50 disabled:opacity-50 disabled:cursor-not-allowed group" title="Archive Pet"><Archive className="w-5 h-5 transition-transform group-hover:scale-110" /></button>) : (<button onClick={() => openConfirmModal("delete", pet._id, pet.name)} disabled={actionLoading || pet.isArchived} className="p-2 text-red-500 transition-all duration-200 rounded-full hover:text-red-700 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed group" title="Delete Pet"><X className="w-5 h-5 transition-transform group-hover:scale-110" /></button>))}</div></td></tr>);})}</tbody>
-          </table>
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 p-4 bg-gradient-to-r from-gray-50 to-amber-50">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  onClick={() => handlePageChange(page)}
-                  className={`px-3 py-1 rounded-md text-sm font-medium ${currentPage === page ? "bg-amber-200 text-amber-800" : "bg-white text-amber-600 hover:bg-amber-100"} transition-all duration-200`}
-                >
-                  {page}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
+      {renderContent()}
       <ConfirmationModal
         isOpen={confirmModal.isOpen}
         onClose={closeConfirmModal}

@@ -90,8 +90,8 @@ const CreatePet = () => {
     city: "",
     gender: "male",
     species: "dog",
-    feeOption: "Free", // Nouvelle option pour Free/With Fee
-    fee: "0", // Valeur par défaut pour le fee
+    feeOption: "Free",
+    fee: "0",
     isTrained: false,
     image: "",
     description: "",
@@ -102,7 +102,6 @@ const CreatePet = () => {
   const [availableAges, setAvailableAges] = useState(ageRanges.dog);
 
   useEffect(() => {
-    // Update breeds and ages based on species
     if (formData.species === "dog") {
       setAvailableBreeds(dogBreeds);
       setAvailableAges(ageRanges.dog);
@@ -191,10 +190,10 @@ const CreatePet = () => {
 
       const petData = {
         ...formData,
-        fee: formData.feeOption === "Free" ? 0 : Number(formData.fee), // Free = 0, sinon la valeur entrée
+        fee: formData.feeOption === "Free" ? 0 : Number(formData.fee),
         isTrained: Boolean(formData.isTrained),
       };
-      delete petData.feeOption; // Supprime feeOption du payload envoyé au backend
+      delete petData.feeOption;
 
       const result = await axiosInstance.post("/api/pet/addpet", petData);
 
@@ -225,203 +224,215 @@ const CreatePet = () => {
   }
 
   return (
-    <div className="relative min-h-screen px-4 py-6 overflow-hidden bg-gradient-to-b from-white to-pink-50 sm:py-12">
+    <div className="relative min-h-screen px-4 py-12 overflow-hidden sm:py-20 sm:px-6 lg:px-8 bg-gradient-to-br from-white to-pink-50">
       <div className="absolute inset-0 overflow-hidden">
         <PawBackground />
       </div>
+      <div className="relative max-w-5xl mx-auto space-y-12">
+        {/* Header */}
+        <div className="pt-16 space-y-6 text-center animate-fadeIn" style={{ animationDelay: "0.2s" }}>
+          <span className="inline-flex items-center px-4 py-2 text-sm font-semibold text-pink-500 bg-white border border-pink-100 rounded-full shadow-sm">
+            <PawPrint className="w-4 h-4 mr-2 text-yellow-400" />Create a New Pet Profile
+          </span>
+          <h1 className="text-4xl font-bold tracking-tight text-gray-900 md:text-5xl">
+            <span className="block">Help a Pet</span>
+            <span className="block text-pink-500">Find a Home</span>
+          </h1>
+          <p className="max-w-2xl mx-auto text-lg leading-relaxed text-gray-600">
+            Share the details of your furry friend to find them the perfect family!
+          </p>
+        </div>
 
-      <div className="absolute top-0 left-0 w-64 h-64 bg-[#ffc929] rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob" />
-      <div className="absolute bottom-0 right-0 w-64 h-64 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob-reverse" />
+        <div className="container relative max-w-4xl mx-auto">
+          <div className="bg-white rounded-3xl overflow-hidden shadow-xl border-2 border-[#ffc929]/20 flex flex-col md:flex-row transform hover:scale-[1.01] transition-all duration-300">
+            <button
+              onClick={() => navigate(-1)}
+              className="fixed top-4 left-4 z-50 group flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border-2 border-[#ffc929]/20 hover:border-[#ffc929] transition-all duration-300 hover:scale-105"
+            >
+              <ArrowLeft className="w-4 h-4 text-[#ffc929] transition-transform duration-300 transform group-hover:-translate-x-1" />
+              <span className="text-gray-700 group-hover:text-[#ffc929] transition-colors duration-300">Back</span>
+            </button>
 
-      <div className="container relative max-w-4xl mx-auto">
-        <div className="bg-white rounded-3xl overflow-hidden shadow-xl border-2 border-[#ffc929]/20 flex flex-col md:flex-row transform hover:scale-[1.01] transition-all duration-300">
-          <button
-            onClick={() => navigate(-1)}
-            className="fixed top-4 left-4 z-50 group flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border-2 border-[#ffc929]/20 hover:border-[#ffc929] transition-all duration-300 hover:scale-105"
-          >
-            <ArrowLeft className="w-4 h-4 text-[#ffc929] transition-transform duration-300 transform group-hover:-translate-x-1" />
-            <span className="text-gray-700 group-hover:text-[#ffc929] transition-colors duration-300">Back</span>
-          </button>
+            <div className="relative md:w-1/2">
+              <ImageUpload
+                currentImage={formData.image}
+                onImageSelected={handleImageSelected}
+                className="h-96 md:h-full"
+                maxSize={5}
+                showRemove={true}
+                onRemove={() => handleImageSelected("")}
+              />
+            </div>
 
-          <div className="relative md:w-1/2">
-            <ImageUpload
-              currentImage={formData.image}
-              onImageSelected={handleImageSelected}
-              className="h-96 md:h-full"
-              maxSize={5}
-              showRemove={true}
-              onRemove={() => handleImageSelected("")}
-            />
-          </div>
+            <div className="flex flex-col p-6 space-y-6 md:w-1/2 md:p-8">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <input
+                      type="text"
+                      placeholder="Pet Name"
+                      className="text-3xl font-bold text-gray-900 placeholder-gray-400 bg-transparent border-none focus:outline-none focus:ring-0"
+                      value={formData.name}
+                      onChange={(e) => handleInputChange("name", e.target.value)}
+                      required
+                    />
+                  </div>
 
-          <div className="flex flex-col p-6 space-y-6 md:w-1/2 md:p-8">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <input
-                    type="text"
-                    placeholder="Pet Name"
-                    className="text-3xl font-bold text-gray-900 placeholder-gray-400 bg-transparent border-none focus:outline-none focus:ring-0"
-                    value={formData.name}
-                    onChange={(e) => handleInputChange("name", e.target.value)}
+                  <div className="flex flex-wrap items-center gap-3 text-gray-600">
+                    <div className="flex items-center gap-2 bg-[#ffc929]/10 px-3 py-1.5 rounded-full border border-[#ffc929]/20">
+                      <Star size={14} />
+                      <select
+                        className="w-32 bg-transparent border-none focus:outline-none focus:ring-0"
+                        value={formData.species}
+                        onChange={(e) => handleInputChange("species", e.target.value)}
+                      >
+                        <option value="dog">Dog</option>
+                        <option value="cat">Cat</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                    <div className="flex items-center gap-2 bg-[#ffc929]/10 px-3 py-1.5 rounded-full border border-[#ffc929]/20">
+                      <Star size={14} />
+                      {formData.species === "other" ? (
+                        <input
+                          type="text"
+                          placeholder="Enter breed..."
+                          className="w-32 bg-transparent border-none focus:outline-none focus:ring-0"
+                          value={formData.breed}
+                          onChange={(e) => handleInputChange("breed", e.target.value)}
+                        />
+                      ) : (
+                        <select
+                          className="w-32 bg-transparent border-none focus:outline-none focus:ring-0"
+                          value={formData.breed}
+                          onChange={(e) => handleInputChange("breed", e.target.value)}
+                          required
+                        >
+                          {availableBreeds.map((breed) => (
+                            <option key={breed} value={breed}>
+                              {breed}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-[#ffc929]/5 to-pink-50 rounded-2xl p-6">
+                  <p className="flex items-center gap-2 mb-3 text-lg font-bold text-gray-900">
+                    <PawPrint size={24} className="text-[#ffc929]" />
+                    About
+                  </p>
+                  <textarea
+                    placeholder="Tell us about your pet..."
+                    className="w-full h-32 p-3 text-base leading-relaxed text-gray-600 bg-white/50 rounded-xl border-2 border-[#ffc929]/20 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/30"
+                    value={formData.description}
+                    onChange={(e) => handleInputChange("description", e.target.value)}
                     required
                   />
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3 text-gray-600">
-                  <div className="flex items-center gap-2 bg-[#ffc929]/10 px-3 py-1.5 rounded-full border border-[#ffc929]/20">
-                    <Star size={14} />
+                <div className="flex flex-wrap gap-4">
+                  <div className="flex items-center gap-2 px-4 py-2 border rounded-full bg-[#ffc929]/10 border-[#ffc929]/20">
+                    <Calendar size={18} />
                     <select
-                      className="w-32 bg-transparent border-none focus:outline-none focus:ring-0"
-                      value={formData.species}
-                      onChange={(e) => handleInputChange("species", e.target.value)}
+                      className="bg-transparent border-none focus:outline-none focus:ring-0"
+                      value={formData.age}
+                      onChange={(e) => handleInputChange("age", e.target.value)}
+                      required
                     >
-                      <option value="dog">Dog</option>
-                      <option value="cat">Cat</option>
-                      <option value="other">Other</option>
+                      {availableAges.map((age) => (
+                        <option key={age} value={age}>
+                          {age.charAt(0).toUpperCase() + age.slice(1)}
+                        </option>
+                      ))}
                     </select>
                   </div>
-                  <div className="flex items-center gap-2 bg-[#ffc929]/10 px-3 py-1.5 rounded-full border border-[#ffc929]/20">
-                    <Star size={14} />
-                    {formData.species === "other" ? (
-                      <input
-                        type="text"
-                        placeholder="Enter breed..."
-                        className="w-32 bg-transparent border-none focus:outline-none focus:ring-0"
-                        value={formData.breed}
-                        onChange={(e) => handleInputChange("breed", e.target.value)}
-                      />
-                    ) : (
-                      <select
-                        className="w-32 bg-transparent border-none focus:outline-none focus:ring-0"
-                        value={formData.breed}
-                        onChange={(e) => handleInputChange("breed", e.target.value)}
-                        required
-                      >
-                        {availableBreeds.map((breed) => (
-                          <option key={breed} value={breed}>
-                            {breed}
-                          </option>
-                        ))}
-                      </select>
-                    )}
+
+                  <div className="flex items-center gap-2 px-4 py-2 border rounded-full bg-[#ffc929]/10 border-[#ffc929]/20">
+                    <Zap size={18} />
+                    <select
+                      className="bg-transparent border-none focus:outline-none focus:ring-0"
+                      value={formData.isTrained}
+                      onChange={(e) => handleInputChange("isTrained", e.target.value === "true")}
+                    >
+                      <option value="true">Trained</option>
+                      <option value="false">Not Trained</option>
+                    </select>
                   </div>
-                </div>
-              </div>
 
-              <div className="bg-gradient-to-br from-[#ffc929]/5 to-pink-50 rounded-2xl p-6">
-                <p className="flex items-center gap-2 mb-3 text-lg font-bold text-gray-900">
-                  <PawPrint size={24} className="text-[#ffc929]" />
-                  About
-                </p>
-                <textarea
-                  placeholder="Tell us about your pet..."
-                  className="w-full h-32 p-3 text-base leading-relaxed text-gray-600 bg-white/50 rounded-xl border-2 border-[#ffc929]/20 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/30"
-                  value={formData.description}
-                  onChange={(e) => handleInputChange("description", e.target.value)}
-                  required
-                />
-              </div>
+                  <div className="flex items-center gap-2 px-4 py-2 border rounded-full bg-[#ffc929]/10 border-[#ffc929]/20">
+                    <select
+                      className="bg-transparent border-none focus:outline-none focus:ring-0"
+                      value={formData.gender}
+                      onChange={(e) => handleInputChange("gender", e.target.value)}
+                    >
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                    </select>
+                  </div>
 
-              <div className="flex flex-wrap gap-4">
-                <div className="flex items-center gap-2 px-4 py-2 border rounded-full bg-[#ffc929]/10 border-[#ffc929]/20">
-                  <Calendar size={18} />
-                  <select
-                    className="bg-transparent border-none focus:outline-none focus:ring-0"
-                    value={formData.age}
-                    onChange={(e) => handleInputChange("age", e.target.value)}
-                    required
-                  >
-                    {availableAges.map((age) => (
-                      <option key={age} value={age}>
-                        {age.charAt(0).toUpperCase() + age.slice(1)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                  <div className="flex items-center gap-2 px-4 py-2 border rounded-full bg-[#ffc929]/10 border-[#ffc929]/20">
+                    <MapPin size={18} />
+                    <select
+                      className="bg-transparent border-none focus:outline-none focus:ring-0"
+                      value={formData.city}
+                      onChange={(e) => handleInputChange("city", e.target.value)}
+                      required
+                    >
+                      <option value="">Select city...</option>
+                      {tunisianCities.map((city) => (
+                        <option key={city} value={city}>
+                          {city}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-                <div className="flex items-center gap-2 px-4 py-2 border rounded-full bg-[#ffc929]/10 border-[#ffc929]/20">
-                  <Zap size={18} />
-                  <select
-                    className="bg-transparent border-none focus:outline-none focus:ring-0"
-                    value={formData.isTrained}
-                    onChange={(e) => handleInputChange("isTrained", e.target.value === "true")}
-                  >
-                    <option value="true">Trained</option>
-                    <option value="false">Not Trained</option>
-                  </select>
-                </div>
-
-                <div className="flex items-center gap-2 px-4 py-2 border rounded-full bg-[#ffc929]/10 border-[#ffc929]/20">
-                  <select
-                    className="bg-transparent border-none focus:outline-none focus:ring-0"
-                    value={formData.gender}
-                    onChange={(e) => handleInputChange("gender", e.target.value)}
-                  >
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                  </select>
-                </div>
-
-                <div className="flex items-center gap-2 px-4 py-2 border rounded-full bg-[#ffc929]/10 border-[#ffc929]/20">
-                  <MapPin size={18} />
-                  <select
-                    className="bg-transparent border-none focus:outline-none focus:ring-0"
-                    value={formData.city}
-                    onChange={(e) => handleInputChange("city", e.target.value)}
-                    required
-                  >
-                    <option value="">Select city...</option>
-                    {tunisianCities.map((city) => (
-                      <option key={city} value={city}>
-                        {city}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex items-center gap-2 px-4 py-2 border rounded-full bg-[#ffc929]/10 border-[#ffc929]/20">
-                  <Coins size={18} />
-                  <select
-                    className="bg-transparent border-none focus:outline-none focus:ring-0"
-                    value={formData.feeOption}
-                    onChange={(e) => handleInputChange("feeOption", e.target.value)}
-                  >
-                    <option value="Free">Free</option>
-                    <option value="With Fee">With Fee</option>
-                  </select>
-                </div>
-
-                {formData.feeOption === "With Fee" && (
                   <div className="flex items-center gap-2 px-4 py-2 border rounded-full bg-[#ffc929]/10 border-[#ffc929]/20">
                     <Coins size={18} />
-                    <input
-                      type="number"
-                      placeholder="Enter fee..."
-                      className="w-24 bg-transparent border-none focus:outline-none focus:ring-0"
-                      value={formData.fee}
-                      onChange={(e) => handleInputChange("fee", e.target.value)}
-                      min="1"
-                      required
-                    />
+                    <select
+                      className="bg-transparent border-none focus:outline-none focus:ring-0"
+                      value={formData.feeOption}
+                      onChange={(e) => handleInputChange("feeOption", e.target.value)}
+                    >
+                      <option value="Free">Free</option>
+                      <option value="With Fee">With Fee</option>
+                    </select>
+                  </div>
+
+                  {formData.feeOption === "With Fee" && (
+                    <div className="flex items-center gap-2 px-4 py-2 border rounded-full bg-[#ffc929]/10 border-[#ffc929]/20">
+                      <Coins size={18} />
+                      <input
+                        type="number"
+                        placeholder="Enter fee..."
+                        className="w-24 bg-transparent border-none focus:outline-none focus:ring-0"
+                        value={formData.fee}
+                        onChange={(e) => handleInputChange("fee", e.target.value)}
+                        min="1"
+                        required
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {error && (
+                  <div className="p-3 text-sm text-red-600 bg-red-100 rounded-lg">
+                    {error}
                   </div>
                 )}
-              </div>
 
-              {error && (
-                <div className="p-3 text-sm text-red-600 bg-red-100 rounded-lg">
-                  {error}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={submitLoading}
-                className={`w-full text-center py-4 rounded-xl font-bold text-white transition-all duration-300 transform hover:scale-105 bg-gradient-to-r from-[#ffc929] to-[#ffa726] hover:from-[#ffa726] hover:to-[#ffc929] shadow-lg shadow-[#ffc929]/20 hover:shadow-xl hover:shadow-[#ffc929]/30 ${submitLoading ? "opacity-70 cursor-not-allowed" : ""}`}
-              >
-                {submitLoading ? "Creating..." : "Create Pet Profile"}
-              </button>
-            </form>
+                <button
+                  type="submit"
+                  disabled={submitLoading}
+                  className={`w-full text-center py-4 rounded-xl font-bold text-white transition-all duration-300 transform hover:scale-105 bg-gradient-to-r from-[#ffc929] to-[#ffa726] hover:from-[#ffa726] hover:to-[#ffc929] shadow-lg shadow-[#ffc929]/20 hover:shadow-xl hover:shadow-[#ffc929]/30 ${submitLoading ? "opacity-70 cursor-not-allowed" : ""}`}
+                >
+                  {submitLoading ? "Creating..." : "Create Pet Profile"}
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       </div>
