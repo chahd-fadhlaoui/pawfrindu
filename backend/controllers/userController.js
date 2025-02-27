@@ -207,6 +207,7 @@ const getCurrentUser = async (req, res) => {
         fullName: user.fullName,
         email: user.email,
         role: user.role,
+        about: user.about,
         image: user.image,
         lastLogin: user.lastLogin,
         petOwnerDetails: user.petOwnerDetails || undefined,
@@ -384,7 +385,70 @@ const getAllUsers = async (req, res) => {
   }
 };
 
+const updateProfile = async (req, res) => {
+  const { userId, fullName, about, image, petOwnerDetails } = req.body;
 
+  try {
+    console.log("Request body received:", req.body);
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (fullName !== undefined) {
+      console.log("Updating fullName to:", fullName);
+      user.fullName = fullName;
+    }
+
+    if (about !== undefined) {
+      console.log("Updating about to:", about);
+      user.about = about;
+    }
+
+    if (image !== undefined) {
+      console.log("Updating image to:", image);
+      user.image = image; // Enregistrer l’URL de l’image
+    }
+
+    if (user.role === "PetOwner" && petOwnerDetails) {
+      if (
+        (petOwnerDetails.address === undefined && !user.petOwnerDetails?.address) ||
+        (petOwnerDetails.phone === undefined && !user.petOwnerDetails?.phone)
+      ) {
+        return res.status(400).json({
+          message: "Address and phone are required for PetOwner",
+        });
+      }
+
+      console.log("Updating petOwnerDetails to:", petOwnerDetails);
+      user.petOwnerDetails = {
+        ...user.petOwnerDetails,
+        ...petOwnerDetails,
+      };
+    }
+
+    await user.save();
+    console.log("Saved user with image:", user.image);
+    console.log("Saved user full document:", user.toObject());
+
+    res.json({
+      message: "Profile updated successfully",
+      user: {
+        _id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+        about: user.about,
+        image: user.image,
+        petOwnerDetails: user.petOwnerDetails,
+      },
+    });
+  } catch (error) {
+    console.error("Update Profile Error:", error);
+    res.status(500).json({ message: "Failed to update profile" });
+  }
+};
 export {
   createProfile,
   forgotPassword,
@@ -395,4 +459,5 @@ export {
   getAllUsers,
   verifyToken,
   validateResetToken,
+  updateProfile
 };

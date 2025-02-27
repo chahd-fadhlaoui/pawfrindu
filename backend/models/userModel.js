@@ -6,6 +6,7 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true },
     resetPasswordToken: String,
     resetPasswordExpiry: Date,
+    about:String,
     role: {
       type: String,
       enum: ["PetOwner", "Trainer", "Vet", "Admin"],
@@ -32,7 +33,6 @@ const userSchema = new mongoose.Schema(
             return this.role === "PetOwner";
           },
         },
-        about:String,
         occupation: String,
         workSchedule: {
           type: String,

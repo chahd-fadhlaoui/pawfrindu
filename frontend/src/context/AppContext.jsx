@@ -105,10 +105,11 @@ const AppContextProvider = ({ children }) => {
       const userData = response.data.user;
       const formattedUser = {
         _id: userData._id,
-        name: userData.fullName || userData.name,
+        fullName: userData.fullName, // Utiliser fullName
         image: userData.image || DEFAULT_PROFILE_IMAGE,
         email: userData.email,
         role: userData.role,
+        about: userData.about || "",
         displayRole:
           userData.role === "PetOwner"
             ? "Pet Owner"
@@ -117,7 +118,6 @@ const AppContextProvider = ({ children }) => {
             : userData.role === "Trainer"
             ? "Pet Trainer"
             : userData.role,
-        about: userData.about || "No bio available.",
         petOwnerDetails: userData.petOwnerDetails || {
           address: "Not provided",
           phone: "Not provided",
@@ -126,7 +126,9 @@ const AppContextProvider = ({ children }) => {
         veterinarianDetails: userData.veterinarianDetails || undefined,
         createdAt: userData.createdAt,
       };
+      console.log("Fetched user data:", formattedUser); // Ajoutez ceci pour déboguer
       setUser(formattedUser);
+      console.log("Fetched user data:", formattedUser);
       return formattedUser;
     }).catch((error) => {
       console.error("Failed to fetch profile:", error);

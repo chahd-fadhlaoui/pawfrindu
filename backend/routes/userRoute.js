@@ -8,6 +8,7 @@ import {
   login,
   register,
   resetPassword,
+  updateProfile,
   validateResetToken,
 } from "../controllers/userController.js";
 import { authenticate, authorize } from "../middlewares/authMiddleware.js";
@@ -25,6 +26,7 @@ userRouter.get('/validate-reset-token/:token', validateResetToken);
 userRouter.get('/me', authenticate, getCurrentUser);
 console.log('GET /me route registered');
 userRouter.post("/profile", authenticate, createProfile);
+userRouter.put("/updateProfile", authenticate, updateProfile); // Nouvelle route PUT pour update
 
 // Admin-Only Route
 userRouter.get('/getAllUsers', authenticate, authorize('Admin'), getAllUsers);
