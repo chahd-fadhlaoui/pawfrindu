@@ -1,4 +1,3 @@
-// context/AppContext.jsx
 import {
   createContext,
   useContext,
@@ -24,66 +23,84 @@ const AppContextProvider = ({ children }) => {
   const [error, setError] = useState("");
   const [pets, setPets] = useState([]);
   const [userPets, setUserPets] = useState([]);
+  const [lastPetFetchTime, setLastPetFetchTime] = useState(0);
+  const [refreshPetsTrigger, setRefreshPetsTrigger] = useState(0);
   const currencySymbol = "Dt";
+  const CACHE_DURATION = 60000; // 60 seconds
+
+  // Custom timing utility to avoid console.time conflicts
+  const measureTime = async (label, fn) => {
+    const start = performance.now();
+    try {
+      const result = await fn();
+      const end = performance.now();
+      console.log(`${label}: ${(end - start).toFixed(2)} ms`);
+      return result;
+    } catch (error) {
+      console.log(`${label} failed: ${(performance.now() - start).toFixed(2)} ms`);
+      throw error;
+    }
+  };
 
   // Memoized core functions
   const checkAuth = useCallback(async () => {
-    console.time("checkAuth");
     const token = localStorage.getItem("token");
     if (!token) {
       setUser(null);
       return false;
     }
-    try {
+    return measureTime("checkAuth", async () => {
       const response = await axiosInstance.get("/api/user/me");
       const authenticatedUser = ensureUserHasImage(response.data.user);
       setUser(authenticatedUser);
-      console.timeEnd("checkAuth");
       return true;
-    } catch (error) {
-      console.timeEnd("checkAuth");
+    }).catch((error) => {
       console.error("Auth check failed:", error.response?.status);
       if (error.response?.status === 401) {
         localStorage.removeItem("token");
         setUser(null);
       }
       return false;
-    }
+    });
   }, []);
 
-  const fetchPets = useCallback(async (forceRefresh = false) => {
-    if (!forceRefresh && pets.length > 0) return pets;
-    try {
-      console.time("fetchPets");
+  const fetchPets = useCallback(async () => {
+    const now = Date.now();
+    if (pets.length > 0 && now - lastPetFetchTime < CACHE_DURATION) {
+      console.log("Returning cached pets");
+      return pets;
+    }
+
+    return measureTime("fetchPets", async () => {
       const response = await axiosInstance.get("/api/pet/allpets");
       const petsData = response.data.data || [];
-      setPets(petsData);
-      console.timeEnd("fetchPets");
+      if (JSON.stringify(petsData) !== JSON.stringify(pets)) {
+        setPets(petsData);
+      }
+      setLastPetFetchTime(now);
       return petsData;
-    } catch (error) {
+    }).catch((error) => {
       console.error("Error fetching pets:", error);
       setError("Failed to fetch pets");
       return [];
-    }
-  }, [pets]);
+    });
+  }, [pets, lastPetFetchTime]);
 
   const getMyPets = useCallback(async () => {
-    try {
-      console.time("getMyPets");
+    return measureTime("getMyPets", async () => {
       const response = await axiosInstance.get("/api/pet/mypets");
       const userPetsData = response.data.data || [];
       setUserPets(userPetsData);
-      console.timeEnd("getMyPets");
       return { success: true, data: userPetsData };
-    } catch (error) {
+    }).catch((error) => {
       console.error("Error fetching your pets:", error);
       setError("Failed to fetch your pets");
       return { success: false, error: "Error fetching your pets", data: [] };
-    }
+    });
   }, []);
+
   const fetchUserProfile = useCallback(async () => {
-    try {
-      console.time("fetchUserProfile");
+    return measureTime("fetchUserProfile", async () => {
       const response = await axiosInstance.get("/api/user/me");
       const userData = response.data.user;
       const formattedUser = {
@@ -91,28 +108,34 @@ const AppContextProvider = ({ children }) => {
         name: userData.fullName || userData.name,
         image: userData.image || DEFAULT_PROFILE_IMAGE,
         email: userData.email,
-        role: userData.role, // Keep raw role ("PetOwner")
-        displayRole: userData.role === "PetOwner" ? "Pet Owner" // Add displayRole for UI
-          : userData.role === "Vet" ? "Veterinarian"
-          : userData.role === "Trainer" ? "Pet Trainer"
-          : userData.role,
+        role: userData.role,
+        displayRole:
+          userData.role === "PetOwner"
+            ? "Pet Owner"
+            : userData.role === "Vet"
+            ? "Veterinarian"
+            : userData.role === "Trainer"
+            ? "Pet Trainer"
+            : userData.role,
         about: userData.about || "No bio available.",
-        petOwnerDetails: userData.petOwnerDetails || { address: "Not provided", phone: "Not provided" },
+        petOwnerDetails: userData.petOwnerDetails || {
+          address: "Not provided",
+          phone: "Not provided",
+        },
         trainerDetails: userData.trainerDetails || undefined,
         veterinarianDetails: userData.veterinarianDetails || undefined,
         createdAt: userData.createdAt,
       };
       setUser(formattedUser);
-      console.timeEnd("fetchUserProfile");
       return formattedUser;
-    } catch (error) {
+    }).catch((error) => {
       console.error("Failed to fetch profile:", error);
       setError(error.response?.data?.message || "Failed to fetch user profile");
       throw error;
-    }
+    });
   }, []);
 
-  // Initialize app - Run once on mount
+  // Initialize app
   useEffect(() => {
     const initialize = async () => {
       setLoading(true);
@@ -121,15 +144,11 @@ const AppContextProvider = ({ children }) => {
         if (token) {
           const isAuthenticated = await checkAuth();
           if (isAuthenticated) {
-            await Promise.all([
-              fetchUserProfile(), // Fetch full profile
-              getMyPets() ,// Fetch user pets
-              fetchPets(true) // Fetch all pets and wait for it
-            ]);
+            await fetchUserProfile();
+            if (user?.role === "PetOwner") await getMyPets();
+            await fetchPets(); // Initial fetch without debounce
           }
         }
-        // Fetch all pets in background
-        fetchPets().catch((err) => console.error("Background fetch failed:", err));
       } catch (error) {
         console.error("Initialization failed:", error);
       } finally {
@@ -137,7 +156,14 @@ const AppContextProvider = ({ children }) => {
       }
     };
     initialize();
-  }, [checkAuth, fetchUserProfile, getMyPets]); // Stable dependencies
+  }, [checkAuth, fetchUserProfile, getMyPets]);
+
+  // Refresh pets when triggered
+  useEffect(() => {
+    if (refreshPetsTrigger > 0) {
+      fetchPets();
+    }
+  }, [refreshPetsTrigger, fetchPets]);
 
   // Auth functions
   const login = async (email, password) => {
@@ -149,15 +175,20 @@ const AppContextProvider = ({ children }) => {
       const { accessToken, user: userData } = response.data;
       localStorage.setItem("token", accessToken);
       axiosInstance.setAuthToken(accessToken);
-      setUser(ensureUserHasImage(userData)); // Set initial user
-      await Promise.all([fetchUserProfile(), fetchPets(true), getMyPets()]); // Fetch full data
+      setUser(ensureUserHasImage(userData));
+      await Promise.all([fetchUserProfile(), fetchPets(), getMyPets()]);
       return {
         success: true,
-        redirectTo: userData.role === "PetOwner" ? "/"
-          : userData.role === "Trainer" ? "/trainer"
-          : userData.role === "Vet" ? "/vet"
-          : userData.role === "Admin" ? "/admin"
-          : "/login",
+        redirectTo:
+          userData.role === "PetOwner"
+            ? "/"
+            : userData.role === "Trainer"
+            ? "/trainer"
+            : userData.role === "Vet"
+            ? "/vet"
+            : userData.role === "Admin"
+            ? "/admin"
+            : "/login",
       };
     } catch (error) {
       const errorMessage = error.response?.data?.message || "Error logging in";
@@ -196,10 +227,13 @@ const AppContextProvider = ({ children }) => {
     setLoading(true);
     setError("");
     try {
-      const response = await axiosInstance.post("/api/user/profile", { ...profileData, userId: user._id });
+      const response = await axiosInstance.post("/api/user/profile", {
+        ...profileData,
+        userId: user._id,
+      });
       const updatedUser = ensureUserHasImage(response.data.user);
       setUser(updatedUser);
-      if (updatedUser.role === "Pet Owner") await getMyPets(); // Fetch pets if PetOwner
+      if (updatedUser.role === "PetOwner") await getMyPets();
       return { success: true, message: response.data.message };
     } catch (error) {
       const errorMessage = error.response?.data?.message || "Error completing profile";
@@ -241,7 +275,10 @@ const AppContextProvider = ({ children }) => {
       const response = await axiosInstance.get(`/api/user/validate-reset-token/${token}`);
       return { success: true, data: response.data };
     } catch (error) {
-      return { success: false, error: error.response?.data?.message || "Invalid or expired token" };
+      return {
+        success: false,
+        error: error.response?.data?.message || "Invalid or expired token",
+      };
     }
   };
 
@@ -249,7 +286,10 @@ const AppContextProvider = ({ children }) => {
     setLoading(true);
     setError("");
     try {
-      const response = await axiosInstance.post("/api/user/reset-password", { token, newPassword });
+      const response = await axiosInstance.post("/api/user/reset-password", {
+        token,
+        newPassword,
+      });
       return { success: true, message: response.data.message };
     } catch (error) {
       const errorMessage = error.response?.data?.message || "Failed to reset password";
@@ -263,7 +303,7 @@ const AppContextProvider = ({ children }) => {
   const updatePet = async (petId, updateData) => {
     try {
       const response = await axiosInstance.put(`/api/pet/updatedPet/${petId}`, updateData);
-      await fetchPets(true);
+      setRefreshPetsTrigger((prev) => prev + 1);
       if (user) await getMyPets();
       return { success: true, data: response.data, message: response.data.message };
     } catch (error) {
@@ -276,7 +316,7 @@ const AppContextProvider = ({ children }) => {
   const deletePet = async (petId) => {
     try {
       await axiosInstance.delete(`/api/pet/deletePet/${petId}`);
-      await fetchPets(true);
+      setRefreshPetsTrigger((prev) => prev + 1);
       if (user) await getMyPets();
       return { success: true };
     } catch (error) {
@@ -291,7 +331,9 @@ const AppContextProvider = ({ children }) => {
     localStorage.removeItem("token");
     setUser(null);
     setUserPets([]);
-    setPets([]); // Clear pets on logout
+    setPets([]);
+    setLastPetFetchTime(0);
+    setRefreshPetsTrigger(0);
   }, []);
 
   const clearError = useCallback(() => setError(""), []);
@@ -300,33 +342,37 @@ const AppContextProvider = ({ children }) => {
     setUser((prevUser) => ensureUserHasImage({ ...prevUser, ...userData }));
   }, []);
 
-  const value = useMemo(() => ({
-    user,
-    loading,
-    error,
-    pets,
-    userPets,
-    currencySymbol,
-    login,
-    register,
-    logout,
-    checkAuth,
-    forgotPassword,
-    validateResetToken,
-    resetPassword,
-    fetchUserProfile,
-    createProfile,
-    updateUser,
-    fetchPets,
-    getMyPets,
-    updatePet,
-    deletePet,
-    clearError,
-    setError,
-    setLoading,
-    applyToAdopt,
-  }), [user, loading, error, pets, userPets, checkAuth, fetchPets, getMyPets, logout, clearError, updateUser]);
-  
+  const value = useMemo(
+    () => ({
+      user,
+      loading,
+      error,
+      pets,
+      userPets,
+      currencySymbol,
+      login,
+      register,
+      logout,
+      checkAuth,
+      forgotPassword,
+      validateResetToken,
+      resetPassword,
+      fetchUserProfile,
+      createProfile,
+      updateUser,
+      fetchPets,
+      getMyPets,
+      updatePet,
+      deletePet,
+      clearError,
+      setError,
+      setLoading,
+      applyToAdopt,
+      triggerPetsRefresh: () => setRefreshPetsTrigger((prev) => prev + 1),
+    }),
+    [user, loading, error, pets, userPets, checkAuth, fetchPets, getMyPets, logout, clearError, updateUser]
+  );
+
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
 

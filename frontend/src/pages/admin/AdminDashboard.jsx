@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import Sidebar from "../../components/admin/Sidebar";
-import SearchBar from "../../components/admin/SearchBar";
 import UsersTable from "../../components/admin/UsersTable";
 import PetsTable from "../../components/admin/PetsTable";
 import ArchivedPetsTable from "../../components/admin/ArchivedPetsTable";
@@ -8,37 +7,43 @@ import { useApp } from "../../context/AppContext";
 import axiosInstance from "../../utils/axiosInstance";
 
 const AdminDashboard = () => {
-  const { pets, fetchPets } = useApp();
-  const [activeTab, setActiveTab] = useState('pets');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filteredData, setFilteredData] = useState([]);
+  const { pets, fetchPets, triggerPetsRefresh } = useApp();
+  const [activeTab, setActiveTab] = useState("pets");
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [refreshTrigger, setRefreshTrigger] = useState(0); // Ajouté pour déclencher le rafraîchissement
 
   useEffect(() => {
-    fetchPets();
-  }, [fetchPets]);
+    if (activeTab === "pets" || activeTab === "archived") {
+      fetchPets();
+    }
+  }, [activeTab, fetchPets]);
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
       setError(null);
-      console.log('Fetching users...');
-      const response = await axiosInstance.get('/api/user/getAllUsers');
-      console.log('API Response:', response);
+      console.log("Fetching users...");
+      const response = await axiosInstance.get("/api/user/getAllUsers");
+      console.log("API Response:", response);
       if (!response.data) {
-        throw new Error('No data received from API');
+        throw new Error("No data received from API");
       }
-      const userData = Array.isArray(response.data) ? response.data : 
-                      Array.isArray(response.data.users) ? response.data.users : [];
-      console.log('Processed users data:', userData);
+      const userData = Array.isArray(response.data)
+        ? response.data
+        : Array.isArray(response.data.users)
+        ? response.data.users
+        : [];
+      console.log("Processed users data:", userData);
       setUsers(userData);
     } catch (err) {
-      const errorMessage = err.response?.data?.message || err.message || 'Unknown error';
-      setError('Failed to fetch users: ' + errorMessage);
-      console.error('Error fetching users:', { error: err, response: err.response, message: errorMessage });
+      const errorMessage = err.response?.data?.message || err.message || "Unknown error";
+      setError("Failed to fetch users: " + errorMessage);
+      console.error("Error fetching users:", {
+        error: err,
+        response: err.response, // No trailing comma here
+        message: errorMessage // No trailing comma needed as last property
+      });
       setUsers([]);
     } finally {
       setLoading(false);
@@ -46,103 +51,52 @@ const AdminDashboard = () => {
   };
 
   useEffect(() => {
-    if (activeTab === 'users') {
+    if (activeTab === "users") {
       fetchUsers();
     }
   }, [activeTab]);
 
-  useEffect(() => {
-    const debounceTimeout = setTimeout(() => {
-      let filtered = [];
-      if (activeTab === 'pets' && Array.isArray(pets)) {
-        filtered = pets.filter(pet => !pet.isArchived); // Pets non archivés
-      } else if (activeTab === 'archived' && Array.isArray(pets)) {
-        filtered = pets.filter(pet => pet.isArchived); // Pets archivés
-      } else if (activeTab === 'users' && Array.isArray(users)) {
-        filtered = users;
-      }
-
-      // Filtrer uniquement par recherche pour les onglets "users" et "archived"
-      filtered = filtered.filter(item => {
-        if (activeTab === 'users') {
-          return (
-            (item.fullName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (item.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (item.role || '').toLowerCase().includes(searchTerm.toLowerCase())
-          );
-        } else {
-          return (
-            (item.name || '').toLowerCase().includes(searchTerm.toLowerCase())
-          );
-        }
-      });
-
-      setFilteredData(filtered);
-      console.log('Filtered Data in AdminDashboard:', filtered);
-    }, 300);
-
-    return () => clearTimeout(debounceTimeout);
-  }, [searchTerm, pets, users, activeTab]);
-
-  const getCurrentData = () => {
-    if (loading) return [];
-    return filteredData.length > 0 ? filteredData : (activeTab === 'users' ? users : pets) || [];
-  };
-
-  // Fonction pour signaler un rafraîchissement (à appeler après ajout d'un pet)
   const handlePetChange = () => {
-    setRefreshTrigger(prev => prev + 1); // Incrémente pour déclencher useEffect dans PetsTable
-    fetchPets(); // Met à jour les pets dans AppContext
+    triggerPetsRefresh();
   };
 
   return (
-    <div className="flex h-screen bg-amber-50/30">
+    <div className="flex h-screen bg-gray-100">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-      
-      <div className="flex-1 p-8 overflow-auto">
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-neutral-900 hover:text-[#ffc929]">
-              {activeTab === 'users' ? 'Gestion des Utilisateurs' : 
-               activeTab === 'pets' ? 'Gestion des Animaux' : 
-               'Animaux Archivés'}
+
+      <div className="flex-1 p-6 overflow-auto">
+        <div className="mx-auto space-y-6 max-w-7xl">
+          {/* Header */}
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold text-gray-900">
+              {activeTab === "users"
+                ? "User Management"
+                : activeTab === "pets"
+                ? "Pet Management"
+                : "Archived Pets"}
             </h1>
-            <p className="text-amber-700">
-              {activeTab === 'users'
-                ? 'Gérez les utilisateurs de la plateforme'
-                : activeTab === 'pets' 
-                ? 'Gérez les profils des animaux en attente d\'adoption'
-                : 'Visualisez et gérez les animaux archivés'}
+            <p className="text-gray-600 text-md">
+              {activeTab === "users"
+                ? "Manage platform users efficiently."
+                : activeTab === "pets"
+                ? "Oversee pet profiles awaiting adoption."
+                : "View and manage archived pet records."}
             </p>
           </div>
 
-          <div className="mb-6">
-            <SearchBar
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder={
-                activeTab === 'users' ? 'Rechercher un utilisateur...' : 
-                activeTab === 'pets' ? 'Rechercher un animal...' : 
-                'Rechercher un animal archivé...'
-              }
-            />
-          </div>
-
+          {/* Error Message */}
           {error && (
-            <div className="p-4 mb-4 text-red-700 bg-red-100 rounded-lg">
+            <div className="p-4 text-red-700 border-l-4 border-red-500 rounded-lg shadow-sm bg-red-50">
               {error}
             </div>
           )}
 
-          <div className="bg-white border-2 shadow-sm rounded-xl border-amber-100">
-            {activeTab === 'users' ? (
-              <UsersTable 
-                users={getCurrentData()} 
-                loading={loading}
-                error={error}
-              />
-            ) : activeTab === 'pets' ? (
-<PetsTable refreshTrigger={refreshTrigger} onPetChange={handlePetChange} />
+          {/* Content Area */}
+          <div className="overflow-hidden bg-white border border-gray-200 shadow-md rounded-xl">
+            {activeTab === "users" ? (
+              <UsersTable users={users} loading={loading} error={error} />
+            ) : activeTab === "pets" ? (
+              <PetsTable onPetChange={handlePetChange} />
             ) : (
               <ArchivedPetsTable />
             )}
