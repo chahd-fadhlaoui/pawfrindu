@@ -165,7 +165,7 @@ const Profile = () => {
     <div className="min-h-screen bg-gradient-to-br from-amber-50 to-rose-50 px-6 py-20">
       <div className="max-w-5xl mx-auto bg-white rounded-3xl shadow-lg overflow-hidden border border-amber-50 transition-all duration-300">
         {/* Header */}
-        <div className="relative h-28 bg-gradient-to-r from-amber-100 via-rose-100 to-purple-100">
+        <div className="relative h-28 bg-gradient-to-r from-amber-100 to-pink-500 ">
           <div className="absolute inset-0 opacity-30">
             {[...Array(10)].map((_, i) => (
               <Heart
