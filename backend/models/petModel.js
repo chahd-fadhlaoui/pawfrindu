@@ -20,7 +20,14 @@ const petSchema = new mongoose.Schema({
   status: { type: String, enum: ["pending", "accepted","adoptionPending","adopted", "sold"], default: "pending" },
   image: { type: String, required: true },
   description: { type: String, required: true },
-  candidates: [{ type: mongoose.Schema.Types.ObjectId, ref: "user" }],
+  candidates: [{
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "user" },
+    status: { 
+      type: String, 
+      enum: ["pending", "approved", "rejected"], 
+      default: "pending" 
+    },
+  }],
   owner: { type: mongoose.Schema.Types.ObjectId, ref: "user", required: true },
   isApproved: { type: Boolean, default: false },
   isArchived: { type: Boolean, default: false } // Nouveau champ pour l'archivage

@@ -29,7 +29,7 @@ import fs from 'fs';
 const uploadDir = 'uploads';
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
-}
+} 
 
 app.use('/api',uploadRouter)
 app.use('/api/pet',petRouter)

@@ -6,13 +6,15 @@ import {
   updatePet,
   deletePet,
   getMyPets,
-  applyToAdopt,
   approvePet,
   getPetsByStatus,
   approveAdoption,
   modifyPetStatus,
   deleteAdminPet,
   unarchivePet,
+  getPetCandidates,
+  updateCandidateStatus,
+  finalizeAdoption,
 } from '../controllers/petController.js'
 import { authenticate, authorize } from '../middlewares/authMiddleware.js'
 import { verifyToken } from "../controllers/userController.js";
@@ -34,7 +36,10 @@ petRouter.post('/addpet', authorize('PetOwner'), createPet);  // Vérifier que l
 petRouter.get('/mypets', getMyPets);  // Récupérer les pets de l'utilisateur connecté
 petRouter.put('/updatedPet/:id', updatePet);  // Mettre à jour un pet
 petRouter.delete('/deletePet/:id', verifyToken, deletePet); // Supprimer un pet
-petRouter.post('/:petId/apply', applyToAdopt);  // Postuler pour adopter un pet
+petRouter.get('/:petId/candidates', getPetCandidates); // Nouvelle route pour les candidats
+petRouter.put('/:petId/candidate/:candidateId/status', updateCandidateStatus);
+petRouter.put('/:petId/candidate/:candidateId/finalize', finalizeAdoption); 
+
 petRouter.post('/:petId/approve-adoption/:adopterId', approveAdoption);  // Approuver une adoption
 
 // Routes pour l'admin

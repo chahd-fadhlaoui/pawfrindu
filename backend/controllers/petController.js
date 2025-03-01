@@ -312,105 +312,7 @@ export const getMyPets = async (req, res) => {
   }
 };
 
-// Apply to adopt a pet 
-export const applyToAdopt = async (req, res) => {
-  try {
-    console.log("Received request:", { params: req.params, body: req.body });
 
-    const { petId } = req.params;
-    const userId = req.user?._id; // Vérification sécurisée de req.user
-    const { occupation, workSchedule, housing, reasonForAdoption, readiness } = req.body;
-
-    console.log("petId:", petId);
-    console.log("userId:", userId);
-    console.log("Request body:", { occupation, workSchedule, housing, reasonForAdoption, readiness });
-
-    // Vérifier l'authentification
-    if (!userId) {
-      console.error("No user ID found in request");
-      return res.status(401).json({ success: false, message: "User not authenticated" });
-    }
-
-    // Trouver l'utilisateur connecté
-    const user = await User.findById(userId);
-    if (!user) {
-      console.error("User not found for ID:", userId);
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
-
-    // Trouver l'animal
-    const pet = await Pet.findById(petId);
-    if (!pet) {
-      console.error("Pet not found for ID:", petId);
-      return res.status(404).json({ success: false, message: "Pet not found" });
-    }
-
-    // Vérifier le statut de l'animal
-    if (pet.status !== "accepted") {
-      console.warn("Pet status not accepted:", pet.status);
-      return res.status(400).json({
-        success: false,
-        message: `Pet is not available for adoption (current status: ${pet.status})`
-      });
-    }
-
-    // Vérifier si owner existe avant toString
-    if (!pet.owner) {
-      console.error("Pet has no owner:", pet);
-      return res.status(400).json({ success: false, message: "Pet has no owner defined" });
-    }
-    if (pet.owner.toString() === userId.toString()) {
-      console.warn("User is the owner of the pet");
-      return res.status(400).json({ success: false, message: "You cannot adopt your own pet" });
-    }
-
-    // Mettre à jour petOwnerDetails
-    user.petOwnerDetails = {
-      ...user.petOwnerDetails,
-      occupation,
-      workSchedule,
-      housing: {
-        type: housing.type,
-        ownership: housing.ownership,
-        familySize: housing.familySize,
-        landlordApproval: housing.landlordApproval
-      },
-      reasonForAdoption,
-      readiness
-    };
-
-    console.log("Updating user with petOwnerDetails:", user.petOwnerDetails);
-    await user.save();
-    console.log("User saved successfully");
-
-    // Ajouter l'utilisateur à la liste des candidats
-    if (!pet.candidates.includes(userId)) {
-      pet.candidates.push(userId);
-      console.log("Adding user to candidates:", pet.candidates);
-      await pet.save();
-      console.log("Pet saved successfully");
-    }
-
-    return res.status(200).json({
-      success: true,
-      message: "Application submitted successfully",
-      data: {
-        pet,
-        user: {
-          _id: user._id,
-          petOwnerDetails: user.petOwnerDetails
-        }
-      }
-    });
-  } catch (error) {
-    console.error("Error in applyToAdopt:", error.message, error.stack);
-    return res.status(500).json({
-      success: false,
-      message: "Error applying for adoption",
-      error: error.message
-    });
-  }
-};
 // Admin approve pet listing
 export const approvePet = async (req, res) => {
   try {
@@ -556,6 +458,238 @@ export const unarchivePet = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: 'Error unarchiving pet',
+      error: error.message,
+    });
+  }
+};
+
+// Get candidates for a specific pet
+export const getPetCandidates = async (req, res) => {
+  try {
+    const { petId } = req.params;
+    console.log('Fetching pet with ID:', petId);
+    console.time('getPetCandidates');
+
+    const pet = await Pet.findById(petId).populate({
+      path: 'candidates.user',
+      select: '-password',
+    });
+    console.log('Pet query completed');
+    console.log('Pet found:', pet ? pet._id : 'Not found');
+    console.log('Raw pet candidates:', pet ? pet.candidates : 'No pet');
+
+    if (!pet) {
+      console.log('Pet not found for ID:', petId);
+      return res.status(404).json({
+        success: false,
+        message: 'Pet not found',
+      });
+    }
+
+    console.log('Candidates raw data:', pet.candidates);
+    console.log('Pet owner ID:', pet.owner.toString());
+    console.log('Request user ID:', req.user?._id);
+    if (!req.user || (pet.owner.toString() !== req.user._id.toString())) {
+      console.log('Unauthorized access attempt by:', req.user?._id);
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized: Only the owner can view candidates',
+      });
+    }
+
+    const validCandidates = pet.candidates.filter(candidate => {
+      if (!candidate.user) {
+        console.warn('Invalid candidate found (no user):', candidate);
+        return false;
+      }
+      return true;
+    });
+    console.log('Valid candidates after filtering:', validCandidates);
+
+    const candidates = validCandidates.map(candidate => {
+      const candidateData = {
+        id: candidate.user._id,
+        name: candidate.user.fullName || "Unknown",
+        email: candidate.user.email || "N/A",
+        status: candidate.status || "pending",
+        petOwnerDetails: {
+          occupation: candidate.user.petOwnerDetails?.occupation || "N/A",
+          workSchedule: candidate.user.petOwnerDetails?.workSchedule || "N/A",
+          housing: {
+            type: candidate.user.petOwnerDetails?.housing?.type || "N/A",
+            ownership: candidate.user.petOwnerDetails?.housing?.ownership || "N/A",
+            familySize: candidate.user.petOwnerDetails?.housing?.familySize || "N/A",
+            landlordApproval: candidate.user.petOwnerDetails?.housing?.landlordApproval || false,
+          },
+          reasonForAdoption: candidate.user.petOwnerDetails?.reasonForAdoption || "N/A",
+          readiness: candidate.user.petOwnerDetails?.readiness || "N/A",
+          phone: candidate.status === "approved" ? candidate.user.petOwnerDetails?.phone : undefined,
+        },
+      };
+      console.log('Formatted candidate:', candidateData);
+      return candidateData;
+    });
+
+    console.log('All formatted candidates:', candidates);
+    console.timeEnd('getPetCandidates');
+    return res.status(200).json({
+      success: true,
+      count: candidates.length,
+      data: candidates,
+    });
+  } catch (error) {
+    console.error("Get Pet Candidates Error:", error.stack);
+    console.timeEnd('getPetCandidates');
+    return res.status(500).json({
+      success: false,
+      message: 'Error fetching candidates',
+      error: error.message,
+    });
+  }
+};
+export const updateCandidateStatus = async (req, res) => {
+  try {
+    const { petId, candidateId } = req.params;
+    const { status } = req.body; // "approved", "rejected", ou "pending"
+
+    console.log('Updating candidate status:', { petId, candidateId, status });
+
+    const pet = await Pet.findById(petId);
+    if (!pet) {
+      console.log('Pet not found:', petId);
+      return res.status(404).json({ success: false, message: 'Pet not found' });
+    }
+
+    console.log('Pet owner:', pet.owner.toString(), 'User:', req.user?._id);
+    if (pet.owner.toString() !== req.user._id.toString()) {
+      console.log('Unauthorized access attempt by:', req.user?._id);
+      return res.status(403).json({ success: false, message: 'Unauthorized' });
+    }
+
+    const candidateIndex = pet.candidates.findIndex(
+      (c) => c.user.toString() === candidateId
+    );
+    console.log('Candidate index:', candidateIndex);
+    if (candidateIndex === -1) {
+      console.log('Candidate not found:', candidateId);
+      return res.status(404).json({ success: false, message: 'Candidate not found' });
+    }
+
+    const currentStatus = pet.candidates[candidateIndex].status;
+    console.log('Current candidate status:', currentStatus);
+
+    if (status === "approved") {
+      const hasApproved = pet.candidates.some(
+        (c) => c.status === "approved" && c.user.toString() !== candidateId
+      );
+      if (hasApproved) {
+        console.log('Conflict: Another candidate is already approved');
+        return res.status(400).json({
+          success: false,
+          message: 'Only one candidate can be approved at a time',
+        });
+      }
+      pet.candidates[candidateIndex].status = "approved";
+      pet.status = "adoptionPending";
+    } else if (status === "rejected") {
+      pet.candidates[candidateIndex].status = "rejected";
+      if (currentStatus === "approved") {
+        const stillApproved = pet.candidates.some(c => c.status === "approved");
+        if (!stillApproved && pet.status === "adoptionPending") {
+          pet.status = "accepted";
+        }
+      }
+    } else if (status === "pending") {
+      pet.candidates[candidateIndex].status = "pending";
+      if (currentStatus === "approved") {
+        const stillApproved = pet.candidates.some(c => c.status === "approved");
+        if (!stillApproved && pet.status === "adoptionPending") {
+          pet.status = "accepted";
+        }
+      }
+    } else {
+      console.log('Invalid status received:', status);
+      return res.status(400).json({ success: false, message: 'Invalid status' });
+    }
+
+    await pet.save();
+    console.log('Candidate updated successfully:', pet.candidates[candidateIndex]);
+    return res.status(200).json({
+      success: true,
+      message: `Candidate updated to ${status} successfully`,
+      data: pet,
+    });
+  } catch (error) {
+    console.error("Update Candidate Status Error:", error.stack);
+    return res.status(500).json({
+      success: false,
+      message: 'Error updating candidate status',
+      error: error.message,
+    });
+  }
+};
+
+export const finalizeAdoption = async (req, res) => {
+  try {
+    const { petId, candidateId } = req.params;
+    const { action } = req.body; // "adopt" ou "reject"
+
+    console.log('Finalizing adoption:', { petId, candidateId, action });
+
+    const pet = await Pet.findById(petId);
+    if (!pet) {
+      console.log('Pet not found:', petId);
+      return res.status(404).json({ success: false, message: 'Pet not found' });
+    }
+
+    console.log('Pet owner:', pet.owner.toString(), 'User:', req.user?._id);
+    if (pet.owner.toString() !== req.user._id.toString()) {
+      console.log('Unauthorized access attempt by:', req.user?._id);
+      return res.status(403).json({ success: false, message: 'Unauthorized' });
+    }
+
+    const candidateIndex = pet.candidates.findIndex(
+      (c) => c.user.toString() === candidateId && c.status === "approved"
+    );
+    console.log('Candidate index:', candidateIndex);
+    if (candidateIndex === -1) {
+      console.log('No approved candidate found for:', candidateId);
+      return res.status(400).json({
+        success: false,
+        message: 'No approved candidate found for this action',
+      });
+    }
+
+    if (action === "adopt") {
+      pet.status = "adopted";
+      pet.candidates[candidateIndex].status = "approved"; // Conserver pour historique
+      // Rejeter automatiquement les autres candidats
+      pet.candidates.forEach((candidate, index) => {
+        if (index !== candidateIndex && candidate.status !== "rejected") {
+          candidate.status = "rejected";
+        }
+      });
+    } else if (action === "reject") {
+      pet.candidates[candidateIndex].status = "rejected";
+      const stillApproved = pet.candidates.some(c => c.status === "approved");
+      pet.status = stillApproved ? "adoptionPending" : "accepted";
+    } else {
+      console.log('Invalid action received:', action);
+      return res.status(400).json({ success: false, message: 'Invalid action' });
+    }
+
+    await pet.save();
+    console.log('Adoption finalized:', { petStatus: pet.status, candidateStatus: pet.candidates[candidateIndex].status });
+    return res.status(200).json({
+      success: true,
+      message: `Adoption ${action === "adopt" ? "finalized" : "rejected"} successfully`,
+      data: pet,
+    });
+  } catch (error) {
+    console.error("Finalize Adoption Error:", error.stack);
+    return res.status(500).json({
+      success: false,
+      message: 'Error finalizing adoption',
       error: error.message,
     });
   }
