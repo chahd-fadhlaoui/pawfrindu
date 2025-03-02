@@ -250,7 +250,105 @@ export const deletePet = async (req, res) => {
   }
 };
 
+// Apply to adopt a pet 
+export const applyToAdopt = async (req, res) => {
+  try {
+    console.log("Received request:", { params: req.params, body: req.body });
 
+    const { petId } = req.params;
+    const userId = req.user?._id; // Vérification sécurisée de req.user
+    const { occupation, workSchedule, housing, reasonForAdoption, readiness } = req.body;
+
+    console.log("petId:", petId);
+    console.log("userId:", userId);
+    console.log("Request body:", { occupation, workSchedule, housing, reasonForAdoption, readiness });
+
+    // Vérifier l'authentification
+    if (!userId) {
+      console.error("No user ID found in request");
+      return res.status(401).json({ success: false, message: "User not authenticated" });
+    }
+
+    // Trouver l'utilisateur connecté
+    const user = await User.findById(userId);
+    if (!user) {
+      console.error("User not found for ID:", userId);
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // Trouver l'animal
+    const pet = await Pet.findById(petId);
+    if (!pet) {
+      console.error("Pet not found for ID:", petId);
+      return res.status(404).json({ success: false, message: "Pet not found" });
+    }
+
+    // Vérifier le statut de l'animal
+    if (pet.status !== "accepted") {
+      console.warn("Pet status not accepted:", pet.status);
+      return res.status(400).json({
+        success: false,
+        message: `Pet is not available for adoption (current status: ${pet.status})`
+      });
+    }
+
+    // Vérifier si owner existe avant toString
+    if (!pet.owner) {
+      console.error("Pet has no owner:", pet);
+      return res.status(400).json({ success: false, message: "Pet has no owner defined" });
+    }
+    if (pet.owner.toString() === userId.toString()) {
+      console.warn("User is the owner of the pet");
+      return res.status(400).json({ success: false, message: "You cannot adopt your own pet" });
+    }
+
+    // Mettre à jour petOwnerDetails
+    user.petOwnerDetails = {
+      ...user.petOwnerDetails,
+      occupation,
+      workSchedule,
+      housing: {
+        type: housing.type,
+        ownership: housing.ownership,
+        familySize: housing.familySize,
+        landlordApproval: housing.landlordApproval
+      },
+      reasonForAdoption,
+      readiness
+    };
+
+    console.log("Updating user with petOwnerDetails:", user.petOwnerDetails);
+    await user.save();
+    console.log("User saved successfully");
+
+    // Ajouter l'utilisateur à la liste des candidats
+    if (!pet.candidates.includes(userId)) {
+      pet.candidates.push(userId);
+      console.log("Adding user to candidates:", pet.candidates);
+      await pet.save();
+      console.log("Pet saved successfully");
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Application submitted successfully",
+      data: {
+        pet,
+        user: {
+          _id: user._id,
+          petOwnerDetails: user.petOwnerDetails
+        }
+      }
+    });
+  } catch (error) {
+    console.error("Error in applyToAdopt:", error.message, error.stack);
+    return res.status(500).json({
+      success: false,
+      message: "Error applying for adoption",
+      error: error.message
+    });
+  }
+};
 // Delete pet
 export const deleteAdminPet = async (req, res) => {
   try {

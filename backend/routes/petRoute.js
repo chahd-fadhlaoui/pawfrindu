@@ -15,6 +15,7 @@ import {
   getPetCandidates,
   updateCandidateStatus,
   finalizeAdoption,
+  applyToAdopt,
 } from '../controllers/petController.js'
 import { authenticate, authorize } from '../middlewares/authMiddleware.js'
 import { verifyToken } from "../controllers/userController.js";
@@ -39,6 +40,8 @@ petRouter.delete('/deletePet/:id', verifyToken, deletePet); // Supprimer un pet
 petRouter.get('/:petId/candidates', getPetCandidates); // Nouvelle route pour les candidats
 petRouter.put('/:petId/candidate/:candidateId/status', updateCandidateStatus);
 petRouter.put('/:petId/candidate/:candidateId/finalize', finalizeAdoption); 
+
+petRouter.post('/:petId/apply', applyToAdopt);  // Postuler pour adopter un pet
 
 petRouter.post('/:petId/approve-adoption/:adopterId', approveAdoption);  // Approuver une adoption
 
