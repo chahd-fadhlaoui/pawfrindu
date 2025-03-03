@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { PawPrint, ChevronLeft, ChevronRight, X, Loader2 } from "lucide-react";
+import {
+  PawPrint,
+  ChevronLeft,
+  ChevronRight,
+  X,
+  Loader2,
+  ChevronsRight,
+  ChevronsLeft,
+} from "lucide-react";
 import SearchBar from "../SearchBar";
 
 const UsersTable = ({ users = [], loading, error }) => {
@@ -52,8 +60,8 @@ const UsersTable = ({ users = [], loading, error }) => {
     }
 
     if (roleFilter) {
-      filtered = filtered.filter((user) =>
-        (user.role || "").toLowerCase() === roleFilter.toLowerCase()
+      filtered = filtered.filter(
+        (user) => (user.role || "").toLowerCase() === roleFilter.toLowerCase()
       );
     }
 
@@ -85,7 +93,9 @@ const UsersTable = ({ users = [], loading, error }) => {
             <Loader2 className="w-8 h-8 text-[#ffc929] animate-spin" />
             <PawPrint className="w-8 h-8 text-[#ffc929] animate-pulse" />
           </div>
-          <p className="text-lg font-semibold text-gray-700">Loading users...</p>
+          <p className="text-lg font-semibold text-gray-700">
+            Loading users...
+          </p>
         </div>
       </div>
     );
@@ -136,16 +146,24 @@ const UsersTable = ({ users = [], loading, error }) => {
         <div className="w-full p-8 text-center bg-white border border-gray-200 shadow-lg rounded-2xl">
           <div className="flex flex-col items-center gap-4">
             <PawPrint size={48} className="text-[#ffc929]" />
-            <p className="text-lg font-semibold text-gray-700">No users match your filters</p>
-            <p className="text-sm text-gray-600">Adjust your search or filters to find users.</p>
+            <p className="text-lg font-semibold text-gray-700">
+              No users match your filters
+            </p>
+            <p className="text-sm text-gray-600">
+              Adjust your search or filters to find users.
+            </p>
           </div>
         </div>
       ) : safeUsers.length === 0 ? (
         <div className="w-full p-8 text-center bg-white border border-gray-200 shadow-lg rounded-2xl">
           <div className="flex flex-col items-center gap-4">
             <PawPrint size={48} className="text-[#ffc929]" />
-            <p className="text-lg font-semibold text-gray-700">No users found</p>
-            <p className="text-sm text-gray-600">Add a user to populate the table.</p>
+            <p className="text-lg font-semibold text-gray-700">
+              No users found
+            </p>
+            <p className="text-sm text-gray-600">
+              Add a user to populate the table.
+            </p>
           </div>
         </div>
       ) : (
@@ -156,7 +174,8 @@ const UsersTable = ({ users = [], loading, error }) => {
               <h2 className="text-xl font-bold text-gray-900">Users Table</h2>
             </div>
             <span className="text-sm text-gray-500">
-              {filteredUsers.length} {filteredUsers.length === 1 ? "user" : "users"}
+              {filteredUsers.length}{" "}
+              {filteredUsers.length === 1 ? "user" : "users"}
             </span>
           </div>
           <table className="w-full text-sm text-left">
@@ -176,7 +195,9 @@ const UsersTable = ({ users = [], loading, error }) => {
                   <td className="px-6 py-4 font-medium text-gray-800">
                     {user.fullName || "N/A"}
                   </td>
-                  <td className="px-6 py-4 text-gray-600">{user.email || "N/A"}</td>
+                  <td className="px-6 py-4 text-gray-600">
+                    {user.email || "N/A"}
+                  </td>
                   <td className="px-6 py-4">
                     <span
                       className={`inline-flex items-center px-3 py-1 text-sm font-semibold rounded-full shadow-sm transition-colors duration-200 ${
@@ -202,7 +223,8 @@ const UsersTable = ({ users = [], loading, error }) => {
             <div className="flex items-center justify-between p-4 border-t border-gray-200 bg-gray-50">
               <div className="text-sm text-gray-600">
                 Showing {indexOfFirstUser + 1}-
-                {Math.min(indexOfLastUser, filteredUsers.length)} of {filteredUsers.length}
+                {Math.min(indexOfLastUser, filteredUsers.length)} of{" "}
+                {filteredUsers.length}
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -215,8 +237,7 @@ const UsersTable = ({ users = [], loading, error }) => {
                   }`}
                   aria-label="First page"
                 >
-                  <ChevronLeft className="w-5 h-5" />
-                  <ChevronLeft className="w-5 h-5 -ml-3" />
+                  <ChevronsLeft className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
@@ -231,20 +252,22 @@ const UsersTable = ({ users = [], loading, error }) => {
                   <ChevronLeft className="w-5 h-5" />
                 </button>
                 <div className="flex items-center gap-1">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                    <button
-                      key={page}
-                      onClick={() => handlePageChange(page)}
-                      className={`w-8 h-8 rounded-full text-sm font-medium transition-all duration-200 ${
-                        currentPage === page
-                          ? "bg-[#ffc929] text-white shadow-md"
-                          : "text-gray-600 hover:bg-[#ffc929]/10 hover:scale-105"
-                      }`}
-                      aria-label={`Page ${page}`}
-                    >
-                      {page}
-                    </button>
-                  ))}
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (page) => (
+                      <button
+                        key={page}
+                        onClick={() => handlePageChange(page)}
+                        className={`w-8 h-8 rounded-full text-sm font-medium transition-all duration-200 ${
+                          currentPage === page
+                            ? "bg-[#ffc929] text-white shadow-md"
+                            : "text-gray-600 hover:bg-[#ffc929]/10 hover:scale-105"
+                        }`}
+                        aria-label={`Page ${page}`}
+                      >
+                        {page}
+                      </button>
+                    )
+                  )}
                 </div>
                 <button
                   onClick={() => handlePageChange(currentPage + 1)}
@@ -268,8 +291,7 @@ const UsersTable = ({ users = [], loading, error }) => {
                   }`}
                   aria-label="Last page"
                 >
-                  <ChevronRight className="w-5 h-5" />
-                  <ChevronRight className="w-5 h-5 -ml-3" />
+                  <ChevronsRight className="w-5 h-5" />
                 </button>
               </div>
             </div>

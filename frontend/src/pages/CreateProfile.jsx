@@ -30,7 +30,7 @@ const CreateProfile = () => {
       yearsOfPractice: "",
     },
   });
-  
+
   const [userRole, setUserRole] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
   const [uploadLoading, setUploadLoading] = useState(false);
@@ -156,11 +156,14 @@ const CreateProfile = () => {
         };
         validateForm("Vet", formData.veterinarianDetails);
       }
+      console.log("Before createProfile, user:", user);
 
       const result = await createProfile(profileDetails);
-      
+      console.log("After createProfile, result:", result, "user:", user);
+
       if (result.success) {
-        navigate(userRole === "PetOwner" ? "/" : `/${userRole.toLowerCase()}`);
+        console.log("Navigating with user:", user);
+        navigate(result.redirectTo, { replace: true }); // Use redirectTo from createProfile /Replace to avoid back-button issues
       }
     } catch (error) {
       clearError();

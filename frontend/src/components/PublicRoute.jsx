@@ -14,16 +14,15 @@ const PublicRoute = ({ children, restrictedRoles = [] }) => {
   if (user) {
     // Normalize role for comparison
     const normalizedRole = user.role === "Pet Owner" ? "PetOwner" : user.role;
-    if (normalizedRole !== "PetOwner") {
+    if (restrictedRoles.includes(normalizedRole)) {
       console.log(`PublicRoute: User role ${user.role} not allowed, redirecting`);
       return <Navigate to={{
         "Admin": "/admin",
         "Trainer": "/trainer",
-        "Vet": "/vet"
+        "Vet": "/vet",
+        "PetOwner": "/"
       }[normalizedRole] || "/login"} replace />;
     }
-    // PetOwner (raw or formatted) can stay
-    return children;
   }
 
   // Non-authenticated users can access

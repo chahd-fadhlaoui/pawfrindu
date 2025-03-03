@@ -25,7 +25,7 @@ import PetOwnerPosts from './pages/PetOwnerPosts';
 
 const Layout = ({ children }) => {
   const location = useLocation();
-  const { user } = useApp(); // Remove loading check here
+  const { user } = useApp(); 
 
   const isAdminPage = location.pathname.startsWith('/admin');
   const isTrainerPage = location.pathname.startsWith('/trainer');
@@ -40,11 +40,13 @@ const Layout = ({ children }) => {
     !isVetPage && 
     !isForbiddenPage;
 
-  // No loading check; let routes handle it
+ 
   return (
-    <div className='mx-4 sm:max-[10%]'>
+<div className="mx-4 sm:max-[10%]">
       {showHeaderFooter && <Header />}
-      {children}
+      <div className="transition-opacity duration-300 ease-in-out">
+        {children}
+      </div>
       {showHeaderFooter && <Footer />}
     </div>
   );

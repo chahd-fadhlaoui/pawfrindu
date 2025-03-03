@@ -133,7 +133,8 @@ const createProfile = async (req, res) => {
     res.json({
       message: "Profile completed successfully!",
       accessToken,
-      profileImage: user.image, // Send back the saved image URL
+      user,
+      // profileImage: user.image, // Send back the saved image URL
     });
   } catch (error) {
     console.error("Profile Completion Error:", error);
