@@ -729,7 +729,7 @@ export const getPetCandidates = async (req, res) => {
 export const updateCandidateStatus = async (req, res) => {
   try {
     const { petId, candidateId } = req.params;
-    const { status } = req.body; // "approved", "rejected", ou "pending"
+    const { status } = req.body; // "approved" ou "rejected"
 
     console.log("Updating candidate status:", { petId, candidateId, status });
 
@@ -751,59 +751,41 @@ export const updateCandidateStatus = async (req, res) => {
     console.log("Candidate index:", candidateIndex);
     if (candidateIndex === -1) {
       console.log("Candidate not found:", candidateId);
-      return res
-        .status(404)
-        .json({ success: false, message: "Candidate not found" });
+      return res.status(404).json({ success: false, message: "Candidate not found" });
     }
 
     const currentStatus = pet.candidates[candidateIndex].status;
     console.log("Current candidate status:", currentStatus);
 
     if (status === "approved") {
-      const hasApproved = pet.candidates.some(
-        (c) => c.status === "approved" && c.user.toString() !== candidateId
-      );
-      if (hasApproved) {
-        console.log("Conflict: Another candidate is already approved");
-        return res.status(400).json({
-          success: false,
-          message: "Only one candidate can be approved at a time",
-        });
-      }
+      // Rejeter automatiquement tous les autres candidats de manière définitive
+      pet.candidates.forEach((candidate, index) => {
+        if (index !== candidateIndex && candidate.status !== "rejected") {
+          candidate.status = "rejected";
+          console.log(`Auto-rejecting candidate ${candidate.user.toString()}`);
+        }
+      });
       pet.candidates[candidateIndex].status = "approved";
       pet.status = "adoptionPending";
     } else if (status === "rejected") {
       pet.candidates[candidateIndex].status = "rejected";
-      if (currentStatus === "approved") {
-        const stillApproved = pet.candidates.some(
-          (c) => c.status === "approved"
-        );
-        if (!stillApproved && pet.status === "adoptionPending") {
-          pet.status = "accepted";
-        }
-      }
-    } else if (status === "pending") {
-      pet.candidates[candidateIndex].status = "pending";
-      if (currentStatus === "approved") {
-        const stillApproved = pet.candidates.some(
-          (c) => c.status === "approved"
-        );
-        if (!stillApproved && pet.status === "adoptionPending") {
-          pet.status = "accepted";
-        }
+      
+      // Vérifier si c'était le seul candidat approuvé
+      const approvedCandidates = pet.candidates.filter(c => c.status === "approved");
+      
+      // Si le candidat rejeté était auparavant approuvé et qu'il n'y a plus de candidats approuvés,
+      // remettre le statut de l'animal à "accepted"
+      if (currentStatus === "approved" && approvedCandidates.length === 0) {
+        pet.status = "accepted";
+        console.log("Pet status reverted to accepted due to rejection of approved candidate");
       }
     } else {
       console.log("Invalid status received:", status);
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid status" });
+      return res.status(400).json({ success: false, message: "Invalid status" });
     }
 
     await pet.save();
-    console.log(
-      "Candidate updated successfully:",
-      pet.candidates[candidateIndex]
-    );
+    console.log("Candidate updated successfully:", pet.candidates[candidateIndex]);
     return res.status(200).json({
       success: true,
       message: `Candidate updated to ${status} successfully`,
@@ -818,11 +800,10 @@ export const updateCandidateStatus = async (req, res) => {
     });
   }
 };
-
 export const finalizeAdoption = async (req, res) => {
   try {
     const { petId, candidateId } = req.params;
-    const { action } = req.body; // "adopt" ou "reject"
+    const { action } = req.body;
 
     console.log("Finalizing adoption:", { petId, candidateId, action });
 
@@ -832,42 +813,39 @@ export const finalizeAdoption = async (req, res) => {
       return res.status(404).json({ success: false, message: "Pet not found" });
     }
 
-    console.log("Pet owner:", pet.owner.toString(), "User:", req.user?._id);
     if (pet.owner.toString() !== req.user._id.toString()) {
       console.log("Unauthorized access attempt by:", req.user?._id);
       return res.status(403).json({ success: false, message: "Unauthorized" });
     }
 
     const candidateIndex = pet.candidates.findIndex(
-      (c) => c.user.toString() === candidateId && c.status === "approved"
+      (c) => c.user.toString() === candidateId
     );
-    console.log("Candidate index:", candidateIndex);
     if (candidateIndex === -1) {
-      console.log("No approved candidate found for:", candidateId);
+      console.log("Candidate not found:", candidateId);
       return res.status(400).json({
         success: false,
-        message: "No approved candidate found for this action",
+        message: "Candidate not found",
       });
     }
 
     if (action === "adopt") {
       pet.status = "adopted";
-      pet.candidates[candidateIndex].status = "approved"; // Conserver pour historique
-      // Rejeter automatiquement les autres candidats
+      pet.candidates[candidateIndex].status = "approved";
       pet.candidates.forEach((candidate, index) => {
         if (index !== candidateIndex && candidate.status !== "rejected") {
           candidate.status = "rejected";
+          console.log(`Auto-rejecting candidate ${candidate.user.toString()} during adoption`);
         }
       });
     } else if (action === "reject") {
       pet.candidates[candidateIndex].status = "rejected";
       const stillApproved = pet.candidates.some((c) => c.status === "approved");
       pet.status = stillApproved ? "adoptionPending" : "accepted";
+      console.log("Pet status after rejection:", pet.status);
     } else {
       console.log("Invalid action received:", action);
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid action" });
+      return res.status(400).json({ success: false, message: "Invalid action" });
     }
 
     await pet.save();
@@ -877,9 +855,7 @@ export const finalizeAdoption = async (req, res) => {
     });
     return res.status(200).json({
       success: true,
-      message: `Adoption ${
-        action === "adopt" ? "finalized" : "rejected"
-      } successfully`,
+      message: `Adoption ${action === "adopt" ? "finalized" : "rejected"} successfully`,
       data: pet,
     });
   } catch (error) {
