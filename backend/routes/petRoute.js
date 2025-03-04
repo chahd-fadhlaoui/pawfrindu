@@ -16,6 +16,7 @@ import {
   updateCandidateStatus,
   finalizeAdoption,
   applyToAdopt,
+  getMyAdoptionRequests,
 } from '../controllers/petController.js'
 import { authenticate, authorize } from '../middlewares/authMiddleware.js'
 import { verifyToken } from "../controllers/userController.js";
@@ -36,7 +37,7 @@ petRouter.use(authenticate);  // Appliquer le middleware d'authentification à t
 petRouter.post('/addpet', authorize('PetOwner'), createPet);  // Vérifier que l'utilisateur est un PetOwner avant de créer un pet
 petRouter.get('/mypets', getMyPets);  // Récupérer les pets de l'utilisateur connecté
 petRouter.put('/updatedPet/:id', updatePet);  // Mettre à jour un pet
-petRouter.delete('/deletePet/:id', verifyToken, deletePet); // Supprimer un pet
+petRouter.delete("/deletePet/:id", deletePet);// Supprimer un pet
 petRouter.get('/:petId/candidates', getPetCandidates); // Nouvelle route pour les candidats
 petRouter.put('/:petId/candidate/:candidateId/status', updateCandidateStatus);
 petRouter.put('/:petId/candidate/:candidateId/finalize', finalizeAdoption); 
@@ -44,6 +45,8 @@ petRouter.put('/:petId/candidate/:candidateId/finalize', finalizeAdoption);
 petRouter.post('/:petId/apply', applyToAdopt);  // Postuler pour adopter un pet
 
 petRouter.post('/:petId/approve-adoption/:adopterId', approveAdoption);  // Approuver une adoption
+
+petRouter.get("/my-adoption-requests", getMyAdoptionRequests); // Adoption requests for Adopters 
 
 // Routes pour l'admin
 petRouter.use(authorize('Admin'));  // Appliquer le middleware d'autorisation pour les routes suivantes

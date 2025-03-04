@@ -14,31 +14,32 @@ function Header() {
   const dropdownRef = useRef(null);
   const DEFAULT_PROFILE_IMAGE =
     "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSIxMDAiIGZpbGw9IiNFNUU3RUIiLz4KICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSI4MCIgcj0iNDAiIGZpbGw9IiM5Q0EzQUYiLz4KICA8cGF0aCBkPSJNMTYwIDE4MEgzOUM0MSAxNDAgODAgMTIwIDEwMCAxMjBDMTIwIDEyMCAxNTggMTQwIDE2MCAxODBaIiBmaWxsPSIjOUNBM0FGIi8+Cjwvc3ZnPg==";
+
   const navLinks = [
     {
-      name: "Adopt A Pet",
+      name: "Adopt a Pet",
       to: "/pets",
       ariaLabel: "Go to pet adoption section",
     },
     {
-      name: "Lost Your Pet?",
+      name: "Lost & Found",
       to: "/lost",
       ariaLabel: "Get help finding a lost pet",
     },
     {
-      name: "Train Your Pet",
+      name: "Pet Training",
       to: "/training",
       ariaLabel: "Access pet training resources",
     },
     {
-      name: "Veterinary",
+      name: "Veterinary Care",
       to: "/veterinary",
       ariaLabel: "Find veterinary services",
     },
     {
-      name: "Add a friend",
-      to: "/addPet",
-      ariaLabel: "Add a new pet",
+      name: "Pet Management",
+      to: "/list",
+      ariaLabel: "Manage my pets and adoption requests",
       protected: true,
     },
   ];
@@ -81,7 +82,7 @@ function Header() {
       return (
         <div className="flex gap-4">
           <button
-            className="px-6 py-2.5 text-white font-semibold bg-gradient-to-r from-[#ffc929] to-[#ffa726] rounded-xl shadow-md hover:from-[#ffa726] hover:to-[#ffc929] transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/30"
+            className="px-6 py-2.5 text-white font-semibold bg-gradient-to-r from-[#ffc929] to-[#ffa726] rounded-xl shadow-md hover:from-[#ffa726] hover:to-[#ffc929] transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/50"
             onClick={() => navigate("/login")}
           >
             Login
@@ -97,14 +98,14 @@ function Header() {
     return (
       <div className="relative flex items-center gap-2" ref={dropdownRef}>
         <button
-          className="flex items-center gap-3 px-3 py-2 rounded-full transition-all duration-300 hover:bg-[#ffc929]/10 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/30"
+          className="flex items-center gap-2 p-2 rounded-full transition-all duration-300 hover:bg-[#ffc929]/10 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/50"
           onClick={() => setDropdownOpen(!dropdownOpen)}
           aria-expanded={dropdownOpen}
           aria-label="User menu"
         >
-          <div className="relative w-10 h-10 overflow-hidden rounded-full border-2 border-[#ffc929]/20">
+          <div className="relative w-10 h-10 overflow-hidden rounded-full border-2 border-[#ffc929]/30 shadow-inner">
             <img
-              className="object-cover w-full h-full"
+              className="object-cover w-full h-full transition-transform duration-300 hover:scale-105"
               src={imageSrc || DEFAULT_PROFILE_IMAGE}
               alt={user.fullName || "User"}
               key={user?.id || user?.email || "default"}
@@ -113,11 +114,11 @@ function Header() {
               }}
             />
           </div>
-          <span className="hidden font-medium text-gray-800 md:block">
+          <span className="hidden font-medium text-gray-800 md:inline-block">
             {user.fullName}
           </span>
           <ChevronDown
-            className={`w-5 h-5 text-gray-600 transition-transform duration-300 ${
+            className={`w-4 h-4 text-gray-600 transition-transform duration-300 ${
               dropdownOpen ? "rotate-180" : ""
             }`}
           />
@@ -125,30 +126,29 @@ function Header() {
 
         {dropdownOpen && (
           <div className="absolute right-0 z-20 w-48 mt-2 overflow-hidden bg-white rounded-xl shadow-lg border border-[#ffc929]/20 top-full">
-            <div className="py-1">
+            <div className="py-2">
               <button
                 onClick={() => {
                   navigate("/profile");
                   setDropdownOpen(false);
                 }}
-                className="flex w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-[#ffc929]/5 hover:text-gray-900 transition-all duration-300"
+                className="flex w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-[#ffc929]/10 hover:text-[#ffc929] transition-all duration-300"
               >
                 My Profile
               </button>
-              {user.role === "PetOwner" && (
-                <button
-                  onClick={() => {
-                    navigate("/list");
-                    setDropdownOpen(false);
-                  }}
-                  className="flex w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-[#ffc929]/5 hover:text-gray-900 transition-all duration-300"
-                >
-                  My Pets for Adoption
-                </button>
-              )}
+              <button
+                onClick={() => {
+                  navigate("/list");
+                  setDropdownOpen(false);
+                }}
+                className="flex w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-[#ffc929]/10 hover:text-[#ffc929] transition-all duration-300"
+              >
+                Pet Management
+              </button>
               <button
                 onClick={handleLogout}
                 className="flex w-full px-4 py-2 text-sm text-left text-red-600 transition-all duration-300 hover:bg-red-50 hover:text-red-700"
+                aria-label="Logout"
               >
                 Logout
               </button>
@@ -196,11 +196,11 @@ function Header() {
           </ul>
         </nav>
 
-        <div className="hidden lg:block">{authSection}</div>
+        <div className="items-center hidden lg:flex">{authSection}</div>
 
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="p-2 text-gray-600 transition-all duration-300 rounded-full hover:bg-[#ffc929]/10 hover:text-[#ffc929] lg:hidden focus:outline-none focus:ring-2 focus:ring-[#ffc929]/30"
+          className="p-2 text-gray-600 transition-all duration-300 rounded-full hover:bg-[#ffc929]/10 hover:text-[#ffc929] lg:hidden focus:outline-none focus:ring-2 focus:ring-[#ffc929]/50"
           aria-expanded={mobileMenuOpen}
           aria-label="Toggle menu"
         >
@@ -209,15 +209,15 @@ function Header() {
 
         {mobileMenuOpen && (
           <div className="absolute left-0 right-0 z-20 bg-white shadow-lg border-t border-[#ffc929]/20 top-full">
-            <nav className="px-4 py-3">
-              <ul className="space-y-1">
+            <nav className="px-4 py-4 space-y-3">
+              <ul className="space-y-2">
                 {navLinks.map(
                   (link) =>
                     (!link.protected || user) && (
                       <li key={link.to}>
                         <Link
                           to={link.to}
-                          className={`block py-2 px-3 rounded-xl text-gray-800 hover:bg-[#ffc929]/10 hover:text-[#ffc929] transition-all duration-300
+                          className={`block py-2.5 px-4 rounded-xl text-gray-800 hover:bg-[#ffc929]/10 hover:text-[#ffc929] transition-all duration-300
                           ${
                             location.pathname === link.to
                               ? "bg-[#ffc929]/10 text-[#ffc929]"
@@ -230,10 +230,10 @@ function Header() {
                       </li>
                     )
                 )}
-                <li className="pt-4 mt-4 border-t border-[#ffc929]/20">
-                  <div className="flex flex-col space-y-2">{authSection}</div>
-                </li>
               </ul>
+              <div className="pt-3 border-t border-[#ffc929]/20">
+                <div className="flex flex-col px-2 space-y-2">{authSection}</div>
+              </div>
             </nav>
           </div>
         )}

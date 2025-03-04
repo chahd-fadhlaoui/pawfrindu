@@ -94,6 +94,7 @@ const AppContextProvider = ({ children }) => {
   const getMyPets = useCallback(async () => {
     return measureTime("getMyPets", async () => {
       const response = await axiosInstance.get("/api/pet/mypets");
+      console.log("getMyPets response:", response.data); // Debug
       const userPetsData = response.data.data || [];
       setUserPets(userPetsData);
       return { success: true, data: userPetsData };
@@ -141,6 +142,22 @@ const AppContextProvider = ({ children }) => {
       throw error;
     });
   }, []);
+
+// method for fetching adoption requests
+const getMyAdoptionRequests = useCallback(async () => {
+  return measureTime("getMyAdoptionRequests", async () => {
+    const token = localStorage.getItem("token");
+    console.log("Sending request to /my-adoption-requests with token:", token);
+    const response = await axiosInstance.get("/api/pet/my-adoption-requests");
+    console.log("Adoption requests response:", response.data);
+    const adoptionRequests = response.data.data || [];
+    return { success: true, data: adoptionRequests };
+  }).catch((error) => {
+    console.error("Error fetching adoption requests:", error.response?.data || error.message);
+    setError(error.response?.data?.message || "Failed to fetch adoption requests");
+    return { success: false, error: "Error fetching adoption requests", data: [] };
+  });
+}, [setError]);
 
   // Initialize app
   useEffect(() => {
@@ -424,6 +441,7 @@ const AppContextProvider = ({ children }) => {
       updateUser,
       fetchPets,
       getMyPets,
+      getMyAdoptionRequests,
       updatePet,
       deletePet,
       clearError,
