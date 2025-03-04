@@ -17,6 +17,7 @@ import {
   finalizeAdoption,
   applyToAdopt,
   getMyAdoptionRequests,
+  archivePet,
 } from '../controllers/petController.js'
 import { authenticate, authorize } from '../middlewares/authMiddleware.js'
 import { verifyToken } from "../controllers/userController.js";
@@ -52,6 +53,8 @@ petRouter.get("/my-adoption-requests", getMyAdoptionRequests); // Adoption reque
 petRouter.use(authorize('Admin'));  // Appliquer le middleware d'autorisation pour les routes suivantes
 petRouter.put('/modifyStatus/:id', modifyPetStatus);  // Récupérer un pet par ID
 petRouter.delete('/deleteAdminPet/:id', deleteAdminPet);  // Supprimer un pet
+petRouter.put('/archivePet/:id', archivePet);  // Nouvelle route pour archiver un pet
+
 petRouter.put('/unarchivePet/:id',unarchivePet); // Ajoutez cette route
 
 export default petRouter;

@@ -404,58 +404,80 @@ export const applyToAdopt = async (req, res) => {
     });
   }
 };
+
+
+
 // Delete pet
 export const deleteAdminPet = async (req, res) => {
   try {
     const { id } = req.params;
 
+    // Chercher le pet directement sans validation explicite de l'ID
     const pet = await Pet.findById(id);
-
     if (!pet) {
-      return res.status(404).json({ success: false, message: "Pet not found" });
+      return res.status(404).json({ success: false, message: "Animal non trouvé" });
     }
 
-    /*  Vérifie si l'utilisateur est un admin
-    if (req.user.role !== 'Admin') {
-      return res.status(403).json({ success: false, message: 'Unauthorized: Admin access required' });
-    }
- */
-    // Suppression si status est "pending"
-    if (pet.status === "pending") {
-      await Pet.findByIdAndDelete(id);
-      return res
-        .status(200)
-        .json({ success: true, message: "Pet deleted successfully" });
-    }
-
-    // Archivage si status est "adopted" ou "sold"
-    if (pet.status === "adopted" || pet.status === "sold") {
-      pet.isArchived = true; // Correction : utilisation de "isArchived"
-      await pet.save();
-      return res
-        .status(200)
-        .json({ success: true, message: "Pet archived successfully" });
-    }
-
-    // Erreur explicite si status est "accepted"
-    if (pet.status === "accepted") {
+    // Autoriser la suppression uniquement pour "pending"
+    if (pet.status !== "accepted") {
       return res.status(403).json({
         success: false,
-        message: "Admin cannot delete an accepted pet",
+        message: "Seuls les animaux en status (accepted) peuvent être supprimés par un admin",
       });
     }
 
-    return res
-      .status(400)
-      .json({ success: false, message: "Invalid action for this pet status" });
+    // Supprimer le pet
+    await Pet.findByIdAndDelete(id);
+    return res.status(200).json({ success: true, message: "Animal supprimé avec succès" });
   } catch (error) {
+    console.error("Erreur dans deleteAdminPet :", error.message);
     return res.status(500).json({
       success: false,
-      message: "Error processing request",
+      message: "Erreur lors de la suppression",
       error: error.message,
     });
   }
 };
+
+export const archivePet = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Chercher le pet directement sans validation explicite de l'ID
+    const pet = await Pet.findById(id);
+    if (!pet) {
+      return res.status(404).json({ success: false, message: "Animal non trouvé" });
+    }
+
+    // Vérifier si le pet est déjà archivé
+    if (pet.isArchived) {
+      return res.status(400).json({ success: false, message: "Cet animal est déjà archivé" });
+    }
+
+    // Vérifier si le statut permet l'archivage
+    if (pet.status !== "adopted" && pet.status !== "sold") {
+      return res.status(400).json({
+        success: false,
+        message: "Seuls les animaux adoptés ou vendus peuvent être archivés",
+      });
+    }
+
+    // Archiver le pet
+    pet.isArchived = true;
+    await pet.save();
+
+    return res.status(200).json({ success: true, message: "Animal archivé avec succès" });
+  } catch (error) {
+    console.error("Erreur dans archivePet :", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Erreur lors de l'archivage",
+      error: error.message,
+    });
+  }
+};
+
+
 // Get pets by owner (my pets)
 export const getMyPets = async (req, res) => {
   try {
@@ -658,8 +680,7 @@ export const getPetCandidates = async (req, res) => {
     console.log("Candidates raw data:", pet.candidates);
     console.log("Pet owner ID:", pet.owner.toString());
     console.log("Request user ID:", req.user?._id);
-    if (!req.user || pet.owner.toString() !== req.user._id.toString()) {
-      console.log("Unauthorized access attempt by:", req.user?._id);
+    if (!req.user || (pet.owner.toString() !== req.user._id.toString() && req.user.role !== "Admin")) {      console.log("Unauthorized access attempt by:", req.user?._id);
       return res.status(403).json({
         success: false,
         message: "Unauthorized: Only the owner can view candidates",

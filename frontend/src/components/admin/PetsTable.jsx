@@ -2,16 +2,20 @@ import {
   AlertCircle,
   Archive,
   Check,
+  CheckCircle,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
   Clock,
+  Clock1,
+  Eye,
   Filter,
   Heart,
   Loader2,
   PawPrint,
   X,
+  XCircle,
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { useApp } from "../../context/AppContext";
@@ -24,6 +28,7 @@ const PetsTable = ({ onPetChange }) => {
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState(null);
   const [filteredPets, setFilteredPets] = useState([]);
+  const [selectedPet, setSelectedPet] = useState(null);
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
     action: "",
@@ -34,6 +39,186 @@ const PetsTable = ({ onPetChange }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const petsPerPage = 5;
+
+const PetDetailsModal = ({ pet, onClose, actionLoading }) => {
+  const [candidates, setCandidates] = useState([]);
+  const [fetchingCandidates, setFetchingCandidates] = useState(false);
+  const [candidatesError, setCandidatesError] = useState(null);
+
+  // Fetch candidates for all statuses
+  useEffect(() => {
+    const fetchCandidates = async () => {
+      if (pet._id) {
+        setFetchingCandidates(true);
+        setCandidatesError(null); // Réinitialiser l'erreur avant chaque appel
+        try {
+          const response = await axiosInstance.get(`/api/pet/${pet._id}/candidates`);
+          if (response.data.success) {
+            setCandidates(response.data.data);
+          } else {
+            setCandidatesError("Failed to fetch candidates");
+          }
+        } catch (err) {
+          if (err.response?.status === 403) {
+            setCandidatesError("You are not authorized to view candidates for this pet.");
+          } else {
+            setCandidatesError(err.response?.data?.message || "Error fetching candidates");
+          }
+        } finally {
+          setFetchingCandidates(false);
+        }
+      }
+    };
+    fetchCandidates();
+  }, [pet._id]);
+
+  const getCandidateStatusIcon = (status) => {
+    switch (status) {
+      case "approved":
+        return <CheckCircle className="w-4 h-4 text-green-500 mr-1" />;
+      case "rejected":
+        return <XCircle className="w-4 h-4 text-red-500 mr-1" />;
+      case "pending":
+      default:
+        return <Clock1 className="w-4 h-4 text-orange-500 mr-1" />;
+    }
+  };
+
+  // Find approved candidate for "adopted" status
+  const approvedCandidate = pet.status === "adopted" && candidates.length > 0
+    ? candidates.find(candidate => candidate.status === "approved")
+    : null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 animate-fade-in">
+      <div className="relative w-full max-w-lg p-6 bg-white border border-gray-200 shadow-xl rounded-2xl max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="flex items-center gap-2 text-xl font-bold text-gray-900">
+            <Heart className="w-6 h-6 text-[#ffc929] animate-pulse" />
+            {pet.name || "Unnamed Pet"}
+          </h3>
+          <button
+            onClick={onClose}
+            className="p-1 text-gray-500 rounded-full hover:text-gray-700 hover:bg-gray-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/50"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Pet Image and Basic Info */}
+        <div className="flex flex-col items-center space-y-6">
+          <img
+            src={pet.image || "/api/placeholder/150/150"}
+            alt={pet.name || "Unnamed Pet"}
+            className="object-cover w-32 h-32 border border-gray-200 rounded-full shadow-sm"
+          />
+          <div className="w-full p-4 border border-gray-200 bg-gray-50 rounded-xl">
+            <h4 className="text-lg font-semibold text-gray-800 mb-4">Pet Details</h4>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-gray-700">
+              <p><span className="font-semibold text-gray-900">Owner:</span> {pet.owner?.fullName || "Unknown"}</p>
+              <p><span className="font-semibold text-gray-900">Breed:</span> {pet.breed || "-"}</p>
+              <p><span className="font-semibold text-gray-900">Age:</span> {pet.age || "N/A"}</p>
+              <p><span className="font-semibold text-gray-900">City:</span> {pet.city || "N/A"}</p>
+              <p><span className="font-semibold text-gray-900">Gender:</span> {pet.gender || "N/A"}</p>
+              <p><span className="font-semibold text-gray-900">Species:</span> {pet.species || "N/A"}</p>
+              <p><span className="font-semibold text-gray-900">Fee:</span> {pet.fee === 0 ? "Free" : `${pet.fee} DT`}</p>
+              <p><span className="font-semibold text-gray-900">Trained:</span> {pet.isTrained ? "Yes" : "No"}</p>
+              <p className="col-span-2">
+                <span className="font-semibold text-gray-900">Status:</span> 
+                <span className={`ml-2 ${pet.isArchived ? "text-gray-600" : "text-[#ffc929]"}`}>
+                  {pet.isArchived ? "Archived" : pet.status}
+                </span>
+              </p>
+            </div>
+            <div className="mt-4">
+              <p className="font-semibold text-gray-900">Description:</p>
+              <p className="text-gray-600 text-sm">{pet.description || "No description available."}</p>
+            </div>
+          </div>
+
+          {/* Candidates Section */}
+          <div className="w-full p-4 border border-gray-200 bg-white rounded-xl shadow-sm">
+            <h4 className="text-lg font-semibold text-gray-800 mb-4">
+              {pet.status === "adopted" ? "Ownership Details" : "Adoption Candidates"}
+            </h4>
+            {fetchingCandidates ? (
+              <div className="flex justify-center items-center py-4">
+                <Loader2 className="w-6 h-6 text-[#ffc929] animate-spin" />
+                <span className="ml-2 text-gray-600 text-sm">Loading candidates...</span>
+              </div>
+            ) : candidatesError ? (
+              <p className="text-red-600 text-sm py-2">{candidatesError}</p>
+            ) : candidates.length === 0 ? (
+              <p className="text-gray-500 text-sm italic py-2">
+                {pet.status === "adopted" 
+                  ? "No approved candidate found." 
+                  : "No candidates have applied yet."}
+              </p>
+            ) : pet.status === "adopted" ? (
+              <div className="space-y-4 text-gray-700">
+                <p className="flex items-center gap-2">
+                  <span className="font-semibold text-gray-900">Previous Owner:</span>
+                  <span>{pet.owner?.fullName || "Unknown"}</span>
+                </p>
+                <p className="flex items-center gap-2">
+                  <span className="font-semibold text-gray-900">New Owner:</span>
+                  {approvedCandidate ? (
+                    <span className="text-green-600 font-medium">{approvedCandidate.name || "Unknown"}</span>
+                  ) : (
+                    <span className="text-gray-500 italic">No approved candidate found</span>
+                  )}
+                </p>
+              </div>
+            ) : (
+              <ul className="space-y-3">
+                {candidates.map((candidate) => (
+                  <li
+                    key={candidate.id}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-md border border-gray-100 shadow-sm"
+                  >
+                    <div className="flex items-center gap-2">
+                      {getCandidateStatusIcon(candidate.status)}
+                      <div>
+                        <span className="text-gray-800 text-sm font-medium">
+                          {candidate.name}
+                        </span>
+                        <span className="text-gray-500 text-xs block">
+                          ({candidate.email})
+                        </span>
+                      </div>
+                    </div>
+                    <span
+                      className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                        candidate.status === "approved"
+                          ? "bg-green-100 text-green-700"
+                          : candidate.status === "rejected"
+                          ? "bg-red-100 text-red-700"
+                          : "bg-orange-100 text-orange-700"
+                      }`}
+                    >
+                      {candidate.status.charAt(0).toUpperCase() + candidate.status.slice(1)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex justify-end gap-4 mt-6">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/50"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
   // Filter states
   const [sortByDate, setSortByDate] = useState("desc");
@@ -52,7 +237,9 @@ const PetsTable = ({ onPetChange }) => {
   // Filter Select Component
   const FilterSelect = ({ label, value, onChange, options }) => (
     <div className="relative w-full">
-      <label className="block mb-1 text-xs font-medium text-gray-700">{label}</label>
+      <label className="block mb-1 text-xs font-medium text-gray-700">
+        {label}
+      </label>
       <select
         className="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-[#ffc929] focus:border-[#ffc929] transition-all duration-200 text-gray-800"
         value={value}
@@ -76,7 +263,7 @@ const PetsTable = ({ onPetChange }) => {
     { value: "adoptionPending", label: "Adoption Pending" },
     { value: "adopted", label: "Adopted" },
     { value: "sold", label: "Sold" },
-    { value: "archived", label: "Archived" }, // Added to match schema capability
+    { value: "archived", label: "Archived" },
   ];
   const sortOptions = [
     { value: "desc", label: "Newest First" },
@@ -122,7 +309,7 @@ const PetsTable = ({ onPetChange }) => {
   // Apply filters and search
   useEffect(() => {
     const applyFilters = () => {
-      let filtered = [...pets]; // Include all pets initially
+      let filtered = [...pets];
 
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase().trim();
@@ -137,13 +324,15 @@ const PetsTable = ({ onPetChange }) => {
 
       filtered = filtered.filter((pet) => {
         const ageMatch =
-          !ageFilter || (pet.age || "").toLowerCase() === ageFilter.toLowerCase();
+          !ageFilter ||
+          (pet.age || "").toLowerCase() === ageFilter.toLowerCase();
 
-        // Handle status filter including archived
         const statusMatch =
           !statusFilter ||
           (statusFilter === "archived" && pet.isArchived) ||
-          (statusFilter !== "archived" && !pet.isArchived && pet.status === statusFilter);
+          (statusFilter !== "archived" &&
+            !pet.isArchived &&
+            pet.status === statusFilter);
 
         return (
           statusMatch &&
@@ -152,7 +341,8 @@ const PetsTable = ({ onPetChange }) => {
           (!cityFilter ||
             (pet.city || "").toLowerCase() === cityFilter.toLowerCase()) &&
           (!speciesFilter ||
-            (pet.species || "").toLowerCase() === speciesFilter.toLowerCase()) &&
+            (pet.species || "").toLowerCase() ===
+              speciesFilter.toLowerCase()) &&
           ageMatch &&
           (!genderFilter ||
             (pet.gender || "").toLowerCase() === genderFilter.toLowerCase()) &&
@@ -203,7 +393,13 @@ const PetsTable = ({ onPetChange }) => {
         { status: "accepted" }
       );
       if (response.data.success) {
-        triggerPetsRefresh();
+        // Mise à jour locale immédiate
+        setFilteredPets((prevPets) =>
+          prevPets.map((pet) =>
+            pet._id === petId ? { ...pet, status: "accepted" } : pet
+          )
+        );
+        triggerPetsRefresh(); // Synchroniser avec le contexte
         onPetChange();
       } else {
         throw new Error(response.data.message || "Failed to accept pet");
@@ -214,7 +410,6 @@ const PetsTable = ({ onPetChange }) => {
       setActionLoading(false);
     }
   };
-
   const handleReject = async (petId) => {
     try {
       setActionLoading(true);
@@ -223,7 +418,11 @@ const PetsTable = ({ onPetChange }) => {
         `/api/pet/deleteAdminPet/${petId}`
       );
       if (response.data.success) {
-        triggerPetsRefresh();
+        // Suppression locale immédiate
+        setFilteredPets((prevPets) =>
+          prevPets.filter((pet) => pet._id !== petId)
+        );
+        triggerPetsRefresh(); // Synchroniser avec le contexte
         onPetChange();
       } else {
         throw new Error(response.data.message || "Failed to process pet");
@@ -239,20 +438,31 @@ const PetsTable = ({ onPetChange }) => {
     try {
       setActionLoading(true);
       setActionError(null);
-      const response = await axiosInstance.delete(
-        `/api/pet/deleteAdminPet/${petId}`
-      ); // Old version’s archive logic
+      const response = await axiosInstance.put(`/api/pet/archivePet/${petId}`);
       if (response.data.success) {
-        triggerPetsRefresh();
+        // Mise à jour locale immédiate
+        setFilteredPets((prevPets) =>
+          prevPets.map((pet) =>
+            pet._id === petId ? { ...pet, isArchived: true } : pet
+          )
+        );
+        triggerPetsRefresh(); // Synchroniser avec le contexte
         onPetChange();
       } else {
-        throw new Error(response.data.message || "Failed to archive pet");
+        throw new Error(
+          response.data.message || "Échec de l'archivage de l'animal"
+        );
       }
     } catch (err) {
-      setActionError(err.response?.data?.message || "Failed to archive pet");
+      setActionError(
+        err.response?.data?.message || "Échec de l'archivage de l'animal"
+      );
     } finally {
       setActionLoading(false);
     }
+  };
+  const handleViewInfo = (pet) => {
+    setSelectedPet(pet);
   };
 
   const openConfirmModal = (action, petId, petName) => {
@@ -363,7 +573,9 @@ const PetsTable = ({ onPetChange }) => {
         <div className="flex items-center justify-center p-12 bg-white border border-gray-200 shadow-sm rounded-xl">
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="w-10 h-10 text-[#ffc929] animate-spin" />
-            <p className="text-base font-medium text-gray-600">Loading Pets...</p>
+            <p className="text-base font-medium text-gray-600">
+              Loading Pets...
+            </p>
           </div>
         </div>
       );
@@ -495,7 +707,8 @@ const PetsTable = ({ onPetChange }) => {
                 </h2>
               </div>
               <span className="text-sm text-gray-500">
-                {filteredPets.length} {filteredPets.length === 1 ? "pet" : "pets"}
+                {filteredPets.length}{" "}
+                {filteredPets.length === 1 ? "pet" : "pets"}
               </span>
             </div>
             <div className="overflow-x-auto">
@@ -527,8 +740,13 @@ const PetsTable = ({ onPetChange }) => {
                       pet.status,
                       pet.isArchived
                     );
-                    const isAccepted = pet.status === "accepted";
-                    const canArchive = pet.status === "adopted" || pet.status === "sold";
+                    const canAccept =
+                      pet.status === "pending" && !pet.isArchived;
+                    const canDelete =
+                      pet.status === "accepted" && !pet.isArchived; // Only "accepted" allows "Delete"
+                    const canArchive =
+                      (pet.status === "adopted" || pet.status === "sold") &&
+                      !pet.isArchived;
                     return (
                       <tr
                         key={pet._id}
@@ -585,16 +803,14 @@ const PetsTable = ({ onPetChange }) => {
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
-                            {!canArchive && (
+                            {canAccept && (
                               <button
                                 onClick={() =>
                                   openConfirmModal("accept", pet._id, pet.name)
                                 }
-                                disabled={
-                                  actionLoading || isAccepted || pet.isArchived
-                                }
+                                disabled={actionLoading}
                                 className={`p-1.5 rounded-md transition-all duration-200 ${
-                                  actionLoading || isAccepted || pet.isArchived
+                                  actionLoading
                                     ? "text-gray-400 cursor-not-allowed"
                                     : "text-green-600 hover:bg-green-100 hover:text-green-700"
                                 }`}
@@ -604,41 +820,48 @@ const PetsTable = ({ onPetChange }) => {
                                 <Check className="w-4 h-4" />
                               </button>
                             )}
-                            {!isAccepted && (
-                              canArchive ? (
-                                <button
-                                  onClick={() =>
-                                    openConfirmModal("archive", pet._id, pet.name)
-                                  }
-                                  disabled={actionLoading || pet.isArchived}
-                                  className={`p-1.5 rounded-md transition-all duration-200 ${
-                                    actionLoading || pet.isArchived
-                                      ? "text-gray-400 cursor-not-allowed"
-                                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-700"
-                                  }`}
-                                  title="Archive Pet"
-                                  aria-label="Archive Pet"
-                                >
-                                  <Archive className="w-4 h-4" />
-                                </button>
-                              ) : (
-                                <button
-                                  onClick={() =>
-                                    openConfirmModal("delete", pet._id, pet.name)
-                                  }
-                                  disabled={actionLoading || pet.isArchived}
-                                  className={`p-1.5 rounded-md transition-all duration-200 ${
-                                    actionLoading || pet.isArchived
-                                      ? "text-gray-400 cursor-not-allowed"
-                                      : "text-red-600 hover:bg-red-100 hover:text-red-700"
-                                  }`}
-                                  title="Delete Pet"
-                                  aria-label="Delete Pet"
-                                >
-                                  <X className="w-4 h-4" />
-                                </button>
-                              )
+                            {canDelete && (
+                              <button
+                                onClick={() =>
+                                  openConfirmModal("delete", pet._id, pet.name)
+                                }
+                                disabled={actionLoading}
+                                className={`p-1.5 rounded-md transition-all duration-200 ${
+                                  actionLoading
+                                    ? "text-gray-400 cursor-not-allowed"
+                                    : "text-red-600 hover:bg-red-100 hover:text-red-700"
+                                }`}
+                                title="Delete Pet"
+                                aria-label="Delete Pet"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
                             )}
+                            {canArchive && (
+                              <button
+                                onClick={() =>
+                                  openConfirmModal("archive", pet._id, pet.name)
+                                }
+                                disabled={actionLoading}
+                                className={`p-1.5 rounded-md transition-all duration-200 ${
+                                  actionLoading
+                                    ? "text-gray-400 cursor-not-allowed"
+                                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-700"
+                                }`}
+                                title="Archive Pet"
+                                aria-label="Archive Pet"
+                              >
+                                <Archive className="w-4 h-4" />
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleViewInfo(pet)}
+                              className="p-1.5 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-700 transition-all duration-200"
+                              title="View Pet Info"
+                              aria-label="View Pet Info"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -724,6 +947,13 @@ const PetsTable = ({ onPetChange }) => {
         </div>
       )}
       {renderContent()}
+      {selectedPet && (
+      <PetDetailsModal
+        pet={selectedPet}
+        onClose={() => setSelectedPet(null)}
+        actionLoading={actionLoading}
+      />
+    )}
       <ConfirmationModal
         isOpen={confirmModal.isOpen}
         onClose={closeConfirmModal}
