@@ -1,5 +1,3 @@
-import React, { useState, useEffect } from "react";
-import ImageUpload from "../components/ImageUpload";
 import {
   ArrowLeft,
   Calendar,
@@ -9,6 +7,8 @@ import {
   Star,
   Zap,
 } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import ImageUpload from "../components/ImageUpload";
 
 // Breed lists
 const dogBreeds = [

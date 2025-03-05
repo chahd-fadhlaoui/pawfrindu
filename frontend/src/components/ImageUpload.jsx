@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Upload, X, Camera, ImagePlus, Loader2 } from 'lucide-react';
+import { Camera, ImagePlus, Loader2, X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import axiosInstance from '../utils/axiosInstance';
 
 const ImageUpload = ({ 

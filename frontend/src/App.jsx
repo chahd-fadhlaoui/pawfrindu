@@ -8,6 +8,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
 import AppContextProvider, { useApp } from './context/AppContext';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminLoginPage from './pages/admin/AdminLoginPage';
 import Auth from './pages/Auth';
 import CandidatesPage from './pages/CandidatesPage';
 import CreatePet from './pages/CreatePet';
@@ -21,7 +22,6 @@ import Profile from './pages/Profile';
 import TrainerDashboard from './pages/Trainer/TrainerDashboard';
 import { VetDashboard } from './pages/Vet/VetDashboard';
 import Veteriniandetail from './pages/Veteriniandetail';
-import AdminLoginPage from './pages/admin/AdminLoginPage ';
 
 const Layout = ({ children }) => {
   const location = useLocation();

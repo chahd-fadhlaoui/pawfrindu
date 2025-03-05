@@ -189,17 +189,6 @@ const Sidebar = ({ activeTab, setActiveTab, onCollapsedChange }) => {
             {!isCollapsed && <span className="ml-3 text-sm font-medium">Logout</span>}
           </button>
         </div>
-
-        {/* Playful Animation for PawPrint */}
-        <style jsx global>{`
-          .animate-bounce-subtle {
-            animation: bounce-subtle 2s infinite;
-          }
-          @keyframes bounce-subtle {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-4px); }
-          }
-        `}</style>
       </aside>
     </>
   );
