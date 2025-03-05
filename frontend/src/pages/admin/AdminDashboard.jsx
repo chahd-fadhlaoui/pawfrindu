@@ -1,20 +1,20 @@
 import React, { useEffect, useState } from "react";
 import Sidebar from "../../components/admin/Sidebar";
 import UsersTable from "../../components/admin/UsersTable";
-import PetsTable from "../../components/admin/PetsTable";
-import ArchivedPetsTable from "../../components/admin/ArchivedPetsTable";
+import PetsManagement from "../../components/admin/PetsManagement";
 import { useApp } from "../../context/AppContext";
 import axiosInstance from "../../utils/axiosInstance";
 
 const AdminDashboard = () => {
-  const { pets, fetchPets, triggerPetsRefresh } = useApp();
+  const { fetchPets, triggerPetsRefresh } = useApp();
   const [activeTab, setActiveTab] = useState("pets");
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
-    if (activeTab === "pets" || activeTab === "archived") {
+    if (activeTab === "pets") {
       fetchPets();
     }
   }, [activeTab, fetchPets]);
@@ -23,27 +23,15 @@ const AdminDashboard = () => {
     try {
       setLoading(true);
       setError(null);
-      console.log("Fetching users...");
       const response = await axiosInstance.get("/api/user/getAllUsers");
-      console.log("API Response:", response);
-      if (!response.data) {
-        throw new Error("No data received from API");
-      }
       const userData = Array.isArray(response.data)
         ? response.data
         : Array.isArray(response.data.users)
         ? response.data.users
         : [];
-      console.log("Processed users data:", userData);
       setUsers(userData);
     } catch (err) {
-      const errorMessage = err.response?.data?.message || err.message || "Unknown error";
-      setError("Failed to fetch users: " + errorMessage);
-      console.error("Error fetching users:", {
-        error: err,
-        response: err.response, // No trailing comma here
-        message: errorMessage // No trailing comma needed as last property
-      });
+      setError("Failed to fetch users: " + (err.response?.data?.message || err.message));
       setUsers([]);
     } finally {
       setLoading(false);
@@ -60,49 +48,49 @@ const AdminDashboard = () => {
     triggerPetsRefresh();
   };
 
-  return (
-    <div className="flex h-screen bg-gray-100">
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+  const handleCollapsedChange = (collapsed) => {
+    setIsSidebarCollapsed(collapsed);
+  };
 
-      <div className="flex-1 p-6 overflow-auto">
-        <div className="mx-auto space-y-6 max-w-7xl">
-          {/* Header */}
+  return (
+    <div className="flex min-h-screen bg-gray-100">
+      <Sidebar 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        onCollapsedChange={handleCollapsedChange} 
+      />
+      <main 
+        className={`
+          flex-1 p-6 overflow-auto transition-all duration-300
+          ${isSidebarCollapsed ? 'ml-16' : 'ml-64'}
+          w-full
+        `}
+      >
+        <div className="w-full mx-auto space-y-6 max-w-7xl">
           <div className="space-y-2">
             <h1 className="text-3xl font-bold text-gray-900">
-              {activeTab === "users"
-                ? "User Management"
-                : activeTab === "pets"
-                ? "Pet Management"
-                : "Archived Pets"}
+              {activeTab === "users" ? "User Management" : "Pet Management"}
             </h1>
             <p className="text-gray-600 text-md">
               {activeTab === "users"
                 ? "Manage platform users efficiently."
-                : activeTab === "pets"
-                ? "Oversee pet profiles awaiting adoption."
-                : "View and manage archived pet records."}
+                : "Oversee and manage all pet profiles."}
             </p>
           </div>
-
-          {/* Error Message */}
           {error && (
-            <div className="p-4 text-red-700 border-l-4 border-red-500 rounded-lg shadow-sm bg-red-50">
+            <div className="p-4 text-red-700 border-l-4 border-red-500 rounded-lg bg-red-50">
               {error}
             </div>
           )}
-
-          {/* Content Area */}
-          <div className="overflow-hidden bg-white border border-gray-200 shadow-md rounded-xl">
+          <div className="bg-white border border-gray-200 shadow-md rounded-xl">
             {activeTab === "users" ? (
               <UsersTable users={users} loading={loading} error={error} />
-            ) : activeTab === "pets" ? (
-              <PetsTable onPetChange={handlePetChange} />
             ) : (
-              <ArchivedPetsTable />
+              <PetsManagement onPetChange={handlePetChange} />
             )}
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 };

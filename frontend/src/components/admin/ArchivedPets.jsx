@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   AlertCircle,
   Archive,
@@ -7,24 +7,30 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Clock,
+  Edit,
   Eye,
   Filter,
   Heart,
   Loader2,
   PawPrint,
   RotateCcw,
+  Trash2,
   X,
 } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 import axiosInstance from "../../utils/axiosInstance";
 import ConfirmationModal from "../ConfirmationModal";
 import SearchBar from "../SearchBar";
+import EditForm from "../EditForm";
 
-const ArchivedPetsTable = () => {
-  const { pets, loading, error, triggerPetsRefresh } = useApp();
+const ArchivedPets = ({ onPetChange }) => {
+  const { user, pets, loading, error, triggerPetsRefresh } = useApp();
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState(null);
+  const [filteredPets, setFilteredPets] = useState([]);
   const [selectedPet, setSelectedPet] = useState(null);
+  const [editMode, setEditMode] = useState(false);
+  const [editFormData, setEditFormData] = useState(null);
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
     action: "",
@@ -34,7 +40,6 @@ const ArchivedPetsTable = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [filteredPets, setFilteredPets] = useState([]);
   const petsPerPage = 5;
 
   // Filter states
@@ -56,9 +61,7 @@ const ArchivedPetsTable = () => {
         aria-label={`Filter by ${label}`}
       >
         {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
+          <option key={option.value} value={option.value}>{option.label}</option>
         ))}
       </select>
     </div>
@@ -120,9 +123,7 @@ const ArchivedPetsTable = () => {
       }
 
       filtered = filtered.filter((pet) => {
-        const ageMatch =
-          !ageFilter || (pet.age || "").toLowerCase() === ageFilter.toLowerCase();
-
+        const ageMatch = !ageFilter || (pet.age || "").toLowerCase() === ageFilter.toLowerCase();
         return (
           (!statusFilter || pet.status === statusFilter) &&
           (!speciesFilter || (pet.species || "").toLowerCase() === speciesFilter.toLowerCase()) &&
@@ -139,6 +140,7 @@ const ArchivedPetsTable = () => {
       });
 
       setFilteredPets(filtered);
+      setCurrentPage(1);
     };
 
     applyFilters();
@@ -158,31 +160,108 @@ const ArchivedPetsTable = () => {
     try {
       setActionLoading(true);
       setActionError(null);
-
-      // Optimistic update: Remove pet from filteredPets (since it’s no longer archived)
-      setFilteredPets((prev) => prev.filter((pet) => pet._id !== petId));
-
+      setFilteredPets((prev) => prev.filter((pet) => pet._id !== petId)); // Optimistic update
       const response = await axiosInstance.put(`/api/pet/unarchivePet/${petId}`);
       if (response.data.success) {
-        triggerPetsRefresh(); // Sync with server in background
+        triggerPetsRefresh();
+        onPetChange();
         setSelectedPet(null);
       } else {
         throw new Error(response.data.message || "Failed to unarchive pet");
       }
     } catch (err) {
-      // Roll back on error: Restore the pet
       const originalPet = pets.find((p) => p._id === petId);
       if (originalPet) {
-        setFilteredPets((prev) => [...prev, originalPet].sort((a, b) => {
-          const dateA = new Date(a.updatedAt || a.createdAt || 0);
-          const dateB = new Date(b.updatedAt || b.createdAt || 0);
-          return sortByDate === "asc" ? dateA - dateB : dateB - dateA;
-        }));
+        setFilteredPets((prev) =>
+          [...prev, originalPet].sort((a, b) => {
+            const dateA = new Date(a.updatedAt || a.createdAt || 0);
+            const dateB = new Date(b.updatedAt || b.createdAt || 0);
+            return sortByDate === "asc" ? dateA - dateB : dateB - dateA;
+          })
+        );
       }
       setActionError(err.response?.data?.message || "Failed to unarchive pet");
     } finally {
       setActionLoading(false);
     }
+  };
+
+  const handleDelete = async (petId) => {
+    try {
+      setActionLoading(true);
+      setActionError(null);
+      setFilteredPets((prev) => prev.filter((pet) => pet._id !== petId)); // Optimistic update
+      const response = await axiosInstance.delete(`/api/pet/deleteAdminPet/${petId}`);
+      if (response.data.success) {
+        triggerPetsRefresh();
+        onPetChange();
+      } else {
+        throw new Error(response.data.message || "Failed to delete pet");
+      }
+    } catch (err) {
+      const originalPet = pets.find((p) => p._id === petId);
+      if (originalPet) {
+        setFilteredPets((prev) =>
+          [...prev, originalPet].sort((a, b) => {
+            const dateA = new Date(a.updatedAt || a.createdAt || 0);
+            const dateB = new Date(b.updatedAt || b.createdAt || 0);
+            return sortByDate === "asc" ? dateA - dateB : dateB - dateA;
+          })
+        );
+      }
+      setActionError(err.response?.data?.message || "Failed to delete pet");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleEdit = useCallback(
+    (petId, petName) => {
+      const pet = filteredPets.find((p) => p._id === petId);
+      if (pet && pet.owner?._id === user._id) {
+        setEditMode(true);
+        setSelectedPet(pet);
+        setEditFormData({
+          name: pet.name,
+          breed: pet.breed,
+          age: pet.age,
+          city: pet.city,
+          gender: pet.gender,
+          species: pet.species,
+          fee: pet.fee,
+          isTrained: pet.isTrained,
+          description: pet.description,
+          image: pet.image,
+        });
+      }
+    },
+    [filteredPets, user._id]
+  );
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      setActionLoading(true);
+      setActionError(null);
+      const response = await axiosInstance.put(`/api/pet/updatePet/${selectedPet._id}`, editFormData);
+      if (response.data.success) {
+        setFilteredPets((prev) =>
+          prev.map((pet) => (pet._id === selectedPet._id ? { ...pet, ...editFormData } : pet))
+        );
+        triggerPetsRefresh();
+        onPetChange();
+        setEditMode(false);
+        setSelectedPet(null);
+      }
+    } catch (err) {
+      setActionError(err.response?.data?.message || "Failed to update pet");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleInputChange = (field, value) => {
+    setEditFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleViewInfo = (pet) => {
@@ -199,8 +278,18 @@ const ArchivedPetsTable = () => {
 
   const confirmAction = () => {
     const { action, petId } = confirmModal;
-    if (action === "unarchive") {
-      handleUnarchive(petId);
+    switch (action) {
+      case "unarchive":
+        handleUnarchive(petId);
+        break;
+      case "delete":
+        handleDelete(petId);
+        break;
+      case "edit":
+        handleEdit(petId, confirmModal.petName);
+        break;
+      default:
+        break;
     }
     closeConfirmModal();
   };
@@ -255,7 +344,7 @@ const ArchivedPetsTable = () => {
           iconClass: "text-green-500",
           borderClass: "border-green-100",
         };
-      default: // pending
+      default:
         return {
           icon: Clock,
           text: "Pending",
@@ -267,7 +356,7 @@ const ArchivedPetsTable = () => {
     }
   };
 
-  const PetDetailsModal = ({ pet, onClose, onUnarchive, actionLoading }) => {
+  const PetDetailsModal = ({ pet, onClose, actionLoading }) => {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 animate-fade-in">
         <div className="relative w-full max-w-lg p-6 bg-white border border-gray-200 shadow-xl rounded-2xl max-h-[90vh] overflow-y-auto">
@@ -361,7 +450,6 @@ const ArchivedPetsTable = () => {
 
     return (
       <>
-        {/* Top Bar: Search and Filter Toggle */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <SearchBar
             value={searchQuery}
@@ -375,52 +463,19 @@ const ArchivedPetsTable = () => {
           >
             <Filter className="w-4 h-4" />
             {isFilterOpen ? "Hide Filters" : "Filters"}
-            {anyFilterApplied() && (
-              <span className="w-2 h-2 bg-[#ffc929] rounded-full" />
-            )}
+            {anyFilterApplied() && <span className="w-2 h-2 bg-[#ffc929] rounded-full" />}
           </button>
         </div>
 
-        {/* Filters Section */}
         {isFilterOpen && (
           <div className="p-4 transition-all duration-300 bg-white border border-gray-200 shadow-sm rounded-xl">
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-3">
-              <FilterSelect
-                label="Sort by Date"
-                value={sortByDate}
-                onChange={(e) => setSortByDate(e.target.value)}
-                options={sortOptions}
-              />
-              <FilterSelect
-                label="Status"
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                options={statusOptions}
-              />
-              <FilterSelect
-                label="Species"
-                value={speciesFilter}
-                onChange={(e) => setSpeciesFilter(e.target.value)}
-                options={speciesOptions}
-              />
-              <FilterSelect
-                label="Age"
-                value={ageFilter}
-                onChange={(e) => setAgeFilter(e.target.value)}
-                options={ageOptions}
-              />
-              <FilterSelect
-                label="Gender"
-                value={genderFilter}
-                onChange={(e) => setGenderFilter(e.target.value)}
-                options={genderOptions}
-              />
-              <FilterSelect
-                label="Trained"
-                value={trainedFilter}
-                onChange={(e) => setTrainedFilter(e.target.value)}
-                options={trainedOptions}
-              />
+              <FilterSelect label="Sort by Date" value={sortByDate} onChange={(e) => setSortByDate(e.target.value)} options={sortOptions} />
+              <FilterSelect label="Status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} options={statusOptions} />
+              <FilterSelect label="Species" value={speciesFilter} onChange={(e) => setSpeciesFilter(e.target.value)} options={speciesOptions} />
+              <FilterSelect label="Age" value={ageFilter} onChange={(e) => setAgeFilter(e.target.value)} options={ageOptions} />
+              <FilterSelect label="Gender" value={genderFilter} onChange={(e) => setGenderFilter(e.target.value)} options={genderOptions} />
+              <FilterSelect label="Trained" value={trainedFilter} onChange={(e) => setTrainedFilter(e.target.value)} options={trainedOptions} />
             </div>
             {anyFilterApplied() && (
               <button
@@ -433,17 +488,12 @@ const ArchivedPetsTable = () => {
           </div>
         )}
 
-        {/* Table or Empty State */}
         {filteredPets.length === 0 ? (
           <div className="flex items-center justify-center p-12 bg-white border border-gray-200 shadow-sm rounded-xl">
             <div className="flex flex-col items-center gap-4">
               <PawPrint className="w-10 h-10 text-gray-400" />
-              <p className="text-base font-medium text-gray-600">
-                No archived pets found
-              </p>
-              <p className="text-sm text-gray-500">
-                Try adjusting your filters or archiving some pets.
-              </p>
+              <p className="text-base font-medium text-gray-600">No archived pets found</p>
+              <p className="text-sm text-gray-500">Try adjusting your filters.</p>
             </div>
           </div>
         ) : (
@@ -451,9 +501,7 @@ const ArchivedPetsTable = () => {
             <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
               <div className="flex items-center gap-2">
                 <PawPrint className="w-5 h-5 text-[#ffc929]" />
-                <h2 className="text-lg font-semibold text-gray-800">
-                  Archived Pet Listings
-                </h2>
+                <h2 className="text-lg font-semibold text-gray-800">Archived Pet Listings</h2>
               </div>
               <span className="text-sm text-gray-500">
                 {filteredPets.length} {filteredPets.length === 1 ? "pet" : "pets"}
@@ -463,33 +511,19 @@ const ArchivedPetsTable = () => {
               <table className="w-full text-sm text-left">
                 <thead className="sticky top-0 text-xs font-semibold text-gray-600 uppercase bg-gray-100 border-b border-gray-200">
                   <tr>
-                    {[
-                      "Photo",
-                      "Name",
-                      "Breed",
-                      "Age",
-                      "City",
-                      "Gender",
-                      "Species",
-                      "Fee",
-                      "Trained",
-                      "Status",
-                      "Actions",
-                    ].map((header) => (
-                      <th key={header} className="px-4 py-3">
-                        {header}
-                      </th>
+                    {["Photo", "Name", "Breed", "Age", "City", "Gender", "Species", "Fee", "Trained", "Status", "Actions"].map((header) => (
+                      <th key={header} className="px-4 py-3">{header}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {currentPets.map((pet) => {
                     const statusConfig = getStatusConfig(pet.status);
+                    const isOwnPet = pet.owner?._id === user._id;
+                    const canEdit = isOwnPet;
+
                     return (
-                      <tr
-                        key={pet._id}
-                        className="transition-colors duration-150 hover:bg-gray-50"
-                      >
+                      <tr key={pet._id} className="transition-colors duration-150 hover:bg-gray-50">
                         <td className="px-4 py-3">
                           <img
                             src={pet.image || "/api/placeholder/48/48"}
@@ -497,33 +531,17 @@ const ArchivedPetsTable = () => {
                             className="object-cover w-10 h-10 border border-gray-200 rounded-full"
                           />
                         </td>
-                        <td className="px-4 py-3 font-medium text-gray-800">
-                          {pet.name || "N/A"}
-                        </td>
-                        <td className="px-4 py-3 text-gray-600">
-                          {pet.breed || "-"}
-                        </td>
-                        <td className="px-4 py-3 text-gray-600">
-                          {pet.age || "N/A"}
-                        </td>
-                        <td className="px-4 py-3 text-gray-600">
-                          {pet.city || "N/A"}
-                        </td>
-                        <td className="px-4 py-3 text-gray-600">
-                          {pet.gender || "N/A"}
-                        </td>
-                        <td className="px-4 py-3 text-gray-600">
-                          {pet.species || "N/A"}
-                        </td>
-                        <td className="px-4 py-3 text-[#ffc929] font-medium">
-                          {pet.fee === 0 ? "Free" : `${pet.fee} DT`}
-                        </td>
+                        <td className="px-4 py-3 font-medium text-gray-800">{pet.name || "N/A"}</td>
+                        <td className="px-4 py-3 text-gray-600">{pet.breed || "-"}</td>
+                        <td className="px-4 py-3 text-gray-600">{pet.age || "N/A"}</td>
+                        <td className="px-4 py-3 text-gray-600">{pet.city || "N/A"}</td>
+                        <td className="px-4 py-3 text-gray-600">{pet.gender || "N/A"}</td>
+                        <td className="px-4 py-3 text-gray-600">{pet.species || "N/A"}</td>
+                        <td className="px-4 py-3 text-[#ffc929] font-medium">{pet.fee === 0 ? "Free" : `${pet.fee} DT`}</td>
                         <td className="px-4 py-3">
                           <span
                             className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full ${
-                              pet.isTrained
-                                ? "bg-[#ffc929]/10 text-[#ffc929]"
-                                : "bg-gray-100 text-gray-600"
+                              pet.isTrained ? "bg-[#ffc929]/10 text-[#ffc929]" : "bg-gray-100 text-gray-600"
                             }`}
                           >
                             {pet.isTrained ? "Yes" : "No"}
@@ -533,9 +551,7 @@ const ArchivedPetsTable = () => {
                           <span
                             className={`inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full ${statusConfig.bgClass} border ${statusConfig.borderClass}`}
                           >
-                            <statusConfig.icon
-                              className={`w-4 h-4 mr-1 ${statusConfig.iconClass}`}
-                            />
+                            <statusConfig.icon className={`w-4 h-4 mr-1 ${statusConfig.iconClass}`} />
                             {statusConfig.text}
                           </span>
                         </td>
@@ -554,6 +570,36 @@ const ArchivedPetsTable = () => {
                             >
                               <RotateCcw className="w-4 h-4" />
                             </button>
+                            {isOwnPet && (
+                              <button
+                                onClick={() => openConfirmModal("delete", pet._id, pet.name)}
+                                disabled={actionLoading}
+                                className={`p-1.5 rounded-md transition-all duration-200 ${
+                                  actionLoading
+                                    ? "text-gray-400 cursor-not-allowed"
+                                    : "text-red-600 hover:bg-red-100 hover:text-red-700"
+                                }`}
+                                title="Delete Pet"
+                                aria-label="Delete Pet"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                            {canEdit && (
+                              <button
+                                onClick={() => openConfirmModal("edit", pet._id, pet.name)}
+                                disabled={actionLoading}
+                                className={`p-1.5 rounded-md transition-all duration-200 ${
+                                  actionLoading
+                                    ? "text-gray-400 cursor-not-allowed"
+                                    : "text-yellow-600 hover:bg-yellow-100 hover:text-yellow-700"
+                                }`}
+                                title="Edit Pet"
+                                aria-label="Edit Pet"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                            )}
                             <button
                               onClick={() => handleViewInfo(pet)}
                               className="p-1.5 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-700 transition-all duration-200"
@@ -573,9 +619,7 @@ const ArchivedPetsTable = () => {
             {totalPages > 1 && (
               <div className="flex items-center justify-between p-4 border-t border-gray-200 bg-gray-50">
                 <span className="text-sm text-gray-600">
-                  Showing {indexOfFirstPet + 1}-
-                  {Math.min(indexOfLastPet, filteredPets.length)} of{" "}
-                  {filteredPets.length}
+                  Showing {indexOfFirstPet + 1}-{Math.min(indexOfLastPet, filteredPets.length)} of {filteredPets.length}
                 </span>
                 <div className="flex items-center gap-1">
                   <button
@@ -595,18 +639,13 @@ const ArchivedPetsTable = () => {
                     <ChevronLeft className="w-4 h-4" />
                   </button>
                   {Array.from({ length: totalPages }, (_, i) => i + 1)
-                    .slice(
-                      Math.max(0, currentPage - 3),
-                      Math.min(totalPages, currentPage + 2)
-                    )
+                    .slice(Math.max(0, currentPage - 3), Math.min(totalPages, currentPage + 2))
                     .map((page) => (
                       <button
                         key={page}
                         onClick={() => handlePageChange(page)}
                         className={`w-8 h-8 flex items-center justify-center text-sm font-medium rounded-full transition-all duration-200 ${
-                          currentPage === page
-                            ? "bg-[#ffc929] text-white"
-                            : "text-gray-600 hover:bg-gray-100"
+                          currentPage === page ? "bg-[#ffc929] text-white" : "text-gray-600 hover:bg-gray-100"
                         }`}
                         aria-label={`Page ${page}`}
                       >
@@ -648,11 +687,18 @@ const ArchivedPetsTable = () => {
       )}
       {renderContent()}
       {selectedPet && (
-        <PetDetailsModal
-          pet={selectedPet}
-          onClose={() => setSelectedPet(null)}
-          onUnarchive={handleUnarchive}
-          actionLoading={actionLoading}
+        <PetDetailsModal pet={selectedPet} onClose={() => setSelectedPet(null)} actionLoading={actionLoading} />
+      )}
+      {editMode && selectedPet && (
+        <EditForm
+          formData={editFormData}
+          onChange={handleInputChange}
+          onSubmit={handleUpdate}
+          onCancel={() => {
+            setEditMode(false);
+            setSelectedPet(null);
+          }}
+          loading={actionLoading}
         />
       )}
       <ConfirmationModal
@@ -666,4 +712,4 @@ const ArchivedPetsTable = () => {
   );
 };
 
-export default ArchivedPetsTable;
+export default ArchivedPets;
