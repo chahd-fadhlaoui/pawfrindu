@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, memo } from "react";
 import {
   PawPrint,
   ChevronLeft,
@@ -7,17 +7,230 @@ import {
   Loader2,
   ChevronsRight,
   ChevronsLeft,
+  Plus,
+  EyeOff,
+  Eye,
 } from "lucide-react";
 import SearchBar from "../SearchBar";
+import axiosInstance from "../../utils/axiosInstance";
 
-const UsersTable = ({ users = [], loading, error }) => {
+// Modal séparé pour éviter les re-rendus excessifs
+const AddUserModal = memo(({ isOpen, onClose, onAddUser }) => {
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    password: "",
+    role: "",
+  });
+  const [formError, setFormError] = useState(null);
+  const [formSuccess, setFormSuccess] = useState(null);
+  const [formLoading, setFormLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const formRoleOptions = [
+    { value: "admin", label: "Admin" },
+    { value: "adminAdoption", label: "Admin Adoption" },
+    { value: "adminVet", label: "Admin Vet" },
+    { value: "adminTrainer", label: "Admin Trainer" },
+    { value: "adminLostAndFound", label: "Admin Lost & Found" },
+  ];
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormError(null);
+    setFormSuccess(null);
+  };
+
+  const validateForm = () => {
+    if (
+      !formData.fullName ||
+      !formData.email ||
+      !formData.password ||
+      !formData.role
+    ) {
+      setFormError("All fields are required.");
+      return false;
+    }
+    if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      setFormError("Please enter a valid email address.");
+      return false;
+    }
+    if (formData.password.length < 6) {
+      setFormError("Password must be at least 6 characters long.");
+      return false;
+    }
+    return true;
+  };
+
+  const handleAddUser = async (e) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
+    setFormError(null);
+    setFormSuccess(null);
+    setFormLoading(true);
+
+    const apiRole = "Admin"; // Toujours "Admin" pour l'API
+
+    try {
+      const response = await axiosInstance.post("/api/user/register", {
+        fullName: formData.fullName,
+        email: formData.email,
+        password: formData.password,
+        role: apiRole,
+      });
+
+      if (response.status === 201) {
+        const newUser = {
+          _id: response.data.user._id,
+          fullName: formData.fullName,
+          email: formData.email,
+          role:
+            formRoleOptions.find((option) => option.value === formData.role)
+              ?.label || "Admin", // Utiliser le label du rôle sélectionné
+        };
+        setFormSuccess("User added successfully!");
+        setTimeout(() => {
+          onAddUser(newUser);
+          onClose();
+          setFormData({ fullName: "", email: "", password: "", role: "" });
+          setFormSuccess(null);
+        }, 1500);
+      }
+    } catch (err) {
+      setFormError(err.response?.data?.message || "Failed to add user");
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 animate-fade-in">
+      <div className="relative w-full max-w-md p-6 bg-white border border-gray-200 shadow-2xl rounded-2xl">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-bold text-gray-900">Add New User</h3>
+          <button
+            onClick={onClose}
+            className="p-1 text-gray-500 rounded-full hover:text-gray-700 hover:bg-gray-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/50"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <form onSubmit={handleAddUser} className="space-y-4">
+          <div>
+            <label className="block mb-1 text-sm font-medium text-gray-700">
+              Full Name
+            </label>
+            <input
+              type="text"
+              name="fullName"
+              value={formData.fullName}
+              onChange={handleInputChange}
+              className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ffc929] focus:border-[#ffc929] transition-all duration-200"
+              placeholder="Enter full name"
+              required
+              autoFocus
+            />
+          </div>
+          <div>
+            <label className="block mb-1 text-sm font-medium text-gray-700">
+              Email
+            </label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ffc929] focus:border-[#ffc929] transition-all duration-200"
+              placeholder="Enter email"
+              required
+            />
+          </div>
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              value={formData.password}
+              onChange={handleInputChange}
+              className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ffc929] focus:border-[#ffc929] transition-all duration-200"
+              placeholder="Enter password"
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          </div>
+          <div>
+            <label className="block mb-1 text-sm font-medium text-gray-700">
+              Role
+            </label>
+            <select
+              name="role"
+              value={formData.role}
+              onChange={handleInputChange}
+              className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ffc929] focus:border-[#ffc929] transition-all duration-200"
+              required
+            >
+              <option value="">Select Role</option>
+              {formRoleOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          {formError && (
+            <p className="text-sm text-red-600 bg-red-50 p-2 rounded">
+              {formError}
+            </p>
+          )}
+          {formSuccess && (
+            <p className="text-sm text-green-600 bg-green-50 p-2 rounded">
+              {formSuccess}
+            </p>
+          )}
+          <div className="flex justify-end gap-4 mt-6">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/50"
+              disabled={formLoading}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={formLoading}
+              className={`px-4 py-2 text-white bg-[#ffc929] rounded-lg hover:bg-[#e6b625] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/50 flex items-center gap-2 ${
+                formLoading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+            >
+              {formLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+              Add User
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+});
+
+const UsersTable = ({ users = [], loading, error, onUserAdded }) => {
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
   const usersPerPage = 5;
 
-  // Filter Select Component with improved styling
+  // Filter Select Component
   const FilterSelect = ({ label, value, onChange, options }) => (
     <div className="relative w-full sm:w-48">
       <select
@@ -38,7 +251,7 @@ const UsersTable = ({ users = [], loading, error }) => {
     </div>
   );
 
-  // Role options matching AppContext roles
+  // Role options pour le filtre
   const roleOptions = [
     { value: "Admin", label: "Admin" },
     { value: "PetOwner", label: "Pet Owner" },
@@ -46,7 +259,7 @@ const UsersTable = ({ users = [], loading, error }) => {
     { value: "Trainer", label: "Trainer" },
   ];
 
-  // Apply filters and search with normalized role comparison
+  // Apply filters and search
   useEffect(() => {
     let filtered = Array.isArray(users) ? [...users] : [];
 
@@ -85,6 +298,11 @@ const UsersTable = ({ users = [], loading, error }) => {
     setCurrentPage(1);
   };
 
+  const handleUserAdded = (newUser) => {
+    setFilteredUsers((prev) => [...prev, newUser]);
+    if (onUserAdded) onUserAdded(newUser);
+  };
+
   if (loading) {
     return (
       <div className="w-full p-8 text-center bg-white border border-gray-200 shadow-lg rounded-2xl">
@@ -118,19 +336,28 @@ const UsersTable = ({ users = [], loading, error }) => {
   return (
     <div className="p-6 space-y-6 shadow-lg bg-gray-50 rounded-2xl">
       {/* Search and Filter Bar */}
-      <div className="flex flex-col items-start gap-4 p-4 bg-white border border-gray-200 rounded-lg shadow-sm sm:flex-row sm:items-center">
+      <div className="flex flex-col items-start gap-4 p-4 bg-white border border-gray-200 rounded-lg shadow-sm sm:flex-row sm:items-center sm:justify-between">
         <SearchBar
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search by name or email..."
           className="w-full sm:w-64 bg-white border-gray-300 focus:ring-[#ffc929] focus:border-[#ffc929] rounded-lg shadow-sm transition-all duration-200"
         />
-        <FilterSelect
-          label="Role"
-          value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value)}
-          options={roleOptions}
-        />
+        <div className="flex items-center gap-4">
+          <FilterSelect
+            label="Role"
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
+            options={roleOptions}
+          />
+          <button
+            onClick={() => setIsAddUserModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-[#ffc929] rounded-lg hover:bg-[#e6b625] hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/50"
+          >
+            <Plus className="w-4 h-4" />
+            Add User
+          </button>
+        </div>
         {(searchQuery || roleFilter) && (
           <button
             onClick={resetFilters}
@@ -202,6 +429,14 @@ const UsersTable = ({ users = [], loading, error }) => {
                     <span
                       className={`inline-flex items-center px-3 py-1 text-sm font-semibold rounded-full shadow-sm transition-colors duration-200 ${
                         user.role === "Admin"
+                          ? "bg-teal-100 text-teal-700 hover:bg-teal-200"
+                          : user.role === "Admin Adoption"
+                          ? "bg-teal-100 text-teal-700 hover:bg-teal-200"
+                          : user.role === "Admin Vet"
+                          ? "bg-teal-100 text-teal-700 hover:bg-teal-200"
+                          : user.role === "Admin Trainer"
+                          ? "bg-teal-100 text-teal-700 hover:bg-teal-200"
+                          : user.role === "Admin Lost & Found"
                           ? "bg-teal-100 text-teal-700 hover:bg-teal-200"
                           : user.role === "PetOwner"
                           ? "bg-[#ffc929]/20 text-[#ffc929] hover:bg-[#ffc929]/30"
@@ -298,6 +533,11 @@ const UsersTable = ({ users = [], loading, error }) => {
           )}
         </div>
       )}
+      <AddUserModal
+        isOpen={isAddUserModalOpen}
+        onClose={() => setIsAddUserModalOpen(false)}
+        onAddUser={handleUserAdded}
+      />
     </div>
   );
 };

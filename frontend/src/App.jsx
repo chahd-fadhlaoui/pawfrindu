@@ -21,6 +21,7 @@ import Profile from './pages/Profile';
 import TrainerDashboard from './pages/Trainer/TrainerDashboard';
 import { VetDashboard } from './pages/Vet/VetDashboard';
 import Veteriniandetail from './pages/Veteriniandetail';
+import AdminLoginPage from './pages/admin/AdminLoginPage ';
 
 const Layout = ({ children }) => {
   const location = useLocation();
@@ -31,13 +32,17 @@ const Layout = ({ children }) => {
   const isVetPage = location.pathname.startsWith('/vet');
   const isHomePage = location.pathname === '/';
   const isForbiddenPage = location.pathname === '/forbidden';
+  const isAdminLoginPage = location.pathname === '/AdminLoginPage';
+
 
   const showHeaderFooter = 
     (!user || user.role === "PetOwner") && 
     !isAdminPage && 
     !isTrainerPage && 
     !isVetPage && 
-    !isForbiddenPage;
+    !isForbiddenPage && 
+    !isAdminLoginPage;  // Nouvelle condition ajoutée
+
 
  
   return (
@@ -59,6 +64,8 @@ const AppRoutes = () => {
       <Route path="/pets/:category" element={<Pets />} />
       <Route path="/petsdetails/:petId" element={<PetDetails />} />
       <Route path="/login" element={<Auth />} />
+      <Route path="/AdminLoginPage" element={<AdminLoginPage />} />
+
       <Route path="/reset-password" element={<ResetPasswordConfirmation />} />
       <Route path="/forbidden" element={<Forbidden />} />
       <Route path="/admin" element={<ProtectedRoute allowedRoles={["Admin"]}><AdminDashboard /></ProtectedRoute>} />

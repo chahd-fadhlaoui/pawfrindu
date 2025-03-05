@@ -12,6 +12,14 @@ const userSchema = new mongoose.Schema(
       enum: ["PetOwner", "Trainer", "Vet", "Admin"],
       required: true,
     },
+    adminType: {
+      type: String,
+      enum: ["Super Admin", "Admin Adoption", "Admin Vet", "Admin Trainer", "Admin Lost & Found"],
+      required: function () {
+        return this.role === "Admin"; // Obligatoire uniquement pour les admins
+      },
+    },
+    
     isArchieve: {
       type: Boolean,
       default: false,
