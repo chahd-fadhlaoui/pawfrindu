@@ -12,7 +12,7 @@ const userSchema = new mongoose.Schema(
       enum: ["PetOwner", "Trainer", "Vet", "Admin"],
       required: true,
     },
-    adminType: {
+    adminType: {  
       type: String,
       enum: ["Super Admin", "Admin Adoption", "Admin Vet", "Admin Trainer", "Admin Lost & Found"],
       required: function () {

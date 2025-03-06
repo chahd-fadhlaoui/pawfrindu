@@ -6,16 +6,15 @@ import { sendEmail } from "../services/emailService.js";
 // 🚀 Étape 1: Enregistrement de l'utilisateur sans détails spécifiques
 const register = async (req, res) => {
   console.log("Received registration request with body:", req.body);
-  const { fullName, email, password, role } = req.body;
+  const { fullName, email, password, role, adminType } = req.body;
 
   if (!fullName || !email || !password || !role) {
-    console.log("Missing fields:", {
-      hasFullName: !!fullName,
-      hasEmail: !!email,
-      hasPassword: !!password,
-      hasRole: !!role,
-    });
+    console.log("Missing fields:", { hasFullName: !!fullName, hasEmail: !!email, hasPassword: !!password, hasRole: !!role });
     return res.status(400).json({ message: "All fields are required." });
+  }
+
+  if (role === "Admin" && !adminType) {
+    return res.status(400).json({ message: "Admin type is required for Admin role." });
   }
 
   try {
@@ -31,23 +30,21 @@ const register = async (req, res) => {
       email,
       password: hashedPassword,
       role,
+      ...(role === "Admin" ? { adminType } : {}),
     });
 
-    // Save user first
     const savedUser = await newUser.save();
 
     if (!savedUser) {
       throw new Error("User not saved properly.");
     }
 
-    // Generate token after user is successfully saved
     const accessToken = jwt.sign(
-      { userId: savedUser._id, role: savedUser.role },
+      { userId: savedUser._id, role: savedUser.role, adminType: savedUser.adminType },
       process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: "72h" }
     );
 
-    // Try to send welcome email, but don't let it block registration if it fails
     try {
       await sendEmail({
         to: savedUser.email,
@@ -56,7 +53,6 @@ const register = async (req, res) => {
       });
     } catch (emailError) {
       console.error("Failed to send welcome email:", emailError);
-      // Continue with registration even if email fails
     }
 
     res.status(201).json({
@@ -67,14 +63,12 @@ const register = async (req, res) => {
         fullName: savedUser.fullName,
         email: savedUser.email,
         role: savedUser.role,
+        adminType: savedUser.adminType,
       },
     });
   } catch (error) {
-    console.error("Signup Error:", error);
-    res.status(500).json({
-      message: "Failed to create account.",
-      detail: error.message, // Add this for debugging
-    });
+    console.error("Signup Error:", error.stack);
+    res.status(500).json({ message: "Failed to create account", detail: error.message });
   }
 };
 
@@ -146,26 +140,46 @@ const login = async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
+    console.log("Missing email or password:", { email, password });
     return res.status(400).json({ message: "Email and password are required" });
   }
 
   try {
+    console.log("Attempting to find user with email:", email);
     const user = await User.findOne({ email });
     if (!user) {
+      console.log("User not found for email:", email);
       return res.status(400).json({ message: "User not found" });
     }
+    console.log("User found:", user._id);
 
+    console.log("User password from DB:", user.password);
+    if (!user.password) {
+      console.error("User has no password in DB:", user._id);
+      return res.status(500).json({ message: "User password is missing in database" });
+    }
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
+      console.log("Invalid password for user:", user._id);
       return res.status(400).json({ message: "Invalid password" });
     }
+    console.log("Password validated for user:", user._id);
 
-    // Update last login
     user.lastLogin = new Date();
-    await user.save();
+    console.log("Updating lastLogin to:", user.lastLogin);
+    await user.save({ validateBeforeSave: false });
+    console.log("User saved successfully with lastLogin:", user.lastLogin);
 
+    console.log("ACCESS_TOKEN_SECRET:", process.env.ACCESS_TOKEN_SECRET);
+    if (!process.env.ACCESS_TOKEN_SECRET) {
+      throw new Error("ACCESS_TOKEN_SECRET is not defined");
+    }
     const accessToken = jwt.sign(
-      { userId: user._id, role: user.role },
+      { 
+        userId: user._id, 
+        role: user.role, 
+        adminType: user.adminType || (user.role === "Admin" ? "Super Admin" : undefined)
+      },
       process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: "72h" }
     );
@@ -176,15 +190,17 @@ const login = async (req, res) => {
         fullName: user.fullName,
         email: user.email,
         role: user.role,
+        adminType: user.adminType || (user.role === "Admin" ? "Super Admin" : undefined),
         petOwnerDetails: user.petOwnerDetails || undefined,
         trainerDetails: user.trainerDetails || undefined,
         veterinarianDetails: user.veterinarianDetails || undefined,
       },
       accessToken,
     });
+    console.log("Login successful for user:", user._id);
   } catch (error) {
-    console.error("Login Error:", error);
-    res.status(500).json({ message: "Login failed" });
+    console.error("Login Error:", error.stack);
+    res.status(500).json({ message: "Login failed", detail: error.message });
   }
 };
 
@@ -195,12 +211,15 @@ const getCurrentUser = async (req, res) => {
     const user = await User.findById(req.user._id).select("-password");
 
     if (!user) {
+      console.log("User not found for ID:", req.user._id);
       return res.status(404).json({ message: "User not found" });
     }
+    console.log("User found:", user._id);
 
-    // Update last login
     user.lastLogin = new Date();
-    await user.save();
+    console.log("Updating lastLogin to:", user.lastLogin);
+    await user.save({ validateBeforeSave: false }); // Désactiver validation
+    console.log("User saved with lastLogin:", user.lastLogin);
 
     res.json({
       user: {
@@ -208,6 +227,7 @@ const getCurrentUser = async (req, res) => {
         fullName: user.fullName,
         email: user.email,
         role: user.role,
+        adminType: user.adminType || (user.role === "Admin" ? "Super Admin" : undefined),
         about: user.about,
         image: user.image,
         lastLogin: user.lastLogin,
@@ -217,9 +237,13 @@ const getCurrentUser = async (req, res) => {
         isArchieve: user.isArchieve,
       },
     });
+    console.log("Profile fetched successfully for user:", user._id);
   } catch (error) {
-    console.error("Get Current User Error:", error);
-    res.status(500).json({ message: "Failed to fetch user profile" });
+    console.error("Get Current User Error:", error.stack);
+    res.status(500).json({ 
+      message: "Failed to fetch user profile", 
+      detail: error.message 
+    });
   }
 };
 
@@ -235,6 +259,7 @@ const verifyToken = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
     req.userId = decoded.userId;
     req.userRole = decoded.role;
+    req.adminType = decoded.adminType || (decoded.role === "Admin" ? "Super Admin" : undefined); // Secours pour anciens tokens
     next();
   } catch (error) {
     console.error("Token Verification Error:", error);

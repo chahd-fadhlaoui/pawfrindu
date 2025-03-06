@@ -55,7 +55,10 @@ const AppContextProvider = ({ children }) => {
     }
     return measureTime("checkAuth", async () => {
       const response = await axiosInstance.get("/api/user/me");
-      const authenticatedUser = ensureUserHasImage(response.data.user);
+      const authenticatedUser = ensureUserHasImage({
+        ...response.data.user,
+        adminType: response.data.user.adminType, // Inclure adminType
+      });
       setUser(authenticatedUser);
       console.log("checkAuth succeeded with user:", authenticatedUser);
       return true;
@@ -111,10 +114,11 @@ const AppContextProvider = ({ children }) => {
       const userData = response.data.user;
       const formattedUser = {
         _id: userData._id,
-        fullName: userData.fullName, // Utiliser fullName
+        fullName: userData.fullName,
         image: userData.image || DEFAULT_PROFILE_IMAGE,
         email: userData.email,
         role: userData.role,
+        adminType: userData.adminType, // Ajouter adminType
         about: userData.about || "",
         displayRole:
           userData.role === "PetOwner"
@@ -123,6 +127,8 @@ const AppContextProvider = ({ children }) => {
             ? "Veterinarian"
             : userData.role === "Trainer"
             ? "Pet Trainer"
+            : userData.role === "Admin" && userData.adminType
+            ? userData.adminType // Utiliser adminType pour les admins
             : userData.role,
         petOwnerDetails: userData.petOwnerDetails || {
           address: "Not provided",
@@ -132,9 +138,8 @@ const AppContextProvider = ({ children }) => {
         veterinarianDetails: userData.veterinarianDetails || undefined,
         createdAt: userData.createdAt,
       };
-      console.log("Fetched user data:", formattedUser); // Ajoutez ceci pour déboguer
-      setUser(formattedUser);
       console.log("Fetched user data:", formattedUser);
+      setUser(formattedUser);
       return formattedUser;
     }).catch((error) => {
       console.error("Failed to fetch profile:", error);
@@ -208,18 +213,22 @@ const getMyAdoptionRequests = useCallback(async () => {
       const { accessToken, user: userData } = response.data;
       localStorage.setItem("token", accessToken);
       axiosInstance.setAuthToken(accessToken);
-      setUser(ensureUserHasImage(userData));
+      const updatedUser = ensureUserHasImage({
+        ...userData,
+        adminType: userData.adminType, // Inclure adminType
+      });
+      setUser(updatedUser);
       await Promise.all([fetchUserProfile(), fetchPets(), getMyPets()]);
       return {
         success: true,
         redirectTo:
-          userData.role === "PetOwner"
+          updatedUser.role === "PetOwner"
             ? "/"
-            : userData.role === "Trainer"
+            : updatedUser.role === "Trainer"
             ? "/trainer"
-            : userData.role === "Vet"
+            : updatedUser.role === "Vet"
             ? "/vet"
-            : userData.role === "Admin"
+            : updatedUser.role === "Admin"
             ? "/admin"
             : "/login",
       };
@@ -231,25 +240,26 @@ const getMyAdoptionRequests = useCallback(async () => {
       setLoading(false);
     }
   };
-
   const register = async (userData) => {
     setLoading(true);
     setError("");
     const dataToSend = {
       ...userData,
       image: userData.image || DEFAULT_PROFILE_IMAGE,
+      ...(userData.role === "Admin" && userData.adminType ? { adminType: userData.adminType } : {}), // Ajouter adminType si Admin
     };
     try {
-      const response = await axiosInstance.post(
-        "/api/user/register",
-        dataToSend
-      );
+      const response = await axiosInstance.post("/api/user/register", dataToSend);
       if (response.data.accessToken) {
         localStorage.setItem("token", response.data.accessToken);
         axiosInstance.setAuthToken(response.data.accessToken);
       }
       if (response.data.user) {
-        setUser(ensureUserHasImage(response.data.user));
+        const updatedUser = ensureUserHasImage({
+          ...response.data.user,
+          adminType: response.data.user.adminType, // Inclure adminType dans l'état
+        });
+        setUser(updatedUser);
         await fetchPets();
       }
       return { success: true, message: response.data.message };

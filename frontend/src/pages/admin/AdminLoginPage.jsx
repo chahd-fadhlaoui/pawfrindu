@@ -1,15 +1,39 @@
 import React, { useState } from 'react';
-import { Mail, Eye, EyeOff, PawPrint, PawPrintIcon } from 'lucide-react';
+import { Mail, Eye, EyeOff, PawPrintIcon } from 'lucide-react';
+import { useApp } from '../../context/AppContext'; // Importer useApp depuis AppContextProvider
+import { useNavigate } from 'react-router-dom'; // Pour la redirection
 
 const AdminLoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState(''); // Ajouter un état pour les erreurs
 
-  const handleSubmit = (e) => {
+  const { login } = useApp(); // Récupérer la fonction login du contexte
+  const navigate = useNavigate(); // Pour rediriger après connexion
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Logique de connexion à implémenter
-    console.log('Tentative de connexion', { email, password });
+    setError(''); // Réinitialiser les erreurs
+
+    try {
+      const result = await login(email, password);
+      console.log('Résultat de la connexion:', result);
+
+      if (result.success) {
+        // Vérifier si l'utilisateur est un Admin
+        if (result.redirectTo === "/admin") {
+          navigate('/admin'); // Rediriger vers la page admin
+        } else {
+          setError("Seul un administrateur peut se connecter ici.");
+        }
+      } else {
+        setError(result.error); // Afficher l'erreur (ex. "Invalid password")
+      }
+    } catch (err) {
+      console.error('Erreur inattendue lors de la connexion:', err);
+      setError('Une erreur est survenue. Veuillez réessayer.');
+    }
   };
 
   const togglePasswordVisibility = () => {
@@ -22,10 +46,15 @@ const AdminLoginPage = () => {
         <div className="bg-gradient-to-r from-[#ffc929] to-pink-500 p-6 flex items-center justify-center">
           <h2 className="text-2xl font-bold text-white">Admin Login</h2>
           <PawPrintIcon className="w-12 h-12 ml-3 text-white" />
-
         </div>
         
         <form onSubmit={handleSubmit} className="p-8 space-y-6">
+          {error && (
+            <div className="p-2 text-center text-red-700 bg-red-100 border border-red-400 rounded">
+              {error}
+            </div>
+          )}
+          
           <div>
             <label htmlFor="email" className="block mb-2 font-semibold text-gray-700">
               Email

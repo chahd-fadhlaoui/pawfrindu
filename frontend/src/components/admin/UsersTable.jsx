@@ -14,7 +14,7 @@ import {
 import SearchBar from "../SearchBar";
 import axiosInstance from "../../utils/axiosInstance";
 
-// Modal séparé pour éviter les re-rendus excessifs
+// Modal séparé avec nouveaux rôles
 const AddUserModal = memo(({ isOpen, onClose, onAddUser }) => {
   const [formData, setFormData] = useState({
     fullName: "",
@@ -27,12 +27,16 @@ const AddUserModal = memo(({ isOpen, onClose, onAddUser }) => {
   const [formLoading, setFormLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  // Options de rôle élargies
   const formRoleOptions = [
-    { value: "admin", label: "Admin" },
-    { value: "adminAdoption", label: "Admin Adoption" },
-    { value: "adminVet", label: "Admin Vet" },
-    { value: "adminTrainer", label: "Admin Trainer" },
-    { value: "adminLostAndFound", label: "Admin Lost & Found" },
+    { value: "admin", label: "Admin", adminType: "Super Admin" },
+    { value: "adminAdoption", label: "Admin Adoption", adminType: "Admin Adoption" },
+    { value: "adminVet", label: "Admin Vet", adminType: "Admin Vet" },
+    { value: "adminTrainer", label: "Admin Trainer", adminType: "Admin Trainer" },
+    { value: "adminLostAndFound", label: "Admin Lost & Found", adminType: "Admin Lost & Found" },
+    { value: "PetOwner", label: "Pet Owner" }, // Nouveau rôle
+    { value: "Vet", label: "Veterinarian" },  // Nouveau rôle
+    { value: "Trainer", label: "Trainer" },   // Nouveau rôle
   ];
 
   const handleInputChange = (e) => {
@@ -43,12 +47,7 @@ const AddUserModal = memo(({ isOpen, onClose, onAddUser }) => {
   };
 
   const validateForm = () => {
-    if (
-      !formData.fullName ||
-      !formData.email ||
-      !formData.password ||
-      !formData.role
-    ) {
+    if (!formData.fullName || !formData.email || !formData.password || !formData.role) {
       setFormError("All fields are required.");
       return false;
     }
@@ -71,14 +70,19 @@ const AddUserModal = memo(({ isOpen, onClose, onAddUser }) => {
     setFormSuccess(null);
     setFormLoading(true);
 
-    const apiRole = "Admin"; // Toujours "Admin" pour l'API
+    const selectedRoleOption = formRoleOptions.find((option) => option.value === formData.role);
+    const role = selectedRoleOption.value === "PetOwner" || selectedRoleOption.value === "Vet" || selectedRoleOption.value === "Trainer"
+      ? selectedRoleOption.value // Rôle direct pour non-admin
+      : "Admin"; // "Admin" pour les sous-rôles admin
+    const adminType = selectedRoleOption.adminType || undefined; // adminType uniquement pour Admin
 
     try {
       const response = await axiosInstance.post("/api/user/register", {
         fullName: formData.fullName,
         email: formData.email,
         password: formData.password,
-        role: apiRole,
+        role: role,
+        ...(role === "Admin" && { adminType: adminType }), // Ajouter adminType si role est "Admin"
       });
 
       if (response.status === 201) {
@@ -86,9 +90,8 @@ const AddUserModal = memo(({ isOpen, onClose, onAddUser }) => {
           _id: response.data.user._id,
           fullName: formData.fullName,
           email: formData.email,
-          role:
-            formRoleOptions.find((option) => option.value === formData.role)
-              ?.label || "Admin", // Utiliser le label du rôle sélectionné
+          role: selectedRoleOption.label, // Afficher le label localement
+          ...(role === "Admin" && { adminType: adminType }), // Inclure adminType si Admin
         };
         setFormSuccess("User added successfully!");
         setTimeout(() => {
@@ -230,7 +233,6 @@ const UsersTable = ({ users = [], loading, error, onUserAdded }) => {
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
   const usersPerPage = 5;
 
-  // Filter Select Component
   const FilterSelect = ({ label, value, onChange, options }) => (
     <div className="relative w-full sm:w-48">
       <select
@@ -251,7 +253,6 @@ const UsersTable = ({ users = [], loading, error, onUserAdded }) => {
     </div>
   );
 
-  // Role options pour le filtre
   const roleOptions = [
     { value: "Admin", label: "Admin" },
     { value: "PetOwner", label: "Pet Owner" },
@@ -259,7 +260,6 @@ const UsersTable = ({ users = [], loading, error, onUserAdded }) => {
     { value: "Trainer", label: "Trainer" },
   ];
 
-  // Apply filters and search
   useEffect(() => {
     let filtered = Array.isArray(users) ? [...users] : [];
 
@@ -282,7 +282,6 @@ const UsersTable = ({ users = [], loading, error, onUserAdded }) => {
     setCurrentPage(1);
   }, [users, searchQuery, roleFilter]);
 
-  // Pagination logic
   const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
   const indexOfLastUser = currentPage * usersPerPage;
   const indexOfFirstUser = indexOfLastUser - usersPerPage;
@@ -301,6 +300,13 @@ const UsersTable = ({ users = [], loading, error, onUserAdded }) => {
   const handleUserAdded = (newUser) => {
     setFilteredUsers((prev) => [...prev, newUser]);
     if (onUserAdded) onUserAdded(newUser);
+  };
+
+  const getDisplayRole = (user) => {
+    if (user.role === "Admin" && user.adminType) {
+      return user.adminType;
+    }
+    return user.role || "N/A";
   };
 
   if (loading) {
@@ -335,7 +341,6 @@ const UsersTable = ({ users = [], loading, error, onUserAdded }) => {
 
   return (
     <div className="p-6 space-y-6 shadow-lg bg-gray-50 rounded-2xl">
-      {/* Search and Filter Bar */}
       <div className="flex flex-col items-start gap-4 p-4 bg-white border border-gray-200 rounded-lg shadow-sm sm:flex-row sm:items-center sm:justify-between">
         <SearchBar
           value={searchQuery}
@@ -368,7 +373,6 @@ const UsersTable = ({ users = [], loading, error, onUserAdded }) => {
         )}
       </div>
 
-      {/* Table Content */}
       {filteredUsers.length === 0 && safeUsers.length > 0 ? (
         <div className="w-full p-8 text-center bg-white border border-gray-200 shadow-lg rounded-2xl">
           <div className="flex flex-col items-center gap-4">
@@ -428,15 +432,7 @@ const UsersTable = ({ users = [], loading, error, onUserAdded }) => {
                   <td className="px-6 py-4">
                     <span
                       className={`inline-flex items-center px-3 py-1 text-sm font-semibold rounded-full shadow-sm transition-colors duration-200 ${
-                        user.role === "Admin"
-                          ? "bg-teal-100 text-teal-700 hover:bg-teal-200"
-                          : user.role === "Admin Adoption"
-                          ? "bg-teal-100 text-teal-700 hover:bg-teal-200"
-                          : user.role === "Admin Vet"
-                          ? "bg-teal-100 text-teal-700 hover:bg-teal-200"
-                          : user.role === "Admin Trainer"
-                          ? "bg-teal-100 text-teal-700 hover:bg-teal-200"
-                          : user.role === "Admin Lost & Found"
+                        user.role === "Admin" && user.adminType
                           ? "bg-teal-100 text-teal-700 hover:bg-teal-200"
                           : user.role === "PetOwner"
                           ? "bg-[#ffc929]/20 text-[#ffc929] hover:bg-[#ffc929]/30"
@@ -447,7 +443,7 @@ const UsersTable = ({ users = [], loading, error, onUserAdded }) => {
                           : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                       }`}
                     >
-                      {user.role || "N/A"}
+                      {getDisplayRole(user)}
                     </span>
                   </td>
                 </tr>
