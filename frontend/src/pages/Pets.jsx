@@ -4,14 +4,12 @@ import { AppContext } from "../context/AppContext";
 import { Heart, PawPrint, MapPin, Coins, ChevronLeft, ChevronRight, Filter, X } from "lucide-react";
 import SearchBar from "../components/SearchBar";
 
-// Custom PawIcon
 const PawIcon = ({ className, style }) => (
   <svg viewBox="0 0 24 24" className={className} style={style} fill="currentColor">
     <path d="M12,17.5c2.33,2.33,5.67,2.33,8,0s2.33-5.67,0-8s-5.67-2.33-8,0S9.67,15.17,12,17.5z M7.5,14.5 c-1.96,1.96-1.96,4.04,0,6s4.04,1.96,6,0s1.96-4.04,0-6S9.46,12.54,7.5,14.5z M18.5,3.5c-1.96-1.96-4.04-1.96-6,0s-1.96,4.04,0,6 s4.04,1.96,6,0S20.46,5.46,18.5,3.5z M3.5,9.5c-1.96,1.96-1.96,4.04,0,6s4.04,1.96,6,0s1.96-4.04,0-6S5.46,7.54,3.5,9.5z" />
   </svg>
 );
 
-// Predefined filter options
 const allSpecies = ["dog", "cat", "other"];
 const allAges = ["puppy", "kitten", "young", "adult", "senior"];
 const feeOptions = ["Free", "With Money"];
@@ -19,7 +17,6 @@ const sortOptions = ["Ascending", "Descending"];
 const dogBreeds = ["German Shepherd", "Labrador Retriever", "Golden Retriever", "Bulldog", "Rottweiler", "Beagle", "Poodle", "Siberian Husky", "Boxer", "Great Dane"];
 const catBreeds = ["Persian", "Siamese", "Maine Coon", "British Shorthair", "Ragdoll", "Bengal", "Sphynx", "Russian Blue", "American Shorthair", "Scottish Fold"];
 
-// Pet Card Component
 const PetCard = ({ pet, navigate, currencySymbol }) => {
   const [isLiked, setIsLiked] = useState(false);
 
@@ -64,7 +61,6 @@ const PetCard = ({ pet, navigate, currencySymbol }) => {
   );
 };
 
-// Filter Badge Component
 const FilterBadge = ({ label, value, onClear }) => (
   <div className="flex items-center px-3 py-1.5 text-sm text-gray-700 bg-[#ffc929]/10 border border-[#ffc929]/20 rounded-full shadow-sm hover:bg-[#ffc929]/20 transition-all duration-300 focus-within:ring-2 focus-within:ring-[#ffc929]/30">
     <span className="font-medium">{label}:</span><span className="ml-1 truncate max-w-[120px]">{value}</span>
@@ -72,7 +68,6 @@ const FilterBadge = ({ label, value, onClear }) => (
   </div>
 );
 
-// Filter Select Component
 const FilterSelect = ({ label, value, onChange, options }) => (
   <div className="w-full sm:w-auto flex-1 min-w-[140px]">
     <select
@@ -105,7 +100,7 @@ export default function Pet() {
   const [petsPerPage] = useState(9);
   const [isAnimating, setIsAnimating] = useState(false);
 
-  const [selectedSpecies, setSelectedSpecies] = useState(urlSpecies || "");
+  const [selectedSpecies, setSelectedSpecies] = useState("");
   const [selectedBreed, setSelectedBreed] = useState("");
   const [selectedAge, setSelectedAge] = useState("");
   const [selectedFee, setSelectedFee] = useState("");
@@ -113,9 +108,26 @@ export default function Pet() {
   const [sortOrder, setSortOrder] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Filter and sort pets
+  // Mettre à jour selectedSpecies immédiatement avec urlSpecies et filtrer
   useEffect(() => {
+    // Vérifier si urlSpecies est valide, sinon réinitialiser à vide
+    const validSpecies = urlSpecies && allSpecies.includes(urlSpecies.toLowerCase()) ? urlSpecies.toLowerCase() : "";
+    setSelectedSpecies(validSpecies);
+
+    console.log("URL Species from useParams:", urlSpecies);
+    console.log("Selected Species:", validSpecies);
+    console.log("Raw Pets from AppContext:", pets);
+
     let filtered = pets.filter((pet) => pet.status === "accepted");
+
+    // Appliquer le filtre basé sur urlSpecies immédiatement
+    if (validSpecies) {
+      filtered = filtered.filter((pet) => {
+        const matches = pet.species.toLowerCase() === validSpecies;
+        if (!matches) console.log(`Pet ${pet.name} excluded: species "${pet.species}" != "${validSpecies}"`);
+        return matches;
+      });
+    }
 
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
@@ -126,7 +138,6 @@ export default function Pet() {
       );
     }
 
-    if (selectedSpecies) filtered = filtered.filter((pet) => pet.species === selectedSpecies);
     if (selectedBreed) filtered = filtered.filter((pet) => pet.breed === selectedBreed);
     if (selectedAge) filtered = filtered.filter((pet) => pet.age === selectedAge);
     if (selectedFee === "Free") filtered = filtered.filter((pet) => pet.fee === 0);
@@ -137,11 +148,12 @@ export default function Pet() {
       filtered.sort((a, b) => (sortOrder === "Ascending" ? a.fee - b.fee : b.fee - a.fee));
     }
 
+    console.log("Filtered Pets:", filtered);
     setFilteredPets(filtered);
     setCurrentPage(1);
-  }, [pets, selectedSpecies, selectedBreed, selectedAge, selectedFee, selectedCity, sortOrder, searchQuery]);
+  }, [pets, urlSpecies, selectedBreed, selectedAge, selectedFee, selectedCity, sortOrder, searchQuery]);
 
-  // Populate dynamic filter options
+  // Mettre à jour les options de filtre dynamiques
   useEffect(() => {
     const acceptedPets = pets.filter((pet) => pet.status === "accepted");
     let availableBreeds = selectedSpecies === "dog" ? dogBreeds
@@ -168,7 +180,7 @@ export default function Pet() {
 
   const clearFilter = (filterType) => {
     switch (filterType) {
-      case "species": setSelectedSpecies(""); break;
+      case "species": setSelectedSpecies(urlSpecies && allSpecies.includes(urlSpecies.toLowerCase()) ? urlSpecies.toLowerCase() : ""); break;
       case "breed": setSelectedBreed(""); break;
       case "age": setSelectedAge(""); break;
       case "fee": setSelectedFee(""); setSortOrder(""); break;
@@ -179,7 +191,13 @@ export default function Pet() {
   };
 
   const clearAllFilters = () => {
-    setSelectedSpecies(""); setSelectedBreed(""); setSelectedAge(""); setSelectedFee(""); setSortOrder(""); setSelectedCity(""); setSearchQuery("");
+    setSelectedSpecies(urlSpecies && allSpecies.includes(urlSpecies.toLowerCase()) ? urlSpecies.toLowerCase() : "");
+    setSelectedBreed("");
+    setSelectedAge("");
+    setSelectedFee("");
+    setSortOrder("");
+    setSelectedCity("");
+    setSearchQuery("");
   };
 
   const PawBackground = () => {
@@ -215,14 +233,11 @@ export default function Pet() {
     <section className="relative min-h-screen px-4 py-12 overflow-hidden bg-white sm:py-20 sm:px-6 lg:px-8">
       <div className="absolute inset-0 overflow-hidden pointer-events-none"><PawBackground /></div>
       <div className="relative mx-auto space-y-12 max-w-7xl">
-        {/* Header */}
         <div className="pt-16 space-y-6 text-center animate-fadeIn" style={{ animationDelay: "0.2s" }}>
           <span className="inline-flex items-center px-4 py-2 text-sm font-semibold text-[#ffc929] bg-[#ffc929]/10 border border-[#ffc929]/20 rounded-full shadow-sm"><Heart className="w-4 h-4 mr-2 text-[#ffc929]" />Adopt Your Perfect Pet</span>
           <h1 className="text-4xl font-semibold tracking-tight text-gray-800 md:text-5xl"><span className="block">Find Your</span><span className="block text-pink-500">Forever Companion</span></h1>
           <p className="max-w-2xl mx-auto text-lg leading-relaxed text-gray-600">Browse our adorable pets ready to bring joy to your home.</p>
         </div>
-
-        {/* Search and Filters */}
         <div className="p-6 space-y-6 bg-white border-2 border-[#ffc929]/20 shadow-lg rounded-3xl animate-fadeIn" style={{ animationDelay: "0.4s" }}>
           <div className="flex flex-col items-center gap-4 sm:flex-row"><SearchBar value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search by name, breed, or city..." /><button onClick={() => setIsFilterOpen(!isFilterOpen)} className="flex items-center gap-2 px-4 py-2.5 text-white bg-gradient-to-r from-[#ffc929] to-[#ffa726] rounded-xl shadow-md hover:from-[#ffa726] hover:to-[#ffc929] transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/30 disabled:opacity-50" aria-label={isFilterOpen ? "Hide filters" : "Show filters"}><Filter size={16} />{isFilterOpen ? "Hide" : "Filter"}</button></div>
           <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 transition-all duration-300 ${!isFilterOpen && "hidden"}`}>
@@ -238,15 +253,11 @@ export default function Pet() {
           )}
           {filteredPets.length > 0 && <div className="text-center"><span className="inline-flex items-center gap-2 px-4 py-1.5 text-sm font-medium text-gray-600 bg-white border border-[#ffc929]/20 rounded-full shadow-sm"><PawPrint size={14} className="text-[#ffc929]" />{filteredPets.length} Pets Available</span></div>}
         </div>
-
-        {/* Pet Cards Grid */}
         <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 transition-opacity duration-300 ${isAnimating ? "opacity-0" : "opacity-100"} animate-fadeIn`} style={{ animationDelay: "0.6s" }}>
           {currentPets.length > 0 ? currentPets.map((pet) => <PetCard key={pet._id} pet={pet} navigate={navigate} currencySymbol={currencySymbol} />) : (
             <div className="py-12 text-center col-span-full"><PawPrint size={48} className="mx-auto mb-4 text-[#ffc929]" /><h3 className="text-xl font-semibold text-gray-800">No Pets Found</h3><p className="mt-2 text-gray-600">Adjust your filters or search to find more pets.</p></div>
           )}
         </div>
-
-        {/* Pagination */}
         {filteredPets.length > petsPerPage && (
           <div className="flex items-center justify-center gap-4 mt-12 animate-fadeIn" style={{ animationDelay: "0.8s" }}>
             <button onClick={() => paginate(currentPage - 1)} disabled={currentPage === 1} className={`p-2 rounded-full ${currentPage === 1 ? "text-gray-300 cursor-not-allowed" : "text-[#ffc929] hover:bg-[#ffc929]/10"} transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/30`} aria-label="Previous page"><ChevronLeft size={24} /></button>

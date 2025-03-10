@@ -33,11 +33,14 @@ export default {
         'float': 'float 6s ease-in-out infinite',
         'float-slow': 'float 8s ease-in-out infinite',
         'ping-slow': 'ping 3s cubic-bezier(0, 0, 0.2, 1) infinite',
+        "fade-in": "fadeIn 0.3s ease-out",
+        "slide-up": "slideUp 0.3s ease-out",
       },
       keyframes: {
         fadeInLeft: {
           from: { opacity: '0', transform: 'translateX(-50px)' },
           to: { opacity: '1', transform: 'translateX(0)' },
+
         },
         fadeInRight: {
           from: { opacity: '0', transform: 'translateX(50px)' },
@@ -73,6 +76,11 @@ export default {
         sm: '4px',
         md: '8px',
       },
+      slideUp: {
+        "0%": { opacity: "0", transform: "translateY(20px)" },
+        "100%": { opacity: "1", transform: "translateY(0)" },
+      },
+      
     },
   },
   variants: {

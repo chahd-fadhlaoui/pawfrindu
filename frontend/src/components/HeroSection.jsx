@@ -1,6 +1,8 @@
-import { ArrowRight, HandHeartIcon, Heart } from "lucide-react";
-import React from "react";
-import dogImage from '../assets/dogHero.png'
+import { ArrowRight, HandHeartIcon } from "lucide-react"; // Retiré Heart si non utilisé
+import React, { useContext } from "react"; // Ajout de useContext
+import dogImage from '../assets/dogHero.png';
+import { AppContext } from '../context/AppContext'; // Importer AppContext
+
 const PawIcon = ({ className, style }) => (
   <svg
     viewBox="0 0 24 24"
@@ -13,6 +15,8 @@ const PawIcon = ({ className, style }) => (
 );
 
 const HeroSection = () => {
+  const { user } = useContext(AppContext); // Récupérer l'utilisateur depuis AppContext
+
   // Floating paw animation background
   const PawBackground = () => {
     return Array(12)
@@ -21,26 +25,26 @@ const HeroSection = () => {
         <PawIcon
           key={index}
           className={`
-          absolute w-10 h-10 opacity-10
-          animate-float
-          text-pink-300
-          ${
-            index % 3 === 0
-              ? "top-1/4"
-              : index % 3 === 1
-              ? "top-1/2"
-              : "top-3/4"
-          }
-          ${
-            index % 4 === 0
-              ? "left-1/4"
-              : index % 4 === 1
-              ? "left-1/2"
-              : index % 4 === 2
-              ? "left-3/4"
-              : "left-1/3"
-          }
-        `}
+            absolute w-10 h-10 opacity-10
+            animate-float
+            text-pink-300
+            ${
+              index % 3 === 0
+                ? "top-1/4"
+                : index % 3 === 1
+                ? "top-1/2"
+                : "top-3/4"
+            }
+            ${
+              index % 4 === 0
+                ? "left-1/4"
+                : index % 4 === 1
+                ? "left-1/2"
+                : index % 4 === 2
+                ? "left-3/4"
+                : "left-1/3"
+            }
+          `}
           style={{
             animationDelay: `${index * 0.5}s`,
             transform: `rotate(${index * 30}deg)`,
@@ -68,9 +72,14 @@ const HeroSection = () => {
             <h1 className="text-5xl font-bold tracking-tight text-gray-900 md:text-5xl group">
               <span className="block transition-all duration-300">
                 Welcome To{" "}
-                <i className="block mt-2 text-pink-500 transition-all duration-300 group-hover:scale-105">
+                <i className="inline-block mt-2 text-pink-500 transition-all duration-300 group-hover:scale-105">
                   PawFrindu
                 </i>
+                {user && user.fullName && (
+                <span className=" ml-2 text-pink-500 italic">
+                {user.fullName}
+              </span>
+                )}
               </span>
             </h1>
           </div>
@@ -110,7 +119,7 @@ const HeroSection = () => {
             <img
               src={dogImage}
               alt="Happy dog ready for adoption"
-              className="relative z-10 object-contain w-full h-auto transition-all duration-500 group-hover:scale-105 group-hover:rotate-2 drop-shadow-2xl"
+              className="relative z-10 object-contain w-full h-auto transition-all duration-300 group-hover:scale-105 group-hover:rotate-2 drop-shadow-2xl"
             />
           </div>
         </div>
