@@ -1,17 +1,17 @@
 import {
+  AlertCircle,
   Calendar,
+  Camera,
   Coins,
+  Info,
   MapPin,
   PawPrint,
   Star,
-  Zap,
-  AlertCircle,
   X,
-  Info,
-  Camera,
+  Zap,
 } from "lucide-react";
-import React, { useEffect, useState, useMemo, useCallback } from "react";
-import ImageUpload from "../components/ImageUpload";
+import React, { useCallback, useMemo, useState } from "react";
+import ImageUpload from "../../../ImageUpload";
 
 // Data constants moved to a separate file in a real application
 const SPECIES_OPTIONS = [

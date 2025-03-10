@@ -213,7 +213,6 @@ const PetPostsTab = ({ setSelectedPet, setApprovalMessage }) => {
       if (pet) {
         setEditMode(true);
         setSelectedPetLocal(pet);
-        setSelectedPet(pet);
         setEditFormData({
           name: pet.name,
           breed: pet.breed,
@@ -228,7 +227,7 @@ const PetPostsTab = ({ setSelectedPet, setApprovalMessage }) => {
         });
       }
     },
-    [userPets, setSelectedPet]
+    [userPets]
   );
 
   const handleDelete = useCallback(

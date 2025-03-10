@@ -1,5 +1,6 @@
 import Pet from "../models/petModel.js";
 import User from "../models/userModel.js";
+
 // Create a new pet
 export const createPet = async (req, res) => {
   try {
@@ -952,5 +953,35 @@ export const getMyAdoptionRequests = async (req, res) => {
       message: "Error fetching adoption requests",
       error: error.message,
     });
+  }
+};
+
+export const getPetStats = async (req, res) => {
+  try {
+    const totalPets = await Pet.countDocuments();
+    const pendingPets = await Pet.countDocuments({ status: "pending", isArchived: false });
+    const acceptedPets = await Pet.countDocuments({ status: "accepted", isArchived: false });
+    const adoptionPendingPets = await Pet.countDocuments({ status: "adoptionPending", isArchived: false });
+    const adoptedPets = await Pet.countDocuments({ status: "adopted", isArchived: false });
+    const soldPets = await Pet.countDocuments({ status: "sold", isArchived: false });
+    const archivedPets = await Pet.countDocuments({ isArchived: true });
+    const approvedPets = await Pet.countDocuments({ isApproved: true, isArchived: false });
+
+    res.json({
+      success: true,
+      stats: {
+        totalPets,
+        pendingPets,
+        acceptedPets,
+        adoptionPendingPets,
+        adoptedPets,
+        soldPets,
+        archivedPets,
+        approvedPets,
+      },
+    });
+  } catch (error) {
+    console.error("Get Pet Stats Error:", error);
+    res.status(500).json({ success: false, message: "Failed to fetch pet stats" });
   }
 };

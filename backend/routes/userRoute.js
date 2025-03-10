@@ -1,14 +1,17 @@
-// backend/routes/userRoute.js (or userRouter.js)
 import express from "express";
 import {
+  approveUser,
   createProfile,
+  deleteUserByAdmin,
   forgotPassword,
   getAllUsers,
   getCurrentUser,
+  getUserStats,
   login,
   register,
   resetPassword,
   updateProfile,
+  updateUserByAdmin,
   validateResetToken,
 } from "../controllers/userController.js";
 import { authenticate, authorize } from "../middlewares/authMiddleware.js";
@@ -30,5 +33,9 @@ userRouter.put("/updateProfile", authenticate, updateProfile); // Nouvelle route
 
 // Admin-Only Route
 userRouter.get('/getAllUsers', authenticate, authorize('Admin'), getAllUsers);
+userRouter.put("/users/:userId", authenticate, authorize("Admin"), updateUserByAdmin); // update the role / adminType / isActive / isArchieve
+userRouter.put("/users/:userId/approve", authenticate, authorize("Admin"), approveUser); // an endpoint for admins to activate accounts
+userRouter.delete("/users/:userId", authenticate, authorize("Admin"), deleteUserByAdmin); // an endpoint for admins to delete accounts
+userRouter.get("/stats", authenticate, authorize("Admin"), getUserStats);
 
 export default userRouter;

@@ -3,6 +3,8 @@ import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import User from "../models/userModel.js";
 import { sendEmail } from "../services/emailService.js";
+
+
 // 🚀 Étape 1: Enregistrement de l'utilisateur sans détails spécifiques
 const register = async (req, res) => {
   console.log("Received registration request with body:", req.body);
@@ -135,6 +137,8 @@ const createProfile = async (req, res) => {
     res.status(500).json({ message: "Failed to complete profile." });
   }
 };
+
+
 // 🚀 Étape 3: Connexion après enregistrement et complétion du profil
 const login = async (req, res) => {
   const { email, password } = req.body;
@@ -204,6 +208,7 @@ const login = async (req, res) => {
   }
 };
 
+
 // 🚀 Get current user profile
 const getCurrentUser = async (req, res) => {
   console.log('Handling GET /api/user/me for user:', req.user._id);
@@ -247,6 +252,7 @@ const getCurrentUser = async (req, res) => {
   }
 };
 
+
 // Middleware to verify token
 const verifyToken = async (req, res, next) => {
   try {
@@ -266,6 +272,8 @@ const verifyToken = async (req, res, next) => {
     return res.status(401).json({ message: "Invalid or expired token" });
   }
 };
+
+
 const forgotPassword = async (req, res) => {
   const { email } = req.body;
   console.log("Received forgot password request for:", email);
@@ -303,6 +311,8 @@ const forgotPassword = async (req, res) => {
     res.status(500).json({ message: "Failed to process password reset" });
   }
 };
+
+
 const resetPassword = async (req, res) => {
   const { token, newPassword } = req.body;
 
@@ -363,6 +373,8 @@ const resetPassword = async (req, res) => {
     });
   }
 };
+
+
 const validateResetToken = async (req, res) => {
   const { token } = req.params;
 
@@ -394,7 +406,7 @@ const validateResetToken = async (req, res) => {
 // 🚀 Get all users - simple version
 const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find({ isArchieve: false })
+    const users = await User.find()
       .select('-password -resetPasswordToken -resetPasswordExpiry');
 
     res.json({
@@ -475,6 +487,105 @@ const updateProfile = async (req, res) => {
     res.status(500).json({ message: "Failed to update profile" });
   }
 };
+
+const updateUserByAdmin = async (req, res) => {
+  const { userId } = req.params;
+  const { role, adminType, isActive, isArchieve } = req.body;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Update fields if provided
+    if (role) user.role = role;
+    if (role === "Admin" && adminType) user.adminType = adminType;
+    if (typeof isActive === "boolean") user.isActive = isActive;
+    if (typeof isArchieve === "boolean") user.isArchieve = isArchieve;
+
+    await user.save();
+    res.json({ message: "User updated successfully", user });
+  } catch (error) {
+    console.error("Update User Error:", error);
+    res.status(500).json({ message: "Failed to update user" });
+  }
+};
+
+
+const approveUser = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    if (user.isActive) {
+      return res.status(400).json({ message: "User is already active" });
+    }
+
+    user.isActive = true;
+    await user.save();
+
+    // Send email notification
+    await sendEmail({
+      to: user.email,
+      template: "profileApproved",
+      data: { fullName: user.fullName },
+    });
+
+    res.json({ message: "User approved and activated", user });
+  } catch (error) {
+    console.error("Approve User Error:", error);
+    res.status(500).json({ message: "Failed to approve user" });
+  }
+};
+
+const deleteUserByAdmin = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const user = await User.findByIdAndDelete(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json({ message: "User deleted successfully" });
+  } catch (error) {
+    console.error("Delete User Error:", error);
+    res.status(500).json({ message: "Failed to delete user" });
+  }
+};
+
+const getUserStats = async (req, res) => {
+  try {
+    const totalUsers = await User.countDocuments();
+    const activeUsers = await User.countDocuments({ isActive: true, isArchieve: false });
+    const inactiveUsers = await User.countDocuments({ isActive: false, isArchieve: false });
+    const archivedUsers = await User.countDocuments({ isArchieve: true });
+    const pendingUsers = await User.countDocuments({
+      $or: [{ role: "Vet" }, { role: "Trainer" }],
+      isActive: false,
+      isArchieve: false,
+      lastLogin: { $exists: false },
+    });
+
+    res.json({
+      success: true,
+      stats: {
+        totalUsers,
+        activeUsers,
+        inactiveUsers,
+        archivedUsers,
+        pendingUsers,
+      },
+    });
+  } catch (error) {
+    console.error("Get User Stats Error:", error);
+    res.status(500).json({ success: false, message: "Failed to fetch user stats" });
+  }
+};
+
 export {
   createProfile,
   forgotPassword,
@@ -485,5 +596,9 @@ export {
   getAllUsers,
   verifyToken,
   validateResetToken,
-  updateProfile
+  updateProfile,
+  updateUserByAdmin,
+  approveUser,
+  deleteUserByAdmin,
+  getUserStats,
 };

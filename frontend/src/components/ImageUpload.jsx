@@ -121,13 +121,13 @@ const ImageUpload = ({
   return (
     <div className="w-full h-full space-y-4">
       <div 
-       className={`
-        relative overflow-hidden rounded-xl border-2 transition-all duration-300
-        w-full h-full
-        ${className}
-        ${isDragging ? 'border-[#ffc929] scale-102' : 'border-gray-200'}
-        ${loading || uploadLoading ? 'opacity-75' : ''}
-      `}
+        className={`
+          relative overflow-hidden rounded-xl border-2 transition-all duration-300
+          w-full h-full
+          ${className}
+          ${isDragging ? 'border-[#ffc929] border-dashed bg-amber-50' : 'border-gray-200'}
+          ${loading || uploadLoading ? 'opacity-75' : ''}
+        `}
         onDragEnter={handleDragIn}
         onDragLeave={handleDragOut}
         onDragOver={handleDrag}
@@ -143,15 +143,25 @@ const ImageUpload = ({
                 alt="Preview"
                 className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
               />
-              {/* Overlay on hover */}
-              <div className="absolute inset-0 transition-opacity duration-300 opacity-0 bg-black/40 group-hover:opacity-100" />
+              {/* Enhanced overlay on hover */}
+              <div className="absolute inset-0 flex items-center justify-center transition-opacity duration-300 opacity-0 group-hover:opacity-100 bg-black/40 backdrop-blur-sm">
+                <div className="px-4 py-2 transition-transform duration-300 transform bg-white rounded-lg shadow-md hover:scale-105">
+                  <div className="flex items-center gap-2 text-[#e6b625]">
+                    <ImagePlus size={16} />
+                    <span className="font-medium">Change Image</span>
+                  </div>
+                </div>
+              </div>
             </div>
           ) : (
-            // Upload placeholder
+            // Upload placeholder with improved design
             <div className="flex flex-col items-center justify-center w-full h-full p-6 text-center">
-              <Camera size={48} className="mb-4 text-gray-400" />
-              <p className="text-sm text-gray-500">
-                Drag and drop an image here, or click to select
+              <div className="p-4 mb-4 rounded-full bg-amber-50">
+                <Camera size={36} className="text-[#ffc929]" />
+              </div>
+              <p className="mb-2 font-medium text-gray-700">Drop your image here</p>
+              <p className="max-w-xs text-sm text-gray-500">
+                Support for JPG, PNG and GIF files. Max size {maxSize}MB.
               </p>
             </div>
           )}
@@ -159,9 +169,9 @@ const ImageUpload = ({
 
         {/* Loading overlay */}
         {(loading || uploadLoading) && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white/50 backdrop-blur-sm">
-            <div className="flex flex-col items-center gap-3">
-              <Loader2 size={24} className="text-[#ffc929] animate-spin" />
+          <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-sm">
+            <div className="flex flex-col items-center gap-3 p-4 bg-white rounded-lg shadow-md">
+              <Loader2 size={28} className="text-[#ffc929] animate-spin" />
               <p className="text-sm font-medium text-gray-600">
                 {uploadLoading ? 'Uploading...' : 'Loading...'}
               </p>
@@ -179,10 +189,10 @@ const ImageUpload = ({
             disabled={loading || uploadLoading}
           />
           
-          {/* Only show button on hover if there's no preview */}
+          {/* Only show button if there's no preview */}
           {!preview && (
-            <div className="px-4 py-2 transition-transform duration-300 transform rounded-lg hover:scale-105 bg-[#ffc929] hover:bg-[#e6b625]">
-              <div className="flex items-center gap-2 text-white">
+            <div className="px-5 py-2 mt-16 transition-all duration-300 transform rounded-lg shadow-sm hover:shadow-md bg-[#ffc929] hover:bg-[#e6b625]">
+              <div className="flex items-center gap-2 font-medium text-white">
                 <ImagePlus size={16} />
                 <span>Select Image</span>
               </div>
@@ -194,23 +204,26 @@ const ImageUpload = ({
         {showRemove && preview && (
           <button
             onClick={handleRemove}
-            className="absolute p-2 transition-colors duration-300 rounded-full top-2 right-2 bg-black/50 hover:bg-black/70"
+            className="absolute p-2 transition-colors duration-300 rounded-full shadow-sm top-3 right-3 bg-white/80 hover:bg-white"
             disabled={loading || uploadLoading}
           >
-            <X size={16} className="text-white" />
+            <X size={16} className="text-gray-700" />
           </button>
         )}
       </div>
 
       {/* Error message */}
       {error && (
-        <div className="relative p-4 text-sm text-red-600 bg-red-100 rounded-lg">
-          <p>{error}</p>
+        <div className="relative p-4 text-sm text-red-600 border border-red-100 rounded-lg shadow-sm bg-red-50">
+          <div className="flex items-center gap-2">
+            <div className="h-4 bg-red-500 rounded-full min-w-1" />
+            <p>{error}</p>
+          </div>
           <button 
             onClick={clearError}
-            className="absolute p-1 transition-colors duration-300 bg-red-200 rounded-full -top-2 -right-2 hover:bg-red-300"
+            className="absolute p-1 transition-colors duration-300 bg-white border border-red-100 rounded-full -top-2 -right-2 hover:bg-red-50"
           >
-            <X size={14} />
+            <X size={14} className="text-red-500" />
           </button>
         </div>
       )}

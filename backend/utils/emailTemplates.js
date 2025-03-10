@@ -29,9 +29,9 @@ const emailStyles = `
 </style>
 `;
 export const emailTemplates = {
-    welcome: (fullName) => ({
-      subject: "Welcome to PawFrindu!",
-      html: `
+  welcome: (fullName) => ({
+    subject: "Welcome to PawFrindu!",
+    html: `
         ${emailStyles}
         <div class="email-container">
           <h1>Welcome to PawFrindu, ${fullName}! 🐾</h1>
@@ -49,11 +49,11 @@ export const emailTemplates = {
           </div>
         </div>
       `,
-    }),
-  
-    passwordReset: (resetData) => ({
-      subject: "Reset Your PawFrindu Password",
-      html: `
+  }),
+
+  passwordReset: (resetData) => ({
+    subject: "Reset Your PawFrindu Password",
+    html: `
         ${emailStyles}
         <div class="email-container">
           <h1>Password Reset Request 🔑</h1>
@@ -81,5 +81,19 @@ export const emailTemplates = {
           </div>
         </div>
       `,
-    }),
-  };
+  }),
+  profileApproved: (data) => ({
+    subject: "Your PawFrindu Profile is Approved!",
+    html: `
+        ${emailStyles}
+        <div class="email-container">
+          <h1>Congratulations, ${data.fullName}! 🎉</h1>
+          <p>Your profile has been approved and is now active on PawFrindu.</p>
+          <a href="${process.env.FRONTEND_URL}/login" class="button">Log In Now</a>
+          <div class="footer">
+            <p>Welcome aboard!<br>The PawFrindu Team</p>
+          </div>
+        </div>
+      `,
+  }),
+};

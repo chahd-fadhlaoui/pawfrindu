@@ -24,8 +24,10 @@ const AppContextProvider = ({ children }) => {
   const [error, setError] = useState("");
   const [pets, setPets] = useState([]);
   const [userPets, setUserPets] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
   const [lastPetFetchTime, setLastPetFetchTime] = useState(0);
-  const [refreshPetsTrigger, setRefreshPetsTrigger] = useState(0);
+  const [lastUsersFetchTime, setLastUsersFetchTime] = useState(0);
+  const [refreshTrigger, setRefreshTrigger] = useState(0); // Unified refresh trigger
   const currencySymbol = "Dt";
   const CACHE_DURATION = 60000; // 60 seconds
 
@@ -94,6 +96,23 @@ const AppContextProvider = ({ children }) => {
     });
   }, [pets, lastPetFetchTime]);
 
+  const fetchAllUsers = useCallback(async () => {
+    const now = Date.now();
+    if (allUsers.length > 0 && now - lastUsersFetchTime < CACHE_DURATION) {
+      return allUsers;
+    }
+    return measureTime("fetchAllUsers", async () => {
+      const response = await axiosInstance.get("/api/user/getAllUsers");
+      const usersData = response.data.users || [];
+      setAllUsers(usersData);
+      setLastUsersFetchTime(now);
+      return usersData;
+    }).catch((error) => {
+      setError("Failed to fetch users");
+      return [];
+    });
+  }, [allUsers, lastUsersFetchTime]);
+
   const getMyPets = useCallback(async () => {
     return measureTime("getMyPets", async () => {
       const response = await axiosInstance.get("/api/pet/mypets");
@@ -118,7 +137,7 @@ const AppContextProvider = ({ children }) => {
         image: userData.image || DEFAULT_PROFILE_IMAGE,
         email: userData.email,
         role: userData.role,
-        adminType: userData.adminType, // Ajouter adminType
+        adminType: userData.adminType, 
         about: userData.about || "",
         displayRole:
           userData.role === "PetOwner"
@@ -175,9 +194,14 @@ const getMyAdoptionRequests = useCallback(async () => {
           // Only run if no user is set
           const isAuthenticated = await checkAuth();
           if (isAuthenticated) {
-            await fetchUserProfile();
-            if (user?.role === "PetOwner" && userPets.length === 0)
+            const currentUser = await fetchUserProfile(); // Fetch user first
+            if (currentUser.role === "PetOwner" && userPets.length === 0) {
               await getMyPets();
+            }
+            if (currentUser.role === "Admin") {
+              await fetchAllUsers(); // Fetch users for Admin after user is set
+            }
+            console.log("Initialization succeeded")
           } else {
             console.log("Initial auth check failed");
             localStorage.removeItem("token"); // Clear invalid token
@@ -192,13 +216,15 @@ const getMyAdoptionRequests = useCallback(async () => {
       }
     };
     initialize();
-  }, [checkAuth, fetchUserProfile, getMyPets, userPets.length, fetchPets]); 
+  }, [checkAuth, fetchUserProfile, getMyPets, fetchAllUsers, fetchPets]); 
+
   // Refresh pets when triggered
   useEffect(() => {
-    if (refreshPetsTrigger > 0) {
+    if (refreshTrigger > 0) {
       fetchPets();
+      if (user?.role === "Admin") fetchAllUsers(); // Only refresh users for Admin
     }
-  }, [refreshPetsTrigger, fetchPets]);
+  }, [refreshTrigger, fetchPets, fetchAllUsers, user]);
 
   // Auth functions
   const login = async (email, password) => {
@@ -218,7 +244,10 @@ const getMyAdoptionRequests = useCallback(async () => {
         adminType: userData.adminType, // Inclure adminType
       });
       setUser(updatedUser);
-      await Promise.all([fetchUserProfile(), fetchPets(), getMyPets()]);
+      const fetchPromises = [fetchUserProfile(), fetchPets()];
+      if (updatedUser.role === "PetOwner") fetchPromises.push(getMyPets());
+      if (updatedUser.role === "Admin") fetchPromises.push(fetchAllUsers());
+      await Promise.all(fetchPromises);
       return {
         success: true,
         redirectTo:
@@ -260,7 +289,9 @@ const getMyAdoptionRequests = useCallback(async () => {
           adminType: response.data.user.adminType, // Inclure adminType dans l'état
         });
         setUser(updatedUser);
-        await fetchPets();
+        const fetchPromises = [fetchPets()];
+        if (updatedUser.role === "Admin") fetchPromises.push(fetchAllUsers());
+        await Promise.all(fetchPromises);
       }
       return { success: true, message: response.data.message };
     } catch (error) {
@@ -421,14 +452,38 @@ const getMyAdoptionRequests = useCallback(async () => {
     setUser(null);
     setUserPets([]);
     setPets([]);
+    setAllUsers([]);
     setLastPetFetchTime(0);
-    setRefreshPetsTrigger(0);
+    setLastUsersFetchTime(0);
+    setRefreshTrigger(0);
   }, []);
 
   const clearError = useCallback(() => setError(""), []);
 
   const updateUser = useCallback((userData) => {
     setUser((prevUser) => ensureUserHasImage({ ...prevUser, ...userData }));
+  }, []);
+
+  const updateUsers = useCallback((updatedUsers) => {
+    setAllUsers((prevUsers) => {
+      const newUsers = updatedUsers.filter((u) => !prevUsers.some((p) => p._id === u._id));
+      const updatedExisting = prevUsers.map((user) => {
+        const updatedUser = updatedUsers.find((u) => u._id === user._id);
+        return updatedUser ? { ...user, ...updatedUser } : user;
+      });
+      return [...updatedExisting, ...newUsers];
+    });
+  }, []);
+
+  const updatePets = useCallback((updatedPets) => {
+    setPets((prevPets) => {
+      const newPets = updatedPets.filter((p) => !prevPets.some((prev) => prev._id === p._id));
+      const updatedExisting = prevPets.map((pet) => {
+        const updatedPet = updatedPets.find((p) => p._id === pet._id);
+        return updatedPet ? { ...pet, ...updatedPet } : pet;
+      });
+      return [...updatedExisting, ...newPets];
+    });
   }, []);
 
   const value = useMemo(
@@ -438,6 +493,7 @@ const getMyAdoptionRequests = useCallback(async () => {
       error,
       pets,
       userPets,
+      allUsers,
       currencySymbol,
       login,
       register,
@@ -450,6 +506,7 @@ const getMyAdoptionRequests = useCallback(async () => {
       createProfile,
       updateUser,
       fetchPets,
+      fetchAllUsers,
       getMyPets,
       getMyAdoptionRequests,
       updatePet,
@@ -458,7 +515,9 @@ const getMyAdoptionRequests = useCallback(async () => {
       setError,
       setLoading,
       applyToAdopt,
-      triggerPetsRefresh: () => setRefreshPetsTrigger((prev) => prev + 1),
+      triggerRefresh: () => setRefreshTrigger((prev) => prev + 1),
+      updateUsers,
+      updatePets,
     }),
     [
       user,
@@ -468,10 +527,13 @@ const getMyAdoptionRequests = useCallback(async () => {
       userPets,
       checkAuth,
       fetchPets,
+      fetchAllUsers,
       getMyPets,
       logout,
       clearError,
       updateUser,
+      updateUsers,
+      updatePets,
     ]
   );
 

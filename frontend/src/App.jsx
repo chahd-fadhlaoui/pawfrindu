@@ -41,7 +41,7 @@ const Layout = ({ children }) => {
     !isTrainerPage && 
     !isVetPage && 
     !isForbiddenPage && 
-    !isAdminLoginPage;  // Nouvelle condition ajoutée
+    !isAdminLoginPage; 
 
 
  

@@ -1,26 +1,24 @@
 import express from 'express';
 import {
-  createPet,
-  getAllPets,
-  getPetById,
-  updatePet,
-  deletePet,
-  getMyPets,
-  approvePet,
-  getPetsByStatus,
-  approveAdoption,
-  modifyPetStatus,
-  deleteAdminPet,
-  unarchivePet,
-  getPetCandidates,
-  updateCandidateStatus,
-  finalizeAdoption,
   applyToAdopt,
-  getMyAdoptionRequests,
+  approveAdoption,
   archivePet,
-} from '../controllers/petController.js'
-import { authenticate, authorize } from '../middlewares/authMiddleware.js'
-import { verifyToken } from "../controllers/userController.js";
+  createPet,
+  deleteAdminPet,
+  deletePet,
+  finalizeAdoption,
+  getAllPets,
+  getMyAdoptionRequests,
+  getMyPets,
+  getPetById,
+  getPetCandidates,
+  modifyPetStatus,
+  unarchivePet,
+  updateCandidateStatus,
+  updatePet,
+  getPetStats,
+} from '../controllers/petController.js';
+import { authenticate, authorize } from '../middlewares/authMiddleware.js';
 const petRouter = express.Router();
 
 // Routes publiques
@@ -55,6 +53,7 @@ petRouter.put('/modifyStatus/:id', modifyPetStatus);  // Récupérer un pet par 
 petRouter.delete('/deleteAdminPet/:id', deleteAdminPet);  // Supprimer un pet
 petRouter.put('/archivePet/:id', archivePet);  // Nouvelle route pour archiver un pet
 
-petRouter.put('/unarchivePet/:id',unarchivePet); // Ajoutez cette route
+petRouter.put('/unarchivePet/:id',unarchivePet); 
+petRouter.get("/stats", getPetStats);
 
 export default petRouter;

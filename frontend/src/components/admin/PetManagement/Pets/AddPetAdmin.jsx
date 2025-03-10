@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { X, Loader2, PawPrint } from "lucide-react";
-import axiosInstance from "../../utils/axiosInstance";
-import ImageUpload from "../ImageUpload";
+import axiosInstance from "../../../../utils/axiosInstance";
+import ImageUpload from "../../../ImageUpload";
 
 // Breed lists
 const dogBreeds = [

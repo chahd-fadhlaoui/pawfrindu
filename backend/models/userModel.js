@@ -19,7 +19,12 @@ const userSchema = new mongoose.Schema(
         return this.role === "Admin"; // Obligatoire uniquement pour les admins
       },
     },
-    
+    isActive: {
+      type: Boolean,
+      default: function () {
+        return this.role === "Vet" || this.role === "Trainer" ? false : true;
+      },
+    },
     isArchieve: {
       type: Boolean,
       default: false,
