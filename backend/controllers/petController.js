@@ -298,8 +298,7 @@ export const applyToAdopt = async (req, res) => {
 
     const { petId } = req.params;
     const userId = req.user?._id;
-    const { occupation, workSchedule, housing, reasonForAdoption, readiness } =
-      req.body;
+    const { occupation, workSchedule, housing, reasonForAdoption, readiness } = req.body;
 
     console.log("petId:", petId);
     console.log("userId:", userId);
@@ -313,17 +312,13 @@ export const applyToAdopt = async (req, res) => {
 
     if (!userId) {
       console.error("No user ID found in request");
-      return res
-        .status(401)
-        .json({ success: false, message: "User not authenticated" });
+      return res.status(401).json({ success: false, message: "User not authenticated" });
     }
 
     const user = await User.findById(userId);
     if (!user) {
       console.error("User not found for ID:", userId);
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
+      return res.status(404).json({ success: false, message: "User not found" });
     }
 
     const pet = await Pet.findById(petId);
@@ -342,30 +337,30 @@ export const applyToAdopt = async (req, res) => {
 
     if (!pet.owner) {
       console.error("Pet has no owner:", pet);
-      return res
-        .status(400)
-        .json({ success: false, message: "Pet has no owner defined" });
+      return res.status(400).json({ success: false, message: "Pet has no owner defined" });
     }
     if (pet.owner.toString() === userId.toString()) {
       console.warn("User is the owner of the pet");
-      return res
-        .status(400)
-        .json({ success: false, message: "You cannot adopt your own pet" });
+      return res.status(400).json({ success: false, message: "You cannot adopt your own pet" });
     }
 
-    // Check if user is already a candidate with defensive check
+    // Check if user is already a candidate
     const isCandidate = pet.candidates.some(
-      (candidate) =>
-        candidate.user && candidate.user.toString() === userId.toString()
+      (candidate) => candidate.user && candidate.user.toString() === userId.toString()
     );
-    if (!isCandidate) {
-      pet.candidates.push({ user: userId, status: "pending" });
-      console.log("Adding user to candidates:", pet.candidates);
-      await pet.save();
-      console.log("Pet saved successfully");
-    } else {
+    if (isCandidate) {
       console.log("User is already a candidate:", userId);
+      return res.status(400).json({
+        success: false,
+        message: "You have already applied to adopt this pet",
+      });
     }
+
+    // Add user to candidates
+    pet.candidates.push({ user: userId, status: "pending" });
+    console.log("Adding user to candidates:", pet.candidates);
+    await pet.save();
+    console.log("Pet saved successfully");
 
     user.petOwnerDetails = {
       ...user.petOwnerDetails,
@@ -983,5 +978,61 @@ export const getPetStats = async (req, res) => {
   } catch (error) {
     console.error("Get Pet Stats Error:", error);
     res.status(500).json({ success: false, message: "Failed to fetch pet stats" });
+  }
+};
+
+export const getMyAdoptedPets = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Find pets where the user is a candidate and filter for adopted ones
+    const pets = await Pet.find({
+      "candidates.user": userId,
+      "candidates.status": "approved", // Only approved candidates
+      status: "adopted", // Only adopted pets
+      isArchived: false,
+    })
+      .select(
+        "name species city image status candidates breed age gender fee isTrained description owner"
+      )
+      .populate("owner", "fullName");
+
+    console.log("Adopted pets fetched:", pets);
+
+    // Transform the data to focus on the user's adopted pets
+    const adoptedPets = pets.map((pet) => {
+      const candidate = pet.candidates.find(
+        (c) => c.user.toString() === userId.toString()
+      );
+      return {
+        _id: pet._id,
+        name: pet.name,
+        species: pet.species,
+        breed: pet.breed,
+        age: pet.age,
+        gender: pet.gender,
+        fee: pet.fee,
+        isTrained: pet.isTrained,
+        city: pet.city,
+        image: pet.image,
+        description: pet.description,
+        owner: pet.owner ? pet.owner.fullName : "Unknown",
+        status: pet.status,
+        adoptedDate: pet.updatedAt, // Use updatedAt as adoption date
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      count: adoptedPets.length,
+      data: adoptedPets,
+    });
+  } catch (error) {
+    console.error("Get My Adopted Pets Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error fetching adopted pets",
+      error: error.message,
+    });
   }
 };

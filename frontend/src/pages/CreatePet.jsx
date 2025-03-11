@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import ImageUpload from "../components/ImageUpload";
 import { useApp } from "../context/AppContext";
 import axiosInstance from "../utils/axiosInstance";
+import HelpSection from "../components/common/HelpSection";
 
 const PawIcon = ({ className, style }) => (
   <svg
@@ -126,10 +127,25 @@ const CreatePet = () => {
           className={`
             absolute w-8 h-8 opacity-5 animate-float
             ${index % 2 === 0 ? "text-[#ffc929]" : "text-pink-300"}
-            ${index % 3 === 0 ? "top-1/4" : index % 3 === 1 ? "top-1/2" : "top-3/4"}
-            ${index % 4 === 0 ? "left-1/4" : index % 4 === 1 ? "left-1/2" : "left-3/4"}
+            ${
+              index % 3 === 0
+                ? "top-1/4"
+                : index % 3 === 1
+                ? "top-1/2"
+                : "top-3/4"
+            }
+            ${
+              index % 4 === 0
+                ? "left-1/4"
+                : index % 4 === 1
+                ? "left-1/2"
+                : "left-3/4"
+            }
           `}
-          style={{ animationDelay: `${index * 0.5}s`, transform: `rotate(${index * 45}deg)` }}
+          style={{
+            animationDelay: `${index * 0.5}s`,
+            transform: `rotate(${index * 45}deg)`,
+          }}
         />
       ));
   };
@@ -163,7 +179,10 @@ const CreatePet = () => {
       setError("Please provide a description");
       return false;
     }
-    if (formData.feeOption === "With Fee" && (!formData.fee || Number(formData.fee) <= 0)) {
+    if (
+      formData.feeOption === "With Fee" &&
+      (!formData.fee || Number(formData.fee) <= 0)
+    ) {
       setError("Please enter a valid fee amount greater than 0");
       return false;
     }
@@ -216,7 +235,10 @@ const CreatePet = () => {
           <PawBackground />
         </div>
         <div className="relative text-center">
-          <PawPrint size={48} className="mx-auto text-[#ffc929] animate-bounce" />
+          <PawPrint
+            size={48}
+            className="mx-auto text-[#ffc929] animate-bounce"
+          />
           <p className="mt-4 text-gray-600">Loading...</p>
         </div>
       </div>
@@ -230,16 +252,21 @@ const CreatePet = () => {
       </div>
       <div className="relative max-w-5xl mx-auto space-y-12">
         {/* Header */}
-        <div className="pt-16 space-y-6 text-center animate-fadeIn" style={{ animationDelay: "0.2s" }}>
+        <div
+          className="pt-16 space-y-6 text-center animate-fadeIn"
+          style={{ animationDelay: "0.2s" }}
+        >
           <span className="inline-flex items-center px-4 py-2 text-sm font-semibold text-pink-500 bg-white border border-pink-100 rounded-full shadow-sm">
-            <PawPrint className="w-4 h-4 mr-2 text-yellow-400" />Create a New Pet Profile
+            <PawPrint className="w-4 h-4 mr-2 text-yellow-400" />
+            Create a New Pet Profile
           </span>
           <h1 className="text-4xl font-bold tracking-tight text-gray-900 md:text-5xl">
             <span className="block">Help a Pet</span>
             <span className="block text-pink-500">Find a Home</span>
           </h1>
           <p className="max-w-2xl mx-auto text-lg leading-relaxed text-gray-600">
-            Share the details of your furry friend to find them the perfect family!
+            Share the details of your furry friend to find them the perfect
+            family!
           </p>
         </div>
 
@@ -250,7 +277,9 @@ const CreatePet = () => {
               className="fixed top-4 left-4 z-50 group flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border-2 border-[#ffc929]/20 hover:border-[#ffc929] transition-all duration-300 hover:scale-105"
             >
               <ArrowLeft className="w-4 h-4 text-[#ffc929] transition-transform duration-300 transform group-hover:-translate-x-1" />
-              <span className="text-gray-700 group-hover:text-[#ffc929] transition-colors duration-300">Back</span>
+              <span className="text-gray-700 group-hover:text-[#ffc929] transition-colors duration-300">
+                Back
+              </span>
             </button>
 
             <div className="relative md:w-1/2">
@@ -267,24 +296,36 @@ const CreatePet = () => {
             <div className="flex flex-col p-6 space-y-6 md:w-1/2 md:p-8">
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <input
-                      type="text"
-                      placeholder="Pet Name"
-                      className="text-3xl font-bold text-gray-900 placeholder-gray-400 bg-transparent border-none focus:outline-none focus:ring-0"
-                      value={formData.name}
-                      onChange={(e) => handleInputChange("name", e.target.value)}
-                      required
-                    />
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="relative w-full group">
+                      <label
+                        htmlFor="petName"
+                        className="absolute -top-3 left-4 px-2 bg-white text-pink-500 text-xs font-medium"
+                      >
+                        Pet Name
+                      </label>
+                      <input
+                        id="petName"
+                        type="text"
+                        placeholder="Enter your pet's name"
+                        className="w-full text-2xl font-semibold text-gray-900 placeholder-gray-400 bg-white border-2 border-amber-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent transition-all duration-200"
+                        value={formData.name}
+                        onChange={(e) =>
+                          handleInputChange("name", e.target.value)
+                        }
+                        required
+                      />
+                    </div>
                   </div>
-
                   <div className="flex flex-wrap items-center gap-3 text-gray-600">
                     <div className="flex items-center gap-2 bg-[#ffc929]/10 px-3 py-1.5 rounded-full border border-[#ffc929]/20">
                       <Star size={14} />
                       <select
                         className="w-32 bg-transparent border-none focus:outline-none focus:ring-0"
                         value={formData.species}
-                        onChange={(e) => handleInputChange("species", e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("species", e.target.value)
+                        }
                       >
                         <option value="dog">Dog</option>
                         <option value="cat">Cat</option>
@@ -299,13 +340,17 @@ const CreatePet = () => {
                           placeholder="Enter breed..."
                           className="w-32 bg-transparent border-none focus:outline-none focus:ring-0"
                           value={formData.breed}
-                          onChange={(e) => handleInputChange("breed", e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange("breed", e.target.value)
+                          }
                         />
                       ) : (
                         <select
                           className="w-32 bg-transparent border-none focus:outline-none focus:ring-0"
                           value={formData.breed}
-                          onChange={(e) => handleInputChange("breed", e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange("breed", e.target.value)
+                          }
                           required
                         >
                           {availableBreeds.map((breed) => (
@@ -328,7 +373,9 @@ const CreatePet = () => {
                     placeholder="Tell us about your pet..."
                     className="w-full h-32 p-3 text-base leading-relaxed text-gray-600 bg-white/50 rounded-xl border-2 border-[#ffc929]/20 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/30"
                     value={formData.description}
-                    onChange={(e) => handleInputChange("description", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("description", e.target.value)
+                    }
                     required
                   />
                 </div>
@@ -355,7 +402,12 @@ const CreatePet = () => {
                     <select
                       className="bg-transparent border-none focus:outline-none focus:ring-0"
                       value={formData.isTrained}
-                      onChange={(e) => handleInputChange("isTrained", e.target.value === "true")}
+                      onChange={(e) =>
+                        handleInputChange(
+                          "isTrained",
+                          e.target.value === "true"
+                        )
+                      }
                     >
                       <option value="true">Trained</option>
                       <option value="false">Not Trained</option>
@@ -366,7 +418,9 @@ const CreatePet = () => {
                     <select
                       className="bg-transparent border-none focus:outline-none focus:ring-0"
                       value={formData.gender}
-                      onChange={(e) => handleInputChange("gender", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("gender", e.target.value)
+                      }
                     >
                       <option value="male">Male</option>
                       <option value="female">Female</option>
@@ -378,7 +432,9 @@ const CreatePet = () => {
                     <select
                       className="bg-transparent border-none focus:outline-none focus:ring-0"
                       value={formData.city}
-                      onChange={(e) => handleInputChange("city", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("city", e.target.value)
+                      }
                       required
                     >
                       <option value="">Select city...</option>
@@ -395,7 +451,9 @@ const CreatePet = () => {
                     <select
                       className="bg-transparent border-none focus:outline-none focus:ring-0"
                       value={formData.feeOption}
-                      onChange={(e) => handleInputChange("feeOption", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("feeOption", e.target.value)
+                      }
                     >
                       <option value="Free">Free</option>
                       <option value="With Fee">With Fee</option>
@@ -410,7 +468,9 @@ const CreatePet = () => {
                         placeholder="Enter fee..."
                         className="w-24 bg-transparent border-none focus:outline-none focus:ring-0"
                         value={formData.fee}
-                        onChange={(e) => handleInputChange("fee", e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("fee", e.target.value)
+                        }
                         min="1"
                         required
                       />
@@ -427,13 +487,41 @@ const CreatePet = () => {
                 <button
                   type="submit"
                   disabled={submitLoading}
-                  className={`w-full text-center py-4 rounded-xl font-bold text-white transition-all duration-300 transform hover:scale-105 bg-gradient-to-r from-[#ffc929] to-[#ffa726] hover:from-[#ffa726] hover:to-[#ffc929] shadow-lg shadow-[#ffc929]/20 hover:shadow-xl hover:shadow-[#ffc929]/30 ${submitLoading ? "opacity-70 cursor-not-allowed" : ""}`}
+                  className={`w-full text-center py-4 rounded-xl font-bold text-white transition-all duration-300 transform hover:scale-105 bg-gradient-to-r from-[#ffc929] to-[#ffa726] hover:from-[#ffa726] hover:to-[#ffc929] shadow-lg shadow-[#ffc929]/20 hover:shadow-xl hover:shadow-[#ffc929]/30 ${
+                    submitLoading ? "opacity-70 cursor-not-allowed" : ""
+                  }`}
                 >
                   {submitLoading ? "Creating..." : "Create Pet Profile"}
                 </button>
               </form>
             </div>
           </div>
+          {/* Help Section with custom content for CreatePet */}
+          <HelpSection show={true} title="How to Create a Pet Profile">
+            <li>
+              Upload a clear photo of your pet using the image uploader on the
+              left.
+            </li>
+            <li>
+              Fill in all required fields like{" "}
+              <span className="font-medium">name</span>,{" "}
+              <span className="font-medium">breed</span>, and{" "}
+              <span className="font-medium">city</span>.
+            </li>
+            <li>
+              Write a brief <span className="font-medium">description</span> to
+              tell others about your pet.
+            </li>
+            <li>
+              Select <span className="font-medium">Free</span> or{" "}
+              <span className="font-medium">With Fee</span> and add a fee if
+              applicable.
+            </li>
+            <li>
+              Click <span className="font-medium">Create Pet Profile</span> to
+              submit.
+            </li>
+          </HelpSection>
         </div>
       </div>
     </div>

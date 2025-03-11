@@ -6,6 +6,7 @@ import PetDetailsModal from "../components/PetDetailsModal";
 import AdoptionRequestsTab from "../components/PetManagement/AdoptionRequestsTab";
 import PetPostsTab from "../components/PetManagement/PetPostsTab";
 import { useApp } from "../context/AppContext";
+import HelpSection from "../components/common/HelpSection";
 
 // Main Dashboard Component
 const PetManagementDashboard = () => {
@@ -105,15 +106,48 @@ const PetManagementDashboard = () => {
           />
         )}
 
-        {/* Tab Content */}
-        {activeTab === "posts" ? (
-          <PetPostsTab
-            setSelectedPet={setSelectedPet}
-            setApprovalMessage={setApprovalMessage}
-          />
-        ) : (
-          <AdoptionRequestsTab setSelectedPet={setSelectedPet} />
-        )}
+{/* Tab Content */}
+{activeTab === "posts" ? (
+  <>
+    <PetPostsTab
+      setSelectedPet={setSelectedPet}
+      setApprovalMessage={setApprovalMessage}
+    />
+    <HelpSection show={true} title="How to Manage Your Pet Posts">
+      <li>View all your listed pets below.</li>
+      <li>
+        Click a pet to edit its details; changes require{" "}
+        <span className="font-medium">admin approval</span> before going live.
+      </li>
+      <li>
+        Click the <span className="font-medium">Candidates</span> button to see
+        adoption applicants for a pet.
+      </li>
+      <li>
+        Delete a pet post  by clicking the trash icon (no approval
+        needed).
+      </li>
+    </HelpSection>
+  </>
+) : (
+  <>
+    <AdoptionRequestsTab setSelectedPet={setSelectedPet} />
+    <HelpSection show={true} title="How to Manage Adoption Requests" >
+      <li>View all adoption requests for your pets below.</li>
+      <li>
+        Click the <span className="font-medium">eye icon</span> to see pet
+        details in a popup.
+      </li>
+      <li>
+     approval is pending until
+        the <span className="font-medium">pet owner confirms</span>.
+      </li>
+      <li>
+        Track the status of your requests after the pet owner’s decision.
+      </li>
+    </HelpSection>
+  </>
+)}
 
         {/* Modal */}
         {selectedPet && (

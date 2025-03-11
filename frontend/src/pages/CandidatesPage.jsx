@@ -3,7 +3,6 @@ import {
   ArrowLeft,
   Check,
   XCircle,
-  UserCheck,
   ChevronDown,
   ChevronUp,
   Search,
@@ -22,13 +21,31 @@ import {
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axiosInstance from "../utils/axiosInstance";
+import ConfirmationModal from "../components/ConfirmationModal"; // Adjust the path as needed
+import HelpSection from "../components/common/HelpSection";
 
-// Composant pour le statut du candidat
+// Pink SVG User Icon with subtle pink accent
+const PinkUserIcon = ({ className }) => (
+  <svg
+    viewBox="0 0 24 24"
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+    <circle cx="12" cy="7" r="4" fill="#fce7f3" /> {/* Subtle pink fill for head */}
+  </svg>
+);
+
+// Candidate Status Component (Back to amber for pending)
 const CandidateStatus = ({ status }) => {
   const styles = {
     approved: "bg-gradient-to-r from-green-100 to-green-200 text-green-800",
     rejected: "bg-gradient-to-r from-red-100 to-red-200 text-red-800",
-    pending: "bg-gradient-to-r from-amber-100 to-amber-200 text-amber-800",
+    pending: "bg-gradient-to-r from-amber-100 to-amber-200 text-amber-800", // Reverted to amber
   };
 
   const icons = {
@@ -48,14 +65,14 @@ const CandidateStatus = ({ status }) => {
   );
 };
 
-// Barre de recherche
+// Search Bar (Back to amber with a pink accent on hover)
 const SearchBar = ({ value, onChange, onReset }) => (
   <div className="relative w-full max-w-md">
     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-amber-500" />
     <input
       type="text"
       placeholder="Search candidates by name..."
-      className="w-full pl-10 pr-10 py-2.5 bg-white border border-amber-200 rounded-full focus:ring-2 focus:ring-amber-300 focus:border-amber-400 outline-none transition-all duration-300 text-gray-700 shadow-sm"
+      className="w-full pl-10 pr-10 py-2.5 bg-white border border-amber-200 rounded-full focus:ring-2 focus:ring-pink-300 focus:border-pink-400 outline-none transition-all duration-300 text-gray-700 shadow-sm" // Pink on focus
       value={value}
       onChange={onChange}
       aria-label="Search candidates"
@@ -63,7 +80,7 @@ const SearchBar = ({ value, onChange, onReset }) => (
     {value && (
       <button
         onClick={onReset}
-        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-amber-400 hover:text-amber-600 transition-colors duration-200"
+        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-amber-400 hover:text-pink-600 transition-colors duration-200" // Pink on hover
         aria-label="Clear search"
       >
         <X className="w-5 h-5" />
@@ -72,13 +89,13 @@ const SearchBar = ({ value, onChange, onReset }) => (
   </div>
 );
 
-// Bouton de filtre
+// Filter Button (Back to amber with pink active state)
 const FilterButton = ({ active, label, count, onClick }) => (
   <button
     onClick={onClick}
     className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
       active
-        ? "bg-gradient-to-r from-amber-400 to-amber-500 text-white shadow-md"
+        ? "bg-gradient-to-r from-pink-400 to-pink-500 text-white shadow-md" // Pink when active
         : "bg-white text-amber-700 border border-amber-200 hover:bg-amber-50 hover:border-amber-300"
     }`}
     aria-label={`Filter by ${label} (${count} candidates)`}
@@ -87,7 +104,7 @@ const FilterButton = ({ active, label, count, onClick }) => (
     {count !== undefined && (
       <span
         className={`text-xs px-2 py-0.5 rounded-full ${
-          active ? "bg-white text-amber-500" : "bg-amber-100 text-amber-600"
+          active ? "bg-white text-pink-500" : "bg-amber-100 text-amber-600"
         }`}
       >
         {count}
@@ -96,86 +113,7 @@ const FilterButton = ({ active, label, count, onClick }) => (
   </button>
 );
 
-// Modal de confirmation
-const ConfirmationModal = ({ isOpen, onClose, onConfirm, action, itemName }) => {
-  if (!isOpen) return null;
-
-  const getActionDetails = () => {
-    switch (action) {
-      case "select":
-        return {
-          title: "Select Candidate",
-          message: `Confirm selecting "${itemName}"? This will reject other candidates.`,
-          icon: <UserCheck className="w-12 h-12 text-amber-500" />,
-          confirmColor: "bg-amber-500 hover:bg-amber-600",
-          confirmText: "Select",
-        };
-      case "finalize":
-        return {
-          title: "Finalize Adoption",
-          message: `Make "${itemName}" the official adopter? This cannot be undone.`,
-          icon: <Check className="w-12 h-12 text-green-500" />,
-          confirmColor: "bg-green-500 hover:bg-green-600",
-          confirmText: "Finalize",
-        };
-      case "reject":
-        return {
-          title: "Reject Candidate",
-          message: `Reject "${itemName}"? They'll be notified of your decision.`,
-          icon: <AlertTriangle className="w-12 h-12 text-red-500" />,
-          confirmColor: "bg-red-500 hover:bg-red-600",
-          confirmText: "Reject",
-        };
-      default:
-        return {
-          title: "Confirm Action",
-          message: "Are you sure?",
-          icon: <AlertCircle className="w-12 h-12 text-amber-500" />,
-          confirmColor: "bg-amber-500 hover:bg-amber-600",
-          confirmText: "Confirm",
-        };
-    }
-  };
-
-  const { title, message, icon, confirmColor, confirmText } = getActionDetails();
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl border border-amber-100 animate-slide-up">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-semibold text-gray-800">{title}</h3>
-          <button
-            onClick={onClose}
-            className="text-amber-500 hover:text-amber-700 transition-colors duration-200"
-            aria-label="Close"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-        <div className="text-center space-y-4">
-          {icon}
-          <p className="text-gray-600">{message}</p>
-        </div>
-        <div className="flex justify-end gap-3 mt-6">
-          <button
-            onClick={onClose}
-            className="px-5 py-2 bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-100 transition-all duration-200 font-medium"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={onConfirm}
-            className={`px-5 py-2 text-white rounded-lg shadow-md transition-all duration-200 font-medium ${confirmColor}`}
-          >
-            {confirmText}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Détails du candidat
+// Candidate Details (Minimal pink accents)
 const CandidateDetails = ({ candidate, petStatus }) => {
   return (
     <div className="p-5 bg-gradient-to-br from-amber-50 to-white text-sm border-t border-amber-200 animate-fade-in">
@@ -228,7 +166,7 @@ const CandidateDetails = ({ candidate, petStatus }) => {
 
         <div className="md:col-span-2 space-y-4">
           <h4 className="font-semibold text-gray-800 flex items-center gap-2">
-            <Heart className="w-5 h-5 text-amber-600" />
+            <Heart className="w-5 h-5 text-pink-600" /> {/* Pink accent here */}
             Why They Want to Adopt
           </h4>
           <div className="bg-white p-4 rounded-lg shadow-inner border border-amber-100">
@@ -261,10 +199,9 @@ const CandidateDetails = ({ candidate, petStatus }) => {
   );
 };
 
-// Carte individuelle pour chaque candidat
+// Candidate Card (Subtle pink for SVG)
 const CandidateCard = ({ candidate, petStatus, openConfirmModal, toggleDetails, isExpanded }) => {
-  // Si une date réelle est disponible via l'API, utilise candidate.appliedDate
-  const appliedDate = candidate.appliedDate || "2025-03-01"; // Exemple statique, à remplacer par donnée réelle
+  const appliedDate = candidate.appliedDate || "2025-03-01";
   const formattedDate = new Date(appliedDate).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
@@ -278,8 +215,8 @@ const CandidateCard = ({ candidate, petStatus, openConfirmModal, toggleDetails, 
         onClick={() => toggleDetails(candidate.userId)}
       >
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-200 to-amber-300 flex items-center justify-center shadow-sm">
-            <UserCheck className="w-6 h-6 text-amber-600" />
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-200 to-pink-300 flex items-center justify-center shadow-sm">
+            <PinkUserIcon className="w-6 h-6 text-pink-600" /> 
           </div>
           <div>
             <h3 className="text-lg font-semibold text-gray-800">{candidate.name}</h3>
@@ -296,11 +233,11 @@ const CandidateCard = ({ candidate, petStatus, openConfirmModal, toggleDetails, 
                 e.stopPropagation();
                 openConfirmModal("select", candidate.userId, candidate.name);
               }}
-              className="p-2 bg-amber-100 text-amber-600 rounded-full hover:bg-amber-200 hover:text-amber-700 transition-all duration-200 shadow-sm"
+              className="p-2 bg-amber-100 text-amber-600 rounded-full hover:bg-pink-200 hover:text-pink-700 transition-all duration-200 shadow-sm" // Pink on hover
               title="Select this candidate"
               aria-label="Select candidate"
             >
-              <UserCheck className="w-5 h-5" />
+              <PinkUserIcon className="w-5 h-5" />
             </button>
           )}
           {candidate.status === "approved" && petStatus !== "adopted" && (
@@ -351,7 +288,7 @@ const CandidateCard = ({ candidate, petStatus, openConfirmModal, toggleDetails, 
   );
 };
 
-// Skeleton Loader
+// Skeleton Loader (Back to amber)
 const SkeletonLoader = () => (
   <div className="space-y-6">
     {Array(3).fill(0).map((_, i) => (
@@ -374,18 +311,18 @@ const SkeletonLoader = () => (
   </div>
 );
 
-// État vide
+// Empty State (Back to amber with pink icon)
 const EmptyState = ({ message }) => (
   <div className="py-12 px-6 text-center bg-white rounded-xl shadow-md border border-amber-100">
     <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-100 flex items-center justify-center shadow-sm">
-      <AlertCircle className="w-8 h-8 text-amber-500" />
+      <AlertCircle className="w-8 h-8 text-pink-500" /> {/* Pink accent */}
     </div>
     <h3 className="text-gray-800 font-semibold text-lg mb-2">No Candidates Yet</h3>
     <p className="text-gray-600 max-w-md mx-auto">{message}</p>
   </div>
 );
 
-// Composant principal
+// Main Component
 const CandidatesPage = () => {
   const { petId } = useParams();
   const navigate = useNavigate();
@@ -420,8 +357,6 @@ const CandidatesPage = () => {
           const normalizedCandidates = candidatesResponse.data.data.map((candidate) => ({
             ...candidate,
             userId: candidate.user || candidate.userId || candidate.id,
-            // Si l'API fournit une date, décommentez ceci :
-            // appliedDate: candidate.appliedDate,
           }));
           setCandidates(normalizedCandidates);
         } else {
@@ -532,7 +467,7 @@ const CandidatesPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-pink-50 py-10">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-amber-100 py-10">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="bg-white rounded-xl shadow-md border border-amber-100 p-6 mb-8">
@@ -540,7 +475,7 @@ const CandidatesPage = () => {
             <div className="flex items-center gap-4">
               <button
                 onClick={() => navigate(-1)}
-                className="p-2 bg-amber-100 text-amber-600 rounded-full hover:bg-amber-200 hover:text-amber-700 transition-all duration-200 shadow-sm"
+                className="p-2 bg-amber-100 text-amber-600 rounded-full hover:bg-pink-200 hover:text-pink-700 transition-all duration-200 shadow-sm" // Pink on hover
                 aria-label="Go back"
               >
                 <ArrowLeft className="w-5 h-5" />
@@ -632,7 +567,7 @@ const CandidatesPage = () => {
           )}
         </div>
 
-        {/* Candidates List (Cartes séparées) */}
+        {/* Candidates List */}
         <div className="space-y-6">
           {isLoading ? (
             <SkeletonLoader />
@@ -671,21 +606,17 @@ const CandidatesPage = () => {
           )}
         </div>
 
-        {/* Help Section */}
-        {candidates.length > 0 && (
-          <div className="mt-8 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-5 shadow-sm border border-blue-200">
-            <h4 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-blue-600" />
-              How to Use This Page
-            </h4>
-            <ul className="list-disc ml-6 space-y-2 text-blue-700 text-sm">
-              <li>Click a candidate’s card to see their full application details.</li>
-              <li>Use <span className="font-medium">Select</span> to shortlist a candidate (rejects others).</li>
-              <li>After selecting, <span className="font-medium">Finalize</span> to complete the adoption.</li>
-              <li>Contact details unlock after finalization—reach out directly!</li>
-            </ul>
-          </div>
-        )}
+       {/* Help Section with custom content */}
+       <HelpSection show={candidates.length > 0}>
+          <li>Click a candidate’s card to see their full application details.</li>
+          <li>
+            Use <span className="font-bold">Select</span> to shortlist a candidate (rejects others).
+          </li>
+          <li>
+            After selecting, <span className="font-bold">Finalize</span> to complete the adoption.
+          </li>
+          <li>Contact details unlock after finalization—reach out directly!</li>
+        </HelpSection>
 
         <ConfirmationModal
           isOpen={confirmModal.isOpen}
