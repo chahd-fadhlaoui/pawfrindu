@@ -50,18 +50,25 @@ const Profile = () => {
     setPetsLoading(true);
     try {
       const response = await axiosInstance.get("/api/pet/my-adopted-pets");
+      console.log("Raw Adopted Pets Response (Full):", JSON.stringify(response.data, null, 2));
       if (response.data.success) {
+        response.data.data.forEach((pet) => {
+          if (pet.candidateStatus !== "approved") {
+            console.warn(`Unexpected pet with candidateStatus: ${pet.candidateStatus}`, pet);
+          }
+        });
         setAdoptedPets(response.data.data);
       } else {
         console.error("Failed to fetch adopted pets:", response.data.message);
+        setAdoptedPets([]);
       }
     } catch (error) {
       console.error("Error fetching adopted pets:", error);
+      setAdoptedPets([]);
     } finally {
       setPetsLoading(false);
     }
   };
-
   const handleInputChange = (field, value) => {
     setEditableData((prev) => ({
       ...prev,

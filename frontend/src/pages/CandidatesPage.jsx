@@ -36,16 +36,16 @@ const PinkUserIcon = ({ className }) => (
     strokeLinejoin="round"
   >
     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-    <circle cx="12" cy="7" r="4" fill="#fce7f3" /> {/* Subtle pink fill for head */}
+    <circle cx="12" cy="7" r="4" fill="#fce7f3" />
   </svg>
 );
 
-// Candidate Status Component (Back to amber for pending)
+// Candidate Status Component
 const CandidateStatus = ({ status }) => {
   const styles = {
     approved: "bg-gradient-to-r from-green-100 to-green-200 text-green-800",
     rejected: "bg-gradient-to-r from-red-100 to-red-200 text-red-800",
-    pending: "bg-gradient-to-r from-amber-100 to-amber-200 text-amber-800", // Reverted to amber
+    pending: "bg-gradient-to-r from-amber-100 to-amber-200 text-amber-800",
   };
 
   const icons = {
@@ -65,14 +65,14 @@ const CandidateStatus = ({ status }) => {
   );
 };
 
-// Search Bar (Back to amber with a pink accent on hover)
+// Search Bar
 const SearchBar = ({ value, onChange, onReset }) => (
   <div className="relative w-full max-w-md">
     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-amber-500" />
     <input
       type="text"
       placeholder="Search candidates by name..."
-      className="w-full pl-10 pr-10 py-2.5 bg-white border border-amber-200 rounded-full focus:ring-2 focus:ring-pink-300 focus:border-pink-400 outline-none transition-all duration-300 text-gray-700 shadow-sm" // Pink on focus
+      className="w-full pl-10 pr-10 py-2.5 bg-white border border-amber-200 rounded-full focus:ring-2 focus:ring-pink-300 focus:border-pink-400 outline-none transition-all duration-300 text-gray-700 shadow-sm"
       value={value}
       onChange={onChange}
       aria-label="Search candidates"
@@ -80,7 +80,7 @@ const SearchBar = ({ value, onChange, onReset }) => (
     {value && (
       <button
         onClick={onReset}
-        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-amber-400 hover:text-pink-600 transition-colors duration-200" // Pink on hover
+        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-amber-400 hover:text-pink-600 transition-colors duration-200"
         aria-label="Clear search"
       >
         <X className="w-5 h-5" />
@@ -89,13 +89,13 @@ const SearchBar = ({ value, onChange, onReset }) => (
   </div>
 );
 
-// Filter Button (Back to amber with pink active state)
+// Filter Button
 const FilterButton = ({ active, label, count, onClick }) => (
   <button
     onClick={onClick}
     className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
       active
-        ? "bg-gradient-to-r from-pink-400 to-pink-500 text-white shadow-md" // Pink when active
+        ? "bg-gradient-to-r from-pink-400 to-pink-500 text-white shadow-md"
         : "bg-white text-amber-700 border border-amber-200 hover:bg-amber-50 hover:border-amber-300"
     }`}
     aria-label={`Filter by ${label} (${count} candidates)`}
@@ -113,7 +113,7 @@ const FilterButton = ({ active, label, count, onClick }) => (
   </button>
 );
 
-// Candidate Details (Minimal pink accents)
+// Candidate Details
 const CandidateDetails = ({ candidate, petStatus }) => {
   return (
     <div className="p-5 bg-gradient-to-br from-amber-50 to-white text-sm border-t border-amber-200 animate-fade-in">
@@ -166,7 +166,7 @@ const CandidateDetails = ({ candidate, petStatus }) => {
 
         <div className="md:col-span-2 space-y-4">
           <h4 className="font-semibold text-gray-800 flex items-center gap-2">
-            <Heart className="w-5 h-5 text-pink-600" /> {/* Pink accent here */}
+            <Heart className="w-5 h-5 text-pink-600" />
             Why They Want to Adopt
           </h4>
           <div className="bg-white p-4 rounded-lg shadow-inner border border-amber-100">
@@ -199,7 +199,7 @@ const CandidateDetails = ({ candidate, petStatus }) => {
   );
 };
 
-// Candidate Card (Subtle pink for SVG)
+// Candidate Card
 const CandidateCard = ({ candidate, petStatus, openConfirmModal, toggleDetails, isExpanded }) => {
   const appliedDate = candidate.appliedDate || "2025-03-01";
   const formattedDate = new Date(appliedDate).toLocaleDateString("en-US", {
@@ -216,7 +216,7 @@ const CandidateCard = ({ candidate, petStatus, openConfirmModal, toggleDetails, 
       >
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-200 to-pink-300 flex items-center justify-center shadow-sm">
-            <PinkUserIcon className="w-6 h-6 text-pink-600" /> 
+            <PinkUserIcon className="w-6 h-6 text-pink-600" />
           </div>
           <div>
             <h3 className="text-lg font-semibold text-gray-800">{candidate.name}</h3>
@@ -233,8 +233,8 @@ const CandidateCard = ({ candidate, petStatus, openConfirmModal, toggleDetails, 
                 e.stopPropagation();
                 openConfirmModal("select", candidate.userId, candidate.name);
               }}
-              className="p-2 bg-amber-100 text-amber-600 rounded-full hover:bg-pink-200 hover:text-pink-700 transition-all duration-200 shadow-sm" // Pink on hover
-              title="Select this candidate"
+              className="p-2 bg-amber-100 text-amber-600 rounded-full hover:bg-pink-200 hover:text-pink-700 transition-all duration-200 shadow-sm"
+              title="Select this candidate (rejects others)"
               aria-label="Select candidate"
             >
               <PinkUserIcon className="w-5 h-5" />
@@ -248,7 +248,7 @@ const CandidateCard = ({ candidate, petStatus, openConfirmModal, toggleDetails, 
                   openConfirmModal("finalize", candidate.userId, candidate.name);
                 }}
                 className="p-2 bg-green-100 text-green-600 rounded-full hover:bg-green-200 hover:text-green-700 transition-all duration-200 shadow-sm"
-                title="Finalize adoption"
+                title="Finalize adoption for this candidate"
                 aria-label="Finalize adoption"
               >
                 <Check className="w-5 h-5" />
@@ -259,7 +259,7 @@ const CandidateCard = ({ candidate, petStatus, openConfirmModal, toggleDetails, 
                   openConfirmModal("reject", candidate.userId, candidate.name);
                 }}
                 className="p-2 bg-red-100 text-red-600 rounded-full hover:bg-red-200 hover:text-red-700 transition-all duration-200 shadow-sm"
-                title="Reject candidate"
+                title="Reject this candidate"
                 aria-label="Reject candidate"
               >
                 <XCircle className="w-5 h-5" />
@@ -288,7 +288,7 @@ const CandidateCard = ({ candidate, petStatus, openConfirmModal, toggleDetails, 
   );
 };
 
-// Skeleton Loader (Back to amber)
+// Skeleton Loader
 const SkeletonLoader = () => (
   <div className="space-y-6">
     {Array(3).fill(0).map((_, i) => (
@@ -311,11 +311,11 @@ const SkeletonLoader = () => (
   </div>
 );
 
-// Empty State (Back to amber with pink icon)
+// Empty State
 const EmptyState = ({ message }) => (
   <div className="py-12 px-6 text-center bg-white rounded-xl shadow-md border border-amber-100">
     <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-100 flex items-center justify-center shadow-sm">
-      <AlertCircle className="w-8 h-8 text-pink-500" /> {/* Pink accent */}
+      <AlertCircle className="w-8 h-8 text-pink-500" />
     </div>
     <h3 className="text-gray-800 font-semibold text-lg mb-2">No Candidates Yet</h3>
     <p className="text-gray-600 max-w-md mx-auto">{message}</p>
@@ -338,6 +338,7 @@ const CandidatesPage = () => {
     action: "",
     candidateId: null,
     candidateName: "",
+    message: "", // Add message to state
   });
 
   useEffect(() => {
@@ -424,21 +425,42 @@ const CandidatesPage = () => {
   };
 
   const openConfirmModal = (action, candidateId, candidateName) => {
-    setConfirmModal({ isOpen: true, action, candidateId, candidateName });
+    let modalAction;
+    let customMessage;
+    switch (action) {
+      case "select":
+        modalAction = "select"; // Use specific action for styling
+        customMessage = `Are you sure? This action will select ${candidateName} and reject all other candidates.`;
+        break;
+      case "finalize":
+        modalAction = "finalize"; // Use specific action for styling
+        customMessage = `Are you sure? This action will finalize the adoption for ${candidateName}.`;
+        break;
+      case "reject":
+        modalAction = "reject"; // Matches existing action
+        customMessage = `Are you sure? This action will reject ${candidateName}.`;
+        break;
+      default:
+        modalAction = "edit";
+        customMessage = "Are you sure you want to proceed with this action?";
+    }
+    console.log("Opening modal with action:", modalAction, "message:", customMessage);
+    setConfirmModal({ isOpen: true, action: modalAction, candidateId, candidateName, message: customMessage });
   };
 
   const closeConfirmModal = () => {
-    setConfirmModal({ isOpen: false, action: "", candidateId: null, candidateName: "" });
+    setConfirmModal({ isOpen: false, action: "", candidateId: null, candidateName: "", message: "" });
   };
 
   const confirmAction = async () => {
     const { action, candidateId } = confirmModal;
+    console.log("Confirming action:", action, "for candidateId:", candidateId);
     if (action === "select") {
-      await handleInitialStatusChange(candidateId, "approved");
+      await handleInitialStatusChange(candidateId, "approved"); // Selects this candidate, rejects others
     } else if (action === "finalize") {
-      await handleFinalizeAdoption(candidateId);
+      await handleFinalizeAdoption(candidateId); // Finalizes adoption
     } else if (action === "reject") {
-      await handleInitialStatusChange(candidateId, "rejected");
+      await handleInitialStatusChange(candidateId, "rejected"); // Rejects this candidate
     }
     closeConfirmModal();
   };
@@ -475,7 +497,7 @@ const CandidatesPage = () => {
             <div className="flex items-center gap-4">
               <button
                 onClick={() => navigate(-1)}
-                className="p-2 bg-amber-100 text-amber-600 rounded-full hover:bg-pink-200 hover:text-pink-700 transition-all duration-200 shadow-sm" // Pink on hover
+                className="p-2 bg-amber-100 text-amber-600 rounded-full hover:bg-pink-200 hover:text-pink-700 transition-all duration-200 shadow-sm"
                 aria-label="Go back"
               >
                 <ArrowLeft className="w-5 h-5" />
@@ -606,11 +628,11 @@ const CandidatesPage = () => {
           )}
         </div>
 
-       {/* Help Section with custom content */}
-       <HelpSection show={candidates.length > 0}>
+        {/* Help Section */}
+        <HelpSection show={candidates.length > 0}>
           <li>Click a candidate’s card to see their full application details.</li>
           <li>
-            Use <span className="font-bold">Select</span> to shortlist a candidate (rejects others).
+            Use <span className="font-bold">Select</span> to choose a candidate (rejects others).
           </li>
           <li>
             After selecting, <span className="font-bold">Finalize</span> to complete the adoption.
@@ -624,6 +646,7 @@ const CandidatesPage = () => {
           onConfirm={confirmAction}
           action={confirmModal.action}
           itemName={confirmModal.candidateName}
+          message={confirmModal.message} // Pass the custom message
         />
       </div>
     </div>

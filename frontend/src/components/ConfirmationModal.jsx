@@ -1,10 +1,14 @@
 import React from "react";
 import { X, AlertTriangle } from "lucide-react";
 
-const ConfirmationModal = ({ isOpen, onClose, onConfirm, action, itemName }) => {
+const ConfirmationModal = ({ isOpen, onClose, onConfirm, action, itemName, message }) => {
   if (!isOpen) return null;
 
   const getActionMessage = () => {
+    // Use custom message if provided
+    if (message) return message;
+
+    // Fallback to predefined messages
     switch (action) {
       case "delete":
         return `Are you sure you want to delete "${itemName}"? This action cannot be undone.`;
@@ -30,7 +34,7 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, action, itemName }) => 
   const getConfirmButtonStyle = () => {
     switch (action) {
       case "delete":
-        return "bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:  hover:to-red-800 focus:ring-red-400";
+        return "bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 focus:ring-red-400";
       case "archive":
       case "reject":
         return "bg-gradient-to-r from-gray-500 to-gray-700 hover:from-gray-600 hover:to-gray-800 focus:ring-gray-400";
@@ -40,6 +44,8 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, action, itemName }) => 
         return "bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 focus:ring-red-400";
       case "reactivate":
       case "accept":
+      case "select": // Add for consistency with button color
+      case "finalize": // Add for consistency with button color
         return "bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 focus:ring-green-400";
       case "edit":
       default:

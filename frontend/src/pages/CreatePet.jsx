@@ -497,7 +497,7 @@ const CreatePet = () => {
             </div>
           </div>
           {/* Help Section with custom content for CreatePet */}
-          <HelpSection show={true} title="How to Create a Pet Profile">
+          <HelpSection show={true} title="How to Create a Pet Profile" >
             <li>
               Upload a clear photo of your pet using the image uploader on the
               left.

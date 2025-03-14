@@ -249,39 +249,75 @@ const PetPostsTab = ({ setSelectedPet, setApprovalMessage }) => {
     },
     [deletePet, fetchUserPets, setError, setApprovalMessage]
   );
-
   const handleUpdate = useCallback(
     async (e) => {
       e.preventDefault();
       setLoading(true);
+  
       try {
         if (!selectedPetLocal) {
           throw new Error("No pet selected for update");
         }
-        const updatedData = { ...editFormData };
+  
+        const updatedData = {
+          ...editFormData,
+          isTrained: editFormData.isTrained === true || editFormData.isTrained === "true",
+          fee: Number(editFormData.fee),
+        };
+  
+        console.log("Sending update data:", updatedData); // Log the data being sent
+  
+        // Make the API call
         const result = await updatePet(selectedPetLocal._id, updatedData);
-        if (result.success) {
-          await fetchUserPets();
+  
+        console.log("UpdatePet response:", result); // Log the raw response
+  
+        // Check if the update was successful
+        if (result && result.success) {
+          // Display success message
           setApprovalMessage(
             result.message?.includes("pending admin approval")
               ? result.message
               : "Pet updated successfully."
           );
+  
+          // Refresh the pet list
+          await fetchUserPets();
+  
+          // Reset form state and close the edit modal
           setEditMode(false);
+          setEditFormData(null);
           setSelectedPetLocal(null);
           setSelectedPet(null);
+  
+          // Clear any previous errors
+          clearError();
         } else {
-          throw new Error(result.error || "Failed to update pet");
+          throw new Error(result?.error || "Failed to update pet - no success status");
         }
       } catch (err) {
+        console.error("Update Error Details:", {
+          message: err.message,
+          stack: err.stack,
+          dataSent: editFormData,
+        });
         setError(err.message || "Failed to update pet");
+        // Keep the form open on error so the user can correct it
       } finally {
         setLoading(false);
       }
     },
-    [selectedPetLocal, editFormData, updatePet, fetchUserPets, setApprovalMessage, setError, setSelectedPet]
+    [
+      selectedPetLocal,
+      editFormData,
+      updatePet,
+      setApprovalMessage,
+      setError,
+      clearError,
+      fetchUserPets,
+      setSelectedPet,
+    ]
   );
-
   const handleInputChange = useCallback((field, value) => {
     setEditFormData((prev) => ({ ...prev, [field]: value }));
   }, []);

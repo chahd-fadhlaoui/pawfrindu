@@ -417,17 +417,17 @@ const getMyAdoptionRequests = useCallback(async () => {
         `/api/pet/updatedPet/${petId}`,
         updateData
       );
-      setRefreshPetsTrigger((prev) => prev + 1);
-      if (user) await getMyPets();
-      return {
-        success: true,
-        data: response.data,
-        message: response.data.message,
-      };
+      console.log("Raw Backend Response:", JSON.stringify(response.data, null, 2));
+      return response.data; // Return raw response directly
     } catch (error) {
       const errorMessage =
         error.response?.data?.message || "Error updating pet";
-      setError(errorMessage);
+      console.error("UpdatePet Error:", {
+        message: errorMessage,
+        status: error.response?.status,
+        data: error.response?.data,
+        stack: error.stack,
+      });
       return { success: false, error: errorMessage };
     }
   };

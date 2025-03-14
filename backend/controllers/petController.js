@@ -177,7 +177,6 @@ export const updatePet = async (req, res) => {
   try {
     const { id } = req.params;
     const updateData = req.body;
-
     // Find pet first to check ownership and current state
     const pet = await Pet.findById(id);
     if (!pet) {
@@ -985,21 +984,21 @@ export const getMyAdoptedPets = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    // Find pets where the user is a candidate and filter for adopted ones
     const pets = await Pet.find({
-      "candidates.user": userId,
-      "candidates.status": "approved", // Only approved candidates
-      status: "adopted", // Only adopted pets
+      candidates: {
+        $elemMatch: {
+          user: userId,
+          status: "approved"
+        }
+      },
+      status: "adopted",
       isArchived: false,
     })
-      .select(
-        "name species city image status candidates breed age gender fee isTrained description owner"
-      )
+      .select("name species city image status candidates breed age gender fee isTrained description owner updatedAt")
       .populate("owner", "fullName");
 
-    console.log("Adopted pets fetched:", pets);
+    console.log("Adopted pets fetched (Full):", JSON.stringify(pets, null, 2)); // Log full pets
 
-    // Transform the data to focus on the user's adopted pets
     const adoptedPets = pets.map((pet) => {
       const candidate = pet.candidates.find(
         (c) => c.user.toString() === userId.toString()
@@ -1018,7 +1017,8 @@ export const getMyAdoptedPets = async (req, res) => {
         description: pet.description,
         owner: pet.owner ? pet.owner.fullName : "Unknown",
         status: pet.status,
-        adoptedDate: pet.updatedAt, // Use updatedAt as adoption date
+        adoptedDate: pet.updatedAt,
+        candidateStatus: candidate ? candidate.status : "N/A" // Include for debugging
       };
     });
 

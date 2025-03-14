@@ -5,7 +5,7 @@ const HelpSection = ({ show = true, title = "How to Use This Page", children }) 
   if (!show) return null;
   
   return (
-    <div className="mt-80 rounded-xl overflow-hidden shadow-lg">
+    <div className="mt-28 rounded-xl overflow-hidden shadow-lg">
       {/* Header section with vibrant gradient */}
       <div className="bg-gradient-to-r from-pink-500 to-amber-400 p-4">
         <h4 className="font-medium text-white flex items-center gap-2">
