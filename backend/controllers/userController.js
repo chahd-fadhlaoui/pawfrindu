@@ -76,7 +76,7 @@ const register = async (req, res) => {
 
 // 🚀 Étape 2: Complétion du profil et génération du token
 const createProfile = async (req, res) => {
-  const { userId, image } = req.body;
+  const { userId, image, gender} = req.body;
   const { petOwnerDetails, trainerDetails, veterinarianDetails } = req.body;
 
   try {
@@ -89,7 +89,10 @@ const createProfile = async (req, res) => {
     if (image) {
       user.image = image;
     }
-
+   // Ajouter la gestion du champ gender
+   if (gender) {
+    user.gender = gender;
+  }
     // Rest of your existing role-specific logic
     if (user.role === "PetOwner") {
       if (!petOwnerDetails?.address || !petOwnerDetails?.phone) {
@@ -586,6 +589,79 @@ const getUserStats = async (req, res) => {
   }
 };
 
+// Vets module 
+
+// Get all active veterinarians - accessible to any authenticated user
+const getVeterinarians = async (req, res) => {
+  try {
+    const veterinarians = await User.find({ 
+      role: "Vet", 
+      isActive: true,
+      isArchieve: false 
+    })
+      .select('fullName email image veterinarianDetails')
+      .lean();
+
+    console.log("Raw veterinarians from DB:", veterinarians); // Debug raw data
+
+    if (!veterinarians.length) {
+      console.log("No active veterinarians found");
+    } else {
+      console.log(`Found ${veterinarians.length} active veterinarians`);
+    }
+
+    res.json({
+      success: true,
+      count: veterinarians.length,
+      veterinarians,
+    });
+  } catch (error) {
+    console.error("Get Veterinarians Error:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Failed to fetch veterinarians" 
+    });
+  }
+};
+
+
+const getVeterinarianById = async (req, res) => {
+  console.log('Handling GET /api/user/veterinarians/:id for vet:', req.params.id);
+  try {
+    const vet = await User.findOne({ 
+      _id: req.params.id, 
+      role: "Vet", 
+      isActive: true, 
+      isArchieve: false 
+    }).select("fullName image about veterinarianDetails"); // Exclude sensitive fields like email
+
+    if (!vet) {
+      console.log("Vet not found for ID:", req.params.id);
+      return res.status(404).json({ success: false, message: "Veterinarian not found" });
+    }
+    console.log("Vet found:", vet._id);
+
+    res.json({
+      success: true,
+      vet: {
+        _id: vet._id,
+        fullName: vet.fullName,
+        about: vet.about,
+        image: vet.image,
+        veterinarianDetails: vet.veterinarianDetails || undefined,
+      },
+    });
+    console.log("Vet details fetched successfully for vet:", vet._id);
+  } catch (error) {
+    console.error("Get Veterinarian By ID Error:", error.stack);
+    res.status(500).json({ 
+      success: false,
+      message: "Failed to fetch veterinarian details", 
+      detail: error.message 
+    });
+  }
+};
+
 export {
   createProfile,
   forgotPassword,
@@ -601,4 +677,6 @@ export {
   approveUser,
   deleteUserByAdmin,
   getUserStats,
+  getVeterinarians,
+  getVeterinarianById
 };

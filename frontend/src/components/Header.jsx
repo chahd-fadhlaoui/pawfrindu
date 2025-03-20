@@ -33,7 +33,7 @@ function Header() {
     },
     {
       name: "Veterinary Care",
-      to: "/veterinary",
+      to: "/vets",
       ariaLabel: "Find veterinary services",
     },
     {

@@ -2,13 +2,13 @@ import mongoose from "mongoose";
 
 const petSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  breed: { type: String, required: true },
+  breed: { type: String, required: true }, // à modifier  
   age: { 
     type: String, 
     enum: ["puppy", "kitten", "young", "adult", "senior"], // Define age ranges
     required: true 
   },
-  city: { type: String, required: true },
+  city: { type: String, required: true }, // à modifier 24 ville 
   gender: { type: String, required: true },
   species: { // Renamed from "category"
     type: String, 

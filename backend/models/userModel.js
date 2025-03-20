@@ -30,6 +30,10 @@ const userSchema = new mongoose.Schema(
       default: false,
     },
     image: String,
+    gender: {
+      type: String,
+      enum: ["Femme", "Homme"],
+    },
     lastLogin: Date,
     petOwnerDetails: {
       type: {
@@ -107,17 +111,87 @@ const userSchema = new mongoose.Schema(
           type: String,
           required: function () {
             return this.role === "Vet";
-          },
+          }, // à enlever
         },
         degree: {
           type: String,
           required: function () {
             return this.role === "Vet";
-          },
+          }, // à remplacer par une photo de carte visite 
         },
         specialization: String,
-        experienceYears: { type: Number, min: 0 },
-        availableHours: String,
+        title: {
+          type: String,
+          enum: ["Doctor", "Professor"],
+        },
+        governorate: {
+          type: String,
+          enum: ["Ariana", "Beja", "Ben Arous", "Bizerte", "Gabes", "Gafsa", "Jendouba", "Kairouan", "Kasserine", "Kebili", "Kef", "Mahdia", "Manouba", "Medenine", "Monastir", "Nabeul", "Sfax", "Sidi Bouzid", "Siliana", "Sousse", "Tataouine", "Tozeur", "Tunis", "Zaghouan"],
+        },
+        delegation: {
+          type: String,
+        },
+        landlinePhone: String,
+        geolocation: {
+          latitude: { type: Number, default: 36.8665367 }, // Default to a sample value
+          longitude: { type: Number, default: 10.1647233 }, // Default to a sample value
+        },
+        diplomasAndTraining: String,
+        services: [{
+          serviceName: String,
+          fee: { type: Number, min: 0 },
+        }],
+        languagesSpoken: {
+          type: [String],
+          enum: ["Français", "Anglais","Arabe"], // Select field with options
+        },
+        averageConsultationDuration: {
+          type: Number,
+          enum: [10, 15, 20, 25, 30, 45, 50, 55, 60], // Select field in minutes
+        },
+        openingHours: {
+          monday: { type: String, enum: ["Single Session", "Double Session", "Closed"], default: "Closed" },
+          mondayStart: { type: String, default: "" },
+          mondayEnd: { type: String, default: "" },
+          mondayStart2: { type: String, default: "" },
+          mondayEnd2: { type: String, default: "" },
+          tuesday: { type: String, enum: ["Single Session", "Double Session", "Closed"], default: "Closed" },
+          tuesdayStart: { type: String, default: "" },
+          tuesdayEnd: { type: String, default: "" },
+          tuesdayStart2: { type: String, default: "" },
+          tuesdayEnd2: { type: String, default: "" },
+          wednesday: { type: String, enum: ["Single Session", "Double Session", "Closed"], default: "Closed" },
+          wednesdayStart: { type: String, default: "" },
+          wednesdayEnd: { type: String, default: "" },
+          wednesdayStart2: { type: String, default: "" },
+          wednesdayEnd2: { type: String, default: "" },
+          thursday: { type: String, enum: ["Single Session", "Double Session", "Closed"], default: "Closed" },
+          thursdayStart: { type: String, default: "" },
+          thursdayEnd: { type: String, default: "" },
+          thursdayStart2: { type: String, default: "" },
+          thursdayEnd2: { type: String, default: "" },
+          friday: { type: String, enum: ["Single Session", "Double Session", "Closed"], default: "Closed" },
+          fridayStart: { type: String, default: "" },
+          fridayEnd: { type: String, default: "" },
+          fridayStart2: { type: String, default: "" },
+          fridayEnd2: { type: String, default: "" },
+          saturday: { type: String, enum: ["Single Session", "Double Session", "Closed"], default: "Closed" },
+          saturdayStart: { type: String, default: "" },
+          saturdayEnd: { type: String, default: "" },
+          saturdayStart2: { type: String, default: "" },
+          saturdayEnd2: { type: String, default: "" },
+          sunday: { type: String, enum: ["Single Session", "Double Session", "Closed"], default: "Closed" },
+          sundayStart: { type: String, default: "" },
+          sundayEnd: { type: String, default: "" },
+          sundayStart2: { type: String, default: "" },
+          sundayEnd2: { type: String, default: "" },
+        },
+        clinicPhotos: [String],
+
+
+
+        
+
       },
       default: undefined,
     },

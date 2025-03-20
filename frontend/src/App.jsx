@@ -22,6 +22,8 @@ import Profile from './pages/Profile';
 import TrainerDashboard from './pages/Trainer/TrainerDashboard';
 import { VetDashboard } from './pages/Vet/VetDashboard';
 import Veteriniandetail from './pages/Veteriniandetail';
+import Veterinarians from './pages/VetAppointment/Veterinarians';
+import VetDetails from './pages/VetAppointment/VetDetails';
 
 const Layout = ({ children }) => {
   const location = useLocation();
@@ -29,8 +31,8 @@ const Layout = ({ children }) => {
 
   const isAdminPage = location.pathname.startsWith('/admin');
   const isTrainerPage = location.pathname.startsWith('/trainer');
-  const isVetPage = location.pathname.startsWith('/vet');
-  const isHomePage = location.pathname === '/';
+  const isVetPage = location.pathname === '/vet';
+    const isHomePage = location.pathname === '/';
   const isForbiddenPage = location.pathname === '/forbidden';
   const isAdminLoginPage = location.pathname === '/AdminLoginPage';
 
@@ -61,6 +63,8 @@ const AppRoutes = () => {
     <Routes>
       <Route path="/" element={<PublicRoute><Home /></PublicRoute>} />
       <Route path="/pets" element={<Pets />} />
+      <Route path="/vets" element={<Veterinarians/>} />
+      <Route path="/vet/:id" element={<VetDetails />} />
       <Route path="/pets/:species" element={<Pets />} />
       <Route path="/petsdetails/:petId" element={<PetDetails />} />
       <Route path="/login" element={<Auth />} />
