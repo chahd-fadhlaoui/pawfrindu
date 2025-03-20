@@ -1,12 +1,4 @@
-import {
-  Archive,
-  Check,
-  Loader2,
-  PawPrint,
-  Search,
-  X,
-  Info,
-} from "lucide-react";
+import { Archive, Loader2, PawPrint, Search, Info } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
 import { useApp } from "../../../../context/AppContext";
 import axiosInstance from "../../../../utils/axiosInstance";
@@ -17,7 +9,7 @@ import { FilterSelect } from "../common/FilterSelect";
 import PetTable from "../common/PetTable";
 import EmptyState from "../common/EmptyState";
 
-const ActivePets = ({ showHeader = true }) => {
+const CompletedPets = ({ showHeader = true }) => {
   const { user, pets, loading, error, triggerRefresh } = useApp();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -27,27 +19,19 @@ const ActivePets = ({ showHeader = true }) => {
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
   const [selectedPetId, setSelectedPetId] = useState(null);
-  const [bulkAction, setBulkAction] = useState("archive");
-  const [localPets, setLocalPets] = useState(pets);
-  const [isActionLoading, setIsActionLoading] = useState(false);
+  const [bulkAction] = useState("archive"); // Fixed to "archive" as per original
   const [hoveredAction, setHoveredAction] = useState(null);
   const petsPerPage = 10;
 
-  useEffect(() => {
-    setLocalPets(pets);
-    setSelectedPets([]);
-  }, [pets]);
-
   const statusOptions = [
     { value: "", label: "All Statuses" },
-    { value: "pending", label: "Pending" },
-    { value: "accepted", label: "Accepted" },
-    { value: "adoptionPending", label: "Adoption Pending" },
+    { value: "adopted", label: "Adopted" },
+    { value: "sold", label: "Sold" },
   ];
 
   const filteredPets = useMemo(() => {
-    let filtered = localPets.filter(
-      (pet) => !pet.isArchived && !["adopted", "sold"].includes(pet.status)
+    let filtered = pets.filter(
+      (pet) => !pet.isArchived && ["adopted", "sold"].includes(pet.status)
     );
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
@@ -62,12 +46,12 @@ const ActivePets = ({ showHeader = true }) => {
       filtered = filtered.filter((pet) => pet.status === statusFilter);
     }
     return filtered;
-  }, [localPets, searchQuery, statusFilter]);
+  }, [pets, searchQuery, statusFilter]);
 
   useEffect(() => {
     setCurrentPage(1);
     setSelectedPets([]);
-  }, [searchQuery, statusFilter, bulkAction]);
+  }, [searchQuery, statusFilter]);
 
   const totalPages = Math.ceil(filteredPets.length / petsPerPage);
   const currentPets = filteredPets.slice(
@@ -77,16 +61,7 @@ const ActivePets = ({ showHeader = true }) => {
 
   const canPerformAction = (pet, action) => {
     if (user?.role !== "Admin") return false;
-    switch (action) {
-      case "accept":
-        return pet.status === "pending";
-      case "reject":
-        return pet.status === "pending";
-      case "archive":
-        return pet.status === "accepted" || pet.status === "adoptionPending";
-      default:
-        return false;
-    }
+    return action === "archive" && ["adopted", "sold"].includes(pet.status);
   };
 
   const handlePageChange = (page) => {
@@ -101,7 +76,6 @@ const ActivePets = ({ showHeader = true }) => {
     setStatusFilter("");
     setCurrentPage(1);
     setSelectedPets([]);
-    setBulkAction("archive");
   };
 
   const togglePetSelection = (petId) => {
@@ -123,60 +97,27 @@ const ActivePets = ({ showHeader = true }) => {
     );
   };
 
+  const handleAction = async (action, petId) => {
+    try {
+      setActionError("");
+      if (action === "archive") {
+        await axiosInstance.put(`/api/pet/archivePet/${petId}`);
+      } else {
+        throw new Error("Invalid action");
+      }
+      triggerRefresh();
+      setSelectedPets((prev) => prev.filter((id) => id !== petId));
+      setIsConfirmModalOpen(false);
+    } catch (err) {
+      setActionError(err.response?.data?.message || `Failed to ${action} pet`);
+      setIsConfirmModalOpen(false);
+    }
+  };
+
   const handleSingleAction = (action, petId) => {
     setSelectedPetId(petId);
     setConfirmAction(action);
     setIsConfirmModalOpen(true);
-  };
-
-  const handleAction = async (action, petId) => {
-    setIsActionLoading(true);
-    try {
-      setActionError("");
-      const pet = filteredPets.find((p) => p._id === petId);
-      setLocalPets((prev) => {
-        if (action === "reject") return prev.filter((p) => p._id !== petId);
-        return prev.map((p) =>
-          p._id === petId
-            ? {
-                ...p,
-                status: action === "accept" ? "accepted" : p.status,
-                isArchived: action === "archive" ? true : p.isArchived,
-              }
-            : p
-        );
-      });
-
-      switch (action) {
-        case "accept":
-          await axiosInstance.put(`/api/pet/modifyStatus/${petId}`, {
-            status: "accepted",
-            isApproved: true,
-          });
-          break;
-        case "reject":
-          await axiosInstance.delete(`/api/pet/deleteAdminPet/${petId}`);
-          await axiosInstance.post("/api/pet/send-rejection-email", {
-            petId,
-            ownerEmail: pet.owner.email,
-            petName: pet.name,
-          });
-          break;
-        case "archive":
-          await axiosInstance.put(`/api/pet/archivePet/${petId}`);
-          break;
-        default:
-          throw new Error("Invalid action");
-      }
-      triggerRefresh();
-      setIsConfirmModalOpen(false);
-    } catch (err) {
-      setLocalPets(pets);
-      setActionError(err.response?.data?.message || `Failed to ${action} pet`);
-      setIsConfirmModalOpen(false);
-    } finally {
-      setIsActionLoading(false);
-    }
   };
 
   const handleBulkAction = () => {
@@ -186,7 +127,6 @@ const ActivePets = ({ showHeader = true }) => {
   };
 
   const confirmBulkAction = async () => {
-    setIsActionLoading(true);
     try {
       const eligiblePets = selectedPets.filter((petId) =>
         canPerformAction(
@@ -199,57 +139,19 @@ const ActivePets = ({ showHeader = true }) => {
         setIsConfirmModalOpen(false);
         return;
       }
-
-      setLocalPets((prev) => {
-        if (bulkAction === "reject")
-          return prev.filter((p) => !eligiblePets.includes(p._id));
-        return prev.map((p) =>
-          eligiblePets.includes(p._id)
-            ? {
-                ...p,
-                status: bulkAction === "accept" ? "accepted" : p.status,
-                isArchived: bulkAction === "archive" ? true : p.isArchived,
-              }
-            : p
-        );
-      });
-      setSelectedPets([]);
-
       await Promise.all(
-        eligiblePets.map((petId) => {
-          const pet = filteredPets.find((p) => p._id === petId);
-          switch (bulkAction) {
-            case "accept":
-              return axiosInstance.put(`/api/pet/modifyStatus/${petId}`, {
-                status: "accepted",
-                isApproved: true,
-              });
-            case "reject":
-              return Promise.all([
-                axiosInstance.delete(`/api/pet/deleteAdminPet/${petId}`),
-                axiosInstance.post("/api/pet/send-rejection-email", {
-                  petId,
-                  ownerEmail: pet.owner.email,
-                  petName: pet.name,
-                }),
-              ]);
-            case "archive":
-              return axiosInstance.put(`/api/pet/archivePet/${petId}`);
-            default:
-              throw new Error("Invalid bulk action");
-          }
-        })
+        eligiblePets.map((petId) =>
+          axiosInstance.put(`/api/pet/archivePet/${petId}`)
+        )
       );
       triggerRefresh();
+      setSelectedPets([]);
       setIsConfirmModalOpen(false);
     } catch (err) {
-      setLocalPets(pets);
       setActionError(
         err.response?.data?.message || `Failed to bulk ${bulkAction} pets`
       );
       setIsConfirmModalOpen(false);
-    } finally {
-      setIsActionLoading(false);
     }
   };
 
@@ -260,7 +162,7 @@ const ActivePets = ({ showHeader = true }) => {
           <Loader2 className="w-8 h-8 text-[#ffc929] animate-spin" />
           <PawPrint className="w-8 h-8 text-[#ec4899] animate-pulse" />
           <p className="text-lg font-semibold text-gray-700">
-            Loading active pets...
+            Loading completed pets...
           </p>
         </div>
       </div>
@@ -281,6 +183,7 @@ const ActivePets = ({ showHeader = true }) => {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       {showHeader && (
         <div className="overflow-hidden bg-white shadow-lg rounded-xl animate-fade-in">
           <div
@@ -295,20 +198,21 @@ const ActivePets = ({ showHeader = true }) => {
               </div>
               <div className="ml-4">
                 <h2 className="text-xl font-bold tracking-tight text-gray-900">
-                  Active Pets
+                  Completed Pets
                 </h2>
                 <p className="text-sm text-gray-500">
-                  Manage active pet listings
+                  Manage adopted and sold pets
                 </p>
               </div>
             </div>
-            <span className="px-3 py-1 text-sm font-medium text-pink-800 bg-pink-100 rounded-full shadow-sm">
-              {filteredPets.length} Active
+            <span className="px-3 py-1 text-sm font-medium text-teal-800 bg-teal-100 rounded-full shadow-sm">
+              {filteredPets.length} Completed
             </span>
           </div>
         </div>
       )}
 
+      {/* Filters and Actions */}
       <div className="p-4 bg-white shadow-md rounded-xl animate-fade-in">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="relative flex-1">
@@ -317,7 +221,7 @@ const ActivePets = ({ showHeader = true }) => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search active pets by name, breed, or city..."
+              placeholder="Search completed pets by name, breed, or city..."
               className="w-full py-3 pl-10 pr-4 text-sm border border-gray-200 rounded-lg shadow-sm focus:ring-[#ffc929] focus:border-[#ffc929] transition-all duration-300"
             />
           </div>
@@ -330,34 +234,17 @@ const ActivePets = ({ showHeader = true }) => {
               className="bg-white border-gray-200 shadow-sm focus:ring-[#ffc929] focus:border-[#ffc929] rounded-lg py-2 px-3 text-sm transition-all duration-300"
             />
             {user?.role === "Admin" && (
-              <select
-                value={bulkAction}
-                onChange={(e) => setBulkAction(e.target.value)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:ring-[#ffc929] focus:border-[#ffc929] transition-all duration-300"
-              >
-                <option value="accept">Bulk Accept</option>
-                <option value="reject">Bulk Reject</option>
-                <option value="archive">Bulk Archive</option>
-              </select>
-            )}
-            {selectedPets.length > 0 && user?.role === "Admin" && (
               <button
                 onClick={handleBulkAction}
-                disabled={isActionLoading}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white transition-all duration-300 rounded-lg shadow-md bg-gradient-to-r from-gray-600 to-gray-800 hover:from-gray-700 hover:to-gray-900 focus:ring-2 focus:ring-gray-400"
+                disabled={selectedPets.length === 0}
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white rounded-lg shadow-md bg-gradient-to-r transition-all duration-300 ${
+                  selectedPets.length === 0
+                    ? "from-gray-300 to-gray-400 cursor-not-allowed"
+                    : "from-gray-500 to-gray-700 hover:from-gray-600 hover:to-gray-800 focus:ring-2 focus:ring-gray-400"
+                }`}
               >
-                {isActionLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <>
-                    {bulkAction === "accept" && <Check className="w-4 h-4" />}
-                    {bulkAction === "reject" && <X className="w-4 h-4" />}
-                    {bulkAction === "archive" && (
-                      <Archive className="w-4 h-4" />
-                    )}
-                  </>
-                )}
-                Apply ({selectedPets.length})
+                <Archive className="w-4 h-4" />
+                Archive ({selectedPets.length})
               </button>
             )}
             {(searchQuery || statusFilter) && (
@@ -372,6 +259,7 @@ const ActivePets = ({ showHeader = true }) => {
         </div>
       </div>
 
+      {/* Error Alert */}
       {actionError && (
         <ErrorAlert
           message={actionError}
@@ -380,6 +268,7 @@ const ActivePets = ({ showHeader = true }) => {
         />
       )}
 
+      {/* Pets Table or Empty State */}
       {filteredPets.length === 0 ? (
         <EmptyState
           hasFilters={searchQuery || statusFilter}
@@ -400,69 +289,12 @@ const ActivePets = ({ showHeader = true }) => {
             onToggleSelection={togglePetSelection}
             onToggleSelectAll={toggleSelectAll}
             customActions={(pet) => {
-              const canAccept =
-                pet.status === "pending" && user?.role === "Admin";
-              const canReject =
-                pet.status === "pending" && user?.role === "Admin";
               const canArchive =
-                (pet.status === "accepted" ||
-                  pet.status === "adoptionPending") &&
+                ["adopted", "sold"].includes(pet.status) &&
                 user?.role === "Admin";
 
               return (
-                <div className="relative flex items-center justify-end gap-2">
-                  {canAccept && (
-                    <div
-                      className="relative"
-                      onMouseEnter={() => setHoveredAction(`accept-${pet._id}`)}
-                      onMouseLeave={() => setHoveredAction(null)}
-                    >
-                      <button
-                        onClick={() => handleSingleAction("accept", pet._id)}
-                        disabled={isActionLoading}
-                        className="flex items-center gap-1 px-3 py-1 text-xs font-semibold text-white transition-all duration-300 rounded-lg shadow-sm bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 focus:ring-2 focus:ring-green-400"
-                      >
-                        {isActionLoading ? (
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                        ) : (
-                          <Check className="w-3 h-3" />
-                        )}
-                        Accept
-                      </button>
-                      {hoveredAction === `accept-${pet._id}` && (
-                        <div className="absolute right-0 z-10 px-3 py-2 mt-2 text-xs text-white bg-gray-800 rounded-md shadow-lg top-full animate-fade-in-up">
-                          <div className="flex items-center gap-1">
-                            <Info size={12} />
-                            <span>Approve this pet listing</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  {canReject && (
-                    <div
-                      className="relative"
-                      onMouseEnter={() => setHoveredAction(`reject-${pet._id}`)}
-                      onMouseLeave={() => setHoveredAction(null)}
-                    >
-                      <button
-                        onClick={() => handleSingleAction("reject", pet._id)}
-                        disabled={isActionLoading}
-                        className="flex items-center gap-1 px-3 py-1 text-xs font-semibold text-white transition-all duration-300 rounded-lg shadow-sm bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 focus:ring-2 focus:ring-red-400"
-                      >
-                        <X className="w-3 h-3" />
-                        Reject
-                      </button>
-                      {hoveredAction === `reject-${pet._id}` && (
-                        <div className="absolute right-0 z-10 px-3 py-2 mt-2 text-xs text-white bg-gray-800 rounded-md shadow-lg top-full animate-fade-in-up">
-                          <div className="flex items-center gap-1">
-                            <Info size={12} />
-                            <span>Delete and notify owner</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                <div className="flex items-center justify-end gap-2">
                   {canArchive && (
                     <div
                       className="relative"
@@ -473,7 +305,6 @@ const ActivePets = ({ showHeader = true }) => {
                     >
                       <button
                         onClick={() => handleSingleAction("archive", pet._id)}
-                        disabled={isActionLoading}
                         className="flex items-center gap-1 px-3 py-1 text-xs font-semibold text-white transition-all duration-300 rounded-lg shadow-sm bg-gradient-to-r from-gray-500 to-gray-700 hover:from-gray-600 hover:to-gray-800 focus:ring-2 focus:ring-gray-400"
                       >
                         <Archive className="w-3 h-3" />
@@ -492,7 +323,7 @@ const ActivePets = ({ showHeader = true }) => {
                 </div>
               );
             }}
-            title="Active Pets"
+            title="Completed Pets"
             showHeader={false}
             bulkAction={bulkAction}
             className="overflow-hidden shadow-xl rounded-xl animate-fade-in"
@@ -511,6 +342,7 @@ const ActivePets = ({ showHeader = true }) => {
         </>
       )}
 
+      {/* Confirmation Modal */}
       <ConfirmationModal
         isOpen={isConfirmModalOpen}
         onClose={() => setIsConfirmModalOpen(false)}
@@ -529,13 +361,8 @@ const ActivePets = ({ showHeader = true }) => {
         additionalMessage={
           confirmAction === "bulk" ? (
             <p className="text-sm text-gray-600">
-              Only pets eligible for "{bulkAction}" will be processed (e.g.,
-              "pending" for Accept/Reject, "accepted" or "adoptionPending" for
-              Archive).
-            </p>
-          ) : confirmAction === "reject" ? (
-            <p className="text-sm text-gray-600">
-              This will delete the pet and notify the owner via email.
+              This will archive {selectedPets.length} completed pet
+              {selectedPets.length > 1 ? "s" : ""}.
             </p>
           ) : confirmAction === "archive" ? (
             <p className="text-sm text-gray-600">
@@ -549,4 +376,4 @@ const ActivePets = ({ showHeader = true }) => {
   );
 };
 
-export default ActivePets;
+export default CompletedPets;

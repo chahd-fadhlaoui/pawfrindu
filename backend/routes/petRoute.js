@@ -18,6 +18,7 @@ import {
   updatePet,
   getPetStats,
   getMyAdoptedPets,
+  sendRejectionEmail,
 } from '../controllers/petController.js';
 import { authenticate, authorize } from '../middlewares/authMiddleware.js';
 const petRouter = express.Router();
@@ -34,7 +35,7 @@ petRouter.put('/unarchivePet/:id',unarchivePet); // Ajoutez cette route
 petRouter.use(authenticate);  // Appliquer le middleware d'authentification à toutes les routes suivantes
 
 // Routes pour les pet owners 
-petRouter.post('/addpet', authorize('PetOwner'), createPet);  // Vérifier que l'utilisateur est un PetOwner avant de créer un pet
+petRouter.post('/addpet', createPet);  // Vérifier que l'utilisateur est un PetOwner avant de créer un pet
 petRouter.get('/mypets', getMyPets);  // Récupérer les pets de l'utilisateur connecté
 petRouter.put('/updatedPet/:id', updatePet);  // Mettre à jour un pet
 petRouter.delete("/deletePet/:id", deletePet);// Supprimer un pet
@@ -56,5 +57,6 @@ petRouter.put('/archivePet/:id', archivePet);  // Nouvelle route pour archiver u
 
 petRouter.put('/unarchivePet/:id',unarchivePet); 
 petRouter.get("/stats", getPetStats);
+petRouter.post("/send-rejection-email", authenticate, authorize("Admin"), sendRejectionEmail);
 
 export default petRouter;

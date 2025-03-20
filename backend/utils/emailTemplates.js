@@ -96,4 +96,21 @@ export const emailTemplates = {
         </div>
       `,
   }),
+  petRejected: (data) => ({
+    subject: "Your Pet Listing Has Been Rejected",
+    html: `
+        ${emailStyles}
+        <div class="email-container">
+          <h1>Pet Listing Rejected</h1>
+          <p>Hello ${data.ownerFullName},</p>
+          <p>We regret to inform you that your pet listing for <strong>${data.petName}</strong> has been rejected by our team.</p>
+          <p>This could be due to incomplete information, policy violations, or other reasons. For more details, please contact our support team.</p>
+          <a href="${process.env.FRONTEND_URL}/support" class="button" style="background-color: #f44336;">Contact Support</a>
+          <div class="footer">
+            <p>We apologize for any inconvenience this may cause.</p>
+            <p>Best regards,<br>The PawFrindu Team</p>
+          </div>
+        </div>
+      `,
+  }),
 };

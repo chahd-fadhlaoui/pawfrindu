@@ -68,7 +68,7 @@ const CandidateStatus = ({ status }) => {
 // Search Bar
 const SearchBar = ({ value, onChange, onReset }) => (
   <div className="relative w-full max-w-md">
-    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-amber-500" />
+    <Search className="absolute w-5 h-5 transform -translate-y-1/2 left-3 top-1/2 text-amber-500" />
     <input
       type="text"
       placeholder="Search candidates by name..."
@@ -80,7 +80,7 @@ const SearchBar = ({ value, onChange, onReset }) => (
     {value && (
       <button
         onClick={onReset}
-        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-amber-400 hover:text-pink-600 transition-colors duration-200"
+        className="absolute transition-colors duration-200 transform -translate-y-1/2 right-3 top-1/2 text-amber-400 hover:text-pink-600"
         aria-label="Clear search"
       >
         <X className="w-5 h-5" />
@@ -116,10 +116,10 @@ const FilterButton = ({ active, label, count, onClick }) => (
 // Candidate Details
 const CandidateDetails = ({ candidate, petStatus }) => {
   return (
-    <div className="p-5 bg-gradient-to-br from-amber-50 to-white text-sm border-t border-amber-200 animate-fade-in">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="p-5 text-sm border-t bg-gradient-to-br from-amber-50 to-white border-amber-200 animate-fade-in">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <div className="space-y-4">
-          <h4 className="font-semibold text-gray-800 flex items-center gap-2">
+          <h4 className="flex items-center gap-2 font-semibold text-gray-800">
             <Briefcase className="w-5 h-5 text-amber-600" />
             Work Life
           </h4>
@@ -136,7 +136,7 @@ const CandidateDetails = ({ candidate, petStatus }) => {
         </div>
 
         <div className="space-y-4">
-          <h4 className="font-semibold text-gray-800 flex items-center gap-2">
+          <h4 className="flex items-center gap-2 font-semibold text-gray-800">
             <Home className="w-5 h-5 text-amber-600" />
             Home Life
           </h4>
@@ -164,13 +164,13 @@ const CandidateDetails = ({ candidate, petStatus }) => {
           </div>
         </div>
 
-        <div className="md:col-span-2 space-y-4">
-          <h4 className="font-semibold text-gray-800 flex items-center gap-2">
+        <div className="space-y-4 md:col-span-2">
+          <h4 className="flex items-center gap-2 font-semibold text-gray-800">
             <Heart className="w-5 h-5 text-pink-600" />
             Why They Want to Adopt
           </h4>
-          <div className="bg-white p-4 rounded-lg shadow-inner border border-amber-100">
-            <p className="text-gray-700 italic">"{candidate.petOwnerDetails?.reasonForAdoption || "Not provided"}"</p>
+          <div className="p-4 bg-white border rounded-lg shadow-inner border-amber-100">
+            <p className="italic text-gray-700">"{candidate.petOwnerDetails?.reasonForAdoption || "Not provided"}"</p>
           </div>
           <p className="flex items-center gap-2">
             <Calendar className="w-5 h-5 text-amber-600" />
@@ -180,14 +180,14 @@ const CandidateDetails = ({ candidate, petStatus }) => {
         </div>
 
         {petStatus === "adopted" && candidate.status === "approved" && (
-          <div className="md:col-span-2 bg-green-50 p-4 rounded-lg border border-green-200 shadow-sm flex items-center justify-between">
+          <div className="flex items-center justify-between p-4 border border-green-200 rounded-lg shadow-sm md:col-span-2 bg-green-50">
             <div className="flex items-center gap-2">
               <Phone className="w-5 h-5 text-green-600" />
-              <p className="text-green-800 font-medium">{candidate.petOwnerDetails?.phone || "N/A"}</p>
+              <p className="font-medium text-green-800">{candidate.petOwnerDetails?.phone || "N/A"}</p>
             </div>
             <a
               href={`tel:${candidate.petOwnerDetails?.phone}`}
-              className="bg-green-600 text-white px-4 py-2 rounded-full flex items-center gap-2 hover:bg-green-700 transition-all duration-200 shadow-md"
+              className="flex items-center gap-2 px-4 py-2 text-white transition-all duration-200 bg-green-600 rounded-full shadow-md hover:bg-green-700"
             >
               <Phone className="w-4 h-4" />
               Call
@@ -209,13 +209,13 @@ const CandidateCard = ({ candidate, petStatus, openConfirmModal, toggleDetails, 
   });
 
   return (
-    <div className="bg-white rounded-xl shadow-md border border-amber-100 mb-6 hover:shadow-lg transition-all duration-200">
+    <div className="mb-6 transition-all duration-200 bg-white border shadow-md rounded-xl border-amber-100 hover:shadow-lg">
       <div
         className="flex items-center justify-between p-5 cursor-pointer"
         onClick={() => toggleDetails(candidate.userId)}
       >
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-200 to-pink-300 flex items-center justify-center shadow-sm">
+          <div className="flex items-center justify-center w-12 h-12 rounded-full shadow-sm bg-gradient-to-br from-pink-200 to-pink-300">
             <PinkUserIcon className="w-6 h-6 text-pink-600" />
           </div>
           <div>
@@ -233,7 +233,7 @@ const CandidateCard = ({ candidate, petStatus, openConfirmModal, toggleDetails, 
                 e.stopPropagation();
                 openConfirmModal("select", candidate.userId, candidate.name);
               }}
-              className="p-2 bg-amber-100 text-amber-600 rounded-full hover:bg-pink-200 hover:text-pink-700 transition-all duration-200 shadow-sm"
+              className="p-2 transition-all duration-200 rounded-full shadow-sm bg-amber-100 text-amber-600 hover:bg-pink-200 hover:text-pink-700"
               title="Select this candidate (rejects others)"
               aria-label="Select candidate"
             >
@@ -247,7 +247,7 @@ const CandidateCard = ({ candidate, petStatus, openConfirmModal, toggleDetails, 
                   e.stopPropagation();
                   openConfirmModal("finalize", candidate.userId, candidate.name);
                 }}
-                className="p-2 bg-green-100 text-green-600 rounded-full hover:bg-green-200 hover:text-green-700 transition-all duration-200 shadow-sm"
+                className="p-2 text-green-600 transition-all duration-200 bg-green-100 rounded-full shadow-sm hover:bg-green-200 hover:text-green-700"
                 title="Finalize adoption for this candidate"
                 aria-label="Finalize adoption"
               >
@@ -258,7 +258,7 @@ const CandidateCard = ({ candidate, petStatus, openConfirmModal, toggleDetails, 
                   e.stopPropagation();
                   openConfirmModal("reject", candidate.userId, candidate.name);
                 }}
-                className="p-2 bg-red-100 text-red-600 rounded-full hover:bg-red-200 hover:text-red-700 transition-all duration-200 shadow-sm"
+                className="p-2 text-red-600 transition-all duration-200 bg-red-100 rounded-full shadow-sm hover:bg-red-200 hover:text-red-700"
                 title="Reject this candidate"
                 aria-label="Reject candidate"
               >
@@ -267,7 +267,7 @@ const CandidateCard = ({ candidate, petStatus, openConfirmModal, toggleDetails, 
             </>
           )}
           {petStatus === "adopted" && candidate.status === "approved" && (
-            <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full flex items-center shadow-sm">
+            <span className="flex items-center px-3 py-1 text-green-700 bg-green-100 rounded-full shadow-sm">
               <Check className="w-4 h-4 mr-1" />
               Adopted
             </span>
@@ -292,18 +292,18 @@ const CandidateCard = ({ candidate, petStatus, openConfirmModal, toggleDetails, 
 const SkeletonLoader = () => (
   <div className="space-y-6">
     {Array(3).fill(0).map((_, i) => (
-      <div key={i} className="bg-white rounded-xl shadow-md border border-amber-100 p-5 animate-pulse">
+      <div key={i} className="p-5 bg-white border shadow-md rounded-xl border-amber-100 animate-pulse">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-full bg-amber-100"></div>
             <div className="space-y-2">
-              <div className="h-4 bg-amber-100 rounded w-40"></div>
-              <div className="h-3 bg-amber-100 rounded w-24"></div>
+              <div className="w-40 h-4 rounded bg-amber-100"></div>
+              <div className="w-24 h-3 rounded bg-amber-100"></div>
             </div>
           </div>
           <div className="flex gap-2">
-            <div className="w-10 h-10 bg-amber-100 rounded-full"></div>
-            <div className="w-10 h-10 bg-amber-100 rounded-full"></div>
+            <div className="w-10 h-10 rounded-full bg-amber-100"></div>
+            <div className="w-10 h-10 rounded-full bg-amber-100"></div>
           </div>
         </div>
       </div>
@@ -313,12 +313,12 @@ const SkeletonLoader = () => (
 
 // Empty State
 const EmptyState = ({ message }) => (
-  <div className="py-12 px-6 text-center bg-white rounded-xl shadow-md border border-amber-100">
-    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-100 flex items-center justify-center shadow-sm">
+  <div className="px-6 py-12 text-center bg-white border shadow-md rounded-xl border-amber-100">
+    <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full shadow-sm bg-amber-100">
       <AlertCircle className="w-8 h-8 text-pink-500" />
     </div>
-    <h3 className="text-gray-800 font-semibold text-lg mb-2">No Candidates Yet</h3>
-    <p className="text-gray-600 max-w-md mx-auto">{message}</p>
+    <h3 className="mb-2 text-lg font-semibold text-gray-800">No Candidates Yet</h3>
+    <p className="max-w-md mx-auto text-gray-600">{message}</p>
   </div>
 );
 
@@ -489,22 +489,22 @@ const CandidatesPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-amber-100 py-10">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen py-10 bg-gradient-to-br from-amber-50 via-white to-amber-100">
+      <div className="max-w-5xl px-4 mx-auto sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="bg-white rounded-xl shadow-md border border-amber-100 p-6 mb-8">
-          <div className="flex items-center justify-between flex-col sm:flex-row gap-4">
+        <div className="p-6 mb-8 bg-white border shadow-md rounded-xl border-amber-100">
+          <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => navigate(-1)}
-                className="p-2 bg-amber-100 text-amber-600 rounded-full hover:bg-pink-200 hover:text-pink-700 transition-all duration-200 shadow-sm"
+                className="p-2 transition-all duration-200 rounded-full shadow-sm bg-amber-100 text-amber-600 hover:bg-pink-200 hover:text-pink-700"
                 aria-label="Go back"
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
               <div>
                 <h1 className="text-3xl font-bold text-gray-800">Adoption Candidates</h1>
-                <p className="text-sm text-gray-600 mt-2">
+                <p className="mt-2 text-sm text-gray-600">
                   {petDetails ? (
                     <>
                       For <span className="font-semibold text-amber-600">{petDetails.name}</span> •{" "}
@@ -560,26 +560,26 @@ const CandidatesPage = () => {
           </div>
 
           {filteredCandidates.length > 0 && (
-            <div className="bg-gradient-to-r from-amber-50 to-amber-100 rounded-lg p-4 flex items-center justify-between shadow-sm">
+            <div className="flex items-center justify-between p-4 rounded-lg shadow-sm bg-gradient-to-r from-amber-50 to-amber-100">
               <div className="flex items-center gap-3">
                 <Users className="w-6 h-6 text-amber-600" />
-                <span className="text-amber-800 font-semibold text-lg">
+                <span className="text-lg font-semibold text-amber-800">
                   {filteredCandidates.length} Candidate{filteredCandidates.length !== 1 ? "s" : ""}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 {petDetails?.status === "adopted" ? (
-                  <span className="bg-green-100 text-green-700 px-4 py-1 rounded-full flex items-center shadow-sm">
+                  <span className="flex items-center px-4 py-1 text-green-700 bg-green-100 rounded-full shadow-sm">
                     <Check className="w-4 h-4 mr-2" />
                     Adoption Complete
                   </span>
                 ) : filteredCandidates.some((c) => c.status === "approved") ? (
-                  <span className="bg-amber-200 text-amber-800 px-4 py-1 rounded-full flex items-center shadow-sm">
+                  <span className="flex items-center px-4 py-1 rounded-full shadow-sm bg-amber-200 text-amber-800">
                     <AlertCircle className="w-4 h-4 mr-2" />
                     Awaiting Finalization
                   </span>
                 ) : (
-                  <span className="bg-blue-100 text-blue-700 px-4 py-1 rounded-full flex items-center shadow-sm">
+                  <span className="flex items-center px-4 py-1 text-blue-700 bg-blue-100 rounded-full shadow-sm">
                     <MessageCircle className="w-4 h-4 mr-2" />
                     Your Decision Needed
                   </span>
@@ -594,12 +594,12 @@ const CandidatesPage = () => {
           {isLoading ? (
             <SkeletonLoader />
           ) : error ? (
-            <div className="p-6 text-center text-red-600 flex flex-col items-center justify-center gap-3 bg-white rounded-xl shadow-md border border-amber-100">
+            <div className="flex flex-col items-center justify-center gap-3 p-6 text-center text-red-600 bg-white border shadow-md rounded-xl border-amber-100">
               <AlertCircle className="w-12 h-12 text-red-500" />
-              <p className="font-medium text-lg">{error}</p>
+              <p className="text-lg font-medium">{error}</p>
               <button
                 onClick={() => window.location.reload()}
-                className="mt-4 px-5 py-2 bg-red-100 text-red-700 rounded-full hover:bg-red-200 transition-all duration-200 shadow-sm"
+                className="px-5 py-2 mt-4 text-red-700 transition-all duration-200 bg-red-100 rounded-full shadow-sm hover:bg-red-200"
               >
                 Retry
               </button>

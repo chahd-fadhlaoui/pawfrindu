@@ -1,5 +1,6 @@
 import Pet from "../models/petModel.js";
 import User from "../models/userModel.js";
+import { sendEmail } from "../services/emailService.js";
 
 // Create a new pet
 export const createPet = async (req, res) => {
@@ -52,6 +53,11 @@ export const createPet = async (req, res) => {
     // Get owner ID from authenticated user
     const ownerId = req.user._id;
 
+    // Determine status and approval based on user role
+    const isAdmin = req.user.role === "Admin";
+    const status = isAdmin ? "accepted" : "pending";
+    const isApproved = isAdmin;
+
     // Create new pet
     const newPet = new Pet({
       name,
@@ -65,8 +71,8 @@ export const createPet = async (req, res) => {
       image,
       description,
       owner: ownerId,
-      status: "pending",
-      isApproved: false,
+      status,
+      isApproved,
     });
 
     await newPet.save();
@@ -413,14 +419,6 @@ export const deleteAdminPet = async (req, res) => {
       return res.status(404).json({ success: false, message: "Animal non trouvé" });
     }
 
-    // Autoriser la suppression uniquement pour "pending"
-    if (pet.status !== "accepted") {
-      return res.status(403).json({
-        success: false,
-        message: "Seuls les animaux en status (accepted) peuvent être supprimés par un admin",
-      });
-    }
-
     // Supprimer le pet
     await Pet.findByIdAndDelete(id);
     return res.status(200).json({ success: true, message: "Animal supprimé avec succès" });
@@ -622,11 +620,6 @@ export const unarchivePet = async (req, res) => {
     if (!pet) {
       return res.status(404).json({ success: false, message: "Pet not found" });
     }
-
-    // Vérifie si l'utilisateur est un admin (si nécessaire)
-    // if (req.user.role !== 'Admin') {
-    //   return res.status(403).json({ success: false, message: 'Unauthorized: Admin access required' });
-    // }
 
     if (!pet.isArchived) {
       return res
@@ -952,14 +945,20 @@ export const getMyAdoptionRequests = async (req, res) => {
 
 export const getPetStats = async (req, res) => {
   try {
-    const totalPets = await Pet.countDocuments();
-    const pendingPets = await Pet.countDocuments({ status: "pending", isArchived: false });
-    const acceptedPets = await Pet.countDocuments({ status: "accepted", isArchived: false });
-    const adoptionPendingPets = await Pet.countDocuments({ status: "adoptionPending", isArchived: false });
-    const adoptedPets = await Pet.countDocuments({ status: "adopted", isArchived: false });
-    const soldPets = await Pet.countDocuments({ status: "sold", isArchived: false });
-    const archivedPets = await Pet.countDocuments({ isArchived: true });
-    const approvedPets = await Pet.countDocuments({ isApproved: true, isArchived: false });
+    const { startDate, endDate, species } = req.query;
+    const dateFilter = startDate && endDate ? {
+      createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) },
+    } : {};
+    const speciesFilter = species && species !== "all" ? { species } : {};
+
+    const totalPets = await Pet.countDocuments({ ...dateFilter, ...speciesFilter });
+    const pendingPets = await Pet.countDocuments({ ...dateFilter, ...speciesFilter, status: "pending", isArchived: false });
+    const acceptedPets = await Pet.countDocuments({ ...dateFilter, ...speciesFilter, status: "accepted", isArchived: false });
+    const adoptionPendingPets = await Pet.countDocuments({ ...dateFilter, ...speciesFilter, status: "adoptionPending", isArchived: false });
+    const adoptedPets = await Pet.countDocuments({ ...dateFilter, ...speciesFilter, status: "adopted", isArchived: false });
+    const soldPets = await Pet.countDocuments({ ...dateFilter, ...speciesFilter, status: "sold", isArchived: false });
+    const archivedPets = await Pet.countDocuments({ ...dateFilter, ...speciesFilter, isArchived: true });
+    const approvedPets = await Pet.countDocuments({ ...dateFilter, ...speciesFilter, isApproved: true, isArchived: false });
 
     res.json({
       success: true,
@@ -1032,6 +1031,55 @@ export const getMyAdoptedPets = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Error fetching adopted pets",
+      error: error.message,
+    });
+  }
+};
+
+export const sendRejectionEmail = async (req, res) => {
+  try {
+    const { petId, ownerEmail, petName } = req.body;
+
+    // Validate input
+    if (!petId || !ownerEmail || !petName) {
+      return res.status(400).json({
+        success: false,
+        message: "Pet ID, owner email, and pet name are required",
+      });
+    }
+
+    // Fetch owner details (optional, for full name)
+    const owner = await User.findOne({ email: ownerEmail });
+    if (!owner) {
+      return res.status(404).json({
+        success: false,
+        message: "Owner not found",
+      });
+    }
+
+    // Send rejection email
+    const emailSent = await sendEmail({
+      to: ownerEmail,
+      template: "petRejected",
+      data: {
+        ownerFullName: owner.fullName,
+        petName,
+      },
+    });
+
+    if (!emailSent) {
+      console.warn("Email sending failed but rejection process continues");
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Rejection email sent successfully",
+    });
+  } catch (error) {
+    console.error("Error in sendRejectionEmail:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to send rejection email",
       error: error.message,
     });
   }

@@ -32,6 +32,7 @@ const UserTable = ({
   const [sortDirection, setSortDirection] = useState("asc");
   const [dropdownOpen, setDropdownOpen] = useState(null);
   const [expandedUser, setExpandedUser] = useState(null);
+  const [activeTab, setActiveTab] = useState("info");
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -49,7 +50,7 @@ const UserTable = ({
     setSortDirection((prev) => (sortField === field && prev === "asc" ? "desc" : "asc"));
   };
 
-  let displayedUsers = [...users].sort((a, b) => {
+  const displayedUsers = [...users].sort((a, b) => {
     let fieldA = a[sortField] || "";
     let fieldB = b[sortField] || "";
     if (fieldA === fieldB) return 0;
@@ -62,21 +63,28 @@ const UserTable = ({
     setDropdownOpen(dropdownOpen === userId ? null : userId);
   };
 
-  const toggleExpandUser = (userId) => setExpandedUser(expandedUser === userId ? null : userId);
+  const toggleExpandUser = (userId) => {
+    if (expandedUser === userId) {
+      setExpandedUser(null);
+    } else {
+      setExpandedUser(userId);
+      setActiveTab("info");
+    }
+  };
 
   const getRoleBadgeStyle = (role, adminType) => {
     if (role === "Admin" && adminType === "Super Admin") {
       return "bg-gradient-to-r from-yellow-500 to-pink-500 text-white border border-pink-600 shadow-md";
     }
     const styles = {
-      Admin: "bg-pink-100 text-pink-700 border border-pink-200",
-      "Admin Adoption": "bg-pink-100 text-pink-700 border border-pink-200",
-      "Admin Vet": "bg-pink-100 text-pink-700 border border-pink-200",
-      "Admin Trainer": "bg-pink-100 text-pink-700 border border-pink-200",
-      "Admin Lost & Found": "bg-pink-100 text-pink-700 border border-pink-200",
-      PetOwner: "bg-amber-100 text-amber-700 border border-amber-200",
-      Vet: "bg-blue-100 text-blue-700 border border-blue-200",
-      Trainer: "bg-teal-100 text-teal-700 border border-teal-200",
+      Admin: "bg-gradient-to-r from-pink-200 to-pink-300 text-pink-800 border border-pink-400",
+      "Admin Adoption": "bg-gradient-to-r from-pink-200 to-pink-300 text-pink-800 border border-pink-400",
+      "Admin Vet": "bg-gradient-to-r from-pink-200 to-pink-300 text-pink-800 border border-pink-400",
+      "Admin Trainer": "bg-gradient-to-r from-pink-200 to-pink-300 text-pink-800 border border-pink-400",
+      "Admin Lost & Found": "bg-gradient-to-r from-pink-200 to-pink-300 text-pink-800 border border-pink-400",
+      PetOwner: "bg-gradient-to-r from-amber-200 to-amber-300 text-amber-800 border border-amber-400",
+      Vet: "bg-gradient-to-r from-blue-200 to-blue-300 text-blue-800 border border-blue-400",
+      Trainer: "bg-gradient-to-r from-teal-200 to-teal-300 text-teal-800 border border-teal-400",
     };
     return styles[role] || styles[adminType] || "bg-gray-100 text-gray-600 border border-gray-200";
   };
@@ -104,20 +112,20 @@ const UserTable = ({
   return (
     <div className="w-full">
       {showHeader && (
-        <div className="p-4 mb-6 transition-all duration-300 bg-white shadow-md rounded-xl sm:p-6">
+        <div className="p-4 mb-6 transition-all duration-300 bg-white shadow-lg rounded-xl sm:p-6 ring-1 ring-gray-100">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="p-2 bg-pink-100 rounded-lg">
+              <div className="p-2 rounded-lg shadow-sm bg-gradient-to-br from-pink-100 to-yellow-100">
                 <UserCheck className="w-6 h-6 text-pink-500" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
+                <h2 className="text-xl font-bold text-gray-900">{title}</h2>
                 <p className="text-sm text-gray-600">
                   {displayedUsers.length} {displayedUsers.length === 1 ? "user" : "users"}
                 </p>
               </div>
             </div>
-            <span className="px-2 py-1 text-sm font-medium text-white rounded-full bg-gradient-to-r from-yellow-500 to-pink-500">
+            <span className="px-3 py-1 text-sm font-semibold text-white rounded-full shadow-md bg-gradient-to-r from-pink-500 to-yellow-500">
               {displayedUsers.length}
             </span>
           </div>
@@ -125,10 +133,10 @@ const UserTable = ({
       )}
 
       {selectedUsers.length > 0 && (
-        <div className="p-4 mb-6 transition-all duration-300 bg-white shadow-md rounded-xl">
+        <div className="p-4 mb-6 transition-all duration-300 bg-white shadow-lg rounded-xl ring-1 ring-gray-100">
           <div className="flex items-center justify-between sm:gap-4">
             <div className="flex items-center space-x-3">
-              <span className="inline-flex items-center px-2.5 py-1 text-sm font-semibold text-white bg-gradient-to-r from-yellow-500 to-pink-500 rounded-full shadow-sm">
+              <span className="inline-flex items-center px-2.5 py-1 text-sm font-semibold text-white bg-gradient-to-r from-pink-500 to-yellow-500 rounded-full shadow-md">
                 {selectedUsers.length}
               </span>
               <span className="text-sm font-medium text-gray-800">
@@ -137,7 +145,7 @@ const UserTable = ({
             </div>
             <button
               onClick={() => onToggleSelectAll()}
-              className="px-4 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gradient-to-r hover:from-yellow-50 hover:to-pink-50 hover:text-pink-600 focus:outline-none focus:ring-2 focus:ring-pink-500 transition-all duration-200"
+              className="px-4 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-md shadow-sm hover:bg-gradient-to-r hover:from-pink-50 hover:to-yellow-50 hover:text-pink-600 focus:outline-none focus:ring-2 focus:ring-pink-500 transition-all duration-300"
             >
               Deselect All
             </button>
@@ -148,13 +156,13 @@ const UserTable = ({
       {displayedUsers.length === 0 ? (
         <EmptyState customMessage="No users available at this time." />
       ) : (
-        <div className="overflow-hidden bg-white shadow-md rounded-xl">
+        <div className="overflow-hidden bg-white shadow-lg rounded-xl ring-1 ring-gray-100">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
                 <tr>
                   {onToggleSelectAll && (
-                    <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase sm:px-6">
+                    <th className="px-4 py-3 text-xs font-semibold tracking-wider text-left text-gray-600 uppercase sm:px-6">
                       <input
                         type="checkbox"
                         checked={
@@ -170,7 +178,7 @@ const UserTable = ({
                     </th>
                   )}
                   <th
-                    className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase transition-colors cursor-pointer sm:px-6 hover:text-pink-600"
+                    className="px-4 py-3 text-xs font-semibold tracking-wider text-left text-gray-600 uppercase transition-colors cursor-pointer sm:px-6 hover:text-pink-600"
                     onClick={() => handleSort("fullName")}
                   >
                     <div className="flex items-center">
@@ -179,7 +187,7 @@ const UserTable = ({
                     </div>
                   </th>
                   <th
-                    className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase transition-colors cursor-pointer sm:px-6 hover:text-pink-600"
+                    className="px-4 py-3 text-xs font-semibold tracking-wider text-left text-gray-600 uppercase transition-colors cursor-pointer sm:px-6 hover:text-pink-600"
                     onClick={() => handleSort("email")}
                   >
                     <div className="flex items-center">
@@ -188,7 +196,7 @@ const UserTable = ({
                     </div>
                   </th>
                   <th
-                    className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase transition-colors cursor-pointer sm:px-6 hover:text-pink-600"
+                    className="px-4 py-3 text-xs font-semibold tracking-wider text-left text-gray-600 uppercase transition-colors cursor-pointer sm:px-6 hover:text-pink-600"
                     onClick={() => handleSort("role")}
                   >
                     <div className="flex items-center">
@@ -196,7 +204,7 @@ const UserTable = ({
                       {getSortIcon("role")}
                     </div>
                   </th>
-                  <th className="px-4 py-3 text-xs font-medium tracking-wider text-right text-gray-500 uppercase sm:px-6">
+                  <th className="px-4 py-3 text-xs font-semibold tracking-wider text-right text-gray-600 uppercase sm:px-6">
                     Actions
                   </th>
                 </tr>
@@ -205,8 +213,8 @@ const UserTable = ({
                 {displayedUsers.map((user) => (
                   <React.Fragment key={user._id}>
                     <tr
-                      className={`hover:bg-gradient-to-r hover:from-yellow-50 hover:to-pink-50 transition-colors duration-200 cursor-pointer ${
-                        expandedUser === user._id ? "bg-gradient-to-r from-yellow-100 to-pink-100" : ""
+                      className={`transition-all duration-300 hover:bg-gradient-to-r hover:from-pink-50 hover:to-yellow-50 cursor-pointer ${
+                        expandedUser === user._id ? "bg-gradient-to-r from-pink-100 to-yellow-100" : ""
                       }`}
                       onClick={() => toggleExpandUser(user._id)}
                     >
@@ -227,11 +235,11 @@ const UserTable = ({
                       )}
                       <td className="px-4 py-4 sm:px-6 whitespace-nowrap">
                         <div className="flex items-center">
-                          <div className="relative flex-shrink-0 w-10 h-10">
+                          <div className="relative flex-shrink-0 w-12 h-12 transition-transform hover:scale-105">
                             <img
                               src={user.image || DEFAULT_PROFILE_IMAGE}
                               alt={user.fullName || "User"}
-                              className="object-cover w-10 h-10 rounded-full ring-1 ring-pink-200"
+                              className="object-cover w-12 h-12 rounded-full shadow-sm ring-2 ring-pink-200"
                               onError={(e) => (e.target.src = DEFAULT_PROFILE_IMAGE)}
                             />
                             {user.isActive && (
@@ -239,10 +247,10 @@ const UserTable = ({
                             )}
                           </div>
                           <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">
+                            <div className="text-sm font-semibold text-gray-900">
                               {user.fullName || "Unnamed User"}
                               {user._id === currentUser?._id && (
-                                <span className="ml-2 px-1.5 py-0.5 text-xs font-medium text-white bg-gradient-to-r from-yellow-500 to-pink-500 rounded">
+                                <span className="ml-2 px-1.5 py-0.5 text-xs font-medium text-white bg-gradient-to-r from-pink-500 to-yellow-500 rounded-full shadow-sm">
                                   You
                                 </span>
                               )}
@@ -251,17 +259,17 @@ const UserTable = ({
                         </div>
                       </td>
                       <td className="px-4 py-4 sm:px-6 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
+                        <div className="text-sm font-medium text-gray-900">
                           <div className="flex items-center">
-                            <Mail className="w-4 h-4 mr-1 text-gray-400" />
+                            <Mail className="w-4 h-4 mr-1 text-pink-400" />
                             <span className="truncate max-w-48" title={user.email || "No email"}>
                               {user.email || "No email"}
                             </span>
                           </div>
                         </div>
-                        <div className="mt-1 text-xs text-gray-500">
+                        <div className="mt-1 text-xs text-gray-600">
                           <div className="flex items-center">
-                            <Phone className="w-4 h-4 mr-1 text-gray-400" />
+                            <Phone className="w-4 h-4 mr-1 text-pink-400" />
                             {user.petOwnerDetails?.phone || "No phone"}
                           </div>
                         </div>
@@ -269,7 +277,7 @@ const UserTable = ({
                       <td className="px-4 py-4 sm:px-6 whitespace-nowrap">
                         <div className="flex flex-col space-y-1">
                           <span
-                            className={`px-2 py-1 text-xs font-medium rounded-full ${getRoleBadgeStyle(
+                            className={`px-2 py-1 text-xs font-medium rounded-full shadow-sm ${getRoleBadgeStyle(
                               user.role,
                               user.adminType
                             )}`}
@@ -279,13 +287,13 @@ const UserTable = ({
                               : user.role || "Unknown"}
                           </span>
                           {user.role === "Admin" && user.adminType !== "Super Admin" && (
-                            <span className="px-2 py-1 text-xs font-medium text-pink-700 bg-pink-100 rounded-full">
+                            <span className="px-2 py-1 text-xs font-medium text-pink-700 bg-pink-100 rounded-full shadow-sm">
                               <Shield className="inline w-3 h-3 mr-1" />
                               Admin
                             </span>
                           )}
                           {user.role === "Vet" && user.isVerified && (
-                            <span className="px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full">
+                            <span className="px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full shadow-sm">
                               <Check className="inline w-3 h-3 mr-1" />
                               Verified
                             </span>
@@ -309,6 +317,16 @@ const UserTable = ({
                                 <div className="py-1">
                                   <button
                                     onClick={() => {
+                                      toggleExpandUser(user._id);
+                                      setDropdownOpen(null);
+                                    }}
+                                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 transition-colors duration-200 hover:bg-gradient-to-r hover:from-pink-50 hover:to-yellow-50 hover:text-pink-600"
+                                  >
+                                    <User className="w-4 h-4 mr-2 text-pink-500" />
+                                    View Details
+                                  </button>
+                                  <button
+                                    onClick={() => {
                                       onToggleActive?.(user._id);
                                       setDropdownOpen(null);
                                     }}
@@ -316,7 +334,7 @@ const UserTable = ({
                                       user._id === currentUser?._id ||
                                       (user.role === "Admin" && user.adminType === "Super Admin")
                                     }
-                                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 transition-colors duration-200 hover:bg-gradient-to-r hover:from-yellow-50 hover:to-pink-50 hover:text-pink-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 transition-colors duration-200 hover:bg-gradient-to-r hover:from-pink-50 hover:to-yellow-50 hover:text-pink-600 disabled:opacity-50 disabled:cursor-not-allowed"
                                   >
                                     <X className="w-4 h-4 mr-2 text-red-500" />
                                     Deactivate
@@ -330,252 +348,289 @@ const UserTable = ({
                     </tr>
                     {expandedUser === user._id && (
                       <tr className="transition-all duration-300 bg-gray-50">
-                        <td colSpan={onToggleSelection ? 5 : 4} className="px-4 py-4 sm:px-6">
-                          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                            {/* User Information */}
-                            <div className="p-4 bg-white rounded-lg shadow-sm">
-                              <h3 className="flex items-center mb-3 text-sm font-semibold text-gray-900">
-                                <User className="w-4 h-4 mr-2 text-pink-500" />
-                                User Information
-                              </h3>
-                              <dl className="space-y-2 text-sm">
-                                <div>
-                                  <dt className="font-medium text-gray-500">Full Name</dt>
-                                  <dd className="text-gray-900">{user.fullName || "N/A"}</dd>
-                                </div>
-                                <div>
-                                  <dt className="font-medium text-gray-500">Email</dt>
-                                  <dd className="text-gray-900 truncate max-w-48" title={user.email || "N/A"}>
-                                    {user.email || "N/A"}
-                                  </dd>
-                                </div>
-                                <div>
-                                  <dt className="font-medium text-gray-500">Phone</dt>
-                                  <dd className="text-gray-900">{user.petOwnerDetails?.phone || "N/A"}</dd>
-                                </div>
-                                <div>
-                                  <dt className="font-medium text-gray-500">Status</dt>
-                                  <dd className="text-gray-900">
-                                    {user.isActive ? (
-                                      <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium text-green-700 bg-green-100 rounded-full">
-                                        <Check className="w-3 h-3 mr-1" />
-                                        Active
-                                      </span>
-                                    ) : (
-                                      <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium text-red-700 bg-red-100 rounded-full">
-                                        <X className="w-3 h-3 mr-1" />
-                                        Inactive
-                                      </span>
-                                    )}
-                                  </dd>
-                                </div>
-                              </dl>
+                        <td colSpan={onToggleSelection ? 5 : 4} className="px-4 py-6 sm:px-6">
+                          <div className="bg-white shadow-md rounded-xl ring-1 ring-gray-100">
+                            {/* Tab Navigation */}
+                            <div className="border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 rounded-t-xl">
+                              <nav className="flex p-2 space-x-1" aria-label="Tabs">
+                                <button
+                                  className={`py-2 px-4 text-sm font-semibold rounded-t-md transition-all duration-200 ${
+                                    activeTab === "info"
+                                      ? "bg-white text-pink-600 shadow-sm ring-1 ring-pink-200"
+                                      : "text-gray-600 hover:text-pink-600 hover:bg-gray-200"
+                                  }`}
+                                  onClick={() => setActiveTab("info")}
+                                >
+                                  <div className="flex items-center">
+                                    <User className={`w-5 h-5 mr-2 transition-transform duration-200 ${activeTab === "info" ? "text-pink-500" : "text-gray-400"}`} />
+                                    User Info
+                                  </div>
+                                </button>
+                                <button
+                                  className={`py-2 px-4 text-sm font-semibold rounded-t-md transition-all duration-200 ${
+                                    activeTab === "role"
+                                      ? "bg-white text-pink-600 shadow-sm ring-1 ring-pink-200"
+                                      : "text-gray-600 hover:text-pink-600 hover:bg-gray-200"
+                                  }`}
+                                  onClick={() => setActiveTab("role")}
+                                >
+                                  <div className="flex items-center">
+                                    <Shield className={`w-5 h-5 mr-2 transition-transform duration-200 ${activeTab === "role" ? "text-pink-500" : "text-gray-400"}`} />
+                                    Role Details
+                                  </div>
+                                </button>
+                                <button
+                                  className={`py-2 px-4 text-sm font-semibold rounded-t-md transition-all duration-200 ${
+                                    activeTab === "activity"
+                                      ? "bg-white text-pink-600 shadow-sm ring-1 ring-pink-200"
+                                      : "text-gray-600 hover:text-pink-600 hover:bg-gray-200"
+                                  }`}
+                                  onClick={() => setActiveTab("activity")}
+                                >
+                                  <div className="flex items-center">
+                                    <Clock className={`w-5 h-5 mr-2 transition-transform duration-200 ${activeTab === "activity" ? "text-pink-500" : "text-gray-400"}`} />
+                                    Activity
+                                  </div>
+                                </button>
+                              </nav>
                             </div>
 
-                            {/* Role-Specific Details */}
-                            <div className="p-4 bg-white rounded-lg shadow-sm">
-                              <h3 className="flex items-center mb-3 text-sm font-semibold text-gray-900">
-                                <Shield className="w-4 h-4 mr-2 text-pink-500" />
-                                {user.role === "PetOwner"
-                                  ? "Pet Owner Details"
-                                  : user.role === "Vet"
-                                  ? "Veterinarian Details"
-                                  : user.role === "Trainer"
-                                  ? "Trainer Details"
-                                  : "Role Details"}
-                              </h3>
-                              <dl className="space-y-2 text-sm">
-                                {user.role === "PetOwner" ? (
-                                  <>
+                            {/* Tab Content */}
+                            <div className="p-6 transition-opacity duration-200">
+                              {activeTab === "info" && (
+                                <dl className="grid grid-cols-2 gap-6 text-sm">
+                                  <div>
+                                    <dt className="font-semibold text-gray-600">Full Name</dt>
+                                    <dd className="mt-1 text-gray-900">{user.fullName || "N/A"}</dd>
+                                  </div>
+                                  <div>
+                                    <dt className="font-semibold text-gray-600">Email</dt>
+                                    <dd className="mt-1 text-gray-900 truncate" title={user.email || "N/A"}>
+                                      {user.email || "N/A"}
+                                    </dd>
+                                  </div>
+                                  <div>
+                                    <dt className="font-semibold text-gray-600">Phone</dt>
+                                    <dd className="mt-1 text-gray-900">{user.petOwnerDetails?.phone || "N/A"}</dd>
+                                  </div>
+                                  <div>
+                                    <dt className="font-semibold text-gray-600">Status</dt>
+                                    <dd className="mt-1 text-gray-900">
+                                      {user.isActive ? (
+                                        <span className="inline-flex items-center px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full shadow-sm">
+                                          <Check className="w-4 h-4 mr-1" />
+                                          Active
+                                        </span>
+                                      ) : (
+                                        <span className="inline-flex items-center px-2 py-1 text-xs font-medium text-red-700 bg-red-100 rounded-full shadow-sm">
+                                          <X className="w-4 h-4 mr-1" />
+                                          Inactive
+                                        </span>
+                                      )}
+                                    </dd>
+                                  </div>
+                                </dl>
+                              )}
+
+                              {activeTab === "role" && (
+                                <dl className="grid grid-cols-2 gap-6 text-sm">
+                                  <div>
+                                    <dt className="font-semibold text-gray-600">Role</dt>
+                                    <dd className="mt-1 text-gray-900">
+                                      <span
+                                        className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full shadow-sm ${getRoleBadgeStyle(
+                                          user.role,
+                                          user.adminType
+                                        )}`}
+                                      >
+                                        {user.role === "Admin" && user.adminType
+                                          ? getAdminTypeDisplay(user.adminType)
+                                          : user.role || "N/A"}
+                                      </span>
+                                    </dd>
+                                  </div>
+                                  {user.role === "Admin" && (
                                     <div>
-                                      <dt className="font-medium text-gray-500">Current Pets</dt>
-                                      <dd className="text-gray-900">
-                                        {user.petOwnerDetails?.currentPets?.length > 0
-                                          ? user.petOwnerDetails.currentPets.join(", ")
-                                          : "None"}
-                                      </dd>
+                                      <dt className="font-semibold text-gray-600">Admin Type</dt>
+                                      <dd className="mt-1 text-gray-900">{user.adminType || "Standard"}</dd>
                                     </div>
-                                    <div>
-                                      <dt className="font-medium text-gray-500">Address</dt>
-                                      <dd className="text-gray-900">{user.petOwnerDetails?.address || "N/A"}</dd>
-                                    </div>
-                                    <div>
-                                      <dt className="font-medium text-gray-500">Occupation</dt>
-                                      <dd className="text-gray-900">{user.petOwnerDetails?.occupation || "N/A"}</dd>
-                                    </div>
-                                    <div>
-                                      <dt className="font-medium text-gray-500">Work Schedule</dt>
-                                      <dd className="text-gray-900 capitalize">
-                                        {user.petOwnerDetails?.workSchedule?.replace("_", " ") || "N/A"}
-                                      </dd>
-                                    </div>
-                                    <div>
-                                      <dt className="font-medium text-gray-500">Housing</dt>
-                                      <dd className="text-gray-900">
-                                        {user.petOwnerDetails?.housing
-                                          ? `${user.petOwnerDetails.housing.type} (${user.petOwnerDetails.housing.ownership}${
-                                              user.petOwnerDetails.housing.ownership === "rent" &&
-                                              user.petOwnerDetails.housing.landlordApproval
-                                                ? ", Landlord Approved"
-                                                : ""
-                                            })`
-                                          : "N/A"}
-                                      </dd>
-                                    </div>
-                                    <div>
-                                      <dt className="font-medium text-gray-500">Family Size</dt>
-                                      <dd className="text-gray-900">
-                                        {user.petOwnerDetails?.housing?.familySize || "N/A"}
-                                      </dd>
-                                    </div>
-                                    <div>
-                                      <dt className="font-medium text-gray-500">Pet Experience</dt>
-                                      <dd className="text-gray-900">
-                                        {user.petOwnerDetails?.petExperience?.hasPreviousPets
-                                          ? `${user.petOwnerDetails.petExperience.yearsOfExperience} years - ${
-                                              user.petOwnerDetails.petExperience.experience_description || "No description"
-                                            }`
-                                          : "None"}
-                                      </dd>
-                                    </div>
-                                    <div>
-                                      <dt className="font-medium text-gray-500">Reason for Adoption</dt>
-                                      <dd className="text-gray-900">
-                                        {user.petOwnerDetails?.reasonForAdoption || "N/A"}
-                                      </dd>
-                                    </div>
-                                    <div>
-                                      <dt className="font-medium text-gray-500">Adoption Readiness</dt>
-                                      <dd className="text-gray-900 capitalize">
-                                        {user.petOwnerDetails?.readiness?.replace("_", " ") || "N/A"}
-                                      </dd>
-                                    </div>
-                                  </>
-                                ) : user.role === "Vet" ? (
-                                  <>
-                                    <div>
-                                      <dt className="font-medium text-gray-500">Location</dt>
-                                      <dd className="text-gray-900">{user.veterinarianDetails?.location || "N/A"}</dd>
-                                    </div>
-                                    <div>
-                                      <dt className="font-medium text-gray-500">Degree</dt>
-                                      <dd className="text-gray-900">{user.veterinarianDetails?.degree || "N/A"}</dd>
-                                    </div>
-                                    <div>
-                                      <dt className="font-medium text-gray-500">Specialization</dt>
-                                      <dd className="text-gray-900">
-                                        {user.veterinarianDetails?.specialization || "N/A"}
-                                      </dd>
-                                    </div>
-                                    <div>
-                                      <dt className="font-medium text-gray-500">Experience</dt>
-                                      <dd className="text-gray-900">
-                                        {user.veterinarianDetails?.experienceYears
-                                          ? `${user.veterinarianDetails.experienceYears} years`
-                                          : "N/A"}
-                                      </dd>
-                                    </div>
-                                    <div>
-                                      <dt className="font-medium text-gray-500">Availability</dt>
-                                      <dd className="text-gray-900">
-                                        {user.veterinarianDetails?.availableHours || "N/A"}
-                                      </dd>
-                                    </div>
-                                    <div>
-                                      <dt className="font-medium text-gray-500">Verified</dt>
-                                      <dd className="text-gray-900">
-                                        {user.isVerified ? (
-                                          <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium text-green-700 bg-green-100 rounded-full">
-                                            <Check className="w-3 h-3 mr-1" />
-                                            Yes
-                                          </span>
-                                        ) : (
-                                          <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium text-red-700 bg-red-100 rounded-full">
-                                            <X className="w-3 h-3 mr-1" />
-                                            No
-                                          </span>
-                                        )}
-                                      </dd>
-                                    </div>
-                                  </>
-                                ) : user.role === "Trainer" ? (
-                                  <>
-                                    <div>
-                                      <dt className="font-medium text-gray-500">Location</dt>
-                                      <dd className="text-gray-900">{user.trainerDetails?.location || "N/A"}</dd>
-                                    </div>
-                                    <div>
-                                      <dt className="font-medium text-gray-500">Certification</dt>
-                                      <dd className="text-gray-900">{user.trainerDetails?.certification || "N/A"}</dd>
-                                    </div>
-                                    <div>
-                                      <dt className="font-medium text-gray-500">Specialization</dt>
-                                      <dd className="text-gray-900">{user.trainerDetails?.specialization || "N/A"}</dd>
-                                    </div>
-                                    <div>
-                                      <dt className="font-medium text-gray-500">Experience</dt>
-                                      <dd className="text-gray-900">
-                                        {user.trainerDetails?.experienceYears
-                                          ? `${user.trainerDetails.experienceYears} years`
-                                          : "N/A"}
-                                      </dd>
-                                    </div>
-                                    <div>
-                                      <dt className="font-medium text-gray-500">Availability</dt>
-                                      <dd className="text-gray-900">{user.trainerDetails?.availableHours || "N/A"}</dd>
-                                    </div>
-                                  </>
-                                ) : (
-                                  <>
-                                    <div>
-                                      <dt className="font-medium text-gray-500">Role</dt>
-                                      <dd className="text-gray-900">{user.role || "N/A"}</dd>
-                                    </div>
-                                    {user.role === "Admin" && (
+                                  )}
+                                  {user.role === "PetOwner" && (
+                                    <>
                                       <div>
-                                        <dt className="font-medium text-gray-500">Admin Type</dt>
-                                        <dd className="text-gray-900">{user.adminType || "Standard"}</dd>
+                                        <dt className="font-semibold text-gray-600">Current Pets</dt>
+                                        <dd className="mt-1 text-gray-900">
+                                          {user.petOwnerDetails?.currentPets?.length > 0
+                                            ? user.petOwnerDetails.currentPets.join(", ")
+                                            : "None"}
+                                        </dd>
                                       </div>
-                                    )}
-                                  </>
-                                )}
-                              </dl>
-                            </div>
+                                      <div>
+                                        <dt className="font-semibold text-gray-600">Address</dt>
+                                        <dd className="mt-1 text-gray-900">{user.petOwnerDetails?.address || "N/A"}</dd>
+                                      </div>
+                                      <div>
+                                        <dt className="font-semibold text-gray-600">Occupation</dt>
+                                        <dd className="mt-1 text-gray-900">{user.petOwnerDetails?.occupation || "N/A"}</dd>
+                                      </div>
+                                      <div>
+                                        <dt className="font-semibold text-gray-600">Work Schedule</dt>
+                                        <dd className="mt-1 text-gray-900 capitalize">
+                                          {user.petOwnerDetails?.workSchedule?.replace("_", " ") || "N/A"}
+                                        </dd>
+                                      </div>
+                                      <div>
+                                        <dt className="font-semibold text-gray-600">Housing</dt>
+                                        <dd className="mt-1 text-gray-900">
+                                          {user.petOwnerDetails?.housing
+                                            ? `${user.petOwnerDetails.housing.type} (${user.petOwnerDetails.housing.ownership}${
+                                                user.petOwnerDetails.housing.ownership === "rent" &&
+                                                user.petOwnerDetails.housing.landlordApproval
+                                                  ? ", Landlord Approved"
+                                                  : ""
+                                              })`
+                                            : "N/A"}
+                                        </dd>
+                                      </div>
+                                      <div>
+                                        <dt className="font-semibold text-gray-600">Family Size</dt>
+                                        <dd className="mt-1 text-gray-900">
+                                          {user.petOwnerDetails?.housing?.familySize || "N/A"}
+                                        </dd>
+                                      </div>
+                                      <div>
+                                        <dt className="font-semibold text-gray-600">Pet Experience</dt>
+                                        <dd className="mt-1 text-gray-900">
+                                          {user.petOwnerDetails?.petExperience?.hasPreviousPets
+                                            ? `${user.petOwnerDetails.petExperience.yearsOfExperience} years - ${
+                                                user.petOwnerDetails.petExperience.experience_description || "No description"
+                                              }`
+                                            : "None"}
+                                        </dd>
+                                      </div>
+                                      <div>
+                                        <dt className="font-semibold text-gray-600">Reason for Adoption</dt>
+                                        <dd className="mt-1 text-gray-900">
+                                          {user.petOwnerDetails?.reasonForAdoption || "N/A"}
+                                        </dd>
+                                      </div>
+                                      <div>
+                                        <dt className="font-semibold text-gray-600">Adoption Readiness</dt>
+                                        <dd className="mt-1 text-gray-900 capitalize">
+                                          {user.petOwnerDetails?.readiness?.replace("_", " ") || "N/A"}
+                                        </dd>
+                                      </div>
+                                    </>
+                                  )}
+                                  {user.role === "Vet" && (
+                                    <>
+                                      <div>
+                                        <dt className="font-semibold text-gray-600">Location</dt>
+                                        <dd className="mt-1 text-gray-900">{user.veterinarianDetails?.location || "N/A"}</dd>
+                                      </div>
+                                      <div>
+                                        <dt className="font-semibold text-gray-600">Degree</dt>
+                                        <dd className="mt-1 text-gray-900">{user.veterinarianDetails?.degree || "N/A"}</dd>
+                                      </div>
+                                      <div>
+                                        <dt className="font-semibold text-gray-600">Specialization</dt>
+                                        <dd className="mt-1 text-gray-900">
+                                          {user.veterinarianDetails?.specialization || "N/A"}
+                                        </dd>
+                                      </div>
+                                      <div>
+                                        <dt className="font-semibold text-gray-600">Experience</dt>
+                                        <dd className="mt-1 text-gray-900">
+                                          {user.veterinarianDetails?.experienceYears
+                                            ? `${user.veterinarianDetails.experienceYears} years`
+                                            : "N/A"}
+                                        </dd>
+                                      </div>
+                                      <div>
+                                        <dt className="font-semibold text-gray-600">Availability</dt>
+                                        <dd className="mt-1 text-gray-900">
+                                          {user.veterinarianDetails?.availableHours || "N/A"}
+                                        </dd>
+                                      </div>
+                                      <div>
+                                        <dt className="font-semibold text-gray-600">Verified</dt>
+                                        <dd className="mt-1 text-gray-900">
+                                          {user.isVerified ? (
+                                            <span className="inline-flex items-center px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full shadow-sm">
+                                              <Check className="w-4 h-4 mr-1" />
+                                              Yes
+                                            </span>
+                                          ) : (
+                                            <span className="inline-flex items-center px-2 py-1 text-xs font-medium text-red-700 bg-red-100 rounded-full shadow-sm">
+                                              <X className="w-4 h-4 mr-1" />
+                                              No
+                                            </span>
+                                          )}
+                                        </dd>
+                                      </div>
+                                    </>
+                                  )}
+                                  {user.role === "Trainer" && (
+                                    <>
+                                      <div>
+                                        <dt className="font-semibold text-gray-600">Location</dt>
+                                        <dd className="mt-1 text-gray-900">{user.trainerDetails?.location || "N/A"}</dd>
+                                      </div>
+                                      <div>
+                                        <dt className="font-semibold text-gray-600">Certification</dt>
+                                        <dd className="mt-1 text-gray-900">{user.trainerDetails?.certification || "N/A"}</dd>
+                                      </div>
+                                      <div>
+                                        <dt className="font-semibold text-gray-600">Specialization</dt>
+                                        <dd className="mt-1 text-gray-900">{user.trainerDetails?.specialization || "N/A"}</dd>
+                                      </div>
+                                      <div>
+                                        <dt className="font-semibold text-gray-600">Experience</dt>
+                                        <dd className="mt-1 text-gray-900">
+                                          {user.trainerDetails?.experienceYears
+                                            ? `${user.trainerDetails.experienceYears} years`
+                                            : "N/A"}
+                                        </dd>
+                                      </div>
+                                      <div>
+                                        <dt className="font-semibold text-gray-600">Availability</dt>
+                                        <dd className="mt-1 text-gray-900">{user.trainerDetails?.availableHours || "N/A"}</dd>
+                                      </div>
+                                    </>
+                                  )}
+                                </dl>
+                              )}
 
-                            {/* Account Activity */}
-                            <div className="p-4 bg-white rounded-lg shadow-sm">
-                              <h3 className="flex items-center mb-3 text-sm font-semibold text-gray-900">
-                                <Clock className="w-4 h-4 mr-2 text-pink-500" />
-                                Account Activity
-                              </h3>
-                              <dl className="space-y-2 text-sm">
-                                <div>
-                                  <dt className="font-medium text-gray-500">Created</dt>
-                                  <dd className="text-gray-900">
-                                    {new Date(user.createdAt).toLocaleString() || "N/A"}
-                                  </dd>
-                                </div>
-                                <div>
-                                  <dt className="font-medium text-gray-500">Last Login</dt>
-                                  <dd className="text-gray-900">
-                                    {user.lastLogin ? new Date(user.lastLogin).toLocaleString() : "Never"}
-                                  </dd>
-                                </div>
-                                <div>
-                                  <dt className="font-medium text-gray-500">Archived</dt>
-                                  <dd className="text-gray-900">
-                                    {user.isArchieve ? (
-                                      <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium text-pink-700 bg-pink-100 rounded-full">
-                                        Yes
-                                      </span>
-                                    ) : (
-                                      <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium text-gray-700 bg-gray-100 rounded-full">
-                                        No
-                                      </span>
-                                    )}
-                                  </dd>
-                                </div>
-                              </dl>
+                              {activeTab === "activity" && (
+                                <dl className="grid grid-cols-2 gap-6 text-sm">
+                                  <div>
+                                    <dt className="font-semibold text-gray-600">Created</dt>
+                                    <dd className="mt-1 text-gray-900">
+                                      {new Date(user.createdAt).toLocaleString() || "N/A"}
+                                    </dd>
+                                  </div>
+                                  <div>
+                                    <dt className="font-semibold text-gray-600">Last Login</dt>
+                                    <dd className="mt-1 text-gray-900">
+                                      {user.lastLogin ? new Date(user.lastLogin).toLocaleString() : "Never"}
+                                    </dd>
+                                  </div>
+                                  <div>
+                                    <dt className="font-semibold text-gray-600">Archived</dt>
+                                    <dd className="mt-1 text-gray-900">
+                                      {user.isArchieve ? (
+                                        <span className="inline-flex items-center px-2 py-1 text-xs font-medium text-pink-700 bg-pink-100 rounded-full shadow-sm">
+                                          Yes
+                                        </span>
+                                      ) : (
+                                        <span className="inline-flex items-center px-2 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-full shadow-sm">
+                                          No
+                                        </span>
+                                      )}
+                                    </dd>
+                                  </div>
+                                </dl>
+                              )}
                             </div>
                           </div>
                         </td>
