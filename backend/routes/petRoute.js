@@ -41,10 +41,11 @@ petRouter.put('/updatedPet/:id', updatePet);  // Mettre à jour un pet
 petRouter.delete("/deletePet/:id", deletePet);// Supprimer un pet
 petRouter.get('/:petId/candidates', getPetCandidates); // Nouvelle route pour les candidats
 petRouter.put('/:petId/candidate/:candidateId/status', updateCandidateStatus);
-petRouter.put('/:petId/candidate/:candidateId/finalize', finalizeAdoption); 
+petRouter.put('/:petId/candidate/:candidateId/finalize', finalizeAdoption);  
+petRouter.put('/archivePet/:id', archivePet);  // Archiver un pet (pet owners et admins)
 
 petRouter.post('/:petId/apply', applyToAdopt);  // Postuler pour adopter un pet
-
+ 
 petRouter.post('/:petId/approve-adoption/:adopterId', approveAdoption);  // Approuver une adoption
 
 petRouter.get("/my-adoption-requests", getMyAdoptionRequests); // Adoption requests for Adopters 
@@ -53,7 +54,6 @@ petRouter.get("/my-adopted-pets", getMyAdoptedPets); // Add this new route here
 petRouter.use(authorize('Admin'));  // Appliquer le middleware d'autorisation pour les routes suivantes
 petRouter.put('/modifyStatus/:id', modifyPetStatus);  // Récupérer un pet par ID
 petRouter.delete('/deleteAdminPet/:id', deleteAdminPet);  // Supprimer un pet
-petRouter.put('/archivePet/:id', archivePet);  // Nouvelle route pour archiver un pet
 
 petRouter.put('/unarchivePet/:id',unarchivePet); 
 petRouter.get("/stats", getPetStats);

@@ -107,20 +107,16 @@ const userSchema = new mongoose.Schema(
     },
     veterinarianDetails: {
       type: {
-        location: {
-          type: String,
-          required: function () {
-            return this.role === "Vet";
-          }, // à enlever
+        businessCardImage: {
+          type: String, // URL or path to the uploaded business card image
+          
         },
-        degree: {
-          type: String,
-          required: function () {
-            return this.role === "Vet";
-          }, // à remplacer par une photo de carte visite 
-        },
-        specialization: String,
-        title: {
+        specializations: [{
+          specializationName: {
+            type: String,
+          },
+        }],
+         title: {
           type: String,
           enum: ["Doctor", "Professor"],
         },

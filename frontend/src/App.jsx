@@ -24,6 +24,7 @@ import { VetDashboard } from './pages/Vet/VetDashboard';
 import Veteriniandetail from './pages/Veteriniandetail';
 import Veterinarians from './pages/VetAppointment/Veterinarians';
 import VetDetails from './pages/VetAppointment/VetDetails';
+import "leaflet/dist/leaflet.css";
 
 const Layout = ({ children }) => {
   const location = useLocation();

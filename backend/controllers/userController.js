@@ -112,7 +112,7 @@ const createProfile = async (req, res) => {
       }
       user.trainerDetails = trainerDetails;
     } else if (user.role === "Vet") {
-      if (!veterinarianDetails?.location || !veterinarianDetails?.degree) {
+      if (!veterinarianDetails?.governorate || !veterinarianDetails?.diplomasAndTraining) {
         return res.status(400).json({
           message: "Location and degree are required for Veterinarian.",
         });

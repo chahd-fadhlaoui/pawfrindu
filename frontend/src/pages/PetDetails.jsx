@@ -116,6 +116,12 @@ export default function PetDetails() {
       console.log("Application blocked: User has already applied.");
       return;
     }
+    // If the pet has a fee, do nothing for now
+    if (petInfo.fee !== 0) {
+      console.log("Proceed to Payment clicked, but no action is implemented yet.");
+      return;
+    }
+    // If the pet is free, show the application form
     setShowForm(true);
   };
 

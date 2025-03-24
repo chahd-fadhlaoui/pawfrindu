@@ -463,7 +463,7 @@ const triggerRefresh = useCallback(
 
   const deletePet = async (petId) => {
     try {
-      await axiosInstance.delete(`/api/pet/deletePet/${petId}`);
+      await axiosInstance.put(`/api/pet/archivePet/${petId}`);
       await triggerRefresh("pets"); // Refresh pets after update
       if (user) await getMyPets();
       return { success: true };
