@@ -113,4 +113,21 @@ export const emailTemplates = {
         </div>
       `,
   }),
+  profileRejected: (data) => ({
+    subject: "Your PawFrindu Profile Has Been Rejected",
+    html: `
+        ${emailStyles}
+        <div class="email-container">
+          <h1>Profile Rejection Notice</h1>
+          <p>Hello ${data.fullName},</p>
+          <p>We regret to inform you that your profile has been rejected by our team and your account has been deleted.</p>
+          <p>This could be due to incomplete information, policy violations, or other reasons. For more details, please contact our support team.</p>
+          <a href="${process.env.FRONTEND_URL}/support" class="button" style="background-color: #f44336;">Contact Support</a>
+          <div class="footer">
+            <p>We apologize for any inconvenience this may cause.</p>
+            <p>Best regards,<br>The PawFrindu Team</p>
+          </div>
+        </div>
+      `,
+  }),
 };

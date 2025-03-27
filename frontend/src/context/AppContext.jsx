@@ -263,12 +263,14 @@ const triggerRefresh = useCallback(
         email,
         password,
       });
-      const { accessToken, user: userData } = response.data;
+      const { accessToken, user: userData, redirectTo } = response.data;
       localStorage.setItem("token", accessToken);
       axiosInstance.setAuthToken(accessToken);
       const updatedUser = ensureUserHasImage({
         ...userData,
-        adminType: userData.adminType, // Inclure adminType
+        adminType: userData.adminType,
+        isActive: userData.isActive, // Store isActive
+        lastLogin: userData.lastLogin, // Store lastLogin
       });
       setUser(updatedUser);
       const fetchPromises = [fetchUserProfile(), fetchPets()];
@@ -277,16 +279,7 @@ const triggerRefresh = useCallback(
       await Promise.all(fetchPromises);
       return {
         success: true,
-        redirectTo:
-          updatedUser.role === "PetOwner"
-            ? "/"
-            : updatedUser.role === "Trainer"
-            ? "/trainer"
-            : updatedUser.role === "Vet"
-            ? "/vet"
-            : updatedUser.role === "Admin"
-            ? "/admin"
-            : "/login",
+        redirectTo, // Use backend-provided redirectTo
       };
     } catch (error) {
       const errorMessage = error.response?.data?.message || "Error logging in";

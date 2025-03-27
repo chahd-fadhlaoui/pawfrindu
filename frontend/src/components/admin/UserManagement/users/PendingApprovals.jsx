@@ -98,7 +98,7 @@ const PendingApprovals = ({ showHeader = true }) => {
 
   const confirmAcceptUser = async () => {
     try {
-      await axiosInstance.put(`/api/user/users/${selectedUserId}`, { isActive: true });
+      await axiosInstance.put(`/api/user/users/${selectedUserId}/approve`, { isActive: true });
       updateUsers([{ _id: selectedUserId, isActive: true }]);
       setFilteredUsers((prev) => prev.filter((user) => user._id !== selectedUserId));
       setSelectedUsers((prev) => prev.filter((id) => id !== selectedUserId));
@@ -118,18 +118,17 @@ const PendingApprovals = ({ showHeader = true }) => {
 
   const confirmRejectUser = async () => {
     try {
-      await axiosInstance.put(`/api/user/users/${selectedUserId}`, { isArchieve: true });
-      updateUsers([{ _id: selectedUserId, isArchieve: true }]);
+      await axiosInstance.delete(`/api/user/users/${selectedUserId}`);
+      updateUsers([{ _id: selectedUserId, _deleted: true }]);
       setFilteredUsers((prev) => prev.filter((user) => user._id !== selectedUserId));
       setSelectedUsers((prev) => prev.filter((id) => id !== selectedUserId));
       setIsConfirmModalOpen(false);
     } catch (err) {
-      setActionError(err.response?.data?.message || "Failed to reject user");
-      console.error("Reject Error:", err);
+      setActionError(err.response?.data?.message || "Failed to delete user");
+      console.error("Reject (Delete) Error:", err);
       setIsConfirmModalOpen(false);
     }
   };
-
   const handleBulkAccept = () => {
     if (selectedUsers.length === 0) return;
     setConfirmAction("bulkAccept");
@@ -140,7 +139,7 @@ const PendingApprovals = ({ showHeader = true }) => {
     try {
       await Promise.all(
         selectedUsers.map((userId) =>
-          axiosInstance.put(`/api/user/users/${userId}`, { isActive: true })
+          axiosInstance.put(`/api/user/users/${userId}/approve`, { isActive: true })
         )
       );
       updateUsers(selectedUsers.map((userId) => ({ _id: userId, isActive: true })));
@@ -163,17 +162,17 @@ const PendingApprovals = ({ showHeader = true }) => {
   const confirmBulkReject = async () => {
     try {
       await Promise.all(
-        selectedUsers.map((userId) =>
-          axiosInstance.put(`/api/user/users/${userId}`, { isArchieve: true })
+        selectedUsers.map((userId) =>  
+          axiosInstance.delete(`/api/user/users/${userId}`)
         )
       );
-      updateUsers(selectedUsers.map((userId) => ({ _id: userId, isArchieve: true })));
+      updateUsers(selectedUsers.map((userId) => ({ _id: userId, _deleted: true })));
       setFilteredUsers((prev) => prev.filter((user) => !selectedUsers.includes(user._id)));
       setSelectedUsers([]);
       setIsConfirmModalOpen(false);
     } catch (err) {
-      setActionError(err.response?.data?.message || "Failed to bulk reject users");
-      console.error("Bulk Reject Error:", err);
+      setActionError(err.response?.data?.message || "Failed to bulk delete users");
+      console.error("Bulk Reject (Delete) Error:", err);
       setIsConfirmModalOpen(false);
     }
   };

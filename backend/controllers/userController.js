@@ -160,7 +160,6 @@ const login = async (req, res) => {
     }
     console.log("User found:", user._id);
 
-    console.log("User password from DB:", user.password);
     if (!user.password) {
       console.error("User has no password in DB:", user._id);
       return res.status(500).json({ message: "User password is missing in database" });
@@ -172,20 +171,62 @@ const login = async (req, res) => {
     }
     console.log("Password validated for user:", user._id);
 
-    user.lastLogin = new Date();
-    console.log("Updating lastLogin to:", user.lastLogin);
-    await user.save({ validateBeforeSave: false });
-    console.log("User saved successfully with lastLogin:", user.lastLogin);
+    let redirectTo = "";
+    let shouldUpdateLastLogin = false; // Default to false
 
-    console.log("ACCESS_TOKEN_SECRET:", process.env.ACCESS_TOKEN_SECRET);
+    // Log initial state
+    console.log("Initial state - isActive:", user.isActive, "lastLogin:", user.lastLogin);
+
+    // Vet-specific logic
+    if (user.role === "Vet") {
+      if (!user.isActive && !user.lastLogin) {
+        console.log("Case 1: Inactive, first login detected");
+        redirectTo = "/vet-pending-approval";
+        shouldUpdateLastLogin = false; // Don’t store lastLogin
+      } else if (user.isActive) {
+        console.log("Case 2/3: Active vet detected");
+        redirectTo = "/vet";
+        shouldUpdateLastLogin = true; // Store or update lastLogin
+      } else if (!user.isActive && user.lastLogin) {
+        console.log("Case 4: Inactive, previously logged in (deactivated)");
+        redirectTo = "/vet";
+        shouldUpdateLastLogin = false; // Don’t update lastLogin
+      }
+    } else {
+      console.log("Non-vet user detected");
+      redirectTo =
+        user.role === "PetOwner"
+          ? "/"
+          : user.role === "Trainer"
+          ? "/trainer"
+          : user.role === "Admin"
+          ? "/admin"
+          : "/login";
+      shouldUpdateLastLogin = true;
+    }
+
+    // Log decision
+    console.log("Decision - redirectTo:", redirectTo, "shouldUpdateLastLogin:", shouldUpdateLastLogin);
+
+    // Update lastLogin if applicable
+    if (shouldUpdateLastLogin) {
+      user.lastLogin = new Date();
+      console.log("Updating lastLogin to:", user.lastLogin);
+      await user.save({ validateBeforeSave: false });
+      console.log("User saved successfully with lastLogin:", user.lastLogin);
+    } else {
+      console.log("Skipping lastLogin update for user:", user._id);
+    }
+
     if (!process.env.ACCESS_TOKEN_SECRET) {
       throw new Error("ACCESS_TOKEN_SECRET is not defined");
     }
     const accessToken = jwt.sign(
-      { 
-        userId: user._id, 
-        role: user.role, 
-        adminType: user.adminType || (user.role === "Admin" ? "Super Admin" : undefined)
+      {
+        userId: user._id,
+        role: user.role,
+        adminType: user.adminType || (user.role === "Admin" ? "Super Admin" : undefined),
+        isActive: user.isActive,
       },
       process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: "72h" }
@@ -198,36 +239,60 @@ const login = async (req, res) => {
         email: user.email,
         role: user.role,
         adminType: user.adminType || (user.role === "Admin" ? "Super Admin" : undefined),
+        isActive: user.isActive,
+        lastLogin: user.lastLogin,
         petOwnerDetails: user.petOwnerDetails || undefined,
         trainerDetails: user.trainerDetails || undefined,
         veterinarianDetails: user.veterinarianDetails || undefined,
       },
       accessToken,
+      redirectTo,
     });
     console.log("Login successful for user:", user._id);
   } catch (error) {
     console.error("Login Error:", error.stack);
     res.status(500).json({ message: "Login failed", detail: error.message });
   }
-};
-
+}; 
 
 // 🚀 Get current user profile
 const getCurrentUser = async (req, res) => {
   console.log('Handling GET /api/user/me for user:', req.user._id);
   try {
     const user = await User.findById(req.user._id).select("-password");
-
     if (!user) {
       console.log("User not found for ID:", req.user._id);
       return res.status(404).json({ message: "User not found" });
     }
     console.log("User found:", user._id);
 
-    user.lastLogin = new Date();
-    console.log("Updating lastLogin to:", user.lastLogin);
-    await user.save({ validateBeforeSave: false }); // Désactiver validation
-    console.log("User saved with lastLogin:", user.lastLogin);
+    let shouldUpdateLastLogin = false;
+
+    // Vet-specific logic (mirrors login function)
+    if (user.role === "Vet") {
+      if (!user.isActive && !user.lastLogin) {
+        console.log("Case 1: Inactive vet, first fetch - skipping lastLogin update");
+        shouldUpdateLastLogin = false;
+      } else if (user.isActive) {
+        console.log("Case 2/3: Active vet - updating lastLogin");
+        shouldUpdateLastLogin = true;
+      } else if (!user.isActive && user.lastLogin) {
+        console.log("Case 4: Inactive vet, previously logged in - skipping lastLogin update");
+        shouldUpdateLastLogin = false;
+      }
+    } else {
+      console.log("Non-vet user - updating lastLogin");
+      shouldUpdateLastLogin = true;
+    }
+
+    if (shouldUpdateLastLogin) {
+      user.lastLogin = new Date();
+      console.log("Updating lastLogin to:", user.lastLogin);
+      await user.save({ validateBeforeSave: false });
+      console.log("User saved with lastLogin:", user.lastLogin);
+    } else {
+      console.log("Skipping lastLogin update for user:", user._id);
+    }
 
     res.json({
       user: {
@@ -235,6 +300,7 @@ const getCurrentUser = async (req, res) => {
         fullName: user.fullName,
         email: user.email,
         role: user.role,
+        isActive: user.isActive,
         adminType: user.adminType || (user.role === "Admin" ? "Super Admin" : undefined),
         about: user.about,
         image: user.image,
@@ -254,7 +320,6 @@ const getCurrentUser = async (req, res) => {
     });
   }
 };
-
 
 // Middleware to verify token
 const verifyToken = async (req, res, next) => {
@@ -547,12 +612,23 @@ const approveUser = async (req, res) => {
 
 const deleteUserByAdmin = async (req, res) => {
   const { userId } = req.params;
-
   try {
-    const user = await User.findByIdAndDelete(userId);
+    const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+
+    // Send rejection email before deletion
+    await sendEmail({
+      to: user.email,
+      template: "profileRejected",
+      data: { fullName: user.fullName },
+    });
+    console.log(`Rejection email sent to ${user.email}`);
+
+    // Delete the user
+    await User.findByIdAndDelete(userId);
+
     res.json({ message: "User deleted successfully" });
   } catch (error) {
     console.error("Delete User Error:", error);

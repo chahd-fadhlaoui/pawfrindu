@@ -93,7 +93,6 @@ export default function Veterinarians() {
       filtered = filtered.filter(vet => {
         const openingHours = vet.veterinarianDetails?.openingHours;
         if (!openingHours) return false;
-        // Simplified check: if any day matches the availability type
         return Object.keys(openingHours).some(day => {
           const sessionType = openingHours[day];
           return sessionType !== "Closed" && selectedAvailability === "Weekdays" ? day !== "saturday" && day !== "sunday" : selectedAvailability === "Weekends" ? (day === "saturday" || day === "sunday") : true;
@@ -113,7 +112,7 @@ export default function Veterinarians() {
     }
 
     console.log("Filtered veterinarians:", filtered);
-    setFilteredVets(filtered); // Simplified state update
+    setFilteredVets(filtered);
     setCurrentPage(1);
   }, [veterinarians, selectedSpecialty, selectedService, selectedAvailability, selectedLocation, sortOrder, searchQuery]);
 
@@ -161,7 +160,7 @@ export default function Veterinarians() {
     Array(8).fill(null).map((_, index) => (
       <PawIcon
         key={index}
-        className={`absolute w-8 h-8 opacity-5 animate-float ${index % 2 === 0 ? "text-[#0ea5e9]" : "text-[#10b981]"} ${index % 3 === 0 ? "top-1/4" : index % 3 === 1 ? "top-1/2" : "top-3/4"} ${index % 4 === 0 ? "left-1/4" : index % 4 === 1 ? "left-1/2" : "left-3/4"}`}
+        className={`absolute w-8 h-8 opacity-5 animate-float ${index % 2 === 0 ? "text-[#ffc929]" : "text-pink-500"} ${index % 3 === 0 ? "top-1/4" : index % 3 === 1 ? "top-1/2" : "top-3/4"} ${index % 4 === 0 ? "left-1/4" : index % 4 === 1 ? "left-1/2" : "left-3/4"}`}
         style={{ animationDelay: `${index * 0.5}s`, transform: `rotate(${index * 45}deg)` }}
       />
     ))
@@ -171,7 +170,7 @@ export default function Veterinarians() {
     return (
       <div className="flex items-center justify-center min-h-screen bg-white">
         <div className="text-center animate-pulse">
-          <Stethoscope size={48} className="mx-auto text-[#0ea5e9]" />
+          <Stethoscope size={48} className="mx-auto text-[#ffc929]" />
           <p className="mt-4 text-lg font-medium text-gray-600">Finding Veterinarians...</p>
         </div>
       </div>
@@ -182,44 +181,44 @@ export default function Veterinarians() {
     return (
       <div className="flex items-center justify-center min-h-screen bg-white">
         <div className="text-center">
-          <Stethoscope size={48} className="mx-auto mb-4 text-red-500" />
-          <p className="font-medium text-red-600">Error: {error}</p>
+          <Stethoscope size={48} className="mx-auto mb-4 text-pink-500" />
+          <p className="font-medium text-pink-600">Error: {error}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-b from-sky-50 to-white">
+    <div className="relative min-h-screen bg-gradient-to-b from-pink-50 to-white">
       <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
         <PawBackground />
       </div>
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="mb-14 text-center">
-          <h1 className="text-5xl font-extrabold text-gray-800 mb-4 bg-clip-text text-transparent bg-gradient-to-r from-sky-600 to-emerald-500">Find a Veterinarian</h1>
+          <h1 className="text-5xl font-extrabold text-gray-800 mb-4 bg-clip-text text-transparent bg-gradient-to-r from-[#ffc929] to-pink-500">Find a Veterinarian</h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">Connect with trusted veterinarians for your pet's health and wellness needs.</p>
           <div className="mt-8 max-w-xl mx-auto">
             <SearchBar 
               searchQuery={searchQuery} 
               setSearchQuery={setSearchQuery} 
               placeholder="Search by name, specialty, or location" 
-              className="shadow-xl"
+              className="shadow-xl border-[#ffc929] focus:ring-pink-500"
             />
           </div>
         </div>
 
-        <div className="bg-white backdrop-blur-sm bg-opacity-90 border-2 border-sky-200 shadow-xl rounded-3xl p-8 mb-10">
+        <div className="bg-white backdrop-blur-sm bg-opacity-90 border-2 border-pink-200 shadow-xl rounded-3xl p-8 mb-10">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <button
               onClick={() => setIsFilterOpen(!isFilterOpen)}
-              className="flex items-center gap-2 px-6 py-3 text-white bg-gradient-to-r from-sky-500 to-emerald-500 rounded-xl shadow-lg hover:shadow-sky-200/50 transform hover:-translate-y-1 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
+              className="flex items-center gap-2 px-6 py-3 text-white bg-gradient-to-r from-[#ffc929] to-pink-500 rounded-xl shadow-lg hover:shadow-pink-200/50 transform hover:-translate-y-1 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-pink-400"
             >
               <Filter size={18} />
               {isFilterOpen ? "Hide Filters" : "Filter Veterinarians"}
             </button>
             {filteredVets.length > 0 && (
-              <span className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-sky-600 bg-sky-50 border border-sky-200 rounded-full shadow-inner">
-                <Stethoscope size={16} className="text-sky-500" /> {filteredVets.length} Veterinarians Available
+              <span className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-[#ffc929] bg-yellow-50 border border-yellow-200 rounded-full shadow-inner">
+                <Stethoscope size={16} className="text-pink-500" /> {filteredVets.length} Veterinarians Available
               </span>
             )}
           </div>
@@ -244,7 +243,7 @@ export default function Veterinarians() {
               {searchQuery && <FilterBadge label="Search" value={searchQuery} onClear={() => clearFilter("search")} />}
               <button
                 onClick={clearAllFilters}
-                className="px-4 py-1.5 ml-2 text-sm font-medium text-sky-600 bg-sky-100 hover:bg-sky-200 transition-all duration-300 rounded-full focus:outline-none focus:ring-2 focus:ring-sky-400"
+                className="px-4 py-1.5 ml-2 text-sm font-medium text-[#ffc929] bg-yellow-100 hover:bg-yellow-200 transition-all duration-300 rounded-full focus:outline-none focus:ring-2 focus:ring-pink-400"
               >
                 Clear All
               </button>
@@ -255,8 +254,8 @@ export default function Veterinarians() {
         {filteredVets.length === 0 ? (
           <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
             <div className="relative">
-              <Stethoscope size={64} className="text-sky-500 opacity-25" />
-              <span className="absolute inset-0 flex items-center justify-center text-sky-600">
+              <Stethoscope size={64} className="text-pink-500 opacity-25" />
+              <span className="absolute inset-0 flex items-center justify-center text-[#ffc929]">
                 <Search size={28} />
               </span>
             </div>
@@ -264,7 +263,7 @@ export default function Veterinarians() {
             <p className="max-w-md mt-3 text-lg text-gray-600">Try adjusting your filters or search criteria to find a veterinarian.</p>
             <button
               onClick={clearAllFilters}
-              className="mt-8 px-8 py-3 text-base font-medium text-white bg-gradient-to-r from-sky-500 to-emerald-500 rounded-xl shadow-lg hover:shadow-sky-200/50 transform hover:-translate-y-1 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
+              className="mt-8 px-8 py-3 text-base font-medium text-white bg-gradient-to-r from-[#ffc929] to-pink-500 rounded-xl shadow-lg hover:shadow-pink-200/50 transform hover:-translate-y-1 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-pink-400"
             >
               Reset Filters
             </button>
@@ -274,37 +273,37 @@ export default function Veterinarians() {
             <div className={`grid gap-8 sm:grid-cols-2 lg:grid-cols-3 transition-all duration-500 ${isAnimating ? "opacity-0 translate-y-4" : "opacity-100 translate-y-0"}`}>
               {currentVets.map((vet) => {
                 const imageUrl = vet.image ? (vet.image.startsWith("http") ? vet.image : `${process.env.REACT_APP_API_URL}/${vet.image}`) : "https://placehold.co/80x80";
-                
+
                 return (
                   <div
                     key={vet._id}
                     onClick={() => navigate(`/vet/${vet._id}`)}
-                    className="group bg-white border-2 border-sky-100 rounded-3xl shadow-lg p-8 hover:shadow-2xl hover:border-sky-300 hover:scale-102 transition-all duration-300 cursor-pointer relative overflow-hidden"
+                    className="group bg-white border-2 border-yellow-100 rounded-3xl shadow-lg p-8 hover:shadow-2xl hover:border-pink-300 hover:scale-102 transition-all duration-300 cursor-pointer relative overflow-hidden"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-tr from-sky-500/5 to-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <div className="absolute inset-0 bg-gradient-to-tr from-[#ffc929]/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     
                     <div className="flex items-start gap-5">
                       <div className="relative">
-                        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-sky-400 to-emerald-400 blur-md opacity-0 group-hover:opacity-30 transition-opacity duration-300" />
+                        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#ffc929] to-pink-500 blur-md opacity-0 group-hover:opacity-30 transition-opacity duration-300" />
                         <img
                           src={imageUrl}
                           alt={vet.fullName}
-                          className="w-28 h-28 rounded-full object-cover border-3 border-sky-200 shadow-md group-hover:border-sky-300 transition-all duration-300 relative z-10"
+                          className="w-28 h-28 rounded-full object-cover border-3 border-yellow-200 shadow-md group-hover:border-pink-300 transition-all duration-300 relative z-10"
                           onError={(e) => (e.target.src = "https://placehold.co/80x80")}
                         />
                       </div>
                       
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
-                          <h3 className="text-2xl font-bold text-gray-800 group-hover:text-sky-700 transition-colors duration-300">{vet.fullName.trim()}</h3>
+                          <h3 className="text-2xl font-bold text-gray-800 group-hover:text-pink-700 transition-colors duration-300">{vet.fullName.trim()}</h3>
                           {vet.veterinarianDetails?.specialization && (
-                            <span className="inline-flex items-center px-3 py-1.5 text-xs font-semibold text-sky-600 bg-sky-100 rounded-full shadow-inner group-hover:bg-sky-200 transition-colors duration-300">
+                            <span className="inline-flex items-center px-3 py-1.5 text-xs font-semibold text-[#ffc929] bg-yellow-100 rounded-full shadow-inner group-hover:bg-pink-200 transition-colors duration-300">
                               {vet.veterinarianDetails.specialization}
                             </span>
                           )}
                         </div>
                         <p className="text-sm text-gray-600 flex items-center gap-2 mt-2">
-                          <Stethoscope size={16} className="text-sky-500" />
+                          <Stethoscope size={16} className="text-pink-500" />
                           {vet.veterinarianDetails?.degree || "Degree not specified"}
                         </p>
                       </div>
@@ -313,23 +312,29 @@ export default function Veterinarians() {
                     {vet.veterinarianDetails ? (
                       <div className="mt-6 space-y-4 border-t border-gray-100 pt-4">
                         <p className="text-sm text-gray-700 flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-sky-50 flex items-center justify-center shadow-inner">
-                            <MapPin size={16} className="text-sky-500" />
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#ffc929] to-pink-500 flex items-center justify-center shadow-inner">
+                            <MapPin size={16} className="text-white" />
                           </div>
-                          {vet.veterinarianDetails.location || "Location not specified"}
+                          <span>
+                            {vet.veterinarianDetails.governorate && vet.veterinarianDetails.delegation 
+                              ? `${vet.veterinarianDetails.delegation}, ${vet.veterinarianDetails.governorate}`
+                              : vet.veterinarianDetails.governorate || vet.veterinarianDetails.delegation 
+                              ? vet.veterinarianDetails.governorate || vet.veterinarianDetails.delegation
+                              : "Location not specified"}
+                          </span>
                         </p>
                         {vet.veterinarianDetails.openingHours?.monday && (
                           <p className="text-sm text-gray-700 flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-sky-50 flex items-center justify-center shadow-inner">
-                              <Clock size={16} className="text-sky-500" />
+                            <div className="w-8 h-8 rounded-full bg-yellow-50 flex items-center justify-center shadow-inner">
+                              <Clock size={16} className="text-pink-500" />
                             </div>
                             Mon: {vet.veterinarianDetails.openingHours.monday === "Closed" ? "Closed" : `${vet.veterinarianDetails.openingHours.mondayStart} - ${vet.veterinarianDetails.openingHours.mondayEnd}`}
                           </p>
                         )}
                         {vet.veterinarianDetails.experienceYears !== undefined && (
                           <p className="text-sm text-gray-700 flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-sky-50 flex items-center justify-center shadow-inner">
-                              <Award size={16} className="text-sky-500" />
+                            <div className="w-8 h-8 rounded-full bg-yellow-50 flex items-center justify-center shadow-inner">
+                              <Award size={16} className="text-pink-500" />
                             </div>
                             {vet.veterinarianDetails.experienceYears} years of experience
                           </p>
@@ -340,7 +345,7 @@ export default function Veterinarians() {
                     )}
                     
                     <button
-                      className="mt-6 w-full py-3 text-base font-medium text-white bg-gradient-to-r from-sky-500 to-emerald-500 rounded-xl shadow-md hover:shadow-lg hover:from-emerald-500 hover:to-sky-500 transform hover:-translate-y-1 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                      className="mt-6 w-full py-3 text-base font-medium text-white bg-gradient-to-r from-[#ffc929] to-pink-500 rounded-xl shadow-md hover:shadow-lg hover:from-pink-500 hover:to-[#ffc929] transform hover:-translate-y-1 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-pink-400"
                       onClick={(e) => e.stopPropagation()}
                     >
                       Contact Vet
@@ -355,7 +360,7 @@ export default function Veterinarians() {
                 <button
                   onClick={() => paginate(currentPage - 1)}
                   disabled={currentPage === 1}
-                  className={`p-3 rounded-full ${currentPage === 1 ? "text-gray-300 cursor-not-allowed" : "text-sky-500 hover:bg-sky-100"} transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sky-400`}
+                  className={`p-3 rounded-full ${currentPage === 1 ? "text-gray-300 cursor-not-allowed" : "text-[#ffc929] hover:bg-yellow-100"} transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-pink-400`}
                 >
                   <ChevronLeft size={24} />
                 </button>
@@ -367,9 +372,9 @@ export default function Veterinarians() {
                       onClick={() => paginate(page)}
                       className={`w-12 h-12 rounded-full text-base font-medium flex items-center justify-center ${
                         currentPage === page 
-                          ? "bg-gradient-to-r from-sky-500 to-emerald-500 text-white shadow-lg" 
-                          : "text-gray-600 hover:bg-sky-100"
-                      } transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sky-400`}
+                          ? "bg-gradient-to-r from-[#ffc929] to-pink-500 text-white shadow-lg" 
+                          : "text-gray-600 hover:bg-yellow-100"
+                      } transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-pink-400`}
                     >
                       {page}
                     </button>
@@ -379,7 +384,7 @@ export default function Veterinarians() {
                 <button
                   onClick={() => paginate(currentPage + 1)}
                   disabled={currentPage === totalPages}
-                  className={`p-3 rounded-full ${currentPage === totalPages ? "text-gray-300 cursor-not-allowed" : "text-sky-500 hover:bg-sky-100"} transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sky-400`}
+                  className={`p-3 rounded-full ${currentPage === totalPages ? "text-gray-300 cursor-not-allowed" : "text-[#ffc929] hover:bg-yellow-100"} transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-pink-400`}
                 >
                   <ChevronRight size={24} />
                 </button>
@@ -393,7 +398,7 @@ export default function Veterinarians() {
 }
 
 const FilterBadge = ({ label, value, onClear }) => (
-  <span className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium text-[#0ea5e9] bg-[#0ea5e9]/10 rounded-full">
+  <span className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium text-[#ffc929] bg-yellow-100 rounded-full">
     {label}: {value}
     <button onClick={onClear} className="ml-1 focus:outline-none">
       <X size={14} />
