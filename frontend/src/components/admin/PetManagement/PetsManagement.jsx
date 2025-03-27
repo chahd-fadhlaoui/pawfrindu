@@ -28,19 +28,25 @@ const PetsManagement = ({ hideHeader = false }) => {
         active: stats.pendingPets + stats.acceptedPets + stats.adoptionPendingPets,
         completed: stats.adoptedPets + stats.soldPets,
         archived: stats.archivedPets,
-        myPets: userPets.length,
+        myPets: userPets.filter(
+          (p) => !p.isArchived && p.status !== "adopted" && p.status !== "sold"
+        ).length,
       });
     } catch (error) {
       console.error("Failed to fetch pet stats:", error);
       setCounts({
         active: pets.filter(
-          (p) => !p.isArchived && ["pending", "accepted", "adoptionPending"].includes(p.status)
+          (p) =>
+            !p.isArchived &&
+            ["pending", "accepted", "adoptionPending"].includes(p.status)
         ).length,
         completed: pets.filter(
           (p) => !p.isArchived && ["adopted", "sold"].includes(p.status)
         ).length,
         archived: pets.filter((p) => p.isArchived).length,
-        myPets: userPets.length,
+        myPets: userPets.filter(
+          (p) => !p.isArchived && p.status !== "adopted" && p.status !== "sold"
+        ).length,
       });
     } finally {
       setLoadingStats(false);
@@ -49,14 +55,9 @@ const PetsManagement = ({ hideHeader = false }) => {
 
   // Initial fetch and refresh when triggered
   useEffect(() => {
-    if (user?.role === "Admin") fetchPetStats();
-    else
-      setCounts({
-        myPets: userPets.length,
-        active: 0,
-        completed: 0,
-        archived: 0,
-      });
+    if (user?.role === "Admin") {
+      fetchPetStats();
+    }
   }, [pets, userPets, user]);
 
   const handleRefresh = () => {
@@ -109,7 +110,9 @@ const PetsManagement = ({ hideHeader = false }) => {
       {!hideHeader && (
         <div
           className="px-6 py-5 border-l-4"
-          style={{ borderImage: "linear-gradient(to bottom, #f59e0b, #ec4899) 1" }}
+          style={{
+            borderImage: "linear-gradient(to bottom, #f59e0b, #ec4899) 1",
+          }}
         >
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center p-2 rounded-lg bg-yellow-50">
@@ -132,7 +135,7 @@ const PetsManagement = ({ hideHeader = false }) => {
                 activeTab === tab
                   ? `${getTabColor(tab)} shadow-sm`
                   : "text-gray-600 bg-white hover:bg-gray-50"
-              } ${user?.role !== "Admin" && tab !== "myPets" ? "hidden" : ""}`}
+              }`}
               onClick={() => setActiveTab(tab)}
             >
               <span className={activeTab === tab ? "" : "text-gray-400"}>

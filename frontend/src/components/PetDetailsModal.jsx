@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { X, Heart, PawPrint, RotateCcw } from "lucide-react";
+import { Bone, Cake, CatIcon, DogIcon, MapPin, PawPrint, User2, XIcon } from "lucide-react";
+import React, { useEffect, useState } from "react";
 import axiosInstance from "../utils/axiosInstance";
 
 const PetDetailsModal = ({ pet, onClose, onUnarchive, actionLoading, showOwner = true }) => {
@@ -11,7 +11,6 @@ const PetDetailsModal = ({ pet, onClose, onUnarchive, actionLoading, showOwner =
     const fetchOwner = async () => {
       try {
         if (pet.owner && typeof pet.owner !== "string") {
-          // If owner is an ObjectId (from PetPostsTab or similar)
           const response = await axiosInstance.get(`/api/user/getUser/${pet.owner}`);
           if (response.data.success && response.data.user) {
             setOwnerName(response.data.user.fullName || "Unknown Owner");
@@ -19,7 +18,6 @@ const PetDetailsModal = ({ pet, onClose, onUnarchive, actionLoading, showOwner =
             setOwnerName("Unknown Owner");
           }
         } else if (pet.owner && typeof pet.owner === "string") {
-          // If owner is already a string (from AdoptionRequestsTab)
           setOwnerName(pet.owner);
         } else {
           setOwnerName("N/A");
@@ -31,7 +29,7 @@ const PetDetailsModal = ({ pet, onClose, onUnarchive, actionLoading, showOwner =
     };
 
     if (showOwner) fetchOwner();
-    else setOwnerName("N/A"); // No fetch needed if showOwner is false
+    else setOwnerName("N/A");
   }, [pet.owner, showOwner]);
 
   // Safe pet data with defaults
@@ -47,116 +45,126 @@ const PetDetailsModal = ({ pet, onClose, onUnarchive, actionLoading, showOwner =
     status: pet.status || "Unknown",
     description: pet.description || "No description provided",
     image: pet.image || "/api/placeholder/150/150",
-    isArchived: pet.isArchived || false,
   };
 
-  console.log("PetDetailsModal received pet:", pet);
+  // Species icon mapping
+  const SpeciesIcon = {
+    Dog: <DogIcon className="inline-block w-5 h-5 mr-1 text-[#ffc929]" />,
+    Cat: <CatIcon className="inline-block w-5 h-5 mr-1 text-[#ffc929]" />,
+    default: <Bone className="inline-block w-5 h-5 mr-1 text-[#ffc929]" />
+  };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm">
-      <div className="relative w-full max-w-lg p-6 mx-4 overflow-hidden bg-white border-2 shadow-2xl rounded-2xl border-rose-200 animate-fadeIn">
-        {/* Decorative Background with Paws */}
-        <div className="absolute inset-0 pointer-events-none">
-          <PawPrint className="absolute w-12 h-12 transform text-rose-100 top-4 left-4 opacity-20 rotate-12" />
-          <PawPrint className="absolute w-10 h-10 text-[#ffc929] transform bottom-4 right-4 opacity-20 -rotate-24" />
-          <div className="absolute inset-0 opacity-50 bg-gradient-to-br from-rose-50 to-pink-50"></div>
-        </div>
-
-        {/* Header */}
-        <div className="relative flex items-center justify-between mb-6">
-          <h3 className="flex items-center gap-2 text-2xl font-bold text-rose-700">
-            <Heart className="w-6 h-6 text-[#ffc929] animate-pulse" />
-            {safePet.name}
-          </h3>
-          <button
-            onClick={onClose}
-            className="p-2 text-gray-500 transition-all rounded-full hover:text-rose-700 hover:bg-rose-100 focus:outline-none focus:ring-2 focus:ring-rose-300"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="relative flex flex-col items-center space-y-6">
-          <div className="relative w-36 h-36">
-            <img
-              src={safePet.image}
-              alt={safePet.name}
-              className="object-cover w-full h-full border-4 rounded-full shadow-lg border-[#ffc929]"
-              onError={(e) => (e.target.src = "/api/placeholder/150/150")}
-            />
-            <Heart className="absolute w-8 h-8 opacity-75 text-rose-500 bottom-2 right-2 animate-pulse" />
-          </div>
-          <div className="w-full p-4 bg-white border shadow-inner rounded-xl border-rose-200">
-            <div className="grid grid-cols-1 gap-3 text-gray-700 sm:grid-cols-2">
-              {showOwner && (
-                <p>
-                  <span className="font-semibold text-rose-600">Owner:</span> {ownerName}
-                </p>
-              )}
-              <p>
-                <span className="font-semibold text-rose-600">Breed:</span> {safePet.breed}
-              </p>
-              <p>
-                <span className="font-semibold text-rose-600">Age:</span> {safePet.age}
-              </p>
-              <p>
-                <span className="font-semibold text-rose-600">City:</span> {safePet.city}
-              </p>
-              <p>
-                <span className="font-semibold text-rose-600">Gender:</span> {safePet.gender}
-              </p>
-              <p>
-                <span className="font-semibold text-rose-600">Species:</span> {safePet.species}
-              </p>
-              <p>
-                <span className="font-semibold text-rose-600">Fee:</span>{" "}
-                {safePet.fee === 0 ? "Free" : `${safePet.fee} Dt`}
-              </p>
-              <p>
-                <span className="font-semibold text-rose-600">Trained:</span>{" "}
-                {safePet.isTrained ? "Yes" : "No"}
-              </p>
-              <p>
-                <span className="font-semibold text-rose-600">Status:</span>{" "}
-                {safePet.status}
-                {safePet.isArchived ? " (Archived)" : ""}
-              </p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+      <div className="relative w-full max-w-xl mx-4 overflow-hidden bg-white rounded-2xl shadow-2xl border-t-4 border-[#ffc929] animate-slideUp">
+        {/* Modal Content */}
+        <div className="relative z-10 p-5">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-3">
+              <PawPrint className="w-6 h-6 text-[#ffc929]" />
+              <h2 className="text-2xl font-bold text-gray-800">
+                {safePet.name}
+                <span className="ml-2 text-sm text-gray-500">
+                  {SpeciesIcon[safePet.species] || SpeciesIcon.default}
+                  {safePet.species}
+                </span>
+              </h2>
             </div>
-            <div className="mt-4">
-              <p className="font-semibold text-rose-600">Description:</p>
-              <p className="text-sm italic text-gray-600">{safePet.description}</p>
-            </div>
-            {fetchError && (
-              <p className="mt-2 text-sm text-red-600">{fetchError}</p>
-            )}
-          </div>
-        </div>
-
-        {/* Buttons */}
-        <div className="relative flex justify-end gap-4 mt-6">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 transition-all duration-200 rounded-lg text-rose-700 bg-rose-100 hover:bg-rose-200 focus:outline-none focus:ring-2 focus:ring-rose-300"
-          >
-            Close
-          </button>
-          {safePet.isArchived && onUnarchive && (
             <button
-              onClick={() => onUnarchive(pet._id)}
-              disabled={actionLoading}
-              className="flex items-center gap-2 px-4 py-2 text-white transition-all duration-200 rounded-lg bg-gradient-to-r from-[#ffc929] to-rose-500 hover:from-rose-500 hover:to-[#ffc929] disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-rose-300"
+              onClick={onClose}
+              className="p-2 text-gray-600 rounded-full hover:bg-[#ffc929]/10 hover:text-[#ffc929] transition-all"
             >
-              {actionLoading ? (
-                "Unarchiving..."
-              ) : (
-                <>
-                  <RotateCcw className="w-4 h-4" />
-                  Unarchive
-                </>
-              )}
+              <XIcon className="w-6 h-6" />
             </button>
-          )}
+          </div>
+
+          {/* Main Content */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {/* Pet Image */}
+            <div className="flex flex-col items-center justify-center md:col-span-1">
+              <div className="relative w-40 h-40">
+                <img
+                  src={safePet.image}
+                  alt={safePet.name}
+                  className="object-cover w-full h-full rounded-xl border-2 border-[#ffc929]/50 shadow-md transition-transform hover:scale-105"
+                  onError={(e) => (e.target.src = "/api/placeholder/150/150")}
+                />
+              </div>
+            </div>
+
+            {/* Pet Details */}
+            <div className="md:col-span-2 bg-rose-50/30 p-4 rounded-xl border border-[#ffc929]/20">
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                {showOwner && (
+                  <div className="flex items-center space-x-2">
+                    <User2 className="w-5 h-5 text-[#ffc929]" />
+                    <div>
+                      <p className="font-semibold text-gray-700">Owner</p>
+                      <p className="text-gray-600">{ownerName}</p>
+                    </div>
+                  </div>
+                )}
+                <div className="flex items-center space-x-2">
+                  <Cake className="w-5 h-5 text-[#ffc929]" />
+                  <div>
+                    <p className="font-semibold text-gray-700">Age</p>
+                    <p className="text-gray-600">{safePet.age}</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <MapPin className="w-5 h-5 text-[#ffc929]" />
+                  <div>
+                    <p className="font-semibold text-gray-700">City</p>
+                    <p className="text-gray-600">{safePet.city}</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Bone className="w-5 h-5 text-[#ffc929]" />
+                  <div>
+                    <p className="font-semibold text-gray-700">Breed</p>
+                    <p className="text-gray-600">{safePet.breed}</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Description */}
+              <div className="p-3 mt-4 bg-white rounded-lg shadow-inner">
+                <p className="text-sm font-semibold text-[#ffc929] mb-1">Description</p>
+                <p className="text-sm italic text-gray-600">{safePet.description}</p>
+              </div>
+
+              {/* Additional Details */}
+              <div className="grid grid-cols-3 gap-2 mt-4 text-center">
+                <div className="p-2 bg-white rounded-lg shadow-sm">
+                  <p className="text-xs text-gray-500">Gender</p>
+                  <p className="font-semibold text-[#ffc929]">{safePet.gender}</p>
+                </div>
+                <div className="p-2 bg-white rounded-lg shadow-sm">
+                  <p className="text-xs text-gray-500">Fee</p>
+                  <p className="font-semibold text-[#ffc929]">
+                    {safePet.fee === 0 ? "Free" : `${safePet.fee} Dt`}
+                  </p>
+                </div>
+                <div className="p-2 bg-white rounded-lg shadow-sm">
+                  <p className="text-xs text-gray-500">Trained</p>
+                  <p className="font-semibold text-[#ffc929]">
+                    {safePet.isTrained ? "Yes" : "No"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer Buttons */}
+          <div className="flex justify-end mt-5 space-x-3">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-[#ffc929]/30 rounded-lg hover:bg-[#ffc929]/10 transition-colors"
+            >
+              Close
+            </button>
+          </div>
         </div>
       </div>
     </div>

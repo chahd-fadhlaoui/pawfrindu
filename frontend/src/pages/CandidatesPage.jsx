@@ -1,87 +1,96 @@
+import React, { useCallback, useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   AlertCircle,
-  ArrowLeft,
   Check,
-  XCircle,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   ChevronUp,
+  Filter,
+  PawPrint,
+  RefreshCw,
   Search,
   X,
-  Phone,
-  Filter,
-  Clock,
-  Home,
-  Users,
-  Briefcase,
-  Calendar,
-  Heart,
-  MessageCircle,
-  AlertTriangle,
+  XCircle,
+  Heart
 } from "lucide-react";
-import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import axiosInstance from "../utils/axiosInstance";
-import ConfirmationModal from "../components/ConfirmationModal"; // Adjust the path as needed
-import HelpSection from "../components/common/HelpSection";
 
-// Pink SVG User Icon with subtle pink accent
-const PinkUserIcon = ({ className }) => (
-  <svg
-    viewBox="0 0 24 24"
-    className={className}
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-    <circle cx="12" cy="7" r="4" fill="#fce7f3" />
+import HelpSection from "../components/common/HelpSection";
+import ConfirmationModal from "../components/ConfirmationModal";
+import { CandidateDetails } from "../components/PetManagement/CandidateDetails";
+import { Tooltip } from "../components/Tooltip";
+import { useApp } from "../context/AppContext";
+import axiosInstance from "../utils/axiosInstance";
+
+// Utility function to format enum values
+const formatEnum = (value) => {
+  if (!value) return 'N/A';
+  return value
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
+const PawIcon = ({ className, style }) => (
+  <svg viewBox="0 0 24 24" className={className} style={style} fill="currentColor">
+    <path d="M12,17.5c2.33,2.33,5.67,2.33,8,0s2.33-5.67,0-8s-5.67-2.33-8,0S9.67,15.17,12,17.5z M7.5,14.5 c-1.96,1.96-1.96,4.04,0,6s4.04,1.96,6,0s1.96-4.04,0-6S9.46,12.54,7.5,14.5z M18.5,3.5c-1.96-1.96-4.04-1.96-6,0s-1.96,4.04,0,6 s4.04,1.96,6,0S20.46,5.46,18.5,3.5z M3.5,9.5c-1.96,1.96-1.96,4.04,0,6s4.04,1.96,6,0s1.96-4.04,0-6S5.46,7.54,3.5,9.5z" />
   </svg>
 );
 
-// Candidate Status Component
-const CandidateStatus = ({ status }) => {
-  const styles = {
-    approved: "bg-gradient-to-r from-green-100 to-green-200 text-green-800",
-    rejected: "bg-gradient-to-r from-red-100 to-red-200 text-red-800",
-    pending: "bg-gradient-to-r from-amber-100 to-amber-200 text-amber-800",
+const StatusBadge = ({ status }) => {
+  const STATUS_STYLES = {
+    approved: "bg-[#ffc929]/10 text-[#ffc929] border-[#ffc929]/20",
+    rejected: "bg-pink-50 text-pink-600 border-pink-100",
+    pending: "bg-blue-50 text-blue-600 border-blue-100",
+    adopted: "bg-green-50 text-green-600 border-green-100"
   };
-
-  const icons = {
-    approved: <Check className="w-4 h-4 mr-1" />,
-    rejected: <XCircle className="w-4 h-4 mr-1" />,
-    pending: <Clock className="w-4 h-4 mr-1" />,
-  };
-
   return (
-    <span
-      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold shadow-sm ${styles[status] || styles.pending}`}
-      aria-label={`Status: ${status}`}
-    >
-      {icons[status] || icons.pending}
+    <span className={`inline-flex items-center px-3 py-1 text-sm font-medium rounded-full border ${STATUS_STYLES[status] || "bg-gray-50 text-gray-500 border-gray-100"}`}>
       {status.charAt(0).toUpperCase() + status.slice(1)}
     </span>
   );
 };
 
-// Search Bar
-const SearchBar = ({ value, onChange, onReset }) => (
-  <div className="relative w-full max-w-md">
-    <Search className="absolute w-5 h-5 transform -translate-y-1/2 left-3 top-1/2 text-amber-500" />
-    <input
-      type="text"
-      placeholder="Search candidates by name..."
-      className="w-full pl-10 pr-10 py-2.5 bg-white border border-amber-200 rounded-full focus:ring-2 focus:ring-pink-300 focus:border-pink-400 outline-none transition-all duration-300 text-gray-700 shadow-sm"
+const FilterBadge = ({ label, value, onClear }) => (
+  <span className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium text-[#ffc929] bg-[#ffc929]/10 rounded-full">
+    {label}: {value}
+    <button onClick={onClear} className="ml-1 focus:outline-none">
+      <X size={14} />
+    </button>
+  </span>
+);
+
+const FilterSelect = ({ label, value, onChange, options }) => (
+  <div className="w-full sm:w-auto flex-1 min-w-[140px]">
+    <select
+      className="w-full px-4 py-2.5 text-sm text-gray-700 bg-white border border-[#ffc929]/20 rounded-xl shadow-sm focus:ring-2 focus:ring-[#ffc929]/30 focus:border-[#ffc929] hover:border-[#ffc929]/50 transition-all duration-300"
       value={value}
       onChange={onChange}
-      aria-label="Search candidates"
+      aria-label={`Filter by ${label}`}
+    >
+      <option value="">{label}</option>
+      {options.map((option, index) => (
+        <option key={index} value={option}>{option}</option>
+      ))}
+    </select>
+  </div>
+);
+
+const SearchBar = ({ value, onChange, onReset }) => (
+  <div className="relative w-full max-w-md">
+    <Search className="absolute w-5 h-5 text-gray-400 -translate-y-1/2 left-3 top-1/2" />
+    <input
+      type="text"
+      value={value}
+      onChange={onChange}
+      placeholder="Search by name or occupation..."
+      className="w-full py-2 pl-10 pr-10 transition-all duration-300 bg-white border border-[#ffc929]/20 rounded-full shadow-sm focus:ring-2 focus:ring-[#ffc929]/50 focus:border-[#ffc929] text-gray-700"
     />
     {value && (
       <button
         onClick={onReset}
-        className="absolute transition-colors duration-200 transform -translate-y-1/2 right-3 top-1/2 text-amber-400 hover:text-pink-600"
-        aria-label="Clear search"
+        className="absolute text-gray-400 transition-all duration-300 -translate-y-1/2 right-3 top-1/2 hover:text-[#ffc929]"
       >
         <X className="w-5 h-5" />
       </button>
@@ -89,567 +98,467 @@ const SearchBar = ({ value, onChange, onReset }) => (
   </div>
 );
 
-// Filter Button
-const FilterButton = ({ active, label, count, onClick }) => (
-  <button
-    onClick={onClick}
-    className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
-      active
-        ? "bg-gradient-to-r from-pink-400 to-pink-500 text-white shadow-md"
-        : "bg-white text-amber-700 border border-amber-200 hover:bg-amber-50 hover:border-amber-300"
-    }`}
-    aria-label={`Filter by ${label} (${count} candidates)`}
-  >
-    {label}
-    {count !== undefined && (
-      <span
-        className={`text-xs px-2 py-0.5 rounded-full ${
-          active ? "bg-white text-pink-500" : "bg-amber-100 text-amber-600"
-        }`}
-      >
-        {count}
-      </span>
-    )}
-  </button>
+const PawBackground = () => (
+  Array(8).fill(null).map((_, index) => (
+    <PawIcon
+      key={index}
+      className={`absolute w-8 h-8 opacity-5 animate-float ${index % 2 === 0 ? "text-[#ffc929]" : "text-pink-300"} ${index % 3 === 0 ? "top-1/4" : index % 3 === 1 ? "top-1/2" : "top-3/4"} ${index % 4 === 0 ? "left-1/4" : index % 4 === 1 ? "left-1/2" : "left-3/4"}`}
+      style={{ animationDelay: `${index * 0.5}s`, transform: `rotate(${index * 45}deg)` }}
+    />
+  ))
 );
 
-// Candidate Details
-const CandidateDetails = ({ candidate, petStatus }) => {
-  return (
-    <div className="p-5 text-sm border-t bg-gradient-to-br from-amber-50 to-white border-amber-200 animate-fade-in">
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <div className="space-y-4">
-          <h4 className="flex items-center gap-2 font-semibold text-gray-800">
-            <Briefcase className="w-5 h-5 text-amber-600" />
-            Work Life
-          </h4>
-          <div className="space-y-2 ml-7">
-            <p className="flex items-center gap-2">
-              <span className="text-gray-600">Occupation:</span>
-              <span className="font-medium text-gray-800">{candidate.petOwnerDetails?.occupation || "N/A"}</span>
-            </p>
-            <p className="flex items-center gap-2">
-              <span className="text-gray-600">Schedule:</span>
-              <span className="font-medium text-gray-800">{candidate.petOwnerDetails?.workSchedule || "N/A"}</span>
-            </p>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <h4 className="flex items-center gap-2 font-semibold text-gray-800">
-            <Home className="w-5 h-5 text-amber-600" />
-            Home Life
-          </h4>
-          <div className="space-y-2 ml-7">
-            <p className="flex items-center gap-2">
-              <span className="text-gray-600">Type:</span>
-              <span className="font-medium text-gray-800">{candidate.petOwnerDetails?.housing?.type || "N/A"}</span>
-            </p>
-            <p className="flex items-center gap-2">
-              <span className="text-gray-600">Ownership:</span>
-              <span className="font-medium text-gray-800">{candidate.petOwnerDetails?.housing?.ownership || "N/A"}</span>
-            </p>
-            <p className="flex items-center gap-2">
-              <span className="text-gray-600">Family Size:</span>
-              <span className="font-medium text-gray-800">{candidate.petOwnerDetails?.housing?.familySize || "N/A"}</span>
-            </p>
-            {candidate.petOwnerDetails?.housing?.ownership !== "own" && (
-              <p className="flex items-center gap-2">
-                <span className="text-gray-600">Landlord Approval:</span>
-                <span className={`font-medium ${candidate.petOwnerDetails?.housing?.landlordApproval ? "text-green-600" : "text-red-600"}`}>
-                  {candidate.petOwnerDetails?.housing?.landlordApproval ? "Yes" : "No"}
-                </span>
-              </p>
-            )}
-          </div>
-        </div>
-
-        <div className="space-y-4 md:col-span-2">
-          <h4 className="flex items-center gap-2 font-semibold text-gray-800">
-            <Heart className="w-5 h-5 text-pink-600" />
-            Why They Want to Adopt
-          </h4>
-          <div className="p-4 bg-white border rounded-lg shadow-inner border-amber-100">
-            <p className="italic text-gray-700">"{candidate.petOwnerDetails?.reasonForAdoption || "Not provided"}"</p>
-          </div>
-          <p className="flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-amber-600" />
-            <span className="text-gray-600">Ready:</span>
-            <span className="font-medium text-gray-800">{candidate.petOwnerDetails?.readiness || "N/A"}</span>
-          </p>
-        </div>
-
-        {petStatus === "adopted" && candidate.status === "approved" && (
-          <div className="flex items-center justify-between p-4 border border-green-200 rounded-lg shadow-sm md:col-span-2 bg-green-50">
-            <div className="flex items-center gap-2">
-              <Phone className="w-5 h-5 text-green-600" />
-              <p className="font-medium text-green-800">{candidate.petOwnerDetails?.phone || "N/A"}</p>
-            </div>
-            <a
-              href={`tel:${candidate.petOwnerDetails?.phone}`}
-              className="flex items-center gap-2 px-4 py-2 text-white transition-all duration-200 bg-green-600 rounded-full shadow-md hover:bg-green-700"
-            >
-              <Phone className="w-4 h-4" />
-              Call
-            </a>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-// Candidate Card
-const CandidateCard = ({ candidate, petStatus, openConfirmModal, toggleDetails, isExpanded }) => {
-  const appliedDate = candidate.appliedDate || "2025-03-01";
-  const formattedDate = new Date(appliedDate).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-
-  return (
-    <div className="mb-6 transition-all duration-200 bg-white border shadow-md rounded-xl border-amber-100 hover:shadow-lg">
-      <div
-        className="flex items-center justify-between p-5 cursor-pointer"
-        onClick={() => toggleDetails(candidate.userId)}
-      >
-        <div className="flex items-center gap-4">
-          <div className="flex items-center justify-center w-12 h-12 rounded-full shadow-sm bg-gradient-to-br from-pink-200 to-pink-300">
-            <PinkUserIcon className="w-6 h-6 text-pink-600" />
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold text-gray-800">{candidate.name}</h3>
-            <div className="flex items-center gap-3 mt-1">
-              <CandidateStatus status={candidate.status || "pending"} />
-              <span className="text-xs text-gray-500">Applied on {formattedDate}</span>
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          {candidate.status === "pending" && petStatus !== "adopted" && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                openConfirmModal("select", candidate.userId, candidate.name);
-              }}
-              className="p-2 transition-all duration-200 rounded-full shadow-sm bg-amber-100 text-amber-600 hover:bg-pink-200 hover:text-pink-700"
-              title="Select this candidate (rejects others)"
-              aria-label="Select candidate"
-            >
-              <PinkUserIcon className="w-5 h-5" />
-            </button>
-          )}
-          {candidate.status === "approved" && petStatus !== "adopted" && (
-            <>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  openConfirmModal("finalize", candidate.userId, candidate.name);
-                }}
-                className="p-2 text-green-600 transition-all duration-200 bg-green-100 rounded-full shadow-sm hover:bg-green-200 hover:text-green-700"
-                title="Finalize adoption for this candidate"
-                aria-label="Finalize adoption"
-              >
-                <Check className="w-5 h-5" />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  openConfirmModal("reject", candidate.userId, candidate.name);
-                }}
-                className="p-2 text-red-600 transition-all duration-200 bg-red-100 rounded-full shadow-sm hover:bg-red-200 hover:text-red-700"
-                title="Reject this candidate"
-                aria-label="Reject candidate"
-              >
-                <XCircle className="w-5 h-5" />
-              </button>
-            </>
-          )}
-          {petStatus === "adopted" && candidate.status === "approved" && (
-            <span className="flex items-center px-3 py-1 text-green-700 bg-green-100 rounded-full shadow-sm">
-              <Check className="w-4 h-4 mr-1" />
-              Adopted
-            </span>
-          )}
-          <button
-            className={`p-2 rounded-full transition-all duration-200 ${
-              isExpanded ? "bg-amber-200 text-amber-700" : "text-amber-500 hover:bg-amber-100 hover:text-amber-600"
-            }`}
-            aria-label={isExpanded ? "Collapse details" : "Expand details"}
-          >
-            {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-          </button>
-        </div>
-      </div>
-
-      {isExpanded && <CandidateDetails candidate={candidate} petStatus={petStatus} />}
-    </div>
-  );
-};
-
-// Skeleton Loader
-const SkeletonLoader = () => (
-  <div className="space-y-6">
-    {Array(3).fill(0).map((_, i) => (
-      <div key={i} className="p-5 bg-white border shadow-md rounded-xl border-amber-100 animate-pulse">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-amber-100"></div>
-            <div className="space-y-2">
-              <div className="w-40 h-4 rounded bg-amber-100"></div>
-              <div className="w-24 h-3 rounded bg-amber-100"></div>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <div className="w-10 h-10 rounded-full bg-amber-100"></div>
-            <div className="w-10 h-10 rounded-full bg-amber-100"></div>
-          </div>
-        </div>
-      </div>
-    ))}
-  </div>
-);
-
-// Empty State
-const EmptyState = ({ message }) => (
-  <div className="px-6 py-12 text-center bg-white border shadow-md rounded-xl border-amber-100">
-    <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full shadow-sm bg-amber-100">
-      <AlertCircle className="w-8 h-8 text-pink-500" />
-    </div>
-    <h3 className="mb-2 text-lg font-semibold text-gray-800">No Candidates Yet</h3>
-    <p className="max-w-md mx-auto text-gray-600">{message}</p>
-  </div>
-);
-
-// Main Component
 const CandidatesPage = () => {
   const { petId } = useParams();
   const navigate = useNavigate();
+  const { user, setError, clearError, error } = useApp();
+
   const [candidates, setCandidates] = useState([]);
   const [petDetails, setPetDetails] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [statusFilter, setStatusFilter] = useState("");
+  const [sortBy, setSortBy] = useState("");
+  const [loading, setLoading] = useState(true);
   const [expandedRows, setExpandedRows] = useState([]);
+  const [actionLoading, setActionLoading] = useState(null);
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
     action: "",
     candidateId: null,
     candidateName: "",
-    message: "", // Add message to state
+    message: "",
   });
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [candidatesPerPage] = useState(5); // Reduced to fit list style better
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  const statusOptions = ["pending", "approved", "rejected"];
+  const sortOptions = ["Name", "Readiness", "Status", "Family Size"];
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [petResponse, candidatesResponse] = await Promise.all([
+        axiosInstance.get(`/api/pet/pets/${petId}`),
+        axiosInstance.get(`/api/pet/${petId}/candidates`),
+      ]);
+      if (!petResponse.data.success || !candidatesResponse.data.success) throw new Error("Failed to fetch data");
+      setPetDetails(petResponse.data.data);
+      setCandidates(candidatesResponse.data.data.map(c => ({
+        ...c,
+        userId: c.user || c.userId || c.id,
+        fullName: c.name || "Unknown User",
+        petOwnerDetails: c.petOwnerDetails || {}
+      })));
+      clearError();
+    } catch (err) {
+      setError(err.message || "An error occurred while fetching data");
+    } finally {
+      setLoading(false);
+    }
+  }, [petId, setError, clearError]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        const petResponse = await axiosInstance.get(`/api/pet/pets/${petId}`);
-        if (petResponse.data.success) {
-          setPetDetails(petResponse.data.data);
-        } else {
-          setError(petResponse.data.message || "Failed to fetch pet details");
-          return;
-        }
+    if (user === null) return;
+    if (!user?._id) navigate("/login");
+    else fetchData();
+  }, [user, petId, navigate, fetchData]);
 
-        const candidatesResponse = await axiosInstance.get(`/api/pet/${petId}/candidates`);
-        if (candidatesResponse.data.success) {
-          const normalizedCandidates = candidatesResponse.data.data.map((candidate) => ({
-            ...candidate,
-            userId: candidate.user || candidate.userId || candidate.id,
-          }));
-          setCandidates(normalizedCandidates);
-        } else {
-          setError(candidatesResponse.data.message || "Failed to fetch candidates");
-          setCandidates([]);
-        }
-      } catch (err) {
-        setError(err.message || "An error occurred while fetching data");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [petId]);
-
-  const handleInitialStatusChange = async (candidateId, newStatus) => {
+  const handleStatusChange = async (candidateId, newStatus, actionType = "select") => {
+    setActionLoading(candidateId);
     try {
-      const response = await axiosInstance.put(`/api/pet/${petId}/candidate/${candidateId}/status`, {
+      const endpoint = actionType === "finalize"
+        ? `/api/pet/${petId}/candidate/${candidateId}/finalize`
+        : `/api/pet/${petId}/candidate/${candidateId}/status`;
+      const response = await axiosInstance.put(endpoint, {
         status: newStatus,
+        action: actionType === "finalize" ? "adopt" : undefined
       });
       if (response.data.success) {
-        setCandidates((prev) =>
-          prev.map((candidate) =>
+        setCandidates(prev =>
+          prev.map(candidate =>
             candidate.userId === candidateId
               ? { ...candidate, status: newStatus }
-              : newStatus === "approved" && candidate.status !== "rejected"
+              : newStatus === "approved" && candidate.status !== "rejected" && actionType !== "reject"
               ? { ...candidate, status: "rejected" }
               : candidate
           )
         );
         if (response.data.data?.status) {
-          setPetDetails((prev) => ({ ...prev, status: response.data.data.status }));
+          setPetDetails(prev => ({ ...prev, status: response.data.data.status }));
         }
-      } else {
-        setError(response.data.message || "Failed to update status");
+        clearError();
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to update status");
-    }
-  };
-
-  const handleFinalizeAdoption = async (candidateId) => {
-    try {
-      const response = await axiosInstance.put(`/api/pet/${petId}/candidate/${candidateId}/finalize`, {
-        action: "adopt",
-      });
-      if (response.data.success) {
-        setCandidates((prev) =>
-          prev.map((candidate) =>
-            candidate.userId === candidateId
-              ? { ...candidate, status: "approved" }
-              : { ...candidate, status: "rejected" }
-          )
-        );
-        if (response.data.data?.status) {
-          setPetDetails((prev) => ({ ...prev, status: response.data.data.status }));
-        }
-      } else {
-        setError(response.data.message || "Failed to finalize adoption");
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to finalize adoption");
+      setError(err.message || "Failed to update status");
+    } finally {
+      setActionLoading(null);
     }
   };
 
   const openConfirmModal = (action, candidateId, candidateName) => {
-    let modalAction;
-    let customMessage;
-    switch (action) {
-      case "select":
-        modalAction = "select"; // Use specific action for styling
-        customMessage = `Are you sure? This action will select ${candidateName} and reject all other candidates.`;
-        break;
-      case "finalize":
-        modalAction = "finalize"; // Use specific action for styling
-        customMessage = `Are you sure? This action will finalize the adoption for ${candidateName}.`;
-        break;
-      case "reject":
-        modalAction = "reject"; // Matches existing action
-        customMessage = `Are you sure? This action will reject ${candidateName}.`;
-        break;
-      default:
-        modalAction = "edit";
-        customMessage = "Are you sure you want to proceed with this action?";
-    }
-    console.log("Opening modal with action:", modalAction, "message:", customMessage);
-    setConfirmModal({ isOpen: true, action: modalAction, candidateId, candidateName, message: customMessage });
+    const messages = {
+      select: `Ready to give ${candidateName} a chance? This will pass on other pending candidates.`,
+      finalize: `Ready to make it official with ${candidateName}?`,
+      reject: `Sure you want to say no to ${candidateName}?`,
+    };
+    setConfirmModal({
+      isOpen: true,
+      action,
+      candidateId,
+      candidateName: candidateName || "this candidate",
+      message: messages[action]
+    });
   };
 
-  const closeConfirmModal = () => {
-    setConfirmModal({ isOpen: false, action: "", candidateId: null, candidateName: "", message: "" });
-  };
+  const closeConfirmModal = () => setConfirmModal({ isOpen: false, action: "", candidateId: null, candidateName: "", message: "" });
 
-  const confirmAction = async () => {
+  const confirmAction = () => {
     const { action, candidateId } = confirmModal;
-    console.log("Confirming action:", action, "for candidateId:", candidateId);
-    if (action === "select") {
-      await handleInitialStatusChange(candidateId, "approved"); // Selects this candidate, rejects others
-    } else if (action === "finalize") {
-      await handleFinalizeAdoption(candidateId); // Finalizes adoption
-    } else if (action === "reject") {
-      await handleInitialStatusChange(candidateId, "rejected"); // Rejects this candidate
-    }
+    handleStatusChange(candidateId, action === "reject" ? "rejected" : "approved", action);
     closeConfirmModal();
   };
 
-  const toggleDetails = (candidateId) => {
-    setExpandedRows((prev) =>
-      prev.includes(candidateId)
-        ? prev.filter((id) => id !== candidateId)
-        : [...prev, candidateId]
+  const toggleDetails = candidateId =>
+    setExpandedRows(prev =>
+      prev.includes(candidateId) ? prev.filter(id => id !== candidateId) : [...prev, candidateId]
     );
+
+  const sortCandidates = (candidatesToSort) => {
+    if (!sortBy) return candidatesToSort;
+    return [...candidatesToSort].sort((a, b) => {
+      switch (sortBy) {
+        case "Name": return a.fullName.localeCompare(b.fullName);
+        case "Readiness": {
+          const readinessOrder = { immediate: 1, within_a_month: 2, later: 3 };
+          return (readinessOrder[a.petOwnerDetails?.readiness] || 3) - (readinessOrder[b.petOwnerDetails?.readiness] || 3);
+        }
+        case "Status": return a.status.localeCompare(b.status);
+        case "Family Size": return (a.petOwnerDetails?.housing?.familySize || 0) - (b.petOwnerDetails?.housing?.familySize || 0);
+        default: return 0;
+      }
+    });
   };
 
-  const filteredCandidates = candidates.filter((candidate) => {
-    const matchesSearch = candidate.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || candidate.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const filteredCandidates = sortCandidates(
+    candidates.filter(candidate => {
+      const fullName = candidate.fullName || "";
+      const occupation = candidate.petOwnerDetails?.occupation || "";
+      return (
+        (fullName.toLowerCase().includes(searchTerm.toLowerCase()) || occupation.toLowerCase().includes(searchTerm.toLowerCase())) &&
+        (!statusFilter || candidate.status === statusFilter)
+      );
+    })
+  );
 
-  const resetSearch = () => setSearchTerm("");
+  const indexOfLastCandidate = currentPage * candidatesPerPage;
+  const indexOfFirstCandidate = indexOfLastCandidate - candidatesPerPage;
+  const currentCandidates = filteredCandidates.slice(indexOfFirstCandidate, indexOfLastCandidate);
+  const totalPages = Math.ceil(filteredCandidates.length / candidatesPerPage);
 
-  const candidateCounts = {
-    all: candidates.length,
-    pending: candidates.filter((c) => c.status === "pending").length,
-    approved: candidates.filter((c) => c.status === "approved").length,
-    rejected: candidates.filter((c) => c.status === "rejected").length,
+  const paginate = (pageNumber) => {
+    setIsAnimating(true);
+    setTimeout(() => {
+      setCurrentPage(pageNumber);
+      setIsAnimating(false);
+    }, 300);
   };
+
+  const clearFilter = (filterType) => {
+    switch (filterType) {
+      case "status": setStatusFilter(""); break;
+      case "sort": setSortBy(""); break;
+      case "search": setSearchTerm(""); break;
+      default: break;
+    }
+  };
+
+  const clearAllFilters = () => {
+    setStatusFilter("");
+    setSortBy("");
+    setSearchTerm("");
+    setCurrentPage(1);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-white to-pink-50">
+        <div className="text-center animate-pulse">
+          <PawPrint size={48} className="mx-auto text-[#ffc929]" />
+          <p className="mt-4 text-lg font-medium text-gray-600">Fetching Candidates...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-white to-pink-50">
+        <div className="text-center">
+          <PawPrint size={48} className="mx-auto mb-4 text-red-500" />
+          <p className="font-medium text-red-600">Error: {error}</p>
+          <button
+            onClick={fetchData}
+            className="mt-4 px-4 py-2 text-white bg-gradient-to-r from-[#ffc929] to-[#ffa726] rounded-full hover:from-[#ffa726] hover:to-[#ffc929]"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen py-10 bg-gradient-to-br from-amber-50 via-white to-amber-100">
-      <div className="max-w-5xl px-4 mx-auto sm:px-6 lg:px-8">
+    <section className="relative min-h-screen px-4 py-12 overflow-hidden bg-gradient-to-br from-white to-pink-50 sm:py-20 sm:px-6 lg:px-8">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none"><PawBackground /></div>
+      <div className="relative mx-auto space-y-12 max-w-7xl">
         {/* Header */}
-        <div className="p-6 mb-8 bg-white border shadow-md rounded-xl border-amber-100">
-          <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => navigate(-1)}
-                className="p-2 transition-all duration-200 rounded-full shadow-sm bg-amber-100 text-amber-600 hover:bg-pink-200 hover:text-pink-700"
-                aria-label="Go back"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-800">Adoption Candidates</h1>
-                <p className="mt-2 text-sm text-gray-600">
-                  {petDetails ? (
-                    <>
-                      For <span className="font-semibold text-amber-600">{petDetails.name}</span> •{" "}
-                      <span
-                        className={`font-medium ${
-                          petDetails.status === "adopted" ? "text-green-600" : "text-amber-600"
-                        }`}
-                      >
-                        {petDetails.status === "adopted" ? "Adopted" : "Open for Adoption"}
-                      </span>
-                    </>
-                  ) : (
-                    "Loading pet details..."
-                  )}
-                </p>
-              </div>
-            </div>
-            <SearchBar value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} onReset={resetSearch} />
-          </div>
+        <div className="pt-16 space-y-6 text-center animate-fadeIn" style={{ animationDelay: "0.2s" }}>
+          <button
+            onClick={() => navigate(-1)}
+            className="absolute left-0 top-16 group inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#ffc929] to-[#ffa726] text-white font-medium rounded-full shadow-md hover:shadow-lg hover:from-[#ffa726] hover:to-[#ffc929] transition-all duration-300"
+          >
+            <ChevronLeft size={18} className="transition-transform group-hover:-translate-x-1" />
+            Back to {petDetails?.name || "Pet"}
+          </button>
+          <span className="inline-flex items-center px-4 py-2 text-sm font-semibold text-pink-500 bg-white border border-[#ffc929]/20 rounded-full shadow-sm">
+            <PawPrint className="w-4 h-4 mr-2 text-[#ffc929]" /> Adoption Candidates
+          </span>
+          <h1 className="text-4xl font-bold tracking-tight text-gray-900 md:text-5xl">
+            <span className="block">Find a Home for</span>
+            <span className="block text-pink-500">{petDetails?.name || "Your Pet"}</span>
+          </h1>
+          <p className="max-w-2xl mx-auto text-lg leading-relaxed text-gray-600">
+            Review applicants and choose the perfect match.
+          </p>
         </div>
 
-        {/* Filters & Stats */}
-        <div className="mb-8">
-          <div className="flex flex-wrap items-center gap-4 mb-4">
-            <div className="flex items-center gap-2 text-amber-700">
-              <Filter className="w-5 h-5" />
-              <span className="font-semibold">Filters</span>
+        {/* Filters and Search */}
+        <div className="bg-white backdrop-blur-sm bg-opacity-90 border-2 border-[#ffc929]/20 shadow-xl rounded-3xl p-8">
+          {error && (
+            <div className="flex items-center gap-3 p-4 mb-6 text-pink-600 shadow-md rounded-xl bg-pink-50">
+              <AlertCircle size={20} />
+              <span>{error}</span>
+              <button
+                onClick={fetchData}
+                className="inline-flex items-center gap-2 px-4 py-1 ml-auto text-white bg-gradient-to-r from-[#ffc929] to-[#ffa726] rounded-full hover:from-[#ffa726] hover:to-[#ffc929]"
+              >
+                <RefreshCw size={16} /> Refresh
+              </button>
             </div>
-            <FilterButton
-              active={statusFilter === "all"}
-              label="All"
-              count={candidateCounts.all}
-              onClick={() => setStatusFilter("all")}
+          )}
+          <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
+            <button
+              onClick={() => setIsFilterOpen(!isFilterOpen)}
+              className="flex items-center gap-2 px-4 py-2.5 text-white bg-gradient-to-r from-[#ffc929] to-[#ffa726] rounded-xl shadow-md hover:from-[#ffa726] hover:to-[#ffc929] transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/30"
+            >
+              <Filter size={16} />
+              {isFilterOpen ? "Hide" : "Filter"}
+            </button>
+            <SearchBar
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onReset={() => setSearchTerm("")}
+              className="flex-grow max-w-md shadow-xl sm:flex-grow-0 sm:mx-auto"
             />
-            <FilterButton
-              active={statusFilter === "pending"}
-              label="Pending"
-              count={candidateCounts.pending}
-              onClick={() => setStatusFilter("pending")}
-            />
-            <FilterButton
-              active={statusFilter === "approved"}
-              label="Approved"
-              count={candidateCounts.approved}
-              onClick={() => setStatusFilter("approved")}
-            />
-            <FilterButton
-              active={statusFilter === "rejected"}
-              label="Rejected"
-              count={candidateCounts.rejected}
-              onClick={() => setStatusFilter("rejected")}
-            />
+            {filteredCandidates.length > 0 && (
+              <span className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-[#ffc929] bg-[#ffc929]/10 border border-[#ffc929]/20 rounded-full shadow-inner">
+                <PawPrint size={16} className="text-[#ffc929]" /> {filteredCandidates.length} Candidates
+              </span>
+            )}
           </div>
+          <div className={`grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 transition-all duration-300 ease-in-out ${isFilterOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0 overflow-hidden"}`}>
+            <FilterSelect label="Status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} options={statusOptions} />
+            <FilterSelect label="Sort By" value={sortBy} onChange={(e) => setSortBy(e.target.value)} options={sortOptions} />
+          </div>
+          {(statusFilter || sortBy || searchTerm) && (
+            <div className="flex flex-wrap gap-2 mt-6">
+              <span className="text-sm font-medium text-gray-600">Applied Filters:</span>
+              {statusFilter && <FilterBadge label="Status" value={statusFilter} onClear={() => clearFilter("status")} />}
+              {sortBy && <FilterBadge label="Sort" value={sortBy} onClear={() => clearFilter("sort")} />}
+              {searchTerm && <FilterBadge label="Search" value={searchTerm} onClear={() => clearFilter("search")} />}
+              <button
+                onClick={clearAllFilters}
+                className="px-4 py-1.5 ml-2 text-sm font-medium text-[#ffc929] bg-[#ffc929]/10 hover:bg-[#ffc929]/20 transition-all duration-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#ffc929]/30"
+              >
+                Clear All
+              </button>
+            </div>
+          )}
 
-          {filteredCandidates.length > 0 && (
-            <div className="flex items-center justify-between p-4 rounded-lg shadow-sm bg-gradient-to-r from-amber-50 to-amber-100">
-              <div className="flex items-center gap-3">
-                <Users className="w-6 h-6 text-amber-600" />
-                <span className="text-lg font-semibold text-amber-800">
-                  {filteredCandidates.length} Candidate{filteredCandidates.length !== 1 ? "s" : ""}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                {petDetails?.status === "adopted" ? (
-                  <span className="flex items-center px-4 py-1 text-green-700 bg-green-100 rounded-full shadow-sm">
-                    <Check className="w-4 h-4 mr-2" />
-                    Adoption Complete
-                  </span>
-                ) : filteredCandidates.some((c) => c.status === "approved") ? (
-                  <span className="flex items-center px-4 py-1 rounded-full shadow-sm bg-amber-200 text-amber-800">
-                    <AlertCircle className="w-4 h-4 mr-2" />
-                    Awaiting Finalization
-                  </span>
-                ) : (
-                  <span className="flex items-center px-4 py-1 text-blue-700 bg-blue-100 rounded-full shadow-sm">
-                    <MessageCircle className="w-4 h-4 mr-2" />
-                    Your Decision Needed
-                  </span>
+          {/* Candidates List */}
+          <div className="mt-6 space-y-6 transition-opacity duration-300" style={{ animationDelay: "0.6s" }}>
+            {currentCandidates.length === 0 ? (
+              <div className="py-12 text-center bg-white/80 border border-[#ffc929]/10 rounded-3xl shadow-md">
+                <PawPrint size={48} className="mx-auto mb-4 text-[#ffc929] animate-pulse" />
+                <h3 className="text-xl font-semibold text-gray-800">No Candidates Found</h3>
+                <p className="mt-2 text-gray-600">
+                  {searchTerm || statusFilter ? "No candidates match your filters." : "No applicants yet—check back soon!"}
+                </p>
+                {(searchTerm || statusFilter) && (
+                  <button
+                    onClick={clearAllFilters}
+                    className="mt-4 px-4 py-2 text-white bg-gradient-to-r from-[#ffc929] to-[#ffa726] rounded-full hover:from-[#ffa726] hover:to-[#ffc929]"
+                  >
+                    Clear Filters
+                  </button>
                 )}
               </div>
-            </div>
-          )}
-        </div>
+            ) : (
+              <>
+                {currentCandidates.map(candidate => (
+                  <article
+                    key={candidate.userId}
+                    className="p-6 bg-white/80 border-2 border-[#ffc929]/20 rounded-3xl shadow-md transition-all duration-300 hover:shadow-lg hover:border-[#ffc929]/50"
+                  >
+                    <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                      <div className="flex items-center w-full gap-4 sm:w-auto">
+                        <img
+                          src={candidate.image || "/images/default-profile.png"}
+                          alt={`${candidate.fullName || "Candidate"}'s profile`}
+                          className="object-cover w-16 h-16 border border-[#ffc929]/20 rounded-full shadow-sm"
+                          onError={e => (e.target.src = "/images/default-profile.png")}
+                        />
+                        <div className="flex-1">
+                          <h3 className="text-xl font-semibold text-gray-800 transition-colors duration-300 hover:text-pink-500">
+                            {candidate.fullName || "Unknown User"}
+                          </h3>
+                          <div className="flex flex-wrap items-center gap-2 mt-2 text-sm text-gray-600">
+                            <StatusBadge status={candidate.status} />
+                            <span className="px-3 py-1 border border-[#ffc929]/20 rounded-full bg-[#ffc929]/5">
+                              {formatEnum(candidate.petOwnerDetails?.occupation) || "N/A"}
+                            </span>
+                            <span className="px-3 py-1 border border-[#ffc929]/20 rounded-full bg-[#ffc929]/5">
+                              {formatEnum(candidate.petOwnerDetails?.readiness) || "N/A"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-3 sm:flex-row">
+                        {candidate.status === "pending" && petDetails?.status !== "adopted" && (
+                          <Tooltip text="Approve this candidate">
+                            <button
+                              onClick={() => openConfirmModal("select", candidate.userId, candidate.fullName)}
+                              className="p-2 text-[#ffc929] bg-[#ffc929]/10 rounded-full hover:bg-[#ffc929]/20 transition-all duration-300 disabled:opacity-50"
+                              disabled={actionLoading === candidate.userId}
+                            >
+                              {actionLoading === candidate.userId ? (
+                                <RefreshCw size={20} className="animate-spin" />
+                              ) : (
+                                <Check size={20} />
+                              )}
+                            </button>
+                          </Tooltip>
+                        )}
+                        {candidate.status === "approved" && petDetails?.status !== "adopted" && (
+                          <>
+                            <Tooltip text="Finalize adoption">
+                              <button
+                                onClick={() => openConfirmModal("finalize", candidate.userId, candidate.fullName)}
+                                className="p-2 text-[#ffc929] bg-[#ffc929]/10 rounded-full hover:bg-[#ffc929]/20 transition-all duration-300 disabled:opacity-50"
+                                disabled={actionLoading === candidate.userId}
+                              >
+                                {actionLoading === candidate.userId ? (
+                                  <RefreshCw size={20} className="animate-spin" />
+                                ) : (
+                                  <Heart size={20} />
+                                )}
+                              </button>
+                            </Tooltip>
+                            <Tooltip text="Reject this candidate">
+                              <button
+                                onClick={() => openConfirmModal("reject", candidate.userId, candidate.fullName)}
+                                className="p-2 text-pink-600 transition-all duration-300 rounded-full bg-pink-50 hover:bg-pink-100 disabled:opacity-50"
+                                disabled={actionLoading === candidate.userId}
+                              >
+                                {actionLoading === candidate.userId ? (
+                                  <RefreshCw size={20} className="animate-spin" />
+                                ) : (
+                                  <XCircle size={20} />
+                                )}
+                              </button>
+                            </Tooltip>
+                          </>
+                        )}
+                        <button
+                          onClick={() => toggleDetails(candidate.userId)}
+                          className="p-2 text-gray-600 rounded-full hover:bg-[#ffc929]/10 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/30"
+                        >
+                          {expandedRows.includes(candidate.userId) ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                        </button>
+                      </div>
+                    </div>
+                    {expandedRows.includes(candidate.userId) && (
+                      <div className="mt-4 border-t border-[#ffc929]/20 pt-4 animate-fade-in">
+                        <CandidateDetails candidate={candidate} petStatus={petDetails?.status} />
+                      </div>
+                    )}
+                  </article>
+                ))}
+              </>
+            )}
+          </div>
 
-        {/* Candidates List */}
-        <div className="space-y-6">
-          {isLoading ? (
-            <SkeletonLoader />
-          ) : error ? (
-            <div className="flex flex-col items-center justify-center gap-3 p-6 text-center text-red-600 bg-white border shadow-md rounded-xl border-amber-100">
-              <AlertCircle className="w-12 h-12 text-red-500" />
-              <p className="text-lg font-medium">{error}</p>
+          {/* Pagination */}
+          {filteredCandidates.length > candidatesPerPage && (
+            <div className="flex items-center justify-center gap-4 mt-12 animate-fadeIn" style={{ animationDelay: "0.8s" }}>
               <button
-                onClick={() => window.location.reload()}
-                className="px-5 py-2 mt-4 text-red-700 transition-all duration-200 bg-red-100 rounded-full shadow-sm hover:bg-red-200"
+                onClick={() => paginate(currentPage - 1)}
+                disabled={currentPage === 1}
+                className={`p-2 rounded-full ${currentPage === 1 ? "text-gray-300 cursor-not-allowed" : "text-[#ffc929] hover:bg-[#ffc929]/10"} transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/30`}
+                aria-label="Previous page"
               >
-                Retry
+                <ChevronLeft size={24} />
+              </button>
+              <div className="flex items-center gap-2">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => {
+                  const isCurrent = currentPage === page;
+                  const isNear = Math.abs(currentPage - page) <= 1 || page === 1 || page === totalPages;
+                  if (!isNear) return page === currentPage - 2 || page === currentPage + 2 ? <span key={page} className="text-gray-400">...</span> : null;
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => paginate(page)}
+                      className={`w-10 h-10 rounded-full text-sm font-medium ${isCurrent ? "bg-[#ffc929] text-white shadow-md" : "text-gray-600 hover:bg-[#ffc929]/10"} transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/30`}
+                      aria-label={`Go to page ${page}`}
+                    >
+                      {page}
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                onClick={() => paginate(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className={`p-2 rounded-full ${currentPage === totalPages ? "text-gray-300 cursor-not-allowed" : "text-[#ffc929] hover:bg-[#ffc929]/10"} transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/30`}
+                aria-label="Next page"
+              >
+                <ChevronRight size={24} />
               </button>
             </div>
-          ) : filteredCandidates.length === 0 ? (
-            <EmptyState
-              message={
-                searchTerm
-                  ? `No matches for "${searchTerm}". Try a different term or reset the search.`
-                  : statusFilter !== "all"
-                  ? `No candidates with "${statusFilter}" status.`
-                  : "No one has applied yet. Check back soon!"
-              }
-            />
-          ) : (
-            filteredCandidates.map((candidate) => (
-              <CandidateCard
-                key={candidate.userId}
-                candidate={candidate}
-                petStatus={petDetails?.status}
-                openConfirmModal={openConfirmModal}
-                toggleDetails={toggleDetails}
-                isExpanded={expandedRows.includes(candidate.userId)}
-              />
-            ))
           )}
+
+          {/* Help Section */}
+          <HelpSection title={`Helping ${petDetails?.name || "Your Pet"} Find a Home`} className="mt-6 text-sm text-gray-600">
+            <li>Approve an applicant to move them forward—others get passed.</li>
+            <li>Finalize an approved applicant to seal the deal.</li>
+            <li>Get contact info after finalizing to connect directly.</li>
+            <li>Use filters and sorting to find the best match.</li>
+          </HelpSection>
         </div>
 
-        {/* Help Section */}
-        <HelpSection show={candidates.length > 0}>
-          <li>Click a candidate’s card to see their full application details.</li>
-          <li>
-            Use <span className="font-bold">Select</span> to choose a candidate (rejects others).
-          </li>
-          <li>
-            After selecting, <span className="font-bold">Finalize</span> to complete the adoption.
-          </li>
-          <li>Contact details unlock after finalization—reach out directly!</li>
-        </HelpSection>
-
+        {/* Confirmation Modal */}
         <ConfirmationModal
           isOpen={confirmModal.isOpen}
           onClose={closeConfirmModal}
           onConfirm={confirmAction}
           action={confirmModal.action}
           itemName={confirmModal.candidateName}
-          message={confirmModal.message} // Pass the custom message
+          message={confirmModal.message}
         />
       </div>
-    </div>
+    </section>
   );
 };
 

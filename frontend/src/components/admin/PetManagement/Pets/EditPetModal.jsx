@@ -4,41 +4,19 @@ import {
   AlertCircle,
   PawPrint,
   X,
-  Save,
   Camera,
   Calendar,
   Star,
   MapPin,
   Coins,
   Zap,
-  Info
+  Info,
 } from "lucide-react";
 import ImageUpload from "../../../ImageUpload";
 import { FormField, SelectField, InputField } from "./CreatePetModal"; // Import reusable components
+import { SPECIES_OPTIONS, breeds, ageRanges } from "../../../../assets/Pet"; // Import from pet data file
 
 // Constants (aligned with CreatePetModal)
-const SPECIES_OPTIONS = [
-  { value: "dog", label: "Dog" },
-  { value: "cat", label: "Cat" },
-  { value: "other", label: "Other" },
-];
-
-const DOG_BREEDS = [
-  "German Shepherd", "Labrador Retriever", "Golden Retriever", "Bulldog", "Rottweiler",
-  "Beagle", "Poodle", "Siberian Husky", "Boxer", "Great Dane",
-];
-
-const CAT_BREEDS = [
-  "Persian", "Siamese", "Maine Coon", "British Shorthair", "Ragdoll",
-  "Bengal", "Sphynx", "Russian Blue", "American Shorthair", "Scottish Fold",
-];
-
-const AGE_OPTIONS = {
-  dog: ["puppy", "young", "adult", "senior"],
-  cat: ["kitten", "young", "adult", "senior"],
-  other: ["young", "adult", "senior"],
-};
-
 const GENDER_OPTIONS = [
   { value: "male", label: "Male" },
   { value: "female", label: "Female" },
@@ -49,6 +27,7 @@ const EditPetModal = ({ isOpen, onClose, petData, onUpdate }) => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
+  // Initialize formData with petData
   useEffect(() => {
     if (petData) {
       setFormData({
@@ -59,24 +38,33 @@ const EditPetModal = ({ isOpen, onClose, petData, onUpdate }) => {
     }
   }, [petData]);
 
-  // Memoized breed and age options
-  const availableBreeds = useMemo(() => {
-    switch (formData.species) {
-      case "dog": return DOG_BREEDS;
-      case "cat": return CAT_BREEDS;
-      default: return [];
+  // Reset breed and age when species changes
+  useEffect(() => {
+    if (formData.species) {
+      const newBreeds = breeds[formData.species] || [];
+      const newAges = ageRanges[formData.species] || [];
+      setFormData((prev) => ({
+        ...prev,
+        breed: newBreeds.includes(prev.breed) ? prev.breed : (newBreeds.length > 0 ? newBreeds[0] : ""),
+        age: newAges.some(age => age.value === prev.age) ? prev.age : (newAges.length > 0 ? newAges[0].value : ""),
+      }));
     }
   }, [formData.species]);
 
+  // Memoized breed and age options
+  const availableBreeds = useMemo(() => {
+    return formData.species ? breeds[formData.species] || [] : [];
+  }, [formData.species]);
+
   const availableAges = useMemo(() => {
-    return formData.species ? AGE_OPTIONS[formData.species] || AGE_OPTIONS.other : [];
+    return formData.species ? ageRanges[formData.species] || [] : [];
   }, [formData.species]);
 
   // Handle input changes
   const handleInputChange = useCallback((field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: "" }));
+      setErrors((prev) => ({ ...prev, [field]: "" }));
     }
   }, [errors]);
 
@@ -86,7 +74,7 @@ const EditPetModal = ({ isOpen, onClose, petData, onUpdate }) => {
     const requiredFields = {
       name: "Pet name is required",
       species: "Species is required",
-      breed: "Breed is required",
+      breed: formData.species !== "other" ? "Breed is required" : null,
       description: "Description is required",
       age: "Age is required",
       city: "City is required",
@@ -98,10 +86,8 @@ const EditPetModal = ({ isOpen, onClose, petData, onUpdate }) => {
     Object.entries(requiredFields).forEach(([field, errorMessage]) => {
       if (errorMessage && !formData[field]) {
         newErrors[field] = errorMessage;
-      } else if (field === "fee" && formData.feeOption === "With Fee" && (!formData.fee || formData.fee < 1)) {
+      } else if (field === "fee" && formData.feeOption === "With Fee" && (!formData.fee || Number(formData.fee) < 1)) {
         newErrors.fee = errorMessage;
-      } else if (field === "breed" && formData.species === "other" && !formData.breed) {
-        newErrors.breed = null; // Optional for "other"
       }
     });
 
@@ -120,7 +106,7 @@ const EditPetModal = ({ isOpen, onClose, petData, onUpdate }) => {
       });
       onClose();
     } catch (err) {
-      setErrors(prev => ({ ...prev, form: err.message || "Failed to update pet" }));
+      setErrors((prev) => ({ ...prev, form: err.message || "Failed to update pet" }));
     } finally {
       setLoading(false);
     }
@@ -247,9 +233,9 @@ const EditPetModal = ({ isOpen, onClose, petData, onUpdate }) => {
                   <SelectField
                     value={formData.age}
                     onChange={(e) => handleInputChange("age", e.target.value)}
-                    options={availableAges.map(age => ({
-                      value: age,
-                      label: age.charAt(0).toUpperCase() + age.slice(1)
+                    options={availableAges.map((age) => ({
+                      value: age.value,
+                      label: age.label,
                     }))}
                     error={errors.age}
                     required
@@ -288,7 +274,7 @@ const EditPetModal = ({ isOpen, onClose, petData, onUpdate }) => {
                     onChange={(e) => handleInputChange("isTrained", e.target.value === "true")}
                     options={[
                       { value: "true", label: "Trained" },
-                      { value: "false", label: "Not Trained" }
+                      { value: "false", label: "Not Trained" },
                     ]}
                     icon={<Zap />}
                   />
@@ -306,7 +292,7 @@ const EditPetModal = ({ isOpen, onClose, petData, onUpdate }) => {
                     }}
                     options={[
                       { value: "Free", label: "Free" },
-                      { value: "With Fee", label: "With Fee" }
+                      { value: "With Fee", label: "With Fee" },
                     ]}
                     icon={<Coins />}
                   />

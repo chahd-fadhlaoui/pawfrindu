@@ -6,7 +6,7 @@ import {
   Plus,
   Edit,
   UserPlus,
-  Trash2,
+  Archive,
   Search,
   Info,
 } from "lucide-react";
@@ -40,28 +40,28 @@ const MyPets = ({ showHeader = true, onPetChange }) => {
   const [editPetData, setEditPetData] = useState(null);
   const [candidatesPetId, setCandidatesPetId] = useState(null);
   const [actionLoading, setActionLoading] = useState({
-    delete: false,
-    bulkDelete: false,
+    archive: false,
+    bulkArchive: false,
     approve: false,
     finalize: false,
   });
   const [hoveredAction, setHoveredAction] = useState(null);
-  const petsPerPage = 10; // Match ActivePets
+  const petsPerPage = 10;
 
   const statusOptions = [
     { value: "", label: "All Statuses" },
-    { value: "pending", label: "Pending" },
     { value: "accepted", label: "Accepted" },
     { value: "adoptionPending", label: "Adoption Pending" },
-    { value: "adopted", label: "Adopted" },
-    { value: "sold", label: "Sold" },
+    // "adopted" and "sold" removed
   ];
 
   // Filter pets to only those created by the current admin
   useEffect(() => {
     if (currentUser.role !== "Admin") return;
     let filtered = pets.filter(
-      (pet) => pet.owner?._id === currentUser._id && !pet.isArchived
+      (pet) => pet.owner?._id === currentUser._id && !pet.isArchived &&
+      pet.status !== "adopted" &&
+      pet.status !== "sold"
     );
 
     if (searchQuery.trim()) {
@@ -125,16 +125,18 @@ const MyPets = ({ showHeader = true, onPetChange }) => {
     setIsEditModalOpen(true);
   };
 
-  const handleDeletePet = (petId) => {
+  const handleArchivePet = (petId) => {
     setSelectedPetId(petId);
-    setConfirmAction("delete");
+    setConfirmAction("archive");
     setIsConfirmModalOpen(true);
   };
 
-  const confirmDeletePet = async () => {
-    setActionLoading((prev) => ({ ...prev, delete: true }));
+  const confirmArchivePet = async () => {
+    setActionLoading((prev) => ({ ...prev, archive: true }));
     try {
-      await axiosInstance.delete(`/api/pet/deletePet/${selectedPetId}`);
+      await axiosInstance.put(`/api/pet/archivePet/${selectedPetId}`, {
+        isArchived: true,
+      });
       await triggerRefresh("pets");
       setFilteredPets((prev) =>
         prev.filter((pet) => pet._id !== selectedPetId)
@@ -143,25 +145,27 @@ const MyPets = ({ showHeader = true, onPetChange }) => {
       setIsConfirmModalOpen(false);
       onPetChange?.();
     } catch (err) {
-      setActionError(err.response?.data?.message || "Failed to delete pet");
-      console.error("Delete Pet Error:", err);
+      setActionError(err.response?.data?.message || "Failed to archive pet");
+      console.error("Archive Pet Error:", err);
     } finally {
-      setActionLoading((prev) => ({ ...prev, delete: false }));
+      setActionLoading((prev) => ({ ...prev, archive: false }));
     }
   };
 
-  const handleBulkDelete = () => {
+  const handleBulkArchive = () => {
     if (selectedPets.length === 0) return;
-    setConfirmAction("bulkDelete");
+    setConfirmAction("bulkArchive");
     setIsConfirmModalOpen(true);
   };
 
-  const confirmBulkDelete = async () => {
-    setActionLoading((prev) => ({ ...prev, bulkDelete: true }));
+  const confirmBulkArchive = async () => {
+    setActionLoading((prev) => ({ ...prev, bulkArchive: true }));
     try {
       await Promise.all(
         selectedPets.map((petId) =>
-          axiosInstance.delete(`/api/pet/deletePet/${petId}`)
+          axiosInstance.put(`/api/pet/archivePet/${petId}`, {
+            isArchived: true,
+          })
         )
       );
       await triggerRefresh("pets");
@@ -173,11 +177,11 @@ const MyPets = ({ showHeader = true, onPetChange }) => {
       onPetChange?.();
     } catch (err) {
       setActionError(
-        err.response?.data?.message || "Failed to bulk delete pets"
+        err.response?.data?.message || "Failed to bulk archive pets"
       );
-      console.error("Bulk Delete Error:", err);
+      console.error("Bulk Archive Error:", err);
     } finally {
-      setActionLoading((prev) => ({ ...prev, bulkDelete: false }));
+      setActionLoading((prev) => ({ ...prev, bulkArchive: false }));
     }
   };
 
@@ -283,16 +287,16 @@ const MyPets = ({ showHeader = true, onPetChange }) => {
             </button>
             {selectedPets.length > 0 && (
               <button
-                onClick={handleBulkDelete}
-                disabled={actionLoading.bulkDelete}
+                onClick={handleBulkArchive}
+                disabled={actionLoading.bulkArchive}
                 className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white transition-all duration-300 rounded-lg shadow-md bg-gradient-to-r from-gray-600 to-gray-800 hover:from-gray-700 hover:to-gray-900 focus:ring-2 focus:ring-gray-400 disabled:opacity-50"
               >
-                {actionLoading.bulkDelete ? (
+                {actionLoading.bulkArchive ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
-                  <X className="w-4 h-4" />
+                  <Archive className="w-4 h-4" />
                 )}
-                Delete ({selectedPets.length})
+                Archive ({selectedPets.length})
               </button>
             )}
             {(searchQuery || statusFilter) && (
@@ -385,26 +389,26 @@ const MyPets = ({ showHeader = true, onPetChange }) => {
                 )}
                 <div
                   className="relative"
-                  onMouseEnter={() => setHoveredAction(`delete-${pet._id}`)}
+                  onMouseEnter={() => setHoveredAction(`archive-${pet._id}`)}
                   onMouseLeave={() => setHoveredAction(null)}
                 >
                   <button
-                    onClick={() => handleDeletePet(pet._id)}
-                    disabled={actionLoading.delete}
-                    className="flex items-center gap-1 px-3 py-1 text-xs font-semibold text-white transition-all duration-300 rounded-lg shadow-sm bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 focus:outline-none focus:ring-2 focus:ring-red-400 disabled:opacity-50"
+                    onClick={() => handleArchivePet(pet._id)}
+                    disabled={actionLoading.archive}
+                    className="flex items-center gap-1 px-3 py-1 text-xs font-semibold text-white transition-all duration-300 rounded-lg shadow-sm bg-gradient-to-r from-gray-500 to-gray-700 hover:from-gray-600 hover:to-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-400 disabled:opacity-50"
                   >
-                    {actionLoading.delete && selectedPetId === pet._id ? (
+                    {actionLoading.archive && selectedPetId === pet._id ? (
                       <Loader2 className="w-3 h-3 animate-spin" />
                     ) : (
-                      <Trash2 className="w-3 h-3" />
+                      <Archive className="w-3 h-3" />
                     )}
-                    Delete
+                    Archive
                   </button>
-                  {hoveredAction === `delete-${pet._id}` && (
+                  {hoveredAction === `archive-${pet._id}` && (
                     <div className="absolute right-0 z-10 px-3 py-2 mt-2 text-xs text-white bg-gray-800 rounded-md shadow-lg top-full animate-fade-in-up">
                       <div className="flex items-center gap-1">
                         <Info size={12} />
-                        <span>Remove this pet listing</span>
+                        <span>Archive this pet listing</span>
                       </div>
                     </div>
                   )}
@@ -413,7 +417,7 @@ const MyPets = ({ showHeader = true, onPetChange }) => {
             )}
             title="My Pets"
             showHeader={false}
-            bulkAction="delete"
+            bulkAction="archive"
             className="overflow-hidden shadow-xl rounded-xl animate-fade-in"
           />
           {totalPages > 1 && (
@@ -493,10 +497,10 @@ const MyPets = ({ showHeader = true, onPetChange }) => {
         isOpen={isConfirmModalOpen}
         onClose={() => setIsConfirmModalOpen(false)}
         onConfirm={
-          confirmAction === "delete"
-            ? confirmDeletePet
-            : confirmAction === "bulkDelete"
-            ? confirmBulkDelete
+          confirmAction === "archive"
+            ? confirmArchivePet
+            : confirmAction === "bulkArchive"
+            ? confirmBulkArchive
             : confirmAction === "approveCandidate"
             ? async () => {
                 setActionLoading((prev) => ({ ...prev, approve: true }));
@@ -541,14 +545,14 @@ const MyPets = ({ showHeader = true, onPetChange }) => {
               }
         }
         action={
-          confirmAction === "delete" || confirmAction === "bulkDelete"
-            ? "delete"
+          confirmAction === "archive" || confirmAction === "bulkArchive"
+            ? "archive"
             : confirmAction === "approveCandidate"
-            ? "select" // Maps to green button in ConfirmationModal
-            : "finalize" // Maps to blue button in ConfirmationModal
+            ? "select"
+            : "finalize"
         }
         itemName={
-          confirmAction === "bulkDelete"
+          confirmAction === "bulkArchive"
             ? `${selectedPets.length} pet${selectedPets.length > 1 ? "s" : ""}`
             : confirmAction === "approveCandidate" ||
               confirmAction === "finalizeAdoption"
@@ -560,13 +564,13 @@ const MyPets = ({ showHeader = true, onPetChange }) => {
               "this pet"
         }
         additionalMessage={
-          confirmAction === "bulkDelete" ? (
+          confirmAction === "bulkArchive" ? (
             <p className="text-sm text-gray-600">
-              This will permanently delete the selected pets.
+              This will move the selected pets to the archived list.
             </p>
-          ) : confirmAction === "delete" ? (
+          ) : confirmAction === "archive" ? (
             <p className="text-sm text-gray-600">
-              This will permanently delete this pet listing.
+              This will move this pet to the archived list.
             </p>
           ) : null
         }

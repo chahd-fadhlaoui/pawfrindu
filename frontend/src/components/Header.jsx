@@ -2,7 +2,7 @@ import { Menu, X, ChevronDown } from "lucide-react";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useApp } from "../context/AppContext";
-import logo from "../assets/LogoPawfrindu.png";
+import logo from "../assets/images/LogoPawfrindu.png";
 
 function Header() {
   const navigate = useNavigate();
@@ -11,7 +11,9 @@ function Header() {
   const [forceRender, setForceRender] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [petManagementOpen, setPetManagementOpen] = useState(false); // New state for Pet Management dropdown
   const dropdownRef = useRef(null);
+  const petManagementRef = useRef(null); // Ref for Pet Management dropdown
   const DEFAULT_PROFILE_IMAGE =
     "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSIxMDAiIGZpbGw9IiNFNUU3RUIiLz4KICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSI4MCIgcj0iNDAiIGZpbGw9IiM5Q0EzQUYiLz4KICA8cGF0aCBkPSJNMTYwIDE4MEgzOUM0MSAxNDAgODAgMTIwIDEwMCAxMjBDMTIwIDEyMCAxNTggMTQwIDE2MCAxODBaIiBmaWxsPSIjOUNBM0FGIi8+Cjwvc3ZnPg==";
 
@@ -38,9 +40,13 @@ function Header() {
     },
     {
       name: "Pet Management",
-      to: "/list",
       ariaLabel: "Manage my pets and adoption requests",
       protected: true,
+      dropdownItems: [
+        { name: "Create Pet", to: "/addPet" },
+        { name: "My Pet Posts", to: "/list/posts" },
+        { name: "My Adoption Requests", to: "/list/requests" },
+      ],
     },
   ];
 
@@ -60,6 +66,12 @@ function Header() {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setDropdownOpen(false);
+      }
+      if (
+        petManagementRef.current &&
+        !petManagementRef.current.contains(event.target)
+      ) {
+        setPetManagementOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -137,15 +149,6 @@ function Header() {
                 My Profile
               </button>
               <button
-                onClick={() => {
-                  navigate("/list");
-                  setDropdownOpen(false);
-                }}
-                className="flex w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-[#ffc929]/10 hover:text-[#ffc929] transition-all duration-300"
-              >
-                Pet Management
-              </button>
-              <button
                 onClick={handleLogout}
                 className="flex w-full px-4 py-2 text-sm text-left text-red-600 transition-all duration-300 hover:bg-red-50 hover:text-red-700"
                 aria-label="Logout"
@@ -172,26 +175,56 @@ function Header() {
 
         <nav className="hidden lg:block">
           <ul className="flex items-center space-x-8">
-            {navLinks.map(
-              (link) =>
-                (!link.protected || user) && (
-                  <li key={link.to}>
+            {navLinks.map((link) =>
+              (!link.protected || user) ? (
+                <li key={link.name} className="relative" ref={link.name === "Pet Management" ? petManagementRef : null}>
+                  {link.dropdownItems ? (
+                    <>
+                      <button
+                        className={`flex items-center gap-1 text-gray-800 text-sm font-medium transition-all duration-300 hover:text-[#ffc929] relative py-2
+                          after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-[#ffc929] 
+                          after:transition-all after:duration-300 hover:after:w-full
+                          ${location.pathname.startsWith("/list") || location.pathname === "/addPet" ? "text-[#ffc929] after:w-full" : ""}`}
+                        onClick={() => setPetManagementOpen(!petManagementOpen)}
+                        aria-expanded={petManagementOpen}
+                        aria-label={link.ariaLabel}
+                      >
+                        {link.name}
+                        <ChevronDown
+                          className={`w-4 h-4 transition-transform duration-300 ${petManagementOpen ? "rotate-180" : ""}`}
+                        />
+                      </button>
+                      {petManagementOpen && (
+                        <div className="absolute left-0 z-20 w-48 mt-2 overflow-hidden bg-white rounded-xl shadow-lg border border-[#ffc929]/20">
+                          <div className="py-2">
+                            {link.dropdownItems.map((item) => (
+                              <Link
+                                key={item.to}
+                                to={item.to}
+                                className="flex w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-[#ffc929]/10 hover:text-[#ffc929] transition-all duration-300"
+                                onClick={() => setPetManagementOpen(false)}
+                              >
+                                {item.name}
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  ) : (
                     <Link
                       to={link.to}
                       aria-label={link.ariaLabel}
                       className={`text-gray-800 text-sm font-medium transition-all duration-300 hover:text-[#ffc929] relative py-2
-                      after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-[#ffc929] 
-                      after:transition-all after:duration-300 hover:after:w-full
-                      ${
-                        location.pathname === link.to
-                          ? "text-[#ffc929] after:w-full"
-                          : ""
-                      }`}
+                        after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-[#ffc929] 
+                        after:transition-all after:duration-300 hover:after:w-full
+                        ${location.pathname === link.to ? "text-[#ffc929] after:w-full" : ""}`}
                     >
                       {link.name}
                     </Link>
-                  </li>
-                )
+                  )}
+                </li>
+              ) : null
             )}
           </ul>
         </nav>
@@ -211,24 +244,50 @@ function Header() {
           <div className="absolute left-0 right-0 z-20 bg-white shadow-lg border-t border-[#ffc929]/20 top-full">
             <nav className="px-4 py-4 space-y-3">
               <ul className="space-y-2">
-                {navLinks.map(
-                  (link) =>
-                    (!link.protected || user) && (
-                      <li key={link.to}>
+                {navLinks.map((link) =>
+                  (!link.protected || user) ? (
+                    <li key={link.name}>
+                      {link.dropdownItems ? (
+                        <>
+                          <button
+                            className={`block w-full text-left py-2.5 px-4 rounded-xl text-gray-800 hover:bg-[#ffc929]/10 hover:text-[#ffc929] transition-all duration-300 ${
+                              location.pathname.startsWith("/list") || location.pathname === "/addPet"
+                                ? "bg-[#ffc929]/10 text-[#ffc929]"
+                                : ""
+                            }`}
+                            onClick={() => setPetManagementOpen(!petManagementOpen)}
+                          >
+                            {link.name}
+                          </button>
+                          {petManagementOpen && (
+                            <ul className="pl-4 mt-2 space-y-2">
+                              {link.dropdownItems.map((item) => (
+                                <li key={item.to}>
+                                  <Link
+                                    to={item.to}
+                                    className="block py-2 px-4 rounded-xl text-gray-700 hover:bg-[#ffc929]/10 hover:text-[#ffc929] transition-all duration-300"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                  >
+                                    {item.name}
+                                  </Link>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </>
+                      ) : (
                         <Link
                           to={link.to}
-                          className={`block py-2.5 px-4 rounded-xl text-gray-800 hover:bg-[#ffc929]/10 hover:text-[#ffc929] transition-all duration-300
-                          ${
-                            location.pathname === link.to
-                              ? "bg-[#ffc929]/10 text-[#ffc929]"
-                              : ""
+                          className={`block py-2.5 px-4 rounded-xl text-gray-800 hover:bg-[#ffc929]/10 hover:text-[#ffc929] transition-all duration-300 ${
+                            location.pathname === link.to ? "bg-[#ffc929]/10 text-[#ffc929]" : ""
                           }`}
                           onClick={() => setMobileMenuOpen(false)}
                         >
                           {link.name}
                         </Link>
-                      </li>
-                    )
+                      )}
+                    </li>
+                  ) : null
                 )}
               </ul>
               <div className="pt-3 border-t border-[#ffc929]/20">

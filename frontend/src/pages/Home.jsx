@@ -1,8 +1,8 @@
 import React from "react";
-import HeroSection from "../components/HeroSection";
-import CategoriesCards from "../components/CategoriesCards";
-import About from "../components/About";
-import TrainingService from "../components/TrainingService";
+import About from "../components/Home/About";
+import HeroSection from "../components/Home/HeroSection";
+import CategoriesCards from "../components/Home/CategoriesCards";
+import TrainingService from "../components/Home/TrainingService";
 
 export default function Home() {
   return (

@@ -258,7 +258,6 @@ export const deletePet = async (req, res) => {
       return res.status(404).json({ success: false, message: "Pet not found" });
     }
 
-    // Vérifie si l'utilisateur est le propriétaire et pas un admin
     if (pet.owner.toString() !== req.user._id.toString()) {
       return res.status(403).json({
         success: false,
@@ -266,17 +265,30 @@ export const deletePet = async (req, res) => {
       });
     }
 
-    // Suppression si status est "pending" ou "accepted"
-    if (pet.status === "pending" || pet.status === "accepted") {
+    if (pet.status === "pending") {
       await Pet.findByIdAndDelete(id);
       return res
         .status(200)
         .json({ success: true, message: "Pet deleted successfully" });
     }
 
-    // Archivage si status est "adopted" ou "sold"
+    if (pet.status === "accepted") {
+      if (pet.candidates.length > 0) {
+        pet.isArchived = true;
+        await pet.save();
+        return res
+          .status(200)
+          .json({ success: true, message: "Pet archived successfully" });
+      } else {
+        await Pet.findByIdAndDelete(id);
+        return res
+          .status(200)
+          .json({ success: true, message: "Pet deleted successfully" });
+      }
+    }
+
     if (pet.status === "adopted" || pet.status === "sold") {
-      pet.isArchived = true; // Correction : utilisation de "isArchived"
+      pet.isArchived = true;
       await pet.save();
       return res
         .status(200)
@@ -668,28 +680,20 @@ export const getPetCandidates = async (req, res) => {
     console.log("Candidates raw data:", pet.candidates);
     console.log("Pet owner ID:", pet.owner.toString());
     console.log("Request user ID:", req.user?._id);
-    if (!req.user || (pet.owner.toString() !== req.user._id.toString() && req.user.role !== "Admin")) {      console.log("Unauthorized access attempt by:", req.user?._id);
+    if (!req.user || (pet.owner.toString() !== req.user._id.toString() && req.user.role !== "Admin")) {      
+      console.log("Unauthorized access attempt by:", req.user?._id);
       return res.status(403).json({
         success: false,
         message: "Unauthorized: Only the owner can view candidates",
       });
     }
-
-    /*     const validCandidates = pet.candidates.filter(candidate => {
-      if (!candidate.user) {
-        console.warn('Invalid candidate found (no user):', candidate);
-        return false;
-      }
-      return true;
-    });
-    console.log('Valid candidates after filtering:', validCandidates);
- */
     const candidates = pet.candidates.map((candidate) => {
       const user = candidate.user || {}; // Fallback to empty object if user is null
       return {
         id: candidate.user?._id || candidate._id.toString(), // Use candidate._id if user is missing
         name: user.fullName || "Unknown User",
         email: user.email || "N/A",
+        image: user.image || "N/A",
         status: candidate.status || "pending",
         petOwnerDetails: {
           occupation: user.petOwnerDetails?.occupation || "N/A",

@@ -1,6 +1,6 @@
-import { Facebook, Instagram, ArrowRight, Mail, Phone, MapPin } from "lucide-react";
+import { ArrowRight, Facebook, Instagram, Mail, MapPin, Phone } from "lucide-react";
 import React from "react";
-import logo from "../assets/LogoPawfrindu.png";
+import logo from "../assets/images/LogoPawfrindu.png";
 
 const PawIcon = ({ className, style }) => (
   <svg

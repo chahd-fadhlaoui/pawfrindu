@@ -11,7 +11,9 @@ const PawIcon = ({ className, style }) => (
 );
 
 const allSpecies = ["dog", "cat", "other"];
-const allAges = ["puppy", "kitten", "young", "adult", "senior"];
+const dogAges = ["puppy", "young", "adult", "senior"];
+const catAges = ["kitten", "young", "adult", "senior"];
+const otherAges = ["young", "adult", "senior"];
 const feeOptions = ["Free", "With Money"];
 const sortOptions = ["Ascending", "Descending"];
 const dogBreeds = ["German Shepherd", "Labrador Retriever", "Golden Retriever", "Bulldog", "Rottweiler", "Beagle", "Poodle", "Siberian Husky", "Boxer", "Great Dane"];
@@ -62,19 +64,22 @@ const PetCard = ({ pet, navigate, currencySymbol }) => {
 };
 
 const FilterBadge = ({ label, value, onClear }) => (
-  <div className="flex items-center px-3 py-1.5 text-sm text-gray-700 bg-[#ffc929]/10 border border-[#ffc929]/20 rounded-full shadow-sm hover:bg-[#ffc929]/20 transition-all duration-300 focus-within:ring-2 focus-within:ring-[#ffc929]/30">
-    <span className="font-medium">{label}:</span><span className="ml-1 truncate max-w-[120px]">{value}</span>
-    <button onClick={onClear} className="ml-2 text-gray-400 transition-colors duration-300 rounded-full hover:text-[#ffc929] focus:outline-none focus:ring-2 focus:ring-[#ffc929]/30" aria-label={`Remove ${label} filter`}><X size={14} /></button>
-  </div>
+  <span className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium text-[#ffc929] bg-[#ffc929]/10 rounded-full">
+    {label}: {value}
+    <button onClick={onClear} className="ml-1 focus:outline-none">
+      <X size={14} />
+    </button>
+  </span>
 );
 
-const FilterSelect = ({ label, value, onChange, options }) => (
+const FilterSelect = ({ label, value, onChange, options, disabled }) => (
   <div className="w-full sm:w-auto flex-1 min-w-[140px]">
     <select
-      className="w-full px-4 py-2.5 text-sm text-gray-700 bg-white border border-[#ffc929]/20 rounded-xl shadow-sm focus:ring-2 focus:ring-[#ffc929]/30 focus:border-[#ffc929] hover:border-[#ffc929]/50 transition-all duration-300"
+      className={`w-full px-4 py-2.5 text-sm text-gray-700 bg-white border border-[#ffc929]/20 rounded-xl shadow-sm focus:ring-2 focus:ring-[#ffc929]/30 focus:border-[#ffc929] hover:border-[#ffc929]/50 transition-all duration-300 ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
       value={value}
       onChange={onChange}
       aria-label={`Filter by ${label}`}
+      disabled={disabled}
     >
       <option value="">{label}</option>
       {options.map((option, index) => (
@@ -92,7 +97,7 @@ export default function Pet() {
   const [filteredPets, setFilteredPets] = useState([]);
   const [speciesList] = useState(allSpecies);
   const [breeds, setBreeds] = useState([]);
-  const [ages] = useState(allAges);
+  const [ages, setAges] = useState([]);
   const [fees] = useState(feeOptions);
   const [cities, setCities] = useState([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -100,7 +105,7 @@ export default function Pet() {
   const [petsPerPage] = useState(9);
   const [isAnimating, setIsAnimating] = useState(false);
 
-  const [selectedSpecies, setSelectedSpecies] = useState("");
+  const [selectedSpecies, setSelectedSpecies] = useState(urlSpecies && allSpecies.includes(urlSpecies.toLowerCase()) ? urlSpecies.toLowerCase() : "");
   const [selectedBreed, setSelectedBreed] = useState("");
   const [selectedAge, setSelectedAge] = useState("");
   const [selectedFee, setSelectedFee] = useState("");
@@ -108,27 +113,15 @@ export default function Pet() {
   const [sortOrder, setSortOrder] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Mettre à jour selectedSpecies immédiatement avec urlSpecies et filtrer
   useEffect(() => {
-    // Vérifier si urlSpecies est valide, sinon réinitialiser à vide
-    const validSpecies = urlSpecies && allSpecies.includes(urlSpecies.toLowerCase()) ? urlSpecies.toLowerCase() : "";
-    setSelectedSpecies(validSpecies);
-
-    console.log("URL Species from useParams:", urlSpecies);
-    console.log("Selected Species:", validSpecies);
-    console.log("Raw Pets from AppContext:", pets);
-
     let filtered = pets.filter((pet) => pet.status === "accepted");
 
-    // Appliquer le filtre basé sur urlSpecies immédiatement
-    if (validSpecies) {
-      filtered = filtered.filter((pet) => {
-        const matches = pet.species.toLowerCase() === validSpecies;
-        if (!matches) console.log(`Pet ${pet.name} excluded: species "${pet.species}" != "${validSpecies}"`);
-        return matches;
-      });
+    // Apply species filter using selectedSpecies
+    if (selectedSpecies) {
+      filtered = filtered.filter((pet) => pet.species.toLowerCase() === selectedSpecies.toLowerCase());
     }
 
+    // Apply other filters
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
       filtered = filtered.filter((pet) =>
@@ -137,33 +130,57 @@ export default function Pet() {
         (pet.city && pet.city.toLowerCase().includes(query))
       );
     }
-
     if (selectedBreed) filtered = filtered.filter((pet) => pet.breed === selectedBreed);
     if (selectedAge) filtered = filtered.filter((pet) => pet.age === selectedAge);
     if (selectedFee === "Free") filtered = filtered.filter((pet) => pet.fee === 0);
     else if (selectedFee === "With Money") filtered = filtered.filter((pet) => pet.fee > 0);
     if (selectedCity) filtered = filtered.filter((pet) => pet.city === selectedCity);
-
     if (selectedFee === "With Money" && sortOrder) {
       filtered.sort((a, b) => (sortOrder === "Ascending" ? a.fee - b.fee : b.fee - a.fee));
     }
 
-    console.log("Filtered Pets:", filtered);
     setFilteredPets(filtered);
     setCurrentPage(1);
-  }, [pets, urlSpecies, selectedBreed, selectedAge, selectedFee, selectedCity, sortOrder, searchQuery]);
+  }, [pets, selectedSpecies, selectedBreed, selectedAge, selectedFee, selectedCity, sortOrder, searchQuery]);
 
-  // Mettre à jour les options de filtre dynamiques
   useEffect(() => {
     const acceptedPets = pets.filter((pet) => pet.status === "accepted");
-    let availableBreeds = selectedSpecies === "dog" ? dogBreeds
-      : selectedSpecies === "cat" ? catBreeds
-      : selectedSpecies === "other" ? [...new Set(acceptedPets.filter((pet) => pet.species === "other" && pet.breed).map((pet) => pet.breed))] || ["Custom Breed"]
-      : [...new Set([...dogBreeds, ...catBreeds, ...acceptedPets.filter((pet) => pet.species === "other" && pet.breed).map((pet) => pet.breed)])];
+
+    // Update breeds and ages based on selected species
+    let availableBreeds = [];
+    if (selectedSpecies === "dog") {
+      availableBreeds = dogBreeds;
+      setAges(dogAges);
+    } else if (selectedSpecies === "cat") {
+      availableBreeds = catBreeds;
+      setAges(catAges);
+    } else if (selectedSpecies === "other") {
+      availableBreeds = [...new Set(acceptedPets.filter((pet) => pet.species === "other" && pet.breed).map((pet) => pet.breed))] || ["Custom Breed"];
+      setAges(otherAges);
+    } else {
+      availableBreeds = [...new Set([...dogBreeds, ...catBreeds, ...acceptedPets.filter((pet) => pet.species === "other" && pet.breed).map((pet) => pet.breed)])];
+      setAges([]);
+    }
     setBreeds(availableBreeds);
+
+    // Update cities
     setCities([...new Set(acceptedPets.map((pet) => pet.city))].filter(Boolean));
+
+    // Reset dependent filters if species is cleared
+    if (!selectedSpecies) {
+      setSelectedBreed("");
+      setSelectedAge("");
+    }
     if (selectedFee !== "With Money") setSortOrder("");
   }, [pets, selectedSpecies, selectedFee]);
+
+  useEffect(() => {
+    // Sync selectedSpecies with urlSpecies when urlSpecies changes
+    const validSpecies = urlSpecies && allSpecies.includes(urlSpecies.toLowerCase()) ? urlSpecies.toLowerCase() : "";
+    if (validSpecies !== selectedSpecies) {
+      setSelectedSpecies(validSpecies);
+    }
+  }, [urlSpecies]);
 
   const indexOfLastPet = currentPage * petsPerPage;
   const indexOfFirstPet = indexOfLastPet - petsPerPage;
@@ -180,7 +197,7 @@ export default function Pet() {
 
   const clearFilter = (filterType) => {
     switch (filterType) {
-      case "species": setSelectedSpecies(urlSpecies && allSpecies.includes(urlSpecies.toLowerCase()) ? urlSpecies.toLowerCase() : ""); break;
+      case "species": setSelectedSpecies(""); break;
       case "breed": setSelectedBreed(""); break;
       case "age": setSelectedAge(""); break;
       case "fee": setSelectedFee(""); setSortOrder(""); break;
@@ -191,7 +208,7 @@ export default function Pet() {
   };
 
   const clearAllFilters = () => {
-    setSelectedSpecies(urlSpecies && allSpecies.includes(urlSpecies.toLowerCase()) ? urlSpecies.toLowerCase() : "");
+    setSelectedSpecies("");
     setSelectedBreed("");
     setSelectedAge("");
     setSelectedFee("");
@@ -200,64 +217,96 @@ export default function Pet() {
     setSearchQuery("");
   };
 
-  const PawBackground = () => {
-    return Array(8)
-      .fill(null)
-      .map((_, index) => (
-        <PawIcon
-          key={index}
-          className={`
-            absolute w-8 h-8 opacity-5 animate-float
-            ${index % 2 === 0 ? "text-[#ffc929]" : "text-[#ffb800]"}
-            ${index % 3 === 0 ? "top-1/4" : index % 3 === 1 ? "top-1/2" : "top-3/4"}
-            ${index % 4 === 0 ? "left-1/4" : index % 4 === 1 ? "left-1/2" : "left-3/4"}
-          `}
-          style={{ animationDelay: `${index * 0.5}s`, transform: `rotate(${index * 45}deg)` }}
-        />
-      ));
-  };
+  const PawBackground = () => (
+    Array(8).fill(null).map((_, index) => (
+      <PawIcon
+        key={index}
+        className={`absolute w-8 h-8 opacity-5 animate-float ${index % 2 === 0 ? "text-[#ffc929]" : "text-pink-300"} ${index % 3 === 0 ? "top-1/4" : index % 3 === 1 ? "top-1/2" : "top-3/4"} ${index % 4 === 0 ? "left-1/4" : index % 4 === 1 ? "left-1/2" : "left-3/4"}`}
+        style={{ animationDelay: `${index * 0.5}s`, transform: `rotate(${index * 45}deg)` }}
+      />
+    ))
+  );
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white"><div className="text-center animate-pulse"><PawPrint size={48} className="mx-auto text-[#ffc929]" /><p className="mt-4 text-lg font-medium text-gray-600">Fetching Pets...</p></div></div>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-white to-pink-50"><div className="text-center animate-pulse"><PawPrint size={48} className="mx-auto text-[#ffc929]" /><p className="mt-4 text-lg font-medium text-gray-600">Fetching Pets...</p></div></div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white"><div className="text-center"><PawPrint size={48} className="mx-auto mb-4 text-red-500" /><p className="font-medium text-red-600">Error: {error}</p></div></div>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-white to-pink-50"><div className="text-center"><PawPrint size={48} className="mx-auto mb-4 text-red-500" /><p className="font-medium text-red-600">Error: {error}</p></div></div>
     );
   }
 
   return (
-    <section className="relative min-h-screen px-4 py-12 overflow-hidden bg-white sm:py-20 sm:px-6 lg:px-8">
+    <section className="relative min-h-screen px-4 py-12 overflow-hidden bg-gradient-to-br from-white to-pink-50 sm:py-20 sm:px-6 lg:px-8">
       <div className="absolute inset-0 overflow-hidden pointer-events-none"><PawBackground /></div>
       <div className="relative mx-auto space-y-12 max-w-7xl">
         <div className="pt-16 space-y-6 text-center animate-fadeIn" style={{ animationDelay: "0.2s" }}>
-          <span className="inline-flex items-center px-4 py-2 text-sm font-semibold text-[#ffc929] bg-[#ffc929]/10 border border-[#ffc929]/20 rounded-full shadow-sm"><Heart className="w-4 h-4 mr-2 text-[#ffc929]" />Adopt Your Perfect Pet</span>
-          <h1 className="text-4xl font-semibold tracking-tight text-gray-800 md:text-5xl"><span className="block">Find Your</span><span className="block text-pink-500">Forever Companion</span></h1>
+          <span className="inline-flex items-center px-4 py-2 text-sm font-semibold text-pink-500 bg-white border border-[#ffc929]/20 rounded-full shadow-sm"><Heart className="w-4 h-4 mr-2 text-[#ffc929]" />Adopt Your Perfect Pet</span>
+          <h1 className="text-4xl font-bold tracking-tight text-gray-900 md:text-5xl"><span className="block">Find Your</span><span className="block text-pink-500">Forever Companion</span></h1>
           <p className="max-w-2xl mx-auto text-lg leading-relaxed text-gray-600">Browse our adorable pets ready to bring joy to your home.</p>
         </div>
-        <div className="p-6 space-y-6 bg-white border-2 border-[#ffc929]/20 shadow-lg rounded-3xl animate-fadeIn" style={{ animationDelay: "0.4s" }}>
-          <div className="flex flex-col items-center gap-4 sm:flex-row"><SearchBar value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search by name, breed, or city..." /><button onClick={() => setIsFilterOpen(!isFilterOpen)} className="flex items-center gap-2 px-4 py-2.5 text-white bg-gradient-to-r from-[#ffc929] to-[#ffa726] rounded-xl shadow-md hover:from-[#ffa726] hover:to-[#ffc929] transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/30 disabled:opacity-50" aria-label={isFilterOpen ? "Hide filters" : "Show filters"}><Filter size={16} />{isFilterOpen ? "Hide" : "Filter"}</button></div>
-          <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 transition-all duration-300 ${!isFilterOpen && "hidden"}`}>
-            <FilterSelect label="Species" value={selectedSpecies} onChange={(e) => setSelectedSpecies(e.target.value)} options={speciesList} />
-            <FilterSelect label="Breed" value={selectedBreed} onChange={(e) => setSelectedBreed(e.target.value)} options={breeds} />
-            <FilterSelect label="Age" value={selectedAge} onChange={(e) => setSelectedAge(e.target.value)} options={ages} />
-            <FilterSelect label="Fee" value={selectedFee} onChange={(e) => setSelectedFee(e.target.value)} options={fees} />
-            {selectedFee === "With Money" && <FilterSelect label="Sort Fee" value={sortOrder} onChange={(e) => setSortOrder(e.target.value)} options={sortOptions} />}
-            <FilterSelect label="City" value={selectedCity} onChange={(e) => setSelectedCity(e.target.value)} options={cities} />
+
+        <div className="bg-white backdrop-blur-sm bg-opacity-90 border-2 border-[#ffc929]/20 shadow-xl rounded-3xl p-8 mb-10">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <button
+              onClick={() => setIsFilterOpen(!isFilterOpen)}
+              className="flex items-center gap-2 px-4 py-2.5 text-white bg-gradient-to-r from-[#ffc929] to-[#ffa726] rounded-xl shadow-md hover:from-[#ffa726] hover:to-[#ffc929] transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/30"
+            >
+              <Filter size={16} />
+              {isFilterOpen ? "Hide" : "Filter"}
+            </button>
+            <SearchBar
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by name, breed, or city..."
+              className="flex-grow max-w-md shadow-xl sm:flex-grow-0 sm:mx-auto"
+            />
+            {filteredPets.length > 0 && (
+              <span className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-[#ffc929] bg-[#ffc929]/10 border border-[#ffc929]/20 rounded-full shadow-inner">
+                <PawPrint size={16} className="text-[#ffc929]" /> {filteredPets.length} Pets Available
+              </span>
+            )}
           </div>
+
+          <div
+            className={`grid grid-cols-1 gap-6 mt-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 transition-all duration-300 ease-in-out ${isFilterOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0 overflow-hidden"}`}
+          >
+            <FilterSelect label="Species" value={selectedSpecies} onChange={(e) => setSelectedSpecies(e.target.value)} options={speciesList} disabled={false} />
+            <FilterSelect label="Breed" value={selectedBreed} onChange={(e) => setSelectedBreed(e.target.value)} options={breeds} disabled={!selectedSpecies} />
+            <FilterSelect label="Age" value={selectedAge} onChange={(e) => setSelectedAge(e.target.value)} options={ages} disabled={!selectedSpecies} />
+            <FilterSelect label="Fee" value={selectedFee} onChange={(e) => setSelectedFee(e.target.value)} options={fees} disabled={false} />
+            {selectedFee === "With Money" && <FilterSelect label="Sort Fee" value={sortOrder} onChange={(e) => setSortOrder(e.target.value)} options={sortOptions} disabled={false} />}
+            <FilterSelect label="City" value={selectedCity} onChange={(e) => setSelectedCity(e.target.value)} options={cities} disabled={false} />
+          </div>
+
           {(selectedSpecies || selectedBreed || selectedAge || selectedFee || selectedCity || searchQuery) && (
-            <div className="flex flex-wrap gap-2"><span className="text-sm font-medium text-gray-600">Applied Filters:</span>{searchQuery && <FilterBadge label="Search" value={searchQuery} onClear={() => clearFilter("search")} />}{selectedSpecies && <FilterBadge label="Species" value={selectedSpecies} onClear={() => clearFilter("species")} />}{selectedBreed && <FilterBadge label="Breed" value={selectedBreed} onClear={() => clearFilter("breed")} />}{selectedAge && <FilterBadge label="Age" value={selectedAge} onClear={() => clearFilter("age")} />}{selectedFee && <FilterBadge label="Fee" value={selectedFee} onClear={() => clearFilter("fee")} />}{selectedCity && <FilterBadge label="City" value={selectedCity} onClear={() => clearFilter("city")} />}<button onClick={clearAllFilters} className="px-3 py-1 ml-2 text-sm font-medium text-[#ffc929] transition-all duration-300 rounded-full bg-[#ffc929]/10 hover:bg-[#ffc929]/20 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/30" aria-label="Clear all filters">Clear All</button></div>
+            <div className="flex flex-wrap gap-2 mt-6">
+              <span className="text-sm font-medium text-gray-600">Applied Filters:</span>
+              {selectedSpecies && <FilterBadge label="Species" value={selectedSpecies} onClear={() => clearFilter("species")} />}
+              {selectedBreed && <FilterBadge label="Breed" value={selectedBreed} onClear={() => clearFilter("breed")} />}
+              {selectedAge && <FilterBadge label="Age" value={selectedAge} onClear={() => clearFilter("age")} />}
+              {selectedFee && <FilterBadge label="Fee" value={selectedFee} onClear={() => clearFilter("fee")} />}
+              {selectedCity && <FilterBadge label="City" value={selectedCity} onClear={() => clearFilter("city")} />}
+              {searchQuery && <FilterBadge label="Search" value={searchQuery} onClear={() => clearFilter("search")} />}
+              <button
+                onClick={clearAllFilters}
+                className="px-4 py-1.5 ml-2 text-sm font-medium text-[#ffc929] bg-[#ffc929]/10 hover:bg-[#ffc929]/20 transition-all duration-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#ffc929]/30"
+              >
+                Clear All
+              </button>
+            </div>
           )}
-          {filteredPets.length > 0 && <div className="text-center"><span className="inline-flex items-center gap-2 px-4 py-1.5 text-sm font-medium text-gray-600 bg-white border border-[#ffc929]/20 rounded-full shadow-sm"><PawPrint size={14} className="text-[#ffc929]" />{filteredPets.length} Pets Available</span></div>}
         </div>
+
         <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 transition-opacity duration-300 ${isAnimating ? "opacity-0" : "opacity-100"} animate-fadeIn`} style={{ animationDelay: "0.6s" }}>
           {currentPets.length > 0 ? currentPets.map((pet) => <PetCard key={pet._id} pet={pet} navigate={navigate} currencySymbol={currencySymbol} />) : (
             <div className="py-12 text-center col-span-full"><PawPrint size={48} className="mx-auto mb-4 text-[#ffc929]" /><h3 className="text-xl font-semibold text-gray-800">No Pets Found</h3><p className="mt-2 text-gray-600">Adjust your filters or search to find more pets.</p></div>
           )}
         </div>
+
         {filteredPets.length > petsPerPage && (
           <div className="flex items-center justify-center gap-4 mt-12 animate-fadeIn" style={{ animationDelay: "0.8s" }}>
             <button onClick={() => paginate(currentPage - 1)} disabled={currentPage === 1} className={`p-2 rounded-full ${currentPage === 1 ? "text-gray-300 cursor-not-allowed" : "text-[#ffc929] hover:bg-[#ffc929]/10"} transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/30`} aria-label="Previous page"><ChevronLeft size={24} /></button>

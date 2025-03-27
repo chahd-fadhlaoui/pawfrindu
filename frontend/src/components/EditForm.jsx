@@ -12,29 +12,8 @@ import {
 } from "lucide-react";
 import React, { useCallback, useMemo, useState } from "react";
 import ImageUpload from "../components/ImageUpload";
+import { breeds, ageRanges, SPECIES_OPTIONS } from "../assets/Pet"; // Adjust the path as needed
 
-// Data constants moved to a separate file in a real application
-const SPECIES_OPTIONS = [
-  { value: "dog", label: "Dog" },
-  { value: "cat", label: "Cat" },
-  { value: "other", label: "Other" }
-];
-
-const DOG_BREEDS = [
-  "German Shepherd", "Labrador Retriever", "Golden Retriever", "Bulldog", "Rottweiler",
-  "Beagle", "Poodle", "Siberian Husky", "Boxer", "Great Dane",
-];
-
-const CAT_BREEDS = [
-  "Persian", "Siamese", "Maine Coon", "British Shorthair", "Ragdoll",
-  "Bengal", "Sphynx", "Russian Blue", "American Shorthair", "Scottish Fold",
-];
-
-const AGE_RANGES = {
-  dog: ["puppy", "young", "adult", "senior"],
-  cat: ["kitten", "young", "adult", "senior"],
-  other: ["young", "adult", "senior"],
-};
 
 const TUNISIAN_CITIES = [
   "Tunis", "Sfax", "Sousse", "Kairouan", "Bizerte", "Gabès", "Ariana", "Gafsa",
@@ -52,7 +31,7 @@ const FORM_FIELDS = {
     errorMessage: "Species is required",
   },
   breed: {
-    required: (data) => data.species !== "other",
+    required: (data) => true, // Breed is required for all species now since breeds.other exists
     errorMessage: "Breed is required",
   },
   description: {
@@ -150,14 +129,15 @@ const EditForm = ({ formData, onChange, onSubmit, onCancel, loading }) => {
   // Memoized breed and age options based on selected species
   const availableBreeds = useMemo(() => {
     switch (formData.species) {
-      case "dog": return DOG_BREEDS;
-      case "cat": return CAT_BREEDS;
+      case "dog": return breeds.dog;
+      case "cat": return breeds.cat;
+      case "other": return breeds.other;
       default: return [];
     }
   }, [formData.species]);
 
   const availableAges = useMemo(() => {
-    return AGE_RANGES[formData.species] || AGE_RANGES.other;
+    return ageRanges[formData.species] || ageRanges.other;
   }, [formData.species]);
 
   // Handle input changes with validation
@@ -284,25 +264,15 @@ const EditForm = ({ formData, onChange, onSubmit, onCancel, loading }) => {
                   label="Breed" 
                   error={errors.breed}
                 >
-                  {formData.species === "other" ? (
-                    <InputField
-                      icon={<Star />}
-                      placeholder="e.g., Rabbit"
-                      value={formData.breed}
-                      onChange={(e) => handleInputChange("breed", e.target.value)}
-                      error={errors.breed}
-                    />
-                  ) : (
-                    <SelectField
-                      icon={<Star />}
-                      value={formData.breed}
-                      onChange={(e) => handleInputChange("breed", e.target.value)}
-                      options={availableBreeds}
-                      error={errors.breed}
-                      required={formData.species !== "other"}
-                      disabled={!formData.species}
-                    />
-                  )}
+                  <SelectField
+                    icon={<Star />}
+                    value={formData.breed}
+                    onChange={(e) => handleInputChange("breed", e.target.value)}
+                    options={availableBreeds}
+                    error={errors.breed}
+                    required
+                    disabled={!formData.species}
+                  />
                 </FormField>
               </div>
 
@@ -330,9 +300,9 @@ const EditForm = ({ formData, onChange, onSubmit, onCancel, loading }) => {
                     icon={<Calendar />}
                     value={formData.age}
                     onChange={(e) => handleInputChange("age", e.target.value)}
-                    options={availableAges.map(age => ({
-                      value: age,
-                      label: age.charAt(0).toUpperCase() + age.slice(1)
+                    options={availableAges.map(range => ({
+                      value: range.value,
+                      label: range.label // Display label with years
                     }))}
                     error={errors.age}
                     required

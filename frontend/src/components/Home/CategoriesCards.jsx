@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useContext } from 'react'; // Ajout de useContext
+import { ArrowRight, Bird, Cat, Dog, HandHeartIcon, Stethoscope } from 'lucide-react';
+import React, { useContext, useEffect, useState } from 'react'; // Ajout de useContext
 import { Link } from 'react-router-dom';
-import { ArrowRight, HandHeartIcon, Dog, Cat, Bird, Stethoscope } from 'lucide-react';
-import { AppContext } from '../context/AppContext'; // Importer AppContext
+import { AppContext } from '../../context/AppContext'; // Importer AppContext
 
 const CategoryCard = ({ category, isHovered, onHover }) => {
   return (
@@ -175,7 +175,7 @@ const CategoriesSection = () => {
           {loading ? (
             Array(4).fill(null).map((_, i) => <CategorySkeleton key={`skeleton-${i}`} />)
           ) : error ? (
-            <div className="col-span-full text-center text-red-600">Error: {error}</div>
+            <div className="text-center text-red-600 col-span-full">Error: {error}</div>
           ) : (
             categories.map((category) => (
               <CategoryCard

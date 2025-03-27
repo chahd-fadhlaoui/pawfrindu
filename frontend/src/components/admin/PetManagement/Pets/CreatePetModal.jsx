@@ -1,44 +1,21 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   AlertCircle,
-  PawPrint,
-  Info,
-  X,
-  Save,
-  Camera,
   Calendar,
-  Star,
-  MapPin,
+  Camera,
   Coins,
-  Zap
+  Info,
+  MapPin,
+  PawPrint,
+  Star,
+  X,
+  Zap,
 } from "lucide-react";
+import React, { useCallback, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
+import { ageRanges, breeds, SPECIES_OPTIONS } from "../../../../assets/Pet";
 import ImageUpload from "../../../ImageUpload";
 
-// Constants for form options
-const SPECIES_OPTIONS = [
-  { value: "", label: "Select Species" },
-  { value: "dog", label: "Dog" },
-  { value: "cat", label: "Cat" },
-  { value: "other", label: "Other" }
-];
-
-const DOG_BREEDS = [
-  "German Shepherd", "Labrador Retriever", "Golden Retriever", "Bulldog", "Rottweiler",
-  "Beagle", "Poodle", "Siberian Husky", "Boxer", "Great Dane",
-];
-
-const CAT_BREEDS = [
-  "Persian", "Siamese", "Maine Coon", "British Shorthair", "Ragdoll",
-  "Bengal", "Sphynx", "Russian Blue", "American Shorthair", "Scottish Fold",
-];
-
-const AGE_OPTIONS = {
-  dog: ["puppy", "young", "adult", "senior"],
-  cat: ["kitten", "young", "adult", "senior"],
-  other: ["young", "adult", "senior"],
-};
-
+// Constants for form options (GENDER_OPTIONS remains unchanged)
 const GENDER_OPTIONS = [
   { value: "", label: "Select Gender" },
   { value: "male", label: "Male" },
@@ -82,14 +59,15 @@ const FORM_FIELDS = {
   image: {
     required: true,
     errorMessage: "Please upload an image",
-  }
+  },
 };
 
-// Reusable form components
+// Reusable form components (unchanged)
 export const FormField = ({ label, error, icon, children }) => (
   <div>
     <label className="flex items-center block gap-1 mb-1 text-sm font-medium text-gray-700">
-      {icon && React.cloneElement(icon, { size: 14, className: "text-pink-500" })}
+      {icon &&
+        React.cloneElement(icon, { size: 14, className: "text-pink-500" })}
       {label}
       {label && <span className="text-pink-500">*</span>}
     </label>
@@ -102,15 +80,30 @@ export const FormField = ({ label, error, icon, children }) => (
   </div>
 );
 
-export const SelectField = ({ icon, value, onChange, error, options, disabled = false, required = false, placeholder = "Select" }) => (
+export const SelectField = ({
+  icon,
+  value,
+  onChange,
+  error,
+  options,
+  disabled = false,
+  required = false,
+  placeholder = "Select",
+}) => (
   <div className="relative">
-    {icon && React.cloneElement(icon, { 
-      size: 16, 
-      className: "absolute transform -translate-y-1/2 left-2 top-1/2 text-pink-500" 
-    })}
+    {icon &&
+      React.cloneElement(icon, {
+        size: 16,
+        className:
+          "absolute transform -translate-y-1/2 left-2 top-1/2 text-pink-500",
+      })}
     <select
-      className={`w-full ${icon ? "pl-8" : "pl-3"} pr-2 py-2 text-sm text-gray-800 bg-white border rounded-lg transition-all duration-300 ${
-        error ? "border-red-400" : "border-gray-200 hover:border-pink-300 focus:border-pink-400"
+      className={`w-full ${
+        icon ? "pl-8" : "pl-3"
+      } pr-2 py-2 text-sm text-gray-800 bg-white border rounded-lg transition-all duration-300 ${
+        error
+          ? "border-red-400"
+          : "border-gray-200 hover:border-pink-300 focus:border-pink-400"
       } focus:outline-none focus:ring-2 focus:ring-pink-200`}
       value={value || ""}
       onChange={onChange}
@@ -119,25 +112,43 @@ export const SelectField = ({ icon, value, onChange, error, options, disabled = 
     >
       <option value="">{placeholder}</option>
       {options.map((option) => (
-        <option key={typeof option === 'string' ? option : option.value} value={typeof option === 'string' ? option : option.value}>
-          {typeof option === 'string' ? option : option.label}
+        <option
+          key={typeof option === "string" ? option : option.value}
+          value={typeof option === "string" ? option : option.value}
+        >
+          {typeof option === "string" ? option : option.label}
         </option>
       ))}
     </select>
   </div>
 );
 
-export const InputField = ({ icon, type = "text", value, onChange, error, placeholder, min, required = false }) => (
+export const InputField = ({
+  icon,
+  type = "text",
+  value,
+  onChange,
+  error,
+  placeholder,
+  min,
+  required = false,
+}) => (
   <div className="relative">
-    {icon && React.cloneElement(icon, { 
-      size: 16, 
-      className: "absolute transform -translate-y-1/2 left-2 top-1/2 text-pink-500" 
-    })}
+    {icon &&
+      React.cloneElement(icon, {
+        size: 16,
+        className:
+          "absolute transform -translate-y-1/2 left-2 top-1/2 text-pink-500",
+      })}
     <input
       type={type}
       placeholder={placeholder}
-      className={`w-full ${icon ? "pl-8" : "pl-3"} pr-3 py-2 text-sm text-gray-800 bg-white border rounded-lg transition-all duration-300 ${
-        error ? "border-red-400" : "border-gray-200 hover:border-pink-300 focus:border-pink-400"
+      className={`w-full ${
+        icon ? "pl-8" : "pl-3"
+      } pr-3 py-2 text-sm text-gray-800 bg-white border rounded-lg transition-all duration-300 ${
+        error
+          ? "border-red-400"
+          : "border-gray-200 hover:border-pink-300 focus:border-pink-400"
       } focus:outline-none focus:ring-2 focus:ring-pink-200`}
       value={value || ""}
       onChange={onChange}
@@ -166,41 +177,44 @@ const CreatePetModal = ({ isOpen, onClose, onCreate }) => {
 
   // Memoized breed and age options based on selected species
   const availableBreeds = useMemo(() => {
-    switch (petData.species) {
-      case "dog": return DOG_BREEDS;
-      case "cat": return CAT_BREEDS;
-      default: return [];
-    }
+    return petData.species ? breeds[petData.species] || [] : [];
   }, [petData.species]);
 
   const availableAges = useMemo(() => {
-    return petData.species ? AGE_OPTIONS[petData.species] || AGE_OPTIONS.other : [];
+    return petData.species ? ageRanges[petData.species] || [] : [];
   }, [petData.species]);
 
   // Handle input changes with validation
-  const handleInputChange = useCallback((field, value) => {
-    setPetData(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: "" }));
-    }
-  }, [errors]);
+  const handleInputChange = useCallback(
+    (field, value) => {
+      setPetData((prev) => ({ ...prev, [field]: value }));
+      if (errors[field]) {
+        setErrors((prev) => ({ ...prev, [field]: "" }));
+      }
+    },
+    [errors]
+  );
 
   // Form validation
   const validateForm = useCallback(() => {
     const newErrors = {};
-    
+
     Object.entries(FORM_FIELDS).forEach(([field, config]) => {
-      const isRequired = typeof config.required === 'function' 
-        ? config.required(petData) 
-        : config.required;
+      const isRequired =
+        typeof config.required === "function"
+          ? config.required(petData)
+          : config.required;
 
       if (isRequired && !petData[field]) {
         newErrors[field] = config.errorMessage;
-      } else if (config.validator && !config.validator(petData[field], petData)) {
+      } else if (
+        config.validator &&
+        !config.validator(petData[field], petData)
+      ) {
         newErrors[field] = config.errorMessage;
       }
     });
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }, [petData]);
@@ -229,7 +243,10 @@ const CreatePetModal = ({ isOpen, onClose, onCreate }) => {
       });
       onClose();
     } catch (err) {
-      setErrors(prev => ({ ...prev, form: err.message || "Failed to create pet" }));
+      setErrors((prev) => ({
+        ...prev,
+        form: err.message || "Failed to create pet",
+      }));
     } finally {
       setLoading(false);
     }
@@ -304,8 +321,8 @@ const CreatePetModal = ({ isOpen, onClose, onCreate }) => {
               </h4>
 
               {/* Name */}
-              <FormField 
-                label="Pet Name" 
+              <FormField
+                label="Pet Name"
                 error={errors.name}
                 icon={<PawPrint />}
               >
@@ -321,63 +338,47 @@ const CreatePetModal = ({ isOpen, onClose, onCreate }) => {
 
               {/* Species and Breed */}
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <FormField 
-                  label="Species" 
+                <FormField
+                  label="Species"
                   error={errors.species}
                   icon={<PawPrint />}
                 >
                   <SelectField
                     value={petData.species}
-                    onChange={(e) => handleInputChange("species", e.target.value)}
-                    options={SPECIES_OPTIONS.filter(opt => opt.value !== "")}
+                    onChange={(e) =>
+                      handleInputChange("species", e.target.value)
+                    }
+                    options={SPECIES_OPTIONS}
                     error={errors.species}
                     placeholder="Select Species"
                     required
                     icon={<PawPrint />}
                   />
                 </FormField>
-                
-                <FormField 
-                  label="Breed" 
-                  error={errors.breed}
-                  icon={<Star />}
-                >
-                  {petData.species === "other" ? (
-                    <InputField
-                      placeholder="e.g., Rabbit"
-                      value={petData.breed}
-                      onChange={(e) => handleInputChange("breed", e.target.value)}
-                      error={errors.breed}
-                      icon={<Star />}
-                    />
-                  ) : (
-                    <SelectField
-                      value={petData.breed}
-                      onChange={(e) => handleInputChange("breed", e.target.value)}
-                      options={availableBreeds}
-                      error={errors.breed}
-                      required={petData.species !== "other"}
-                      disabled={!petData.species}
-                      placeholder="Select Breed"
-                      icon={<Star />}
-                    />
-                  )}
+
+                <FormField label="Breed" error={errors.breed} icon={<Star />}>
+                  <SelectField
+                    value={petData.breed}
+                    onChange={(e) => handleInputChange("breed", e.target.value)}
+                    options={availableBreeds}
+                    error={errors.breed}
+                    required={petData.species !== "other"}
+                    disabled={!petData.species}
+                    placeholder="Select Breed"
+                    icon={<Star />}
+                  />
                 </FormField>
               </div>
 
               {/* Age and Gender */}
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <FormField 
-                  label="Age" 
-                  error={errors.age}
-                  icon={<Calendar />}
-                >
+                <FormField label="Age" error={errors.age} icon={<Calendar />}>
                   <SelectField
                     value={petData.age}
                     onChange={(e) => handleInputChange("age", e.target.value)}
-                    options={availableAges.map(age => ({
-                      value: age,
-                      label: age.charAt(0).toUpperCase() + age.slice(1)
+                    options={availableAges.map((age) => ({
+                      value: age.value,
+                      label: age.label,
                     }))}
                     error={errors.age}
                     required
@@ -386,16 +387,18 @@ const CreatePetModal = ({ isOpen, onClose, onCreate }) => {
                     icon={<Calendar />}
                   />
                 </FormField>
-                
-                <FormField 
-                  label="Gender" 
+
+                <FormField
+                  label="Gender"
                   error={errors.gender}
                   icon={<PawPrint />}
                 >
                   <SelectField
                     value={petData.gender}
-                    onChange={(e) => handleInputChange("gender", e.target.value)}
-                    options={GENDER_OPTIONS.filter(opt => opt.value !== "")}
+                    onChange={(e) =>
+                      handleInputChange("gender", e.target.value)
+                    }
+                    options={GENDER_OPTIONS.filter((opt) => opt.value !== "")}
                     error={errors.gender}
                     required
                     placeholder="Select Gender"
@@ -406,11 +409,7 @@ const CreatePetModal = ({ isOpen, onClose, onCreate }) => {
 
               {/* City and Training */}
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <FormField 
-                  label="City" 
-                  error={errors.city}
-                  icon={<MapPin />}
-                >
+                <FormField label="City" error={errors.city} icon={<MapPin />}>
                   <InputField
                     placeholder="e.g., Tunis"
                     value={petData.city}
@@ -421,16 +420,15 @@ const CreatePetModal = ({ isOpen, onClose, onCreate }) => {
                   />
                 </FormField>
 
-                <FormField 
-                  label="Training"
-                  icon={<Zap />}
-                >
+                <FormField label="Training" icon={<Zap />}>
                   <SelectField
                     value={petData.isTrained ? "true" : "false"}
-                    onChange={(e) => handleInputChange("isTrained", e.target.value === "true")}
+                    onChange={(e) =>
+                      handleInputChange("isTrained", e.target.value === "true")
+                    }
                     options={[
                       { value: "true", label: "Trained" },
-                      { value: "false", label: "Not Trained" }
+                      { value: "false", label: "Not Trained" },
                     ]}
                     icon={<Zap />}
                   />
@@ -438,39 +436,46 @@ const CreatePetModal = ({ isOpen, onClose, onCreate }) => {
               </div>
 
               {/* Fee */}
-              <FormField 
-                label="Adoption Fee"
-                icon={<Coins />}
-              >
+              <FormField label="Adoption Fee" icon={<Coins />}>
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                   <SelectField
                     value={petData.feeOption}
                     onChange={(e) => {
                       handleInputChange("feeOption", e.target.value);
-                      if (e.target.value === "Free") handleInputChange("fee", 0);
+                      if (e.target.value === "Free")
+                        handleInputChange("fee", 0);
                     }}
                     options={[
                       { value: "Free", label: "Free" },
-                      { value: "With Fee", label: "With Fee" }
+                      { value: "With Fee", label: "With Fee" },
                     ]}
                     icon={<Coins />}
                   />
-                  
+
                   {petData.feeOption === "With Fee" && (
                     <div className="relative">
-                      <Coins size={16} className="absolute text-pink-500 transform -translate-y-1/2 left-2 top-1/2" />
+                      <Coins
+                        size={16}
+                        className="absolute text-pink-500 transform -translate-y-1/2 left-2 top-1/2"
+                      />
                       <input
                         type="number"
                         placeholder="e.g., 50"
                         className={`w-full pl-8 pr-10 py-2 text-sm text-gray-800 bg-white border rounded-lg transition-all duration-300 ${
-                          errors.fee ? "border-red-400" : "border-gray-200 hover:border-pink-300 focus:border-pink-400"
+                          errors.fee
+                            ? "border-red-400"
+                            : "border-gray-200 hover:border-pink-300 focus:border-pink-400"
                         } focus:outline-none focus:ring-2 focus:ring-pink-200`}
                         value={petData.fee || ""}
-                        onChange={(e) => handleInputChange("fee", e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("fee", e.target.value)
+                        }
                         min="1"
                         required={petData.feeOption === "With Fee"}
                       />
-                      <span className="absolute text-xs font-medium text-gray-600 transform -translate-y-1/2 right-3 top-1/2">TND</span>
+                      <span className="absolute text-xs font-medium text-gray-600 transform -translate-y-1/2 right-3 top-1/2">
+                        TND
+                      </span>
                       {errors.fee && (
                         <p className="flex items-center gap-1 mt-1 text-xs text-red-500">
                           <AlertCircle size={12} /> {errors.fee}
@@ -482,18 +487,22 @@ const CreatePetModal = ({ isOpen, onClose, onCreate }) => {
               </FormField>
 
               {/* Description */}
-              <FormField 
-                label="Description" 
+              <FormField
+                label="Description"
                 error={errors.description}
                 icon={<Info />}
               >
                 <textarea
                   placeholder="Describe the pet (e.g., temperament, needs, history)"
                   className={`w-full p-3 text-sm text-gray-800 bg-white border rounded-lg transition-all duration-300 ${
-                    errors.description ? "border-red-400" : "border-gray-200 hover:border-pink-300 focus:border-pink-400"
+                    errors.description
+                      ? "border-red-400"
+                      : "border-gray-200 hover:border-pink-300 focus:border-pink-400"
                   } focus:outline-none focus:ring-2 focus:ring-pink-200 min-h-[80px]`}
                   value={petData.description || ""}
-                  onChange={(e) => handleInputChange("description", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("description", e.target.value)
+                  }
                   required
                 />
               </FormField>
@@ -522,8 +531,19 @@ const CreatePetModal = ({ isOpen, onClose, onCreate }) => {
             >
               {loading && (
                 <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8h8a8 8 0 01-8 8 8 8 0 01-8-8z" />
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v8h8a8 8 0 01-8 8 8 8 0 01-8-8z"
+                  />
                 </svg>
               )}
               {loading ? "Creating..." : "Create Pet"}

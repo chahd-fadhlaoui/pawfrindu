@@ -11,6 +11,7 @@ import {
   BarChart4,
   Settings,
   Bell,
+  LucidePawPrint,
 } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 
@@ -41,13 +42,12 @@ const Sidebar = ({ activeTab, setActiveTab, isCollapsed, setIsCollapsed }) => {
 
   const menuItems = [
     { icon: BarChart4, label: "Dashboard", key: "dashboard" },
-    { icon: Heart, label: "Pets", key: "pets" },
+    { icon: PawPrint, label: "Pets", key: "pets" },
     { icon: Users, label: "Users", key: "users" },
   ];
 
   const systemItems = [
     { icon: Settings, label: "Settings", key: "settings" },
-    { icon: Bell, label: "Notifications", key: "notifications" },
   ];
 
   return (

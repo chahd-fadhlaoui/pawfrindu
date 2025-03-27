@@ -1,7 +1,7 @@
-import { ArrowRight, HandHeartIcon } from "lucide-react"; // Retiré Heart si non utilisé
-import React, { useContext } from "react"; // Ajout de useContext
-import dogImage from '../assets/dogHero.png';
-import { AppContext } from '../context/AppContext'; // Importer AppContext
+import { ArrowRight, HandHeartIcon } from "lucide-react"; 
+import React, { useContext } from "react"; 
+import { AppContext } from '../../context/AppContext'; 
+import dogImage from '../../assets/images/dogHero.png';
 
 const PawIcon = ({ className, style }) => (
   <svg
@@ -76,7 +76,7 @@ const HeroSection = () => {
                   PawFrindu
                 </i>
                 {user && user.fullName && (
-                <span className=" ml-2 text-pink-500 italic">
+                <span className="ml-2 italic text-pink-500 ">
                 {user.fullName}
               </span>
                 )}
