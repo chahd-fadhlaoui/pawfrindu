@@ -24,12 +24,19 @@ import Pets from './pages/Pets';
 import Profile from './pages/Profile';
 import TrainerDashboard from './pages/Trainer/TrainerDashboard';
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import  VetDashboard from './pages/VetDashboard/VetDashboard';
 import Veteriniandetail from './pages/Veteriniandetail';
 import Veterinarians from './pages/VetAppointment/Veterinarians';
 import VetDetails from './pages/VetAppointment/VetDetails';
 import "leaflet/dist/leaflet.css";
 import VetPendingApproval from './pages/VetDashboard/VetPendingApproval';
+=======
+import { VetDashboard } from './pages/Vet/VetDashboard';
+import VetDetails from './pages/VetAppointment/VetDetails';
+import Veterinarians from './pages/VetAppointment/Veterinarians';
+import Veteriniandetail from './pages/Veteriniandetail';
+>>>>>>> Stashed changes
 =======
 import { VetDashboard } from './pages/Vet/VetDashboard';
 import VetDetails from './pages/VetAppointment/VetDetails';
@@ -93,7 +100,11 @@ const AppRoutes = () => {
       <Route path="/addPet" element={<ProtectedRoute allowedRoles={["PetOwner"]}><CreatePet /></ProtectedRoute>} />
       <Route path="/pet-listing" element={<ProtectedRoute allowedRoles={["PetOwner"]}><PetPostsTab /></ProtectedRoute>} />
       <Route path="/adoption-requests" element={<ProtectedRoute allowedRoles={["PetOwner"]}><AdoptionRequestsTab /></ProtectedRoute>} />
+<<<<<<< Updated upstream
       <Route path="/list/*" element={<ProtectedRoute allowedRoles={["PetOwner"]}><PetManagementDashboard /></ProtectedRoute>} />
+=======
+      <Route path="/list" element={<ProtectedRoute allowedRoles={["PetOwner"]}><PetManagementDashboard /></ProtectedRoute>} />
+>>>>>>> Stashed changes
       <Route path="/profile" element={<ProtectedRoute allowedRoles={["PetOwner", "Trainer", "Vet"]}><Profile /></ProtectedRoute>} />
       <Route path="/myprofile" element={<ProtectedRoute allowedRoles={["PetOwner", "Trainer", "Vet"]}><CreateProfile /></ProtectedRoute>} />
       <Route path="/candidates/:petId" element={<ProtectedRoute allowedRoles={["PetOwner", "Trainer", "Vet"]}><CandidatesPage /></ProtectedRoute>} />
