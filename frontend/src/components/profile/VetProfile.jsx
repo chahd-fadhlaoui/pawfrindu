@@ -892,9 +892,7 @@ const renderStep4 = () => (
             <select
               value={formData.veterinarianDetails.governorate || ""}
               onChange={(e) => handleInputChange("veterinarianDetails", "governorate", e.target.value)}
-              className={`w-full pl-4 pr-10 py-3 text-sm border rounded-lg appearance-none focus:ring-teal-500 focus:border-teal-500 ${
-                formErrors.governorate ? "border-red-500" : "border-gray-300"
-              }`}
+              className={`w-full pl-4 pr-10 py-3 text-sm border rounded-lg appearance-none focus:ring-teal-500 focus:border-teal-500 ${formErrors.governorate ? "border-red-500" : "border-gray-300"}`}
             >
               <option value="" disabled>Select Governorate</option>
               {governorates.map((gov) => (
@@ -903,40 +901,30 @@ const renderStep4 = () => (
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
               <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path
-                  fillRule="evenodd"
-                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                />
+                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
               </svg>
             </div>
           </div>
           {formErrors.governorate && <p className="text-sm text-red-500 mt-1">{formErrors.governorate}</p>}
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">City <span className="text-red-500">*</span></label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Delegation <span className="text-red-500">*</span></label>
           <div className="relative">
             <select
               value={formData.veterinarianDetails.delegation || ""}
               onChange={(e) => handleInputChange("veterinarianDetails", "delegation", e.target.value)}
-              className={`w-full pl-4 pr-10 py-3 text-sm border rounded-lg appearance-none focus:ring-teal-500 focus:border-teal-500 ${
-                formErrors.delegation ? "border-red-500" : "border-gray-300"
-              }`}
+              className={`w-full pl-4 pr-10 py-3 text-sm border rounded-lg appearance-none focus:ring-teal-500 focus:border-teal-500 ${formErrors.delegation ? "border-red-500" : "border-gray-300"}`}
               disabled={!formData.veterinarianDetails.governorate}
             >
-              <option value="" disabled>Select City</option>
+              <option value="" disabled>Select Delegation</option>
               {formData.veterinarianDetails.governorate &&
-                delegationsByGovernorate[formData.veterinarianDetails.governorate]?.map((city) => (
-                  <option key={city} value={city}>{city}</option>
+                delegationsByGovernorate[formData.veterinarianDetails.governorate]?.map((delegation) => (
+                  <option key={delegation} value={delegation}>{delegation}</option>
                 ))}
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
               <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path
-                  fillRule="evenodd"
-                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                />
+                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
               </svg>
             </div>
           </div>
@@ -944,9 +932,8 @@ const renderStep4 = () => (
         </div>
       </div>
 
-  
+                
 
-      {/* Map Location with Leaflet */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Map Location</label>
         <MapPicker
@@ -955,31 +942,35 @@ const renderStep4 = () => (
             handleInputChange("veterinarianDetails", "geolocation", newPosition)
           }
         />
-     
+        <button
+          type="button"
+          onClick={getCurrentLocation}
+          className="mt-2 w-full px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors flex items-center justify-center"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          Use Current Location
+        </button>
       </div>
 
-      {/* Clinic Images */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Clinic Images</label>
         <div className="flex flex-col items-center p-5 border-2 border-gray-300 border-dashed rounded-lg hover:bg-gray-50 transition-colors">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-10 w-10 text-gray-400 mb-2"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-            />
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
           <p className="text-sm text-gray-500 mb-2">Drag & drop images here, or click to select</p>
           <label className="px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 cursor-pointer transition-colors">
             Upload Images
-            <input type="file" className="hidden" accept="image/*" multiple onChange={handleClinicImagesUpload} />
+            <input
+              type="file"
+              className="hidden"
+              accept="image/*"
+              multiple
+              onChange={handleClinicImagesUpload}
+            />
           </label>
         </div>
 
@@ -987,19 +978,17 @@ const renderStep4 = () => (
           <div className="mt-4 grid grid-cols-3 sm:grid-cols-4 gap-3">
             {formData.veterinarianDetails.clinicPhotos.map((img, index) => (
               <div key={index} className="relative h-24 rounded-lg overflow-hidden">
-                <img src={img} alt={`Clinic image ${index + 1}`} className="h-full w-full object-cover" />
+                <img
+                  src={img}
+                  alt={`Clinic image ${index + 1}`}
+                  className="h-full w-full object-cover"
+                />
                 <button
                   type="button"
                   onClick={() => removeClinicPhoto(index)}
                   className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-4 w-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
