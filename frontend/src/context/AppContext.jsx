@@ -7,6 +7,7 @@ import {
   useState,
 } from "react";
 import axiosInstance from "../utils/axiosInstance";
+import socket, { disconnectSocket, initializeSocket } from "../utils/socket";
 
 const DEFAULT_PROFILE_IMAGE =
   "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSIxMDAiIGZpbGw9IiNFNUU3RUIiLz4KICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSI4MCIgcj0iNDAiIGZpbGw9IiM5Q0EzQUYiLz4KICA8cGF0aCBkPSJNMTYwIDE4MEgzOUM0MSAxNDAgODAgMTIwIDEwMCAxMjBDMTIwIDEyMCAxNTggMTQwIDE2MCAxODBaIiBmaWxsPSIjOUNBM0FGIi8+Cjwvc3ZnPg==";
@@ -25,13 +26,10 @@ const AppContextProvider = ({ children }) => {
   const [pets, setPets] = useState([]);
   const [userPets, setUserPets] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
-  const [lastPetFetchTime, setLastPetFetchTime] = useState(0);
-  const [lastUsersFetchTime, setLastUsersFetchTime] = useState(0);
-  const [refreshTrigger, setRefreshTrigger] = useState({ pets: 0, users: 0 }); // Split refresh triggers
-  const currencySymbol = "Dt";
-  const CACHE_DURATION = 60000; // 60 seconds
+  const [applications, setApplications] = useState([]);
+  const currencySymbol = "TND";
 
-  // Custom timing utility to avoid console.time conflicts
+  // Custom timing utility
   const measureTime = async (label, fn) => {
     const start = performance.now();
     try {
@@ -59,7 +57,7 @@ const AppContextProvider = ({ children }) => {
       const response = await axiosInstance.get("/api/user/me");
       const authenticatedUser = ensureUserHasImage({
         ...response.data.user,
-        adminType: response.data.user.adminType, // Inclure adminType
+        adminType: response.data.user.adminType,
       });
       setUser(authenticatedUser);
       console.log("checkAuth succeeded with user:", authenticatedUser);
@@ -74,26 +72,12 @@ const AppContextProvider = ({ children }) => {
     });
   }, []);
 
-
   const fetchPets = useCallback(async () => {
     return measureTime("fetchPets", async () => {
       console.log("Fetching fresh pets from /api/pet/allpets");
-
       const response = await axiosInstance.get("/api/pet/allpets");
       const petsData = response.data.data || [];
-      console.log("Fetched pets:", JSON.stringify(petsData, null, 2));
-
-      setPets((prevPets) => {
-        // Only update if data has changed
-        if (JSON.stringify(prevPets) !== JSON.stringify(petsData)) {
-          console.log("Pets updated due to data change");
-          return petsData;
-        }
-        console.log("Pets unchanged, skipping update");
-        return prevPets;
-      });
-
-      setLastPetFetchTime(Date.now());
+      setPets(petsData);
       return petsData;
     }).catch((error) => {
       console.error("Error fetching pets:", error);
@@ -102,35 +86,33 @@ const AppContextProvider = ({ children }) => {
     });
   }, []);
 
-  
   const fetchAllUsers = useCallback(async () => {
-    const now = Date.now();
-    if (allUsers.length > 0 && now - lastUsersFetchTime < CACHE_DURATION) {
-      return allUsers;
-    }
     return measureTime("fetchAllUsers", async () => {
       const response = await axiosInstance.get("/api/user/getAllUsers");
       const usersData = response.data.users || [];
       setAllUsers(usersData);
-      setLastUsersFetchTime(now);
       return usersData;
     }).catch((error) => {
+      console.error("Error fetching users:", error);
       setError("Failed to fetch users");
-      return [];
+      return allUsers;
     });
-  }, [allUsers, lastUsersFetchTime]);
+  }, []);
 
   const getMyPets = useCallback(async () => {
     return measureTime("getMyPets", async () => {
       const response = await axiosInstance.get("/api/pet/mypets");
-      console.log("getMyPets response:", response.data); // Debug
       const userPetsData = response.data.data || [];
       setUserPets(userPetsData);
       return { success: true, data: userPetsData };
     }).catch((error) => {
       console.error("Error fetching your pets:", error);
       setError("Failed to fetch your pets");
-      return { success: false, error: "Error fetching your pets", data: [] };
+      return {
+        success: false,
+        error: "Error fetching your pets",
+        data: userPets,
+      };
     });
   }, []);
 
@@ -144,7 +126,7 @@ const AppContextProvider = ({ children }) => {
         image: userData.image || DEFAULT_PROFILE_IMAGE,
         email: userData.email,
         role: userData.role,
-        adminType: userData.adminType, 
+        adminType: userData.adminType,
         about: userData.about || "",
         displayRole:
           userData.role === "PetOwner"
@@ -154,7 +136,7 @@ const AppContextProvider = ({ children }) => {
             : userData.role === "Trainer"
             ? "Pet Trainer"
             : userData.role === "Admin" && userData.adminType
-            ? userData.adminType // Utiliser adminType pour les admins
+            ? userData.adminType
             : userData.role,
         petOwnerDetails: userData.petOwnerDetails || {
           address: "Not provided",
@@ -164,7 +146,6 @@ const AppContextProvider = ({ children }) => {
         veterinarianDetails: userData.veterinarianDetails || undefined,
         createdAt: userData.createdAt,
       };
-      console.log("Fetched user data:", formattedUser);
       setUser(formattedUser);
       return formattedUser;
     }).catch((error) => {
@@ -174,84 +155,299 @@ const AppContextProvider = ({ children }) => {
     });
   }, []);
 
-// method for fetching adoption requests
-const getMyAdoptionRequests = useCallback(async () => {
-  return measureTime("getMyAdoptionRequests", async () => {
-    const token = localStorage.getItem("token");
-    console.log("Sending request to /my-adoption-requests with token:", token);
-    const response = await axiosInstance.get("/api/pet/my-adoption-requests");
-    console.log("Adoption requests response:", response.data);
-    const adoptionRequests = response.data.data || [];
-    return { success: true, data: adoptionRequests };
-  }).catch((error) => {
-    console.error("Error fetching adoption requests:", error.response?.data || error.message);
-    setError(error.response?.data?.message || "Failed to fetch adoption requests");
-    return { success: false, error: "Error fetching adoption requests", data: [] };
-  });
-}, [setError]);
-
-const triggerRefresh = useCallback(
-  async (type = "pets") => {
-    console.log("triggerRefresh called from:", new Error().stack.split("\n")[2]);
-    let newData;
-    if (type === "pets") {
-      newData = await fetchPets();
-      setRefreshTrigger((prev) => ({ ...prev, pets: prev.pets + 1 }));
-    } else if (type === "users") {
-      newData = await fetchAllUsers();
-      setRefreshTrigger((prev) => ({ ...prev, users: prev.users + 1 }));
+  const getMyAdoptionRequests = useCallback(async () => {
+    try {
+      const response = await axiosInstance.get("/api/pet/my-adoption-requests");
+      const adoptionRequests = response.data.data || [];
+      setApplications(adoptionRequests);
+      console.log(
+        "Fetched applications:",
+        adoptionRequests.map((app) => ({
+          petId: app.pet._id,
+          userId: app.user,
+          status: app.status,
+        }))
+      );
+      return { success: true, data: adoptionRequests };
+    } catch (error) {
+      console.error(
+        "Error fetching adoption requests:",
+        error.response?.data || error.message
+      );
+      setError(
+        error.response?.data?.message || "Failed to fetch adoption requests"
+      );
+      return {
+        success: false,
+        error: "Error fetching adoption requests",
+        data: applications,
+      };
     }
-    console.log(`triggerRefresh completed for ${type}, new data:`, newData);
-    return newData;
-  },
-  [fetchPets, fetchAllUsers]
-);
+  }, []);
 
-  // Initialize app
-  useEffect(() => {
-    const initialize = async () => {
+  const logout = useCallback(() => {
+    axiosInstance.setAuthToken(null);
+    localStorage.removeItem("token");
+    disconnectSocket();
+    setUser(null);
+    setUserPets([]);
+    setAllUsers([]);
+    setApplications([]);
+    setError("");
+  }, []);
+
+  const triggerRefresh = useCallback(
+    async (type) => {
       setLoading(true);
       try {
-        await fetchPets(); // Always fetch pets
-        const token = localStorage.getItem("token");
-        if (token && !user) {
-          // Only run if no user is set
-          const isAuthenticated = await checkAuth();
-          if (isAuthenticated) {
-            const currentUser = await fetchUserProfile(); // Fetch user first
-            const fetchPromises = [];
-            if (currentUser.role === "PetOwner" && userPets.length === 0) {
-              fetchPromises.push(getMyPets()); // Fetch pets for PetOwner
-            }
-            if (currentUser.role === "Admin") {
-              fetchPromises.push(fetchAllUsers()); // Fetch users for Admin after user is set
-            }
-            await Promise.all(fetchPromises);
-            console.log("Initialization succeeded")
-          } else {
-            console.log("Initial auth check failed");
-            localStorage.removeItem("token"); // Clear invalid token
+        if (type === "pets" || !type) {
+          await fetchPets();
+          console.log("User role:", user?.role); // Log role
+          if (user?.role === "PetOwner" || user?.role === "Admin") {
+            console.log("Calling getMyPets for user:", user?._id);
+            await getMyPets();
           }
-        } else if (!token) {
-          console.log("No token, skipping initialization");
+          if (user?.role === "Admin") await fetchAllUsers();
+          await getMyAdoptionRequests();
         }
-      } catch (error) {
-        console.error("Initialization failed:", error);
+      } catch (err) {
+        setError("Failed to refresh data");
+        console.error("Refresh error:", err);
       } finally {
         setLoading(false);
       }
-    };
-    initialize();
+    },
+    [fetchPets, getMyPets, fetchAllUsers, getMyAdoptionRequests, user]
+  );
+
+  // Connect socket only if not already connected
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      initializeSocket(token);
+    }
   }, []); 
 
-  // Refresh pets when triggered
+  // Socket.IO event listeners
   useEffect(() => {
-    if (refreshTrigger > 0) {
-      fetchPets().then(() => {
-        if (user?.role === "Admin") fetchAllUsers();
-      });
-    }
-  }, [refreshTrigger, fetchPets, fetchAllUsers, user]);
+    socket.on("connect", () => {
+      console.log("Connected to Socket.IO server:", socket.id);
+    });
+
+    socket.on("petCreated", (data) => {
+      console.log("Pet created event:", data);
+      setPets((prev) => [...prev, data.pet]);
+      if (user?._id === data.pet.owner) {
+        setUserPets((prev) => [...prev, data.pet]);
+      }
+    });
+
+    socket.on("petUpdated", (data) => {
+      console.log("Pet updated event:", data);
+      setPets((prev) =>
+        prev.map((pet) =>
+          pet._id === data.petId ? { ...pet, ...data.updatedPet } : pet
+        )
+      );
+      setUserPets((prev) =>
+        prev.map((pet) =>
+          pet._id === data.petId ? { ...pet, ...data.updatedPet } : pet
+        )
+      );
+    });
+
+    socket.on("petDeleted", (data) => {
+      console.log("Pet deleted event:", data);
+      setPets((prev) => prev.filter((pet) => pet._id !== data.petId));
+      setUserPets((prev) => prev.filter((pet) => pet._id !== data.petId));
+    });
+
+    socket.on("petArchived", (data) => {
+      setPets((prev) =>
+        prev.map((pet) =>
+          pet._id === data.petId ? { ...pet, isArchived: true } : pet
+        )
+      );
+      setUserPets((prev) =>
+        prev.map((pet) =>
+          pet._id === data.petId ? { ...pet, isArchived: true } : pet
+        )
+      );
+    });
+    socket.on("petUnarchived", (data) => {
+      setPets((prev) =>
+        prev.map((pet) =>
+          pet._id === data.petId ? { ...pet, isArchived: false } : pet
+        )
+      );
+      setUserPets((prev) =>
+        prev.map((pet) =>
+          pet._id === data.petId ? { ...pet, isArchived: false } : pet
+        )
+      );
+    });
+
+    socket.on("userRegistered", (data) => {
+      console.log("User registered event:", data);
+      if (user?.role === "Admin") {
+        setAllUsers((prev) => [...prev, data]);
+      }
+    });
+
+    socket.on("userProfileCompleted", (data) => {
+      console.log("User profile completed event:", data);
+      if (user?._id === data.userId) {
+        setUser((prev) => ensureUserHasImage({ ...prev, ...data }));
+      }
+      if (user?.role === "Admin") {
+        setAllUsers((prev) =>
+          prev.map((u) => (u._id === data.userId ? { ...u, ...data } : u))
+        );
+      }
+    });
+
+    socket.on("userProfileUpdated", (data) => {
+      console.log("User profile updated event:", data);
+      if (user?._id === data.userId) {
+        setUser((prev) => ensureUserHasImage({ ...prev, ...data }));
+      }
+      if (user?.role === "Admin") {
+        setAllUsers((prev) =>
+          prev.map((u) => (u._id === data.userId ? { ...u, ...data } : u))
+        );
+      }
+    });
+
+    socket.on("userUpdatedByAdmin", (data) => {
+      console.log("User updated by admin event:", data);
+      if (user?._id === data.userId) {
+        setUser((prev) => ensureUserHasImage({ ...prev, ...data }));
+      }
+      if (user?.role === "Admin") {
+        setAllUsers((prev) =>
+          prev.map((u) => (u._id === data.userId ? { ...u, ...data } : u))
+        );
+      }
+    });
+
+    socket.on("userApproved", (data) => {
+      console.log("User approved event:", data);
+      if (user?._id === data.userId) {
+        setUser((prev) => ({ ...prev, isActive: true }));
+      }
+      if (user?.role === "Admin") {
+        setAllUsers((prev) =>
+          prev.map((u) =>
+            u._id === data.userId ? { ...u, isActive: true } : u
+          )
+        );
+      }
+    });
+
+    socket.on("userDeletedByAdmin", (data) => {
+      console.log("User deleted by admin event:", data);
+      if (user?._id === data.userId) {
+        logout();
+      }
+      if (user?.role === "Admin") {
+        setAllUsers((prev) => prev.filter((u) => u._id !== data.userId));
+      }
+    });
+
+    socket.on("adoptionApplied", async (data) => {
+      console.log("Adoption applied event:", data);
+      if (user?._id === data.userId) {
+        // Optimistic update
+        setApplications((prev) => {
+          if (prev.some((app) => app.pet._id === data.petId)) {
+            return prev;
+          }
+          return [
+            ...prev,
+            {
+              pet: {
+                _id: data.petId,
+                name: data.petName,
+                species: data.species || "unknown",
+                city: data.city || "Unknown",
+                image: data.image || "Unknown",
+                gender: data.gender || "unknown",
+              },
+              status: "pending",
+              user: data.userId, // Ensure this matches backend structure
+            },
+          ];
+        });
+
+        // Sync with server
+        const result = await getMyAdoptionRequests();
+        if (result.success) {
+          setApplications(result.data);
+          console.log("Applications synced:", result.data);
+        } else {
+          setError(result.error || "Failed to sync adoption requests");
+        }
+      }
+    });
+
+    socket.on("candidateStatusUpdated", (data) => {
+      console.log("Candidate status updated event:", data);
+      setApplications((prev) =>
+        prev.map((app) =>
+          app.pet._id === data.petId && app.user === user?._id
+            ? { ...app, status: data.status }
+            : app
+        )
+      );
+    });
+
+    socket.on("adoptionFinalized", (data) => {
+      console.log("Adoption finalized event:", data);
+      setApplications((prev) =>
+        prev.map((app) =>
+          app.pet._id === data.petId && app.user === user?._id
+            ? {
+                ...app,
+                status: data.action === "adopt" ? "approved" : "rejected",
+              }
+            : app
+        )
+      );
+    });
+
+    socket.on("disconnect", () => {
+      console.log("Disconnected from Socket.IO server");
+      const token = localStorage.getItem("token");
+      if (token) {
+        console.log("Attempting to reconnect...");
+        initializeSocket(token);
+      }
+    });
+
+    return () => {
+      socket.off("connect");
+      socket.off("petCreated");
+      socket.off("petUpdated");
+      socket.off("petDeleted");
+      socket.off("petArchived");
+      socket.off("petUnarchived");
+      socket.off("userRegistered");
+      socket.off("userProfileCompleted");
+      socket.off("userProfileUpdated");
+      socket.off("userUpdatedByAdmin");
+      socket.off("userApproved");
+      socket.off("userDeletedByAdmin");
+      socket.off("adoptionApplied");
+      socket.off("candidateStatusUpdated");
+      socket.off("adoptionFinalized");
+      socket.off("disconnect");
+    };
+  }, [user, fetchPets]);
+
+  // Initialize app
+  useEffect(() => {
+    triggerRefresh();
+  }, [triggerRefresh]);
 
   // Auth functions
   const login = async (email, password) => {
@@ -266,21 +462,31 @@ const triggerRefresh = useCallback(
       const { accessToken, user: userData, redirectTo } = response.data;
       localStorage.setItem("token", accessToken);
       axiosInstance.setAuthToken(accessToken);
+      socket.auth = { token: accessToken };
+      socket.connect();
       const updatedUser = ensureUserHasImage({
         ...userData,
         adminType: userData.adminType,
-        isActive: userData.isActive, // Store isActive
-        lastLogin: userData.lastLogin, // Store lastLogin
+        isActive: userData.isActive,
+        lastLogin: userData.lastLogin,
       });
       setUser(updatedUser);
+
+      // Fetch data after login
       const fetchPromises = [fetchUserProfile(), fetchPets()];
-      if (updatedUser.role === "PetOwner") fetchPromises.push(getMyPets());
-      if (updatedUser.role === "Admin") fetchPromises.push(fetchAllUsers());
+      if (updatedUser.role === "PetOwner") {
+        fetchPromises.push(getMyPets());
+        fetchPromises.push(
+          getMyAdoptionRequests().then((result) => {
+            if (result.success) setApplications(result.data);
+          })
+        );
+      }
+      if (updatedUser.role === "Admin") {
+        fetchPromises.push(fetchAllUsers());
+      }
       await Promise.all(fetchPromises);
-      return {
-        success: true,
-        redirectTo, // Use backend-provided redirectTo
-      };
+      return { success: true, redirectTo };
     } catch (error) {
       const errorMessage = error.response?.data?.message || "Error logging in";
       setError(errorMessage);
@@ -289,24 +495,32 @@ const triggerRefresh = useCallback(
       setLoading(false);
     }
   };
+
   const register = async (userData) => {
     setLoading(true);
     setError("");
     const dataToSend = {
       ...userData,
       image: userData.image || DEFAULT_PROFILE_IMAGE,
-      ...(userData.role === "Admin" && userData.adminType ? { adminType: userData.adminType } : {}), // Ajouter adminType si Admin
+      ...(userData.role === "Admin" && userData.adminType
+        ? { adminType: userData.adminType }
+        : {}),
     };
     try {
-      const response = await axiosInstance.post("/api/user/register", dataToSend);
+      const response = await axiosInstance.post(
+        "/api/user/register",
+        dataToSend
+      );
       if (response.data.accessToken) {
         localStorage.setItem("token", response.data.accessToken);
         axiosInstance.setAuthToken(response.data.accessToken);
+        socket.auth = { token: response.data.accessToken };
+        socket.connect();
       }
       if (response.data.user) {
         const updatedUser = ensureUserHasImage({
           ...response.data.user,
-          adminType: response.data.user.adminType, // Inclure adminType dans l'état
+          adminType: response.data.user.adminType,
         });
         setUser(updatedUser);
         const fetchPromises = [fetchPets()];
@@ -332,32 +546,31 @@ const triggerRefresh = useCallback(
         ...profileData,
         userId: user._id,
       });
-      const { accessToken, message } = response.data; // Extract the new token
-      console.log("createProfile response:", response.data); // Debug response
-      console.log("New token:", accessToken); // Debug new token
-
+      const { accessToken, message } = response.data;
       if (accessToken) {
-        localStorage.setItem("token", accessToken); // Update token in localStorage
-        axiosInstance.setAuthToken(accessToken); // Update axios instance with new token
+        localStorage.setItem("token", accessToken);
+        axiosInstance.setAuthToken(accessToken);
+        socket.auth = { token: accessToken };
+        socket.connect();
       }
-
       const updatedUser = ensureUserHasImage(response.data.user);
       setUser(updatedUser);
-
-      // Pre-fetch data in parallel but don't await navigation
       const fetchPromises = [fetchPets()];
-      if (updatedUser.role === "PetOwner") {
-        fetchPromises.push(getMyPets());
-      }
+      if (updatedUser.role === "PetOwner") fetchPromises.push(getMyPets());
       Promise.all(fetchPromises).catch((error) =>
         console.error("Pre-fetch failed:", error)
       );
-
-      return { success: true, message, redirectTo: updatedUser.role === "PetOwner" ? "/" : `/${updatedUser.role.toLowerCase()}` };
+      return {
+        success: true,
+        message,
+        redirectTo:
+          updatedUser.role === "PetOwner"
+            ? "/"
+            : `/${updatedUser.role.toLowerCase()}`,
+      };
     } catch (error) {
       const errorMessage =
         error.response?.data?.message || "Error completing profile";
-        console.error("createProfile error:", error.response?.data);
       setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {
@@ -371,11 +584,17 @@ const triggerRefresh = useCallback(
         `/api/pet/apply/${petId}`,
         applicationData
       );
-      await triggerRefresh("pets"); // Refresh pets after adoption application
       return { success: true, message: response.data.message };
     } catch (error) {
       const errorMessage =
         error.response?.data?.message || "Failed to apply for adoption";
+      if (errorMessage === "You have already applied to adopt this pet") {
+        // Trigger a sync to ensure UI reflects existing application
+        const result = await getMyAdoptionRequests();
+        if (result.success) {
+          setApplications(result.data);
+        }
+      }
       setError(errorMessage);
       return { success: false, error: errorMessage };
     }
@@ -438,9 +657,7 @@ const triggerRefresh = useCallback(
         `/api/pet/updatedPet/${petId}`,
         updateData
       );
-      console.log("Raw Backend Response:", JSON.stringify(response.data, null, 2));
-      await triggerRefresh("pets"); // Refresh pets after update
-      return response.data; // Return raw response directly
+      return response.data;
     } catch (error) {
       const errorMessage =
         error.response?.data?.message || "Error updating pet";
@@ -456,9 +673,7 @@ const triggerRefresh = useCallback(
 
   const deletePet = async (petId) => {
     try {
-      await axiosInstance.put(`/api/pet/archivePet/${petId}`);
-      await triggerRefresh("pets"); // Refresh pets after update
-      if (user) await getMyPets();
+      await axiosInstance.put(`/api/pet/deletePet/${petId}`);
       return { success: true };
     } catch (error) {
       const errorMessage =
@@ -468,18 +683,6 @@ const triggerRefresh = useCallback(
     }
   };
 
-  const logout = useCallback(() => {
-    axiosInstance.setAuthToken(null);
-    localStorage.removeItem("token");
-    setUser(null);
-    setUserPets([]);
-    setPets([]);
-    setAllUsers([]);
-    setLastPetFetchTime(0);
-    setLastUsersFetchTime(0);
-    setRefreshTrigger({ pets: 0, users: 0 });
-  }, []);
-
   const clearError = useCallback(() => setError(""), []);
 
   const updateUser = useCallback((userData) => {
@@ -488,7 +691,9 @@ const triggerRefresh = useCallback(
 
   const updateUsers = useCallback((updatedUsers) => {
     setAllUsers((prevUsers) => {
-      const newUsers = updatedUsers.filter((u) => !prevUsers.some((p) => p._id === u._id));
+      const newUsers = updatedUsers.filter(
+        (u) => !prevUsers.some((p) => p._id === u._id)
+      );
       const updatedExisting = prevUsers.map((user) => {
         const updatedUser = updatedUsers.find((u) => u._id === user._id);
         return updatedUser ? { ...user, ...updatedUser } : user;
@@ -499,7 +704,9 @@ const triggerRefresh = useCallback(
 
   const updatePets = useCallback((updatedPets) => {
     setPets((prevPets) => {
-      const newPets = updatedPets.filter((p) => !prevPets.some((prev) => prev._id === p._id));
+      const newPets = updatedPets.filter(
+        (p) => !prevPets.some((prev) => prev._id === p._id)
+      );
       const updatedExisting = prevPets.map((pet) => {
         const updatedPet = updatedPets.find((p) => p._id === pet._id);
         return updatedPet ? { ...pet, ...updatedPet } : pet;
@@ -516,6 +723,8 @@ const triggerRefresh = useCallback(
       pets,
       userPets,
       allUsers,
+      applications,
+      triggerRefresh,
       currencySymbol,
       login,
       register,
@@ -537,9 +746,9 @@ const triggerRefresh = useCallback(
       setError,
       setLoading,
       applyToAdopt,
-      triggerRefresh,
       updateUsers,
       updatePets,
+      socket,
     }),
     [
       user,
@@ -547,6 +756,8 @@ const triggerRefresh = useCallback(
       error,
       pets,
       userPets,
+      allUsers,
+      applications,
       checkAuth,
       fetchPets,
       fetchAllUsers,
@@ -556,6 +767,7 @@ const triggerRefresh = useCallback(
       updateUser,
       updateUsers,
       updatePets,
+      socket,
       triggerRefresh,
     ]
   );

@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { AppContext } from "../context/AppContext";
 import { Heart, PawPrint, MapPin, Coins, ChevronLeft, ChevronRight, Filter, X } from "lucide-react";
 import SearchBar from "../components/SearchBar";
+import { SPECIES_OPTIONS, breeds, ageRanges } from "../assets/Pet"; 
 
 const PawIcon = ({ className, style }) => (
   <svg viewBox="0 0 24 24" className={className} style={style} fill="currentColor">
@@ -10,14 +11,8 @@ const PawIcon = ({ className, style }) => (
   </svg>
 );
 
-const allSpecies = ["dog", "cat", "other"];
-const dogAges = ["puppy", "young", "adult", "senior"];
-const catAges = ["kitten", "young", "adult", "senior"];
-const otherAges = ["young", "adult", "senior"];
 const feeOptions = ["Free", "With Money"];
 const sortOptions = ["Ascending", "Descending"];
-const dogBreeds = ["German Shepherd", "Labrador Retriever", "Golden Retriever", "Bulldog", "Rottweiler", "Beagle", "Poodle", "Siberian Husky", "Boxer", "Great Dane"];
-const catBreeds = ["Persian", "Siamese", "Maine Coon", "British Shorthair", "Ragdoll", "Bengal", "Sphynx", "Russian Blue", "American Shorthair", "Scottish Fold"];
 
 const PetCard = ({ pet, navigate, currencySymbol }) => {
   const [isLiked, setIsLiked] = useState(false);
@@ -50,11 +45,18 @@ const PetCard = ({ pet, navigate, currencySymbol }) => {
           <h2 className="text-xl font-semibold text-gray-800 truncate transition-colors duration-300 group-hover:text-pink-500">{pet.name}</h2>
         </div>
         <div className="space-y-3 text-sm text-gray-600">
-          <p className="flex items-center gap-2"><PawPrint size={14} className="text-[#ffc929]" />{pet.species.charAt(0).toUpperCase() + pet.species.slice(1)}{pet.breed && ` • ${pet.breed}`}</p>
+          <p className="flex items-center gap-2">
+            <PawPrint size={14} className="text-[#ffc929]" />
+            {pet.species.charAt(0).toUpperCase() + pet.species.slice(1)}
+            {pet.breed && ` • ${pet.breed}`}
+          </p>
           <div className="flex items-center justify-between text-base font-medium text-gray-700">
-            <span className="flex items-center gap-2 px-3 py-1 border border-[#ffc929]/20 rounded-full shadow-sm bg-[#ffc929]/5"><MapPin size={16} className="text-[#ffc929]" />{pet.city}</span>
+            <span className="flex items-center gap-2 px-3 py-1 border border-[#ffc929]/20 rounded-full shadow-sm bg-[#ffc929]/5">
+              <MapPin size={16} className="text-[#ffc929]" />{pet.city}
+            </span>
             <span className={`flex items-center gap-2 px-3 py-1 rounded-full border shadow-sm ${pet.fee === 0 ? "bg-green-50 border-green-100 text-green-600" : "bg-[#ffc929]/10 border-[#ffc929]/20 text-[#ffc929]"}`}>
-              <Coins size={16} className={pet.fee === 0 ? "text-green-500" : "text-[#ffc929]"} />{pet.fee === 0 ? "Free" : `${pet.fee}${currencySymbol}`}
+              <Coins size={16} className={pet.fee === 0 ? "text-green-500" : "text-[#ffc929]"} />
+              {pet.fee === 0 ? "Free" : `${pet.fee}${currencySymbol}`}
             </span>
           </div>
         </div>
@@ -82,8 +84,10 @@ const FilterSelect = ({ label, value, onChange, options, disabled }) => (
       disabled={disabled}
     >
       <option value="">{label}</option>
-      {options.map((option, index) => (
-        <option key={index} value={option}>{option}</option>
+      {options.map((option) => (
+        <option key={option.value || option} value={option.value || option}>
+          {option.label || option}
+        </option>
       ))}
     </select>
   </div>
@@ -95,17 +99,18 @@ export default function Pet() {
   const { pets, currencySymbol, loading, error } = useContext(AppContext);
 
   const [filteredPets, setFilteredPets] = useState([]);
-  const [speciesList] = useState(allSpecies);
-  const [breeds, setBreeds] = useState([]);
-  const [ages, setAges] = useState([]);
-  const [fees] = useState(feeOptions);
+  const [speciesList] = useState(SPECIES_OPTIONS.map(opt => opt.value));
+  const [breedsList, setBreedsList] = useState([]);
+  const [agesList, setAgesList] = useState([]);
   const [cities, setCities] = useState([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [petsPerPage] = useState(9);
   const [isAnimating, setIsAnimating] = useState(false);
 
-  const [selectedSpecies, setSelectedSpecies] = useState(urlSpecies && allSpecies.includes(urlSpecies.toLowerCase()) ? urlSpecies.toLowerCase() : "");
+  const [selectedSpecies, setSelectedSpecies] = useState(
+    urlSpecies && speciesList.includes(urlSpecies.toLowerCase()) ? urlSpecies.toLowerCase() : ""
+  );
   const [selectedBreed, setSelectedBreed] = useState("");
   const [selectedAge, setSelectedAge] = useState("");
   const [selectedFee, setSelectedFee] = useState("");
@@ -116,12 +121,10 @@ export default function Pet() {
   useEffect(() => {
     let filtered = pets.filter((pet) => pet.status === "accepted");
 
-    // Apply species filter using selectedSpecies
     if (selectedSpecies) {
       filtered = filtered.filter((pet) => pet.species.toLowerCase() === selectedSpecies.toLowerCase());
     }
 
-    // Apply other filters
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
       filtered = filtered.filter((pet) =>
@@ -146,27 +149,24 @@ export default function Pet() {
   useEffect(() => {
     const acceptedPets = pets.filter((pet) => pet.status === "accepted");
 
-    // Update breeds and ages based on selected species
     let availableBreeds = [];
     if (selectedSpecies === "dog") {
-      availableBreeds = dogBreeds;
-      setAges(dogAges);
+      availableBreeds = breeds.dog;
+      setAgesList(ageRanges.dog);
     } else if (selectedSpecies === "cat") {
-      availableBreeds = catBreeds;
-      setAges(catAges);
+      availableBreeds = breeds.cat;
+      setAgesList(ageRanges.cat);
     } else if (selectedSpecies === "other") {
-      availableBreeds = [...new Set(acceptedPets.filter((pet) => pet.species === "other" && pet.breed).map((pet) => pet.breed))] || ["Custom Breed"];
-      setAges(otherAges);
+      availableBreeds = breeds.other;
+      setAgesList(ageRanges.other);
     } else {
-      availableBreeds = [...new Set([...dogBreeds, ...catBreeds, ...acceptedPets.filter((pet) => pet.species === "other" && pet.breed).map((pet) => pet.breed)])];
-      setAges([]);
+      availableBreeds = [...new Set([...breeds.dog, ...breeds.cat, ...breeds.other, ...acceptedPets.filter((pet) => pet.breed).map((pet) => pet.breed)])];
+      setAgesList([]);
     }
-    setBreeds(availableBreeds);
+    setBreedsList(availableBreeds);
 
-    // Update cities
     setCities([...new Set(acceptedPets.map((pet) => pet.city))].filter(Boolean));
 
-    // Reset dependent filters if species is cleared
     if (!selectedSpecies) {
       setSelectedBreed("");
       setSelectedAge("");
@@ -175,12 +175,11 @@ export default function Pet() {
   }, [pets, selectedSpecies, selectedFee]);
 
   useEffect(() => {
-    // Sync selectedSpecies with urlSpecies when urlSpecies changes
-    const validSpecies = urlSpecies && allSpecies.includes(urlSpecies.toLowerCase()) ? urlSpecies.toLowerCase() : "";
+    const validSpecies = urlSpecies && speciesList.includes(urlSpecies.toLowerCase()) ? urlSpecies.toLowerCase() : "";
     if (validSpecies !== selectedSpecies) {
       setSelectedSpecies(validSpecies);
     }
-  }, [urlSpecies]);
+  }, [urlSpecies, speciesList]);
 
   const indexOfLastPet = currentPage * petsPerPage;
   const indexOfFirstPet = indexOfLastPet - petsPerPage;
@@ -229,13 +228,23 @@ export default function Pet() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-white to-pink-50"><div className="text-center animate-pulse"><PawPrint size={48} className="mx-auto text-[#ffc929]" /><p className="mt-4 text-lg font-medium text-gray-600">Fetching Pets...</p></div></div>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-white to-pink-50">
+        <div className="text-center animate-pulse">
+          <PawPrint size={48} className="mx-auto text-[#ffc929]" />
+          <p className="mt-4 text-lg font-medium text-gray-600">Fetching Pets...</p>
+        </div>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-white to-pink-50"><div className="text-center"><PawPrint size={48} className="mx-auto mb-4 text-red-500" /><p className="font-medium text-red-600">Error: {error}</p></div></div>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-white to-pink-50">
+        <div className="text-center">
+          <PawPrint size={48} className="mx-auto mb-4 text-red-500" />
+          <p className="font-medium text-red-600">Error: {error}</p>
+        </div>
+      </div>
     );
   }
 
@@ -244,9 +253,16 @@ export default function Pet() {
       <div className="absolute inset-0 overflow-hidden pointer-events-none"><PawBackground /></div>
       <div className="relative mx-auto space-y-12 max-w-7xl">
         <div className="pt-16 space-y-6 text-center animate-fadeIn" style={{ animationDelay: "0.2s" }}>
-          <span className="inline-flex items-center px-4 py-2 text-sm font-semibold text-pink-500 bg-white border border-[#ffc929]/20 rounded-full shadow-sm"><Heart className="w-4 h-4 mr-2 text-[#ffc929]" />Adopt Your Perfect Pet</span>
-          <h1 className="text-4xl font-bold tracking-tight text-gray-900 md:text-5xl"><span className="block">Find Your</span><span className="block text-pink-500">Forever Companion</span></h1>
-          <p className="max-w-2xl mx-auto text-lg leading-relaxed text-gray-600">Browse our adorable pets ready to bring joy to your home.</p>
+          <span className="inline-flex items-center px-4 py-2 text-sm font-semibold text-pink-500 bg-white border border-[#ffc929]/20 rounded-full shadow-sm">
+            <Heart className="w-4 h-4 mr-2 text-[#ffc929]" />Adopt Your Perfect Pet
+          </span>
+          <h1 className="text-4xl font-bold tracking-tight text-gray-900 md:text-5xl">
+            <span className="block">Find Your</span>
+            <span className="block text-pink-500">Forever Companion</span>
+          </h1>
+          <p className="max-w-2xl mx-auto text-lg leading-relaxed text-gray-600">
+            Browse our adorable pets ready to bring joy to your home.
+          </p>
         </div>
 
         <div className="bg-white backdrop-blur-sm bg-opacity-90 border-2 border-[#ffc929]/20 shadow-xl rounded-3xl p-8 mb-10">
@@ -274,11 +290,13 @@ export default function Pet() {
           <div
             className={`grid grid-cols-1 gap-6 mt-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 transition-all duration-300 ease-in-out ${isFilterOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0 overflow-hidden"}`}
           >
-            <FilterSelect label="Species" value={selectedSpecies} onChange={(e) => setSelectedSpecies(e.target.value)} options={speciesList} disabled={false} />
-            <FilterSelect label="Breed" value={selectedBreed} onChange={(e) => setSelectedBreed(e.target.value)} options={breeds} disabled={!selectedSpecies} />
-            <FilterSelect label="Age" value={selectedAge} onChange={(e) => setSelectedAge(e.target.value)} options={ages} disabled={!selectedSpecies} />
-            <FilterSelect label="Fee" value={selectedFee} onChange={(e) => setSelectedFee(e.target.value)} options={fees} disabled={false} />
-            {selectedFee === "With Money" && <FilterSelect label="Sort Fee" value={sortOrder} onChange={(e) => setSortOrder(e.target.value)} options={sortOptions} disabled={false} />}
+            <FilterSelect label="Species" value={selectedSpecies} onChange={(e) => setSelectedSpecies(e.target.value)} options={SPECIES_OPTIONS} disabled={false} />
+            <FilterSelect label="Breed" value={selectedBreed} onChange={(e) => setSelectedBreed(e.target.value)} options={breedsList} disabled={!selectedSpecies} />
+            <FilterSelect label="Age" value={selectedAge} onChange={(e) => setSelectedAge(e.target.value)} options={agesList} disabled={!selectedSpecies} />
+            <FilterSelect label="Fee" value={selectedFee} onChange={(e) => setSelectedFee(e.target.value)} options={feeOptions} disabled={false} />
+            {selectedFee === "With Money" && (
+              <FilterSelect label="Sort Fee" value={sortOrder} onChange={(e) => setSortOrder(e.target.value)} options={sortOptions} disabled={false} />
+            )}
             <FilterSelect label="City" value={selectedCity} onChange={(e) => setSelectedCity(e.target.value)} options={cities} disabled={false} />
           </div>
 
@@ -302,14 +320,27 @@ export default function Pet() {
         </div>
 
         <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 transition-opacity duration-300 ${isAnimating ? "opacity-0" : "opacity-100"} animate-fadeIn`} style={{ animationDelay: "0.6s" }}>
-          {currentPets.length > 0 ? currentPets.map((pet) => <PetCard key={pet._id} pet={pet} navigate={navigate} currencySymbol={currencySymbol} />) : (
-            <div className="py-12 text-center col-span-full"><PawPrint size={48} className="mx-auto mb-4 text-[#ffc929]" /><h3 className="text-xl font-semibold text-gray-800">No Pets Found</h3><p className="mt-2 text-gray-600">Adjust your filters or search to find more pets.</p></div>
+          {currentPets.length > 0 ? (
+            currentPets.map((pet) => <PetCard key={pet._id} pet={pet} navigate={navigate} currencySymbol={currencySymbol} />)
+          ) : (
+            <div className="py-12 text-center col-span-full">
+              <PawPrint size={48} className="mx-auto mb-4 text-[#ffc929]" />
+              <h3 className="text-xl font-semibold text-gray-800">No Pets Found</h3>
+              <p className="mt-2 text-gray-600">Adjust your filters or search to find more pets.</p>
+            </div>
           )}
         </div>
 
         {filteredPets.length > petsPerPage && (
           <div className="flex items-center justify-center gap-4 mt-12 animate-fadeIn" style={{ animationDelay: "0.8s" }}>
-            <button onClick={() => paginate(currentPage - 1)} disabled={currentPage === 1} className={`p-2 rounded-full ${currentPage === 1 ? "text-gray-300 cursor-not-allowed" : "text-[#ffc929] hover:bg-[#ffc929]/10"} transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/30`} aria-label="Previous page"><ChevronLeft size={24} /></button>
+            <button
+              onClick={() => paginate(currentPage - 1)}
+              disabled={currentPage === 1}
+              className={`p-2 rounded-full ${currentPage === 1 ? "text-gray-300 cursor-not-allowed" : "text-[#ffc929] hover:bg-[#ffc929]/10"} transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/30`}
+              aria-label="Previous page"
+            >
+              <ChevronLeft size={24} />
+            </button>
             <div className="flex items-center gap-2">
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
                 const isCurrent = currentPage === page;
@@ -327,7 +358,14 @@ export default function Pet() {
                 );
               })}
             </div>
-            <button onClick={() => paginate(currentPage + 1)} disabled={currentPage === totalPages} className={`p-2 rounded-full ${currentPage === totalPages ? "text-gray-300 cursor-not-allowed" : "text-[#ffc929] hover:bg-[#ffc929]/10"} transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/30`} aria-label="Next page"><ChevronRight size={24} /></button>
+            <button
+              onClick={() => paginate(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className={`p-2 rounded-full ${currentPage === totalPages ? "text-gray-300 cursor-not-allowed" : "text-[#ffc929] hover:bg-[#ffc929]/10"} transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/30`}
+              aria-label="Next page"
+            >
+              <ChevronRight size={24} />
+            </button>
           </div>
         )}
       </div>

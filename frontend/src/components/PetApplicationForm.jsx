@@ -575,25 +575,29 @@ function PetApplicationForm({ petId, petName, petImage, onClose }) {
     setShowConfirm(false);
     try {
       const applicationData = { ...formData, petId, applicantId: user._id };
-      const response = await axiosInstance.post(
-        `/api/pet/${petId}/apply`,
-        applicationData
-      );
+      const response = await axiosInstance.post(`/api/pet/${petId}/apply`, applicationData);
       if (response.data.success) {
         setSuccess(true);
         localStorage.removeItem(`petApplication_${petId}`);
+        if (typeof onSubmitSuccess === 'function') {
+          onSubmitSuccess();
+        }
         setTimeout(() => onClose(), 3000);
       } else {
-        setError(response.data.message || "Failed to submit application");
+        setError(response.data.message);
+        if (response.data.message === "You have already applied to adopt this pet") {
+          if (typeof onSubmitSuccess === 'function') {
+            onSubmitSuccess();
+          }
+        }
       }
     } catch (err) {
-      const serverErrors = err.response?.data?.errors;
-      if (serverErrors && typeof serverErrors === "object") {
-        setError(Object.values(serverErrors).join(", "));
-      } else {
-        setError(
-          err.response?.data?.message || "An error occurred while submitting"
-        );
+      const errorMessage = err.response?.data?.message || "An error occurred";
+      setError(errorMessage);
+      if (errorMessage === "You have already applied to adopt this pet") {
+        if (typeof onSubmitSuccess === 'function') {
+          onSubmitSuccess(); // Trigger UI refresh
+        }
       }
     } finally {
       setSubmitting(false);

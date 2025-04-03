@@ -138,18 +138,18 @@ const PetManagementDashboard = () => {
               <>
                 <PetPostsTab setSelectedPet={setSelectedPet} setApprovalMessage={setApprovalMessage} />
                 <HelpSection show={true} title="How to Manage Posts" className="mt-4 text-sm text-gray-600">
-                  <li>Click a pet to edit—admin approval needed.</li>
-                  <li>View candidates for adoption interest.</li>
-                  <li>Delete posts instantly with the trash icon.</li>
+                  <p>Click a pet to edit—admin approval needed.</p>
+                  <p>View candidates for adoption interest.</p>
+                  <p>Delete posts instantly with the trash icon.</p>
                 </HelpSection>
               </>
             ) : (
               <>
                 <AdoptionRequestsTab setSelectedPet={setSelectedPet} />
                 <HelpSection show={true} title="How to Manage Requests" className="mt-4 text-sm text-gray-600">
-                  <li>Eye icon shows pet details.</li>
-                  <li>Approval pending until owner confirms.</li>
-                  <li>Track status updates here.</li>
+                  <p>Eye icon shows pet details.</p>
+                  <p>Approval pending until owner confirms.</p>
+                  <p>Track status updates here.</p>
                 </HelpSection>
               </>
             )}

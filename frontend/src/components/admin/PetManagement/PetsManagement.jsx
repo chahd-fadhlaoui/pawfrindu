@@ -1,14 +1,13 @@
-import React, { useState, useEffect } from "react";
-import { Shield, Archive, PawPrint, RefreshCw } from "lucide-react";
+import { Archive, PawPrint, RefreshCw, Shield } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { useApp } from "../../../context/AppContext";
 import ActivePets from "./Pets/ActivePets";
 import ArchivedPets from "./Pets/ArchivedPets";
 import CompletedPets from "./Pets/CompletedPets";
 import MyPets from "./Pets/MyPets";
-import { useApp } from "../../../context/AppContext";
-import axiosInstance from "../../../utils/axiosInstance";
 
 const PetsManagement = ({ hideHeader = false }) => {
-  const { pets, userPets, triggerRefresh, user } = useApp();
+  const { pets, userPets, triggerRefresh, user, socket } = useApp();
   const [activeTab, setActiveTab] = useState("active");
   const [counts, setCounts] = useState({
     active: 0,
@@ -16,53 +15,51 @@ const PetsManagement = ({ hideHeader = false }) => {
     archived: 0,
     myPets: 0,
   });
-  const [loadingStats, setLoadingStats] = useState(false);
 
-  // Fetch pet stats from the backend
-  const fetchPetStats = async () => {
-    setLoadingStats(true);
-    try {
-      const response = await axiosInstance.get("/api/pet/stats");
-      const { stats } = response.data;
-      setCounts({
-        active: stats.pendingPets + stats.acceptedPets + stats.adoptionPendingPets,
-        completed: stats.adoptedPets + stats.soldPets,
-        archived: stats.archivedPets,
-        myPets: userPets.filter(
-          (p) => !p.isArchived && p.status !== "adopted" && p.status !== "sold"
-        ).length,
-      });
-    } catch (error) {
-      console.error("Failed to fetch pet stats:", error);
-      setCounts({
-        active: pets.filter(
-          (p) =>
-            !p.isArchived &&
-            ["pending", "accepted", "adoptionPending"].includes(p.status)
-        ).length,
-        completed: pets.filter(
-          (p) => !p.isArchived && ["adopted", "sold"].includes(p.status)
-        ).length,
-        archived: pets.filter((p) => p.isArchived).length,
-        myPets: userPets.filter(
-          (p) => !p.isArchived && p.status !== "adopted" && p.status !== "sold"
-        ).length,
-      });
-    } finally {
-      setLoadingStats(false);
-    }
+  // Calculate counts based on current pets and userPets
+  const updateCounts = () => {
+    setCounts({
+      active: pets.filter(
+        (p) =>
+          ["pending", "accepted", "adoptionPending"].includes(p.status) &&
+          !p.isArchived
+      ).length,
+      completed: pets.filter(
+        (p) => ["adopted", "sold"].includes(p.status) && !p.isArchived
+      ).length,
+      archived: pets.filter((p) => p.isArchived).length,
+      myPets: userPets.filter(
+        (p) => !p.isArchived && p.status !== "adopted" && p.status !== "sold"
+      ).length,
+    });
   };
 
-  // Initial fetch and refresh when triggered
+  // Update counts when pets or userPets change (initial load or socket updates)
   useEffect(() => {
-    if (user?.role === "Admin") {
-      fetchPetStats();
-    }
-  }, [pets, userPets, user]);
+    updateCounts();
+  }, [pets, userPets]);
 
+  // Listen to socket events for real-time updates
+  useEffect(() => {
+    socket.on("petCreated", () => updateCounts());
+    socket.on("petUpdated", () => updateCounts());
+    socket.on("petDeleted", () => updateCounts());
+    socket.on("petArchived", () => updateCounts());
+    socket.on("petUnarchived", () => updateCounts());
+
+    return () => {
+      socket.off("petCreated");
+      socket.off("petUpdated");
+      socket.off("petDeleted");
+      socket.off("petArchived");
+      socket.off("petUnarchived");
+    };
+  }, [socket]);
+
+  // Optional manual refresh (only for edge cases)
   const handleRefresh = () => {
-    triggerRefresh("pets"); // Trigger context refresh
-    fetchPetStats(); // Fetch updated stats immediately
+    event.preventDefault();
+    triggerRefresh("pets"); // Fetches fresh data from server if needed
   };
 
   const getTabIcon = (tab) => {
@@ -102,7 +99,7 @@ const PetsManagement = ({ hideHeader = false }) => {
         : tab === "completed"
         ? "Completed Pets"
         : `${tab.charAt(0).toUpperCase() + tab.slice(1)} Pets`;
-    return `${displayText} (${loadingStats ? "..." : counts[tab]})`;
+    return `${displayText} (${counts[tab]})`;
   };
 
   return (
@@ -146,6 +143,7 @@ const PetsManagement = ({ hideHeader = false }) => {
           ))}
         </div>
         <button
+          type="button"
           onClick={handleRefresh}
           className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white rounded-lg shadow-sm hover:bg-gray-50"
         >

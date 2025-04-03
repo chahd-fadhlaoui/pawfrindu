@@ -1,16 +1,15 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   ChevronLeft,
   ChevronRight,
-  Loader2,
-  PawPrint,
   Eye,
   Filter,
-  X,
+  PawPrint,
+  X
 } from "lucide-react";
-import { useApp } from "../../context/AppContext";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import EmptyState from "../../components/EmptyState";
+import { useApp } from "../../context/AppContext";
 import { Tooltip } from "../Tooltip";
 
 const STATUS_STYLES = {
@@ -88,8 +87,9 @@ const ApplicationCard = ({ application, onViewPet, disabled }) => (
             {application.pet.name}
           </h3>
           <p className="text-sm text-gray-600">
-            {application.pet.species.charAt(0).toUpperCase() + application.pet.species.slice(1)} •{" "}
-            {application.pet.city}
+            {(application.pet.species || "Unknown").charAt(0).toUpperCase() + 
+             (application.pet.species || "Unknown").slice(1)} •{" "}
+            {application.pet.city || "Unknown"}
           </p>
         </div>
       </div>
@@ -114,47 +114,20 @@ const ApplicationCard = ({ application, onViewPet, disabled }) => (
 
 const AdoptionRequestsTab = ({ setSelectedPet }) => {
   const navigate = useNavigate();
-  const { user, getMyAdoptionRequests, setError, clearError } = useApp();
-
-  const [applications, setApplications] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { user, getMyAdoptionRequests, setError, clearError, loading, setLoading, applications: contextApplications } = useApp();
+  
   const [currentPage, setCurrentPage] = useState(1);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState("");
   const [filterSpecies, setFilterSpecies] = useState("");
   const [filterGender, setFilterGender] = useState("");
 
-  const fetchAdoptionRequests = useCallback(async () => {
-    try {
-      setLoading(true);
-      const result = await getMyAdoptionRequests();
-      if (result.success) {
-        setApplications(result.data);
-        clearError();
-      } else {
-        setError(result.error || "Failed to fetch adoption requests");
-        setApplications([]);
-      }
-    } catch (err) {
-      setError(err.message || "Failed to fetch adoption requests");
-      setApplications([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [getMyAdoptionRequests, setError, clearError]);
-
+  const applications = contextApplications;
+  
   useEffect(() => {
-    let mounted = true;
-    if (user?._id && mounted) {
-      fetchAdoptionRequests();
-      const interval = setInterval(fetchAdoptionRequests, 30000);
-      return () => {
-        mounted = false;
-        clearInterval(interval);
-      };
-    }
-  }, [user?._id, fetchAdoptionRequests]);
-
+    console.log("AdoptionRequestsTab applications updated:", applications);
+  }, [applications]);
+  
   const clearFilter = (filterType) => {
     switch (filterType) {
       case "status": setFilterStatus(""); break;

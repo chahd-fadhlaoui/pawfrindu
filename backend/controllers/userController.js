@@ -3,7 +3,7 @@ import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import User from "../models/userModel.js";
 import { sendEmail } from "../services/emailService.js";
-
+import { io } from "../server.js"; // Import io from the server file
 
 // 🚀 Étape 1: Enregistrement de l'utilisateur sans détails spécifiques
 const register = async (req, res) => {
@@ -56,6 +56,16 @@ const register = async (req, res) => {
     } catch (emailError) {
       console.error("Failed to send welcome email:", emailError);
     }
+
+    // Emit Socket.IO event for new user registration
+    io.emit("userRegistered", {
+      userId: savedUser._id,
+      fullName: savedUser.fullName,
+      email: savedUser.email,
+      role: savedUser.role,
+      adminType: savedUser.adminType,
+      message: "A new user has registered",
+    });
 
     res.status(201).json({
       message: "Account created. Please complete your profile.",
@@ -129,6 +139,20 @@ const createProfile = async (req, res) => {
       process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: "72h" }
     );
+
+    // Emit Socket.IO event for profile completion
+    io.emit("userProfileCompleted", {
+      userId: user._id,
+      role: user.role,
+      fullName: user.fullName,
+      image: user.image,
+      gender: user.gender,
+      petOwnerDetails: user.petOwnerDetails,
+      trainerDetails: user.trainerDetails,
+      veterinarianDetails: user.veterinarianDetails,
+      message: "User profile completed",
+    });
+
     res.json({
       message: "Profile completed successfully!",
       accessToken,
@@ -429,6 +453,13 @@ const resetPassword = async (req, res) => {
       // Continue with password reset even if email fails
     }
 
+    // Emit Socket.IO event for password reset
+    io.emit("userPasswordReset", {
+      userId: user._id,
+      email: user.email,
+      message: "User password has been reset",
+    });
+
     res.json({
       message: "Password successfully reset",
       success: true,
@@ -538,6 +569,16 @@ const updateProfile = async (req, res) => {
     console.log("Saved user with image:", user.image);
     console.log("Saved user full document:", user.toObject());
 
+    // Emit Socket.IO event for profile update
+    io.emit("userProfileUpdated", {
+      userId: user._id,
+      fullName: user.fullName,
+      about: user.about,
+      image: user.image,
+      petOwnerDetails: user.petOwnerDetails,
+      message: "User profile updated",
+    });
+
     res.json({
       message: "Profile updated successfully",
       user: {
@@ -573,6 +614,17 @@ const updateUserByAdmin = async (req, res) => {
     if (typeof isArchieve === "boolean") user.isArchieve = isArchieve;
 
     await user.save();
+
+    // Emit Socket.IO event for admin update
+    io.emit("userUpdatedByAdmin", {
+      userId: user._id,
+      role: user.role,
+      adminType: user.adminType,
+      isActive: user.isActive,
+      isArchieve: user.isArchieve,
+      message: "User updated by admin",
+    });
+
     res.json({ message: "User updated successfully", user });
   } catch (error) {
     console.error("Update User Error:", error);
@@ -603,6 +655,14 @@ const approveUser = async (req, res) => {
       data: { fullName: user.fullName },
     });
 
+    // Emit Socket.IO event for user approval
+    io.emit("userApproved", {
+      userId: user._id,
+      fullName: user.fullName,
+      role: user.role,
+      message: "User approved and activated",
+    });
+
     res.json({ message: "User approved and activated", user });
   } catch (error) {
     console.error("Approve User Error:", error);
@@ -628,6 +688,12 @@ const deleteUserByAdmin = async (req, res) => {
 
     // Delete the user
     await User.findByIdAndDelete(userId);
+
+    // Emit Socket.IO event for user deletion
+    io.emit("userDeletedByAdmin", {
+      userId,
+      message: "User deleted by admin",
+    });
 
     res.json({ message: "User deleted successfully" });
   } catch (error) {

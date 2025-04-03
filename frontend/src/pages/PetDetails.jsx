@@ -1,60 +1,136 @@
-import React, { useContext, useEffect, useState, useCallback, Suspense, lazy } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { AppContext } from "../context/AppContext";
 import {
-  ChevronLeft,
-  Heart,
-  PawPrint,
-  MapPin,
-  Calendar,
-  Info,
-  Zap,
-  DollarSign,
-  CheckCircle,
   AlertCircle,
+  Calendar,
+  CheckCircle,
+  ChevronLeft,
+  DollarSign,
+  Heart,
+  Info,
+  MapPin,
+  PawPrint,
   X,
+  Zap,
 } from "lucide-react";
+import React, { Suspense, lazy, useCallback, useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useApp } from "../context/AppContext";
 import axiosInstance from "../utils/axiosInstance";
 
-// Lazy-loaded components
 const PetApplicationForm = lazy(() => import("../components/PetApplicationForm"));
 const HelpSection = lazy(() => import("../components/common/HelpSection"));
 
 const PetDetails = () => {
   const navigate = useNavigate();
   const { petId } = useParams();
-  const { currencySymbol, user, loading: contextLoading } = useContext(AppContext);
+  const {
+    currencySymbol,
+    user,
+    loading: contextLoading,
+    pets,
+    applications,
+    applyToAdopt,
+    socket,
+    getMyAdoptionRequests,
+  } = useApp();
   const [petInfo, setPetInfo] = useState(null);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
-  const [hasApplied, setHasApplied] = useState(false);
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
 
+  // Derive hasApplied synchronously from applications state
+  console.log("Applications state in PetDetails:", applications);
+  const hasApplied = user && applications.some((app) => 
+    app.pet._id === petId && 
+    (typeof app.user === 'string' ? app.user === user._id : app.user?._id === user._id)
+  );
+  console.log("hasApplied:", hasApplied, { petId, userId: user?._id });
+  console.log("Applications content:", applications.map(app => ({
+    petId: app.pet._id,
+    userId: typeof app.user === 'string' ? app.user : app.user?._id,
+    status: app.status
+  })));
+  
   const fetchPetDetails = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await axiosInstance.get(`/api/pet/pets/${petId}`);
-      if (response.data.success) {
-        const pet = response.data.data;
-        setPetInfo(pet);
-        setHasApplied(user && pet.candidates?.some((cand) => cand.user === user._id));
-        setError(null);
+      const contextPet = pets.find((p) => p._id === petId);
+      if (contextPet) {
+        setPetInfo(contextPet);
       } else {
-        throw new Error(response.data.message || "Failed to fetch pet details");
+        const response = await axiosInstance.get(`/api/pet/pets/${petId}`);
+        if (response.data.success) {
+          setPetInfo(response.data.data);
+        } else {
+          throw new Error(response.data.message || "Failed to fetch pet details");
+        }
       }
+      setError(null);
     } catch (err) {
       setError(err.message || "An error occurred while fetching pet details");
       setPetInfo(null);
     } finally {
       setIsLoading(false);
     }
-  }, [petId, user]);
+  }, [petId, user, pets]);
 
   useEffect(() => {
     if (petId) fetchPetDetails();
   }, [petId, fetchPetDetails]);
+
+  useEffect(() => {
+    if (!user || !petId) return;
+    const fetchApplications = async () => {
+      const result = await getMyAdoptionRequests();
+      if (result.success) {
+        console.log("Fetched applications on mount:", result.data);
+      } else {
+        console.error("Failed to fetch applications:", result.error);
+      }
+    };
+    fetchApplications();
+  }, [user, petId, getMyAdoptionRequests]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handlePetUpdated = (data) => {
+      if (data.petId === petId) {
+        setPetInfo((prev) => ({ ...prev, ...data.updatedPet }));
+      }
+    };
+
+    const handleAdoptionApplied = async (data) => {
+      if (data.petId === petId && user?._id === data.userId) {
+        try {
+          const result = await getMyAdoptionRequests();
+          if (!result.success) {
+            console.error("Failed to refresh applications:", result.error);
+            setError(result.error);
+          }
+        } catch (err) {
+          console.error("Socket sync failed:", err);
+          setError("Failed to sync adoption status");
+        }
+      }
+    };
+
+    const handleCandidateStatusUpdated = (data) => {
+      if (data.petId === petId) {
+        fetchPetDetails();
+      }
+    };
+
+    socket.on("petUpdated", handlePetUpdated);
+    socket.on("adoptionApplied", handleAdoptionApplied);
+    socket.on("candidateStatusUpdated", handleCandidateStatusUpdated);
+
+    return () => {
+      socket.off("petUpdated", handlePetUpdated);
+      socket.off("adoptionApplied", handleAdoptionApplied);
+      socket.off("candidateStatusUpdated", handleCandidateStatusUpdated);
+    };
+  }, [petId, user, fetchPetDetails, getMyAdoptionRequests, socket]);
 
   const handleApplyNowClick = () => {
     if (!user) return navigate("/login", { state: { from: `/pet/${petId}` } });
@@ -63,9 +139,17 @@ const PetDetails = () => {
   };
 
   const handleApplicationSuccess = async () => {
-    setHasApplied(true);
     setShowForm(false);
-    await fetchPetDetails();
+    try {
+      const result = await getMyAdoptionRequests();
+      if (result.success) {
+        console.log("Applications after success:", result.data);
+      } else {
+        setError("Failed to refresh adoption requests");
+      }
+    } catch (err) {
+      setError("Error syncing adoption requests: " + err.message);
+    }
   };
 
   const handleImageError = (e) => {
@@ -265,29 +349,27 @@ const PetDetails = () => {
             </div>
           </div>
 
-          {/* Help Section */}
           {!isOwner && (
             <Suspense fallback={<div className="text-center text-gray-500">Loading Help...</div>}>
               <HelpSection
                 title={`How to Adopt ${petInfo.name}`}
                 className="max-w-4xl mx-auto bg-white rounded-3xl shadow-lg p-6 border border-[#ffc929]/10"
               >
-                <li>Review <span className="font-medium">{petInfo.name}</span>'s profile above.</li>
-                <li>
+                <p>Review <span className="font-medium">{petInfo.name}</span>'s profile above.</p>
+                <p>
                   Click{" "}
                   <span className="font-medium">{petInfo.fee === 0 ? "Apply Now" : "Adopt"}</span>.
-                </li>
-                <li>{petInfo.fee === 0 ? "Complete the application form." : "Proceed with payment."}</li>
-                <li>
+                </p>
+                <p>{petInfo.fee === 0 ? "Complete the application form." : "Proceed with payment."}</p>
+                <p>
                   {petInfo.fee === 0 ? "Await The Pet Owner's Approval." : "The Pet Owner will contact you."}
-                </li>
+                </p>
               </HelpSection>
             </Suspense>
           )}
         </main>
       </div>
 
-      {/* Application Form Modal */}
       {showForm && !isOwner && !hasApplied && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
           <div className="relative w-full max-w-lg p-6 bg-white shadow-2xl rounded-2xl">

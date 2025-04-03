@@ -161,13 +161,7 @@ const PetCard = ({ pet, onEdit, onDelete, onViewCandidates, disabled, currencySy
 
 const PetPostsTab = ({ setSelectedPet, setApprovalMessage }) => {
   const navigate = useNavigate();
-  const { user, getMyPets, updatePet, deletePet, currencySymbol, setError, clearError } = useApp();
-
-  const [editMode, setEditMode] = useState(false);
-  const [editFormData, setEditFormData] = useState(null);
-  const [selectedPetLocal, setSelectedPetLocal] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [userPets, setUserPets] = useState([]);
+  const { user, userPets, updatePet, deletePet, currencySymbol, setError, clearError, loading, setLoading } = useApp();  const [selectedPetLocal, setSelectedPetLocal] = useState(null);
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
     action: "",
@@ -182,38 +176,9 @@ const PetPostsTab = ({ setSelectedPet, setApprovalMessage }) => {
   const [filterApproved, setFilterApproved] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [hoveredPetId, setHoveredPetId] = useState(null);
-
-  const fetchUserPets = useCallback(async () => {
-    try {
-      setLoading(true);
-      const result = await getMyPets();
-      if (result.success) {
-        setUserPets(result.data.filter((pet) => !pet.isArchived));
-        clearError();
-      } else {
-        setError(result.error || "Failed to fetch pets");
-        setUserPets([]);
-      }
-    } catch (err) {
-      setError(err.message || "Failed to fetch pets");
-      setUserPets([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [getMyPets, setError, clearError]);
-
-  useEffect(() => {
-    let mounted = true;
-    if (user?._id && mounted) {
-      fetchUserPets();
-      const interval = setInterval(fetchUserPets, 30000);
-      return () => {
-        mounted = false;
-        clearInterval(interval);
-      };
-    }
-  }, [user?._id, fetchUserPets]);
-
+  const [editMode, setEditMode] = useState(false);
+  const [editFormData, setEditFormData] = useState(null);
+  
   const handleEdit = useCallback(
     (petId, petName) => {
       const pet = userPets.find((p) => p._id === petId);
@@ -243,7 +208,6 @@ const PetPostsTab = ({ setSelectedPet, setApprovalMessage }) => {
       try {
         const result = await deletePet(petId);
         if (result.success) {
-          await fetchUserPets();
           setApprovalMessage(result.message || "Pet removed successfully.");
         } else {
           throw new Error(result.error || "Failed to remove pet");
@@ -254,7 +218,7 @@ const PetPostsTab = ({ setSelectedPet, setApprovalMessage }) => {
         setLoading(false);
       }
     },
-    [deletePet, fetchUserPets, setError, setApprovalMessage]
+    [deletePet, setError, setApprovalMessage, setLoading]
   );
 
   const handleUpdate = useCallback(
@@ -275,7 +239,6 @@ const PetPostsTab = ({ setSelectedPet, setApprovalMessage }) => {
               ? result.message
               : "Pet updated successfully."
           );
-          await fetchUserPets();
           setEditMode(false);
           setEditFormData(null);
           setSelectedPetLocal(null);
@@ -290,7 +253,7 @@ const PetPostsTab = ({ setSelectedPet, setApprovalMessage }) => {
         setLoading(false);
       }
     },
-    [selectedPetLocal, editFormData, updatePet, setApprovalMessage, setError, clearError, fetchUserPets, setSelectedPet]
+    [selectedPetLocal, editFormData, updatePet, setApprovalMessage, setError, clearError, setSelectedPet, setLoading]  
   );
 
   const handleInputChange = useCallback((field, value) => {
@@ -341,7 +304,7 @@ const PetPostsTab = ({ setSelectedPet, setApprovalMessage }) => {
     setCurrentPage(1);
   };
 
-  const filteredPets = userPets.filter((pet) => {
+  const filteredPets = userPets.filter((pet) => !pet.isArchived).filter((pet) => {
     const statusMatch = !filterStatus || pet.status === filterStatus;
     const speciesMatch = !filterSpecies || pet.species === filterSpecies;
     const genderMatch = !filterGender || pet.gender === filterGender;
