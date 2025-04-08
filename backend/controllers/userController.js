@@ -803,7 +803,135 @@ const getVeterinarianById = async (req, res) => {
     });
   }
 };
+const updateVetProfile = async (req, res) => {
+  const { userId, fullName, image, veterinarianDetails } = req.body;
 
+  try {
+    console.log("Received update request:", req.body);
+
+    if (req.user._id.toString() !== userId) {
+      return res.status(403).json({ message: "You can only update your own profile" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user || user.role !== "Vet") {
+      return res.status(404).json({ message: "Veterinarian not found" });
+    }
+
+    // Update common fields (email is not included here as it should not be updated)
+    if (fullName) user.fullName = fullName;
+    if (image) user.image = image;
+
+    if (veterinarianDetails) {
+      const vetDetails = user.veterinarianDetails || {};
+
+      // Fields that CAN be updated
+      if (veterinarianDetails.title) {
+        const validTitles = ["Doctor", "Professor"];
+        if (!validTitles.includes(veterinarianDetails.title)) {
+          return res.status(400).json({ message: "Invalid title" });
+        }
+        vetDetails.title = veterinarianDetails.title;
+      }
+
+      if (veterinarianDetails.averageConsultationDuration) {
+        const validDurations = [10, 15, 20, 25, 30, 45, 50, 55, 60];
+        const duration = parseInt(veterinarianDetails.averageConsultationDuration);
+        if (!validDurations.includes(duration)) {
+          return res.status(400).json({ message: "Invalid consultation duration" });
+        }
+        vetDetails.averageConsultationDuration = duration;
+      }
+
+      if (veterinarianDetails.governorate) {
+        const validGovernorates = [
+          "Ariana", "Beja", "Ben Arous", "Bizerte", "Gabes", "Gafsa", "Jendouba", "Kairouan",
+          "Kasserine", "Kebili", "Kef", "Mahdia", "Manouba", "Medenine", "Monastir", "Nabeul",
+          "Sfax", "Sidi Bouzid", "Siliana", "Sousse", "Tataouine", "Tozeur", "Tunis", "Zaghouan"
+        ];
+        if (!validGovernorates.includes(veterinarianDetails.governorate)) {
+          return res.status(400).json({ message: "Invalid governorate" });
+        }
+        vetDetails.governorate = veterinarianDetails.governorate;
+      }
+
+      if (veterinarianDetails.delegation) vetDetails.delegation = veterinarianDetails.delegation;
+      if (veterinarianDetails.landlinePhone) vetDetails.landlinePhone = veterinarianDetails.landlinePhone;
+
+      if (veterinarianDetails.services) {
+        vetDetails.services = veterinarianDetails.services.map((s) => ({
+          serviceName: s.serviceName || "",
+          fee: Math.max(0, parseFloat(s.fee) || 0),
+        }));
+      }
+
+      if (veterinarianDetails.languagesSpoken) {
+        const validLanguages = ["Français", "Anglais", "Arabe"];
+        if (!veterinarianDetails.languagesSpoken.every((lang) => validLanguages.includes(lang))) {
+          return res.status(400).json({ message: "Invalid language" });
+        }
+        vetDetails.languagesSpoken = veterinarianDetails.languagesSpoken;
+      }
+
+      if (veterinarianDetails.openingHours) {
+        const validSessions = ["Single Session", "Double Session", "Closed"];
+        for (const day of ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]) {
+          if (veterinarianDetails.openingHours[day]) {
+            if (!validSessions.includes(veterinarianDetails.openingHours[day])) {
+              return res.status(400).json({ message: `Invalid session type for ${day}` });
+            }
+            vetDetails.openingHours = vetDetails.openingHours || {};
+            vetDetails.openingHours[day] = veterinarianDetails.openingHours[day];
+            ["Start", "End", "Start2", "End2"].forEach((suffix) => {
+              const key = `${day}${suffix}`;
+              if (veterinarianDetails.openingHours[key]) {
+                vetDetails.openingHours[key] = veterinarianDetails.openingHours[key];
+              }
+            });
+          }
+        }
+      }
+
+      if (veterinarianDetails.geolocation) {
+        vetDetails.geolocation = {
+          latitude: parseFloat(veterinarianDetails.geolocation.latitude) || 36.8665367,
+          longitude: parseFloat(veterinarianDetails.geolocation.longitude) || 10.1647233,
+        };
+      }
+
+      if (veterinarianDetails.clinicPhotos) vetDetails.clinicPhotos = veterinarianDetails.clinicPhotos;
+      if (veterinarianDetails.businessCardImage) vetDetails.businessCardImage = veterinarianDetails.businessCardImage;
+
+      // Fields that CANNOT be updated (diplomasAndTraining and specializations are ignored)
+      user.veterinarianDetails = vetDetails;
+    }
+
+    await user.save();
+
+    io.emit("userProfileUpdated", {
+      userId: user._id,
+      fullName: user.fullName,
+      image: user.image,
+      veterinarianDetails: user.veterinarianDetails,
+      message: "Vet profile updated",
+    });
+
+    res.json({
+      message: "Vet profile updated successfully",
+      user: {
+        _id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+        image: user.image,
+        veterinarianDetails: user.veterinarianDetails,
+      },
+    });
+  } catch (error) {
+    console.error("Update Vet Profile Error:", error);
+    res.status(500).json({ message: "Failed to update vet profile", detail: error.message });
+  }
+};
 export {
   createProfile,
   forgotPassword,
@@ -820,5 +948,6 @@ export {
   deleteUserByAdmin,
   getUserStats,
   getVeterinarians,
-  getVeterinarianById
+  getVeterinarianById,
+  updateVetProfile
 };

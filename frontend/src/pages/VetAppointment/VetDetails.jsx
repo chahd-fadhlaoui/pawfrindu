@@ -18,6 +18,8 @@ import {
   Camera,
 } from "lucide-react";
 import MapViewer from "../../components/map/MapViewer";
+import AppointmentModal from "../../components/vet/AppointmentModal";
+import { useApp } from "../../context/AppContext"; 
 
 const PawIcon = ({ className, style }) => (
   <svg viewBox="0 0 24 24" className={className} style={style} fill="currentColor">
@@ -28,10 +30,12 @@ const PawIcon = ({ className, style }) => (
 export default function VetDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useApp(); // Access authenticated user from context
   const [vet, setVet] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchVetDetails = async () => {
@@ -77,6 +81,21 @@ export default function VetDetails() {
       (prev) => (prev - 1 + vet.veterinarianDetails.clinicPhotos.length) % vet.veterinarianDetails.clinicPhotos.length
     );
 
+  const openAppointmentModal = () => {
+    if (!user) {
+      navigate("/login", { state: { from: `/vets/${id}` } }); // Pass current location to redirect back after login
+      return;
+    }
+    setIsModalOpen(true);
+  };
+
+  const closeAppointmentModal = () => setIsModalOpen(false);
+  const handleBookingSuccess = (data) => {
+    console.log("Appointment booked successfully:", data);
+    closeAppointmentModal();
+    alert("Appointment booked successfully!");
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-pink-50 to-white">
@@ -114,7 +133,6 @@ export default function VetDetails() {
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-yellow-50 via-white to-pink-50">
-      {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-0 w-full h-full">
           <div className="absolute top-10 left-10 w-64 h-64 bg-yellow-200 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob"></div>
@@ -137,7 +155,6 @@ export default function VetDetails() {
         </button>
 
         <div className="bg-white/80 backdrop-blur-lg rounded-3xl overflow-hidden shadow-xl border border-yellow-100 relative">
-          {/* Hero header section */}
           <div className="relative h-48 bg-gradient-to-r from-yellow-100 to-pink-100 overflow-hidden">
             <div className="absolute inset-0">
               <div className="absolute inset-0 bg-gradient-to-br from-yellow-100 to-pink-100 mix-blend-multiply opacity-20"></div>
@@ -170,10 +187,16 @@ export default function VetDetails() {
               </div>
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
-                  className="flex items-center justify-center gap-2 px-6 py-3 text-base font-medium text-white bg-gradient-to-br from-[#ffc929] to-pink-500 rounded-full shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-pink-400"
-                  onClick={() => alert("Booking appointment...")}
+                  className={`flex items-center justify-center gap-2 px-6 py-3 text-base font-medium rounded-full shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-pink-400 ${
+                    user
+                      ? "text-white bg-gradient-to-br from-[#ffc929] to-pink-500"
+                      : "text-gray-500 bg-gray-200 cursor-not-allowed"
+                  }`}
+                  onClick={openAppointmentModal}
+                  disabled={!user} // Disable button if not authenticated
+                  title={!user ? "Please log in to book an appointment" : ""}
                 >
-                  <Calendar size={18} className="text-white" />
+                  <Calendar size={18} className={user ? "text-white" : "text-gray-400"} />
                   Book Appointment
                 </button>
                 <button
@@ -186,7 +209,6 @@ export default function VetDetails() {
               </div>
             </div>
 
-            {/* Specialization pills */}
             {vet.veterinarianDetails?.specialization && (
               <div className="mt-6">
                 <p className="text-sm font-medium text-gray-500 mb-2">Specialized in</p>
@@ -202,9 +224,7 @@ export default function VetDetails() {
             )}
           </div>
 
-          {/* Content tabs and sections */}
           <div className="px-6 md:px-8 lg:px-12 pb-10 space-y-8">
-            {/* About section */}
             {vet.about ? (
               <div className="bg-gradient-to-r from-yellow-50 to-pink-50 p-8 rounded-2xl shadow-sm">
                 <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-3 mb-4">
@@ -225,7 +245,6 @@ export default function VetDetails() {
               </div>
             )}
 
-            {/* Info cards */}
             <div className="grid md:grid-cols-2 gap-6">
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-yellow-100 hover:border-pink-200 hover:shadow-md transition-all duration-300">
                 <div className="flex items-center gap-4 mb-6">
@@ -317,7 +336,6 @@ export default function VetDetails() {
               </div>
             </div>
 
-            {/* Services section */}
             {vet.veterinarianDetails?.services?.length > 0 && (
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-yellow-100 hover:border-pink-200 hover:shadow-md transition-all duration-300">
                 <div className="flex items-center gap-4 mb-6">
@@ -346,7 +364,6 @@ export default function VetDetails() {
               </div>
             )}
 
-            {/* Opening hours section */}
             {vet.veterinarianDetails?.openingHours && (
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-yellow-100 hover:border-pink-200 hover:shadow-md transition-all duration-300">
                 <div className="flex items-center gap-4 mb-6">
@@ -402,7 +419,6 @@ export default function VetDetails() {
           </div>
         </div>
 
-        {/* Clinic photos gallery */}
         {vet.veterinarianDetails?.clinicPhotos?.length > 0 && (
           <div className="mt-12">
             <h3 className="text-2xl font-bold text-gray-800 mb-6 text-center flex items-center justify-center gap-3">
@@ -410,7 +426,7 @@ export default function VetDetails() {
               Clinic Photos
             </h3>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 ">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {vet.veterinarianDetails.clinicPhotos.map((photo, index) => (
                 <div
                   key={index}
@@ -436,7 +452,6 @@ export default function VetDetails() {
           </div>
         )}
 
-        {/* Photo Modal */}
         {selectedPhotoIndex !== null && (
           <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 mt-20">
             <div className="relative max-w-5xl w-full p-4">
@@ -481,6 +496,14 @@ export default function VetDetails() {
               </div>
             </div>
           </div>
+        )}
+
+        {isModalOpen && (
+          <AppointmentModal
+            vet={vet}
+            onClose={closeAppointmentModal}
+            onSuccess={handleBookingSuccess}
+          />
         )}
       </div>
     </div>

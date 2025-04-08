@@ -14,6 +14,7 @@ import {
   resetPassword,
   updateProfile,
   updateUserByAdmin,
+  updateVetProfile,
   validateResetToken,
 } from "../controllers/userController.js";
 import { authenticate, authorize } from "../middlewares/authMiddleware.js";
@@ -36,6 +37,7 @@ userRouter.get('/me', authenticate, getCurrentUser);
 console.log('GET /me route registered');
 userRouter.post("/profile", authenticate, createProfile);
 userRouter.put("/updateProfile", authenticate, updateProfile); // Nouvelle route PUT pour update
+userRouter.put("/updateVetProfile", authenticate, updateVetProfile); // New for Vet
 // Admin-Only Route
 userRouter.get('/getAllUsers', authenticate, authorize('Admin'), getAllUsers);
 userRouter.put("/users/:userId", authenticate, authorize("Admin"), updateUserByAdmin); // update the role / adminType / isActive / isArchieve
