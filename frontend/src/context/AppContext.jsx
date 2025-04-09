@@ -67,6 +67,9 @@ const AppContextProvider = ({ children }) => {
       if (error.response?.status === 401) {
         localStorage.removeItem("token");
         setUser(null);
+        setError("Session expired. Please log in again.");
+      } else {
+        setError("An unexpected error occurred during authentication.");
       }
       return false;
     });
@@ -186,10 +189,11 @@ const AppContextProvider = ({ children }) => {
   }, []);
 
   const logout = useCallback(() => {
-    axiosInstance.setAuthToken(null);
-    localStorage.removeItem("token");
-    disconnectSocket();
-    setUser(null);
+    axiosInstance.setAuthToken(null); // Clears the Authorization header
+    localStorage.removeItem("token"); // Removes token from localStorage
+    socket.auth = null; // Clear socket auth
+    disconnectSocket(); // Disconnects Socket
+    setUser(null); // Resets user state
     setUserPets([]);
     setAllUsers([]);
     setApplications([]);
@@ -198,11 +202,28 @@ const AppContextProvider = ({ children }) => {
 
   const triggerRefresh = useCallback(
     async (type) => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.log("Skipping refresh: No token available");
+        setLoading(false);
+        return;
+      }
+  
       setLoading(true);
       try {
+        if (!user) {
+          console.log("User not set, rechecking auth...");
+          const isAuthenticated = await checkAuth();
+          if (!isAuthenticated) {
+            console.log("Auth check failed during refresh");
+            setLoading(false);
+            return;
+          }
+        }
+  
         if (type === "pets" || !type) {
           await fetchPets();
-          console.log("User role:", user?.role); // Log role
+          console.log("User role:", user?.role);
           if (user?.role === "PetOwner" || user?.role === "Admin") {
             console.log("Calling getMyPets for user:", user?._id);
             await getMyPets();
@@ -217,16 +238,16 @@ const AppContextProvider = ({ children }) => {
         setLoading(false);
       }
     },
-    [fetchPets, getMyPets, fetchAllUsers, getMyAdoptionRequests, user]
+    [fetchPets, getMyPets, fetchAllUsers, getMyAdoptionRequests, checkAuth, user] 
   );
 
   // Connect socket only if not already connected
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (token) {
+    if (token && !socket.connected) {
       initializeSocket(token);
     }
-  }, []); 
+  }, []);
 
   // Socket.IO event listeners
   useEffect(() => {
@@ -446,8 +467,23 @@ const AppContextProvider = ({ children }) => {
 
   // Initialize app
   useEffect(() => {
-    triggerRefresh();
-  }, [triggerRefresh]);
+    const initializeApp = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+      if (!user) { // Only run checkAuth if user isn’t already set
+        const isAuthenticated = await checkAuth();
+        if (!isAuthenticated) {
+          setLoading(false);
+        }
+      } else {
+        setLoading(false); // User is already authenticated, no need to recheck
+      }
+    };
+    initializeApp();
+  }, [checkAuth, user]); 
 
   // Auth functions
   const login = async (email, password) => {
@@ -464,28 +500,33 @@ const AppContextProvider = ({ children }) => {
       axiosInstance.setAuthToken(accessToken);
       socket.auth = { token: accessToken };
       socket.connect();
-      const updatedUser = ensureUserHasImage({
-        ...userData,
-        adminType: userData.adminType,
-        isActive: userData.isActive,
-        lastLogin: userData.lastLogin,
-      });
-      setUser(updatedUser);
-
-      // Fetch data after login
-      const fetchPromises = [fetchUserProfile(), fetchPets()];
-      if (updatedUser.role === "PetOwner") {
-        fetchPromises.push(getMyPets());
+  
+      const fetchPromises = [];
+      fetchPromises.push(fetchPets().then((petsData) => ({ pets: petsData })));
+      fetchPromises.push(fetchUserProfile().then((profile) => ({ user: profile })));
+      if (userData.role === "PetOwner") {
+        fetchPromises.push(getMyPets().then((result) => ({ userPets: result.data })));
         fetchPromises.push(
-          getMyAdoptionRequests().then((result) => {
-            if (result.success) setApplications(result.data);
-          })
+          getMyAdoptionRequests().then((result) => ({ applications: result.success ? result.data : [] }))
         );
       }
-      if (updatedUser.role === "Admin") {
-        fetchPromises.push(fetchAllUsers());
+      if (userData.role === "Admin") {
+        fetchPromises.push(fetchAllUsers().then((users) => ({ allUsers: users })));
       }
-      await Promise.all(fetchPromises);
+  
+      const results = await Promise.all(fetchPromises);
+      const fetchedData = results.reduce((acc, result) => ({ ...acc, ...result }), {});
+  
+      const finalUser = fetchedData.user || ensureUserHasImage({ ...userData, adminType: userData.adminType });
+      setUser(finalUser);
+      setPets(fetchedData.pets || []);
+      setUserPets(fetchedData.userPets || []);
+      setApplications(fetchedData.applications || []);
+      setAllUsers(fetchedData.allUsers || []);
+  
+      console.log("User set after login:", finalUser); 
+      console.log("Token after login:", localStorage.getItem("token").substring(0, 10) + "...");
+  
       return { success: true, redirectTo };
     } catch (error) {
       const errorMessage = error.response?.data?.message || "Error logging in";

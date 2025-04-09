@@ -1,5 +1,5 @@
 import { ArrowLeftRight, Shield, Users, BarChart4 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import DashboardStats from "../../components/admin/DashboardStats.jsx";
 import PetsManagement from "../../components/admin/PetManagement/PetsManagement";
 import Sidebar from "../../components/admin/Sidebar";
@@ -17,6 +17,13 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState(TABS.DASHBOARD);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
+  useEffect(() => {
+    console.log("AdminDashboard mounted");
+    return () => console.log("AdminDashboard unmounted");
+  }, []);
+
+  console.log("AdminDashboard rendered with activeTab:", activeTab);
+
   const tabConfig = {
     [TABS.DASHBOARD]: {
       title: "Dashboard Statistics",
@@ -24,7 +31,6 @@ const AdminDashboard = () => {
       icon: <BarChart4 className="w-6 h-6 text-yellow-500" />,
       bgColor: "#FEF3C7",
       badge: { text: "Stats Module", color: "text-yellow-800 bg-yellow-100" },
-      content: <DashboardStats onRefresh={triggerRefresh} />,
     },
     [TABS.PETS]: {
       title: "Pet Management",
@@ -32,7 +38,6 @@ const AdminDashboard = () => {
       icon: <Shield className="w-6 h-6 text-pink-500" />,
       bgColor: "#FCE7F3",
       badge: { text: "Pets Module", color: "text-pink-800 bg-pink-100" },
-      content: <PetsManagement hideHeader={true} />,
     },
     [TABS.USERS]: {
       title: "User Management",
@@ -40,7 +45,6 @@ const AdminDashboard = () => {
       icon: <Users className="w-6 h-6 text-yellow-500" />,
       bgColor: "#FEF3C7",
       badge: { text: "Users Module", color: "text-yellow-800 bg-yellow-100" },
-      content: <UsersManagement hideHeader={true} />,
     },
   };
 
@@ -98,7 +102,17 @@ const AdminDashboard = () => {
 
         {/* Tab Content */}
         <section className="overflow-hidden bg-white shadow-lg rounded-xl">
-          <div className="p-4 sm:p-6">{currentTab.content}</div>
+          <div className="p-4 sm:p-6">
+            <div style={{ display: activeTab === TABS.DASHBOARD ? "block" : "none" }}>
+              <DashboardStats onRefresh={triggerRefresh} />
+            </div>
+            <div style={{ display: activeTab === TABS.PETS ? "block" : "none" }}>
+              <PetsManagement hideHeader={true} />
+            </div>
+            <div style={{ display: activeTab === TABS.USERS ? "block" : "none" }}>
+              <UsersManagement hideHeader={true} />
+            </div>
+          </div>
         </section>
       </main>
     </div>

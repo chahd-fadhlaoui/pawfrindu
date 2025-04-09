@@ -22,16 +22,33 @@ const CreateProfile = () => {
       },
     },
     trainerDetails: {
-      location: "",
-      certification: "",
-      specialties: "",
-      experience: "",
+      governorate: "",
+      delegation: "",
+      certificationImage: "",
+      trainingFacilityType: "",
+      geolocation: { latitude: 36.81897, longitude: 10.16579 }, // Tunis default
+      serviceAreas: [],
+      businessCardImage: "",
+      experienceYears: 0,
+      phone: "",
+      landlinePhone: "",
+      languagesSpoken: ["Arabe"],
+      services: [{ serviceName: "", fee: "", duration: "" }],
+      openingHours: {
+        monday: "Closed", mondayStart: "", mondayEnd: "", mondayStart2: "", mondayEnd2: "",
+        tuesday: "Closed", tuesdayStart: "", tuesdayEnd: "", tuesdayStart2: "", tuesdayEnd2: "",
+        wednesday: "Closed", wednesdayStart: "", wednesdayEnd: "", wednesdayStart2: "", wednesdayEnd2: "",
+        thursday: "Closed", thursdayStart: "", thursdayEnd: "", thursdayStart2: "", thursdayEnd2: "",
+        friday: "Closed", fridayStart: "", fridayEnd: "", fridayStart2: "", fridayEnd2: "",
+        saturday: "Closed", saturdayStart: "", saturdayEnd: "", saturdayStart2: "", saturdayEnd2: "",
+        sunday: "Closed", sundayStart: "", sundayEnd: "", sundayStart2: "", sundayEnd2: "",
+      },
+      trainingPhotos: [],
+      breedsTrained: [],
+      averageSessionDuration: 60,
+      professionalAffiliations: "",
     },
     veterinarianDetails: {
-      location: "",
-      degree: "",
-      specialization: "",
-      title: "",
       governorate: "",
       delegation: "",
       landlinePhone: "",
@@ -50,15 +67,14 @@ const CreateProfile = () => {
         sunday: "Closed", sundayStart: "", sundayEnd: "", sundayStart2: "", sundayEnd2: "",
       },
       clinicPhotos: [],
-      verificationDocument: "",
-      idPhoto: "",
+      businessCardImage: "",
     },
   });
   const [userRole, setUserRole] = useState("");
   const [formErrors, setFormErrors] = useState({});
   const [progressPercentage, setProgressPercentage] = useState(0);
 
-  const totalSteps = userRole === "Vet" ? 5 : 3;
+  const totalSteps = userRole === "PetOwner" ? 3 : 5; // Trainer and Vet get 5 steps
 
   useEffect(() => {
     if (!user) navigate("/login");

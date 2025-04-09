@@ -34,6 +34,11 @@ const PetsManagement = ({ hideHeader = false }) => {
     });
   };
 
+  useEffect(() => {
+    console.log("PetsManagement mounted");
+    return () => console.log("PetsManagement unmounted");
+  }, []);
+
   // Update counts when pets or userPets change (initial load or socket updates)
   useEffect(() => {
     updateCounts();
@@ -56,10 +61,10 @@ const PetsManagement = ({ hideHeader = false }) => {
     };
   }, [socket]);
 
-  // Optional manual refresh (only for edge cases)
-  const handleRefresh = () => {
-    event.preventDefault();
-    triggerRefresh("pets"); // Fetches fresh data from server if needed
+  const handleRefresh = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    await triggerRefresh("pets"); // Fetch fresh pet data
   };
 
   const getTabIcon = (tab) => {
@@ -116,8 +121,12 @@ const PetsManagement = ({ hideHeader = false }) => {
               <Shield className="w-6 h-6 text-yellow-500" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">Pet Management</h1>
-              <p className="text-sm text-gray-500">Oversee pet profiles and statuses</p>
+              <h1 className="text-xl font-bold text-gray-900">
+                Pet Management
+              </h1>
+              <p className="text-sm text-gray-500">
+                Oversee pet profiles and statuses
+              </p>
             </div>
           </div>
         </div>

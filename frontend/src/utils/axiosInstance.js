@@ -9,8 +9,13 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
-    if (token) config.headers.Authorization = `Bearer ${token}`;
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+      console.log("Token applied to request:", token.substring(0, 10) + "...");
+    } else {
+      console.log("No token found for request");
+    }
     return config;
   },
   (error) => Promise.reject(error)
@@ -21,9 +26,10 @@ axiosInstance.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401 && !error.config._retry) {
       error.config._retry = true;
-      localStorage.removeItem('token');
-      if (!window.location.pathname.includes('/login')) {
-        window.location.href = '/login';
+      console.log("401 detected, clearing token and redirecting...");
+      localStorage.removeItem("token");
+      if (!window.location.pathname.includes("/login")) {
+        window.location.href = "/login";
       }
     }
     return Promise.reject(error);

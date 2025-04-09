@@ -8,7 +8,7 @@ import { useApp } from "../../../context/AppContext";
 import axiosInstance from "../../../utils/axiosInstance";
 
 const UsersManagement = ({ hideHeader = false }) => {
-  const { allUsers, triggerRefresh } = useApp(); // Use context
+  const { allUsers, triggerRefresh } = useApp();
   const [activeTab, setActiveTab] = useState("active");
   const [counts, setCounts] = useState({
     active: 0,
@@ -37,14 +37,25 @@ const UsersManagement = ({ hideHeader = false }) => {
     }
   };
 
+  useEffect(() => {
+    console.log("UsersManagement mounted");
+    return () => console.log("UsersManagement unmounted");
+  }, []);
+
   // Initial fetch and refresh when triggered
   useEffect(() => {
     fetchUserStats();
   }, [allUsers]); // Re-fetch when allUsers changes (e.g., after refresh)
 
-  const handleRefresh = () => {
-    triggerRefresh(); // Trigger context refresh
-    fetchUserStats(); // Fetch updated stats immediately
+  const handleRefresh = async (e) => {
+    e.preventDefault(); // Ensure event doesn’t propagate
+    e.stopPropagation(); // Stop event bubbling
+    try {
+      await triggerRefresh(); // Fetch context data
+      await fetchUserStats(); // Fetch stats for UI update
+    } catch (error) {
+      console.error("Refresh failed:", error);
+    }
   };
 
   const getTabIcon = (tab) => {
@@ -87,15 +98,21 @@ const UsersManagement = ({ hideHeader = false }) => {
       {!hideHeader && (
         <div
           className="px-6 py-5 border-l-4"
-          style={{ borderImage: "linear-gradient(to bottom, #f59e0b, #ec4899) 1" }}
+          style={{
+            borderImage: "linear-gradient(to bottom, #f59e0b, #ec4899) 1",
+          }}
         >
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center p-2 rounded-lg bg-yellow-50">
               <Users className="w-6 h-6 text-yellow-500" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">User Management</h1>
-              <p className="text-sm text-gray-500">Manage platform users and permissions</p>
+              <h1 className="text-xl font-bold text-gray-900">
+                User Management
+              </h1>
+              <p className="text-sm text-gray-500">
+                Manage platform users and permissions
+              </p>
             </div>
           </div>
         </div>
@@ -121,7 +138,8 @@ const UsersManagement = ({ hideHeader = false }) => {
           ))}
         </div>
         <button
-          onClick={handleRefresh}
+          type="button"
+          onClick={handleRefresh} 
           className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white rounded-lg shadow-sm hover:bg-gray-50"
         >
           <RefreshCw className="w-4 h-4 mr-2" />

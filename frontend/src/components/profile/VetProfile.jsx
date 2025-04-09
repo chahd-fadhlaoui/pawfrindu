@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import axiosInstance from "../../utils/axiosInstance";
 import MapPicker from "../map/MapPicker";
 
@@ -25,7 +25,7 @@ const VetProfile = ({
   });
   const [history, setHistory] = useState([]);
   const [specializationInput, setSpecializationInput] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false); // Added isSubmitting state
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const governorates = [
     "Ariana", "Beja", "Ben Arous", "Bizerte", "Gabes", "Gafsa", "Jendouba", "Kairouan", "Kasserine", "Kebili",
@@ -1262,7 +1262,7 @@ const renderStep4 = () => (
             Submitting...
           </span>
         ) : (
-          "Submit" // Changed from "Complete Registration" to "Submit"
+          "Submit" 
         )}
       </button>
       </div>

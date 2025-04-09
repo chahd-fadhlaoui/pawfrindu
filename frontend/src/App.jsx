@@ -26,6 +26,7 @@ import Veterinarians from './pages/VetAppointment/Veterinarians';
 import VetDetails from './pages/VetAppointment/VetDetails';
 import "leaflet/dist/leaflet.css";
 import VetPendingApproval from './pages/VetDashboard/VetPendingApproval';
+import TrainerPendingApproval from './pages/TrainerDashboard/TrainerPendingApproval';
 
 const Layout = ({ children }) => {
   const location = useLocation();
@@ -78,8 +79,9 @@ const AppRoutes = () => {
       <Route path="/forbidden" element={<Forbidden />} />
       <Route path="/admin" element={<ProtectedRoute allowedRoles={["Admin"]}><AdminDashboard /></ProtectedRoute>} />
       <Route path="/trainer" element={<ProtectedRoute allowedRoles={["Trainer"]}><TrainerDashboard /></ProtectedRoute>} />
+      <Route path="/trainer-pending-approval" element={<ProtectedRoute allowedRoles={["Trainer"]}><TrainerPendingApproval/></ProtectedRoute>} /> 
       <Route path="/vet" element={<ProtectedRoute allowedRoles={["Vet"]}><VetDashboard /></ProtectedRoute>} />
-      <Route path="/vet-pending-approval" element={<ProtectedRoute allowedRoles={["Vet"]}><VetPendingApproval/></ProtectedRoute>} /> {/* Add this route */}
+      <Route path="/vet-pending-approval" element={<ProtectedRoute allowedRoles={["Vet"]}><VetPendingApproval/></ProtectedRoute>} /> 
       <Route path="/addPet" element={<ProtectedRoute allowedRoles={["PetOwner"]}><CreatePet /></ProtectedRoute>} />
       <Route path="/list/*" element={<ProtectedRoute allowedRoles={["PetOwner"]}><PetManagementDashboard /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute allowedRoles={["PetOwner", "Trainer", "Vet"]}><Profile /></ProtectedRoute>} />

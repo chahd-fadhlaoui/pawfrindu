@@ -86,7 +86,7 @@ const register = async (req, res) => {
 
 // 🚀 Étape 2: Complétion du profil et génération du token
 const createProfile = async (req, res) => {
-  const { userId, image, gender} = req.body;
+  const { userId, image, gender } = req.body;
   const { petOwnerDetails, trainerDetails, veterinarianDetails } = req.body;
 
   try {
@@ -99,11 +99,12 @@ const createProfile = async (req, res) => {
     if (image) {
       user.image = image;
     }
-   // Ajouter la gestion du champ gender
-   if (gender) {
-    user.gender = gender;
-  }
-    // Rest of your existing role-specific logic
+    // Update gender if provided
+    if (gender) {
+      user.gender = gender;
+    }
+
+    // Role-specific logic
     if (user.role === "PetOwner") {
       if (!petOwnerDetails?.address || !petOwnerDetails?.phone) {
         return res
@@ -111,26 +112,49 @@ const createProfile = async (req, res) => {
           .json({ message: "Address and phone are required for Pet Owner." });
       }
       if (petOwnerDetails.petExperience && petOwnerDetails.petExperience._id) {
-        delete petOwnerDetails.petExperience._id;
+        delete petOwnerDetails.petExperience._id; // Remove _id if present to avoid overwriting issues
       }
       user.petOwnerDetails = petOwnerDetails;
     } else if (user.role === "Trainer") {
-      if (!trainerDetails?.location || !trainerDetails?.certification) {
+      if (
+        !trainerDetails?.governorate ||
+        !trainerDetails?.delegation ||
+        !trainerDetails?.certificationImage ||
+        !trainerDetails?.trainingFacilityType
+      ) {
         return res.status(400).json({
-          message: "Location and certification are required for Trainer.",
+          message:
+            "Governorate, delegation, certification image, and training facility type are required for Trainer.",
+        });
+      }
+      // Ensure geolocation is provided for fixed-location facility types
+      if (
+        ["Fixed Facility", "Public Space", "Rural Area"].includes(
+          trainerDetails.trainingFacilityType
+        ) &&
+        (!trainerDetails.geolocation?.latitude ||
+          !trainerDetails.geolocation?.longitude)
+      ) {
+        return res.status(400).json({
+          message:
+            "Geolocation (latitude and longitude) is required for Fixed Facility, Public Space, or Rural Area trainers.",
         });
       }
       user.trainerDetails = trainerDetails;
     } else if (user.role === "Vet") {
-      if (!veterinarianDetails?.governorate || !veterinarianDetails?.diplomasAndTraining) {
+      if (
+        !veterinarianDetails?.governorate ||
+        !veterinarianDetails?.diplomasAndTraining
+      ) {
         return res.status(400).json({
-          message: "Location and degree are required for Veterinarian.",
+          message:
+            "Governorate and diplomas/training details are required for Veterinarian.",
         });
       }
       user.veterinarianDetails = veterinarianDetails;
     }
 
-    // Save all changes including the image
+    // Save all changes
     await user.save();
 
     // Generate token after profile completion
@@ -157,7 +181,6 @@ const createProfile = async (req, res) => {
       message: "Profile completed successfully!",
       accessToken,
       user,
-      // profileImage: user.image, // Send back the saved image URL
     });
   } catch (error) {
     console.error("Profile Completion Error:", error);
