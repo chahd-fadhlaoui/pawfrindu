@@ -30,6 +30,7 @@ function Header() {
         { name: "Create Pet", to: "/addPet" },
         { name: "My Pet Posts", to: "/list/posts" },
         { name: "My Adoption Requests", to: "/list/requests" },
+        { name: "My Vet Appointments", to: "/Vetappointments" }, 
       ],
     },
   ];

@@ -9,6 +9,7 @@ import petRouter from './routes/petRoute.js';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import fs from 'fs';
+import appointmentRouter from './routes/appointmentRoute.js';
 
 // App config
 const app = express();
@@ -41,6 +42,7 @@ app.use('/api/user', userRouter);
 console.log('User router mounted at /api/user');
 app.use('/api', uploadRouter);
 app.use('/api/pet', petRouter);
+app.use("/api/appointments", appointmentRouter);
 
 // Create 'uploads' directory if it doesn’t exist
 const uploadDir = 'uploads';
