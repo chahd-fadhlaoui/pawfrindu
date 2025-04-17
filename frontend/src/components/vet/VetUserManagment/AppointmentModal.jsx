@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { X, Calendar, Clock, ChevronLeft, ChevronRight, Info, Check } from "lucide-react";
-import axiosInstance from "../../utils/axiosInstance";
-import { useApp } from "../../context/AppContext";
+import axiosInstance from "../../../utils/axiosInstance";
+import { useApp } from "../../../context/AppContext";
 import { useNavigate } from "react-router-dom";
 
 const AppointmentModal = ({ vet, onClose, onSuccess }) => {
@@ -9,7 +9,7 @@ const AppointmentModal = ({ vet, onClose, onSuccess }) => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [availableSlots, setAvailableSlots] = useState([]);
+  const [availableSlots, setAvailableSlots] = useState([]); 
   const [reservedSlots, setReservedSlots] = useState([]);
   const [reservedSlotsByDate, setReservedSlotsByDate] = useState({});
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -97,7 +97,8 @@ const AppointmentModal = ({ vet, onClose, onSuccess }) => {
 
   const normalizeDate = (date) => {
     const newDate = new Date(date);
-    newDate.setUTCHours(0, 0, 0, 0); // Use UTC to avoid timezone shifts
+    // Use local time (Tunisia, UTC+1) instead of UTC to align with platform
+    newDate.setHours(0, 0, 0, 0);
     return newDate;
   };
 
@@ -118,18 +119,18 @@ const AppointmentModal = ({ vet, onClose, onSuccess }) => {
     }
 
     const start = new Date();
-    start.setUTCHours(startHour, startMinute, 0, 0);
+    start.setHours(startHour, startMinute, 0, 0);
     const end = new Date();
-    end.setUTCHours(endHour, endMinute, 0, 0);
-    if (end <= start) end.setUTCDate(end.getUTCDate() + 1);
-    end.setUTCMinutes(end.getUTCMinutes() - duration);
+    end.setHours(endHour, endMinute, 0, 0);
+    if (end <= start) end.setDate(end.getDate() + 1);
+    end.setMinutes(end.getMinutes() - duration);
 
     let currentTime = new Date(start);
     while (currentTime <= end) {
-      const hours = currentTime.getUTCHours().toString().padStart(2, "0");
-      const minutes = currentTime.getUTCMinutes().toString().padStart(2, "0");
+      const hours = currentTime.getHours().toString().padStart(2, "0");
+      const minutes = currentTime.getMinutes().toString().padStart(2, "0");
       slots.push(`${hours}:${minutes}`);
-      currentTime.setUTCMinutes(currentTime.getUTCMinutes() + duration);
+      currentTime.setMinutes(currentTime.getMinutes() + duration);
     }
     return slots;
   };
@@ -173,26 +174,37 @@ const AppointmentModal = ({ vet, onClose, onSuccess }) => {
   const getDaysInMonthView = () => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
-    const firstDayOfMonth = new Date(year, month, 1);
-    const lastDayOfMonth = new Date(year, month + 1, 0);
+    const firstDayOfMonth = normalizeDate(new Date(year, month, 1));
+    const lastDayOfMonth = normalizeDate(new Date(year, month + 1, 0));
     const result = [];
 
+    // Log for debugging
+    console.log("First day of month:", firstDayOfMonth.toDateString(), "Day of week:", firstDayOfMonth.getDay());
+
+    // Adjust to start week on Sunday (0 = Sunday, 1 = Monday, etc.)
     const firstDayOfWeek = firstDayOfMonth.getDay();
-    for (let i = firstDayOfWeek - 1; i >= 0; i--) {
-      const date = normalizeDate(new Date(year, month, -i));
+    const startOffset = firstDayOfWeek;
+
+    // Fill days from previous month
+    for (let i = startOffset - 1; i >= 0; i--) {
+      const date = normalizeDate(new Date(year, month, -(startOffset - 1 - i)));
       result.push({ date, isCurrentMonth: false, isOpen: isDayOpen(date), isFullyBooked: isDayFullyBooked(date) });
     }
 
+    // Fill current month's days
     for (let i = 1; i <= lastDayOfMonth.getDate(); i++) {
       const date = normalizeDate(new Date(year, month, i));
       result.push({ date, isCurrentMonth: true, isOpen: isDayOpen(date), isFullyBooked: isDayFullyBooked(date) });
     }
 
+    // Fill days from next month to complete the grid
     const lastDayOfWeek = lastDayOfMonth.getDay();
-    for (let i = 1; i < 7 - lastDayOfWeek; i++) {
+    const remainingDays = 6 - lastDayOfWeek;
+    for (let i = 1; i <= remainingDays; i++) {
       const date = normalizeDate(new Date(year, month + 1, i));
       result.push({ date, isCurrentMonth: false, isOpen: isDayOpen(date), isFullyBooked: isDayFullyBooked(date) });
     }
+
     return result;
   };
 
@@ -251,9 +263,12 @@ const AppointmentModal = ({ vet, onClose, onSuccess }) => {
     const errors = {};
     if (!selectedPet && !formData.customPetName.trim()) errors.petName = "Please select a pet or enter a custom pet name";
     if (!formData.reason.trim()) errors.reason = "Please specify the reason for your visit";
-    if (!formData.ownerName.trim()) errors.ownerName = "Please enter your name";
-    if (!formData.phone.trim()) errors.phone = "Please enter your phone number";
-    if (!formData.email.trim()) errors.email = "Please enter your email";
+    // Only validate ownerName, phone, email if no pet is selected (unlikely case)
+    if (!selectedPet && !formData.customPetName.trim()) {
+      if (!formData.ownerName.trim()) errors.ownerName = "Please enter your name";
+      if (!formData.phone.trim()) errors.phone = "Please enter your phone number";
+      if (!formData.email.trim()) errors.email = "Please enter your email";
+    }
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -364,10 +379,11 @@ const AppointmentModal = ({ vet, onClose, onSuccess }) => {
                         key={index}
                         className={`
                           h-10 w-10 rounded-full flex items-center justify-center text-sm font-medium transition-all
-                          ${!day.isCurrentMonth ? "text-gray-300" : isPast || isFullyBooked ? "text-gray-400" : "text-gray-800"}
+                          ${!day.isCurrentMonth ? "text-gray-300" : isPast ? "text-gray-400" : isFullyBooked ? "text-red-600" : "text-gray-800"}
                           ${isToday ? "ring-2 ring-[#ffc929]" : ""}
                           ${isSelected ? "bg-pink-500 text-white" : ""}
-                          ${!day.isOpen || isPast || isFullyBooked ? "opacity-50 cursor-not-allowed" : "hover:bg-yellow-100"}
+                          ${isFullyBooked ? "ring-2 ring-red-500" : ""}
+                          ${!day.isOpen || isPast ? "bg-gray-300 opacity-50 cursor-not-allowed" : isFullyBooked ? "bg-red-100 opacity-50 cursor-not-allowed" : "hover:bg-yellow-100"}
                         `}
                         onClick={() => !isPast && day.isOpen && !isFullyBooked && handleDateSelect(day.date)}
                         disabled={isPast || !day.isOpen || isFullyBooked}
@@ -379,7 +395,7 @@ const AppointmentModal = ({ vet, onClose, onSuccess }) => {
                 </div>
               </div>
             )}
-            <div className="flex items-center gap-4 text-xs text-gray-600 justify-center">
+            <div className="flex items-center gap-4 text-xs text-gray-600 justify-center flex-wrap">
               <div className="flex items-center gap-1">
                 <div className="w-3 h-3 rounded-full bg-gray-300"></div>
                 <span>Unavailable</span>
@@ -393,7 +409,7 @@ const AppointmentModal = ({ vet, onClose, onSuccess }) => {
                 <span>Selected</span>
               </div>
               <div className="flex items-center gap-1">
-                <div className="w-3 h-3 rounded-full bg-gray-400 opacity-50"></div>
+                <div className="w-3 h-3 rounded-full ring-2 ring-red-500"></div>
                 <span>Fully Booked</span>
               </div>
             </div>
@@ -471,6 +487,7 @@ const AppointmentModal = ({ vet, onClose, onSuccess }) => {
         );
 
       case 3:
+        const isPetSelected = selectedPet || formData.customPetName.trim();
         return (
           <div className="space-y-5">
             <div className="flex items-center justify-between">
@@ -582,17 +599,23 @@ const AppointmentModal = ({ vet, onClose, onSuccess }) => {
                 <label htmlFor="ownerName" className="block text-sm font-medium text-gray-700 mb-1">
                   Owner Name*
                 </label>
-                <input
-                  type="text"
-                  id="ownerName"
-                  name="ownerName"
-                  value={formData.ownerName}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 rounded-lg border ${
-                    formErrors.ownerName ? "border-red-500 focus:ring-red-200" : "border-gray-300 focus:ring-pink-200"
-                  } focus:outline-none focus:ring-2 text-sm`}
-                  placeholder="Your full name"
-                />
+                {isPetSelected ? (
+                  <div className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-gray-100 text-sm text-gray-700">
+                    {formData.ownerName || "N/A"}
+                  </div>
+                ) : (
+                  <input
+                    type="text"
+                    id="ownerName"
+                    name="ownerName"
+                    value={formData.ownerName}
+                    onChange={handleInputChange}
+                    className={`w-full px-3 py-2 rounded-lg border ${
+                      formErrors.ownerName ? "border-red-500 focus:ring-red-200" : "border-gray-300 focus:ring-pink-200"
+                    } focus:outline-none focus:ring-2 text-sm`}
+                    placeholder="Your full name"
+                  />
+                )}
                 {formErrors.ownerName && <p className="mt-1 text-xs text-red-500">{formErrors.ownerName}</p>}
               </div>
 
@@ -600,17 +623,23 @@ const AppointmentModal = ({ vet, onClose, onSuccess }) => {
                 <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
                   Phone Number*
                 </label>
-                <input
-                  type="text"
-                  id="phone"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 rounded-lg border ${
-                    formErrors.phone ? "border-red-500 focus:ring-red-200" : "border-gray-300 focus:ring-pink-200"
-                  } focus:outline-none focus:ring-2 text-sm`}
-                  placeholder="Your phone number"
-                />
+                {isPetSelected ? (
+                  <div className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-gray-100 text-sm text-gray-700">
+                    {formData.phone || "N/A"}
+                  </div>
+                ) : (
+                  <input
+                    type="text"
+                    id="phone"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    className={`w-full px-3 py-2 rounded-lg border ${
+                      formErrors.phone ? "border-red-500 focus:ring-red-200" : "border-gray-300 focus:ring-pink-200"
+                    } focus:outline-none focus:ring-2 text-sm`}
+                    placeholder="Your phone number"
+                  />
+                )}
                 {formErrors.phone && <p className="mt-1 text-xs text-red-500">{formErrors.phone}</p>}
               </div>
 
@@ -618,17 +647,23 @@ const AppointmentModal = ({ vet, onClose, onSuccess }) => {
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                   Email*
                 </label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 rounded-lg border ${
-                    formErrors.email ? "border-red-500 focus:ring-red-200" : "border-gray-300 focus:ring-pink-200"
-                  } focus:outline-none focus:ring-2 text-sm`}
-                  placeholder="Your email address"
-                />
+                {isPetSelected ? (
+                  <div className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-gray-100 text-sm text-gray-700">
+                    {formData.email || "N/A"}
+                  </div>
+                ) : (
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className={`w-full px-3 py-2 rounded-lg border ${
+                      formErrors.email ? "border-red-500 focus:ring-red-200" : "border-gray-300 focus:ring-pink-200"
+                    } focus:outline-none focus:ring-2 text-sm`}
+                    placeholder="Your email address"
+                  />
+                )}
                 {formErrors.email && <p className="mt-1 text-xs text-red-500">{formErrors.email}</p>}
               </div>
 

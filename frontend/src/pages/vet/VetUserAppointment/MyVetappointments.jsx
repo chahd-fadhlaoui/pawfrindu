@@ -1,13 +1,13 @@
   import React, { useEffect, useState } from "react";
   import { useNavigate } from "react-router-dom";
   import { ChevronLeft, ChevronRight, Filter, Calendar, X, Trash2, Edit } from "lucide-react";
-  import EmptyState from "../../components/EmptyState";
-  import { Tooltip } from "../../components/Tooltip";
-  import axiosInstance from "../../utils/axiosInstance";
-  import { useApp } from "../../context/AppContext";
-  import AppointmentActionModal from "../../components/vet/AppointmentActionModal";
+  import EmptyState from "../../../components/EmptyState";
+  import { Tooltip } from "../../../components/Tooltip";
+  import axiosInstance from "../../../utils/axiosInstance";
+  import { useApp } from "../../../context/AppContext";
+  import AppointmentActionModal from "../../../components/vet/VetUserManagment/AppointmentActionModal";
 
-  const STATUS_STYLES = {
+  const STATUS_STYLES = { 
     pending: "bg-yellow-100 text-yellow-700 border-yellow-200",
     confirmed: "bg-green-100 text-green-700 border-green-200",
     cancelled: "bg-red-100 text-red-700 border-red-200",
@@ -87,17 +87,17 @@
           <div className="flex items-center gap-3">
             <StatusBadge status={appointment.status} />
             <Tooltip text="Update Appointment">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (!disabled) onAction(appointment, "update");
-                }}
-                className="p-2 bg-white border border-gray-200 rounded-full hover:bg-pink-50 hover:text-pink-600 hover:border-pink-300 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-pink-200"
-                disabled={disabled || appointment.status === "confirmed" || appointment.status === "cancelled"}
-              >
-                <Edit size={16} />
-              </button>
-            </Tooltip>
+          <button
+    onClick={(e) => {
+      e.stopPropagation();
+      if (!disabled) onAction(appointment, "update");
+    }}
+    className="p-2 bg-white border border-gray-200 rounded-full hover:bg-pink-50 hover:text-pink-600 hover:border-pink-300 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-pink-200"
+    disabled={disabled || appointment.status === "cancelled"} // Supprimé appointment.status === "confirmed"
+  >
+    <Edit size={16} />
+  </button>
+</Tooltip>
             <Tooltip text="Cancel Appointment">
               <button
                 onClick={(e) => {
@@ -333,10 +333,18 @@
               )
         );
       } else if (action === "update") {
-        setAppointments((prev) => prev.map((appt) => (appt._id === appointment._id ? appointment : appt)));
+        setAppointments((prev) =>
+          prev.map((appt) =>
+            appt._id === appointment._id
+              ? {
+                  ...appointment,
+                  status: appt.status === "confirmed" ? "pending" : appointment.status, // Forcer "pending" si initialement "confirmed"
+                }
+              : appt
+          )
+        );
       }
     };
-
     return (
       <div className="container mx-auto py-8 bg-gradient-to-br from-white to-pink-50 min-h-screen">
         <h1 className="text-3xl font-bold text-gray-800 mb-6">My Appointments</h1>

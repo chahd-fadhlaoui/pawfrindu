@@ -5,12 +5,12 @@ import {
   Upload, Trash2, Edit, Save, X, Loader2, AlertTriangle,
   CreditCard
 } from "lucide-react";
-import { useApp } from "../../context/AppContext";
+import { useApp } from "../../../context/AppContext";
 import { useNavigate } from "react-router-dom";
-import axiosInstance from "../../utils/axiosInstance";
-import MapViewer from "../map/MapViewer";
-import MapPicker from "../map/MapPicker";
-
+import axiosInstance from "../../../utils/axiosInstance";
+import MapViewer from "../../map/MapViewer";
+import MapPicker from "../../map/MapPicker";
+ 
 const DEFAULT_PROFILE_IMAGE = "/api/placeholder/250/250";
 const DEFAULT_BUSINESS_CARD_IMAGE = "/api/placeholder/150/100";
 
@@ -757,7 +757,7 @@ const MyProfile = () => {
                         className="mt-2 text-lg font-semibold text-teal-600 hover:underline flex items-center space-x-2"
                       >
                         <Globe className="w-5 h-5" />
-                        <span>View on Google Maps</span>
+                        <span>  </span>
                       </a>
                     </div>
                   )}

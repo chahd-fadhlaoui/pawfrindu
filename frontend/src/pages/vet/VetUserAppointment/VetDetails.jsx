@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axiosInstance from "../../utils/axiosInstance";
+import axiosInstance from "../../../utils/axiosInstance";
 import {
   Stethoscope,
   MapPin,
@@ -16,10 +16,11 @@ import {
   Info,
   Activity,
   Camera,
+  Globe,
 } from "lucide-react";
-import MapViewer from "../../components/map/MapViewer";
-import AppointmentModal from "../../components/vet/AppointmentModal";
-import { useApp } from "../../context/AppContext"; 
+import MapViewer from "../../../components/map/MapViewer";
+import AppointmentModal from "../../../components/vet/VetUserManagment/AppointmentModal";
+import { useApp } from "../../../context/AppContext";
 
 const PawIcon = ({ className, style }) => (
   <svg viewBox="0 0 24 24" className={className} style={style} fill="currentColor">
@@ -30,7 +31,7 @@ const PawIcon = ({ className, style }) => (
 export default function VetDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useApp(); // Access authenticated user from context
+  const { user } = useApp();
   const [vet, setVet] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -59,17 +60,17 @@ export default function VetDetails() {
   const PawBackground = () => (
     Array(10)
       .fill(null)
-      .map((_, index) => (
-        <PawIcon
-          key={index}
-          className={`absolute w-10 h-10 opacity-10 animate-float ${
-            index % 2 === 0 ? "text-[#ffc929]" : "text-pink-500"
-          } ${index % 3 === 0 ? "top-1/4" : index % 3 === 1 ? "top-1/2" : "top-3/4"} ${
-            index % 4 === 0 ? "left-1/4" : index % 4 === 1 ? "left-1/2" : "left-3/4"
-          }`}
-          style={{ animationDelay: `${index * 0.6}s`, transform: `rotate(${index * 45}deg)` }}
-        />
-      ))
+      .map((_, index) => {
+        const colors = ["text-green-300", "text-teal-200", "text-cyan-200", "text-blue-300"];
+        const colorClass = colors[index % colors.length];
+        return (
+          <PawIcon
+            key={index}
+            className={`absolute w-10 h-10 opacity-10 animate-float ${colorClass} ${index % 3 === 0 ? "top-1/4" : index % 3 === 1 ? "top-1/2" : "top-3/4"} ${index % 4 === 0 ? "left-1/4" : index % 4 === 1 ? "left-1/2" : "left-3/4"}`}
+            style={{ animationDelay: `${index * 0.6}s`, transform: `rotate(${index * 45}deg)` }}
+          />
+        );
+      })
   );
 
   const handlePhotoClick = (index) => setSelectedPhotoIndex(index);
@@ -83,7 +84,7 @@ export default function VetDetails() {
 
   const openAppointmentModal = () => {
     if (!user) {
-      navigate("/login", { state: { from: `/vets/${id}` } }); // Pass current location to redirect back after login
+      navigate("/login", { state: { from: `/vets/${id}` } });
       return;
     }
     setIsModalOpen(true);
@@ -98,9 +99,9 @@ export default function VetDetails() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-pink-50 to-white">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-teal-100">
         <div className="text-center animate-pulse">
-          <Stethoscope size={64} className="mx-auto text-[#ffc929]" />
+          <Stethoscope size={64} className="mx-auto text-[#4ade80]" />
           <p className="mt-4 text-xl font-medium text-gray-600">Loading Veterinarian Details...</p>
         </div>
       </div>
@@ -109,13 +110,13 @@ export default function VetDetails() {
 
   if (error || !vet) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-pink-50 to-white">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-teal-100">
         <div className="text-center">
-          <Stethoscope size={64} className="mx-auto mb-4 text-pink-500" />
-          <p className="text-xl font-medium text-pink-600">{error || "Veterinarian not found"}</p>
+          <Stethoscope size={64} className="mx-auto mb-4 text-blue-500" />
+          <p className="text-xl font-medium text-blue-600">{error || "Veterinarian not found"}</p>
           <button
             onClick={() => navigate("/veterinarians")}
-            className="mt-6 flex items-center gap-2 mx-auto px-6 py-3 text-base font-medium text-white bg-gradient-to-br from-[#ffc929] to-pink-500 rounded-xl shadow-lg hover:shadow-pink-200/50 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-pink-400"
+            className="mt-6 flex items-center gap-2 mx-auto px-6 py-3 text-base font-medium text-white bg-gradient-to-br from-[#4ade80] to-[#3b82f6] rounded-xl shadow-lg hover:shadow-blue-200/50 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
           >
             <ChevronLeft size={20} />
             Back to Veterinarians
@@ -132,12 +133,12 @@ export default function VetDetails() {
     : "https://placehold.co/120x120";
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-yellow-50 via-white to-pink-50">
+    <div className="relative min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-teal-100">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-0 w-full h-full">
-          <div className="absolute top-10 left-10 w-64 h-64 bg-yellow-200 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob"></div>
-          <div className="absolute top-40 right-20 w-72 h-72 bg-pink-200 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000"></div>
-          <div className="absolute bottom-40 left-40 w-80 h-80 bg-yellow-100 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-4000"></div>
+          <div className="absolute top-10 left-10 w-64 h-64 bg-green-200 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob"></div>
+          <div className="absolute top-40 right-20 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000"></div>
+          <div className="absolute bottom-40 left-40 w-80 h-80 bg-teal-100 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-4000"></div>
         </div>
         <div className="absolute inset-0 bg-white/30 backdrop-blur-[100px]"></div>
         <div className="absolute inset-0 opacity-10">
@@ -148,22 +149,22 @@ export default function VetDetails() {
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <button
           onClick={() => navigate("/vets")}
-          className="group flex items-center gap-2 mb-10 px-5 py-3 text-base font-medium text-white bg-gradient-to-br from-[#ffc929] to-pink-500 rounded-full focus:outline-none focus:ring-2 focus:ring-pink-400"
+          className="group flex items-center gap-2 mb-10 px-5 py-3 text-base font-medium text-white bg-gradient-to-br from-[#4ade80] to-[#3b82f6] rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400"
         >
           <ChevronLeft size={18} className="group-hover:-translate-x-1 transition-transform duration-300" />
           Back to Veterinarians
         </button>
 
-        <div className="bg-white/80 backdrop-blur-lg rounded-3xl overflow-hidden shadow-xl border border-yellow-100 relative">
-          <div className="relative h-48 bg-gradient-to-r from-yellow-100 to-pink-100 overflow-hidden">
+        <div className="bg-white/80 backdrop-blur-lg rounded-3xl overflow-hidden shadow-xl border border-green-100 relative">
+          <div className="relative h-48 bg-gradient-to-r from-green-100 to-blue-100 overflow-hidden">
             <div className="absolute inset-0">
-              <div className="absolute inset-0 bg-gradient-to-br from-yellow-100 to-pink-100 mix-blend-multiply opacity-20"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-green-100 to-blue-100 mix-blend-multiply opacity-20"></div>
               <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white/80 to-transparent"></div>
             </div>
 
             <div className="absolute -bottom-20 left-1/2 transform -translate-x-1/2 md:left-16 md:translate-x-0">
               <div className="relative">
-                <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-[#ffc929] to-pink-500 blur-lg opacity-30"></div>
+                <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-[#4ade80] to-[#3b82f6] blur-lg opacity-30"></div>
                 <div className="relative rounded-full p-1 bg-white shadow-lg mb-20">
                   <img
                     src={imageUrl}
@@ -181,29 +182,29 @@ export default function VetDetails() {
               <div>
                 <h1 className="text-3xl md:text-4xl font-bold text-gray-800">{vet.fullName.trim()}</h1>
                 <p className="mt-2 text-lg text-gray-600 flex items-center gap-2">
-                  <Stethoscope size={18} className="text-pink-500" />
+                  <Stethoscope size={18} className="text-blue-500" />
                   {vet.veterinarianDetails?.degree || "Degree not specified"}
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
-                  className={`flex items-center justify-center gap-2 px-6 py-3 text-base font-medium rounded-full shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-pink-400 ${
+                  className={`flex items-center justify-center gap-2 px-6 py-3 text-base font-medium rounded-full shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-400 ${
                     user
-                      ? "text-white bg-gradient-to-br from-[#ffc929] to-pink-500"
+                      ? "text-white bg-gradient-to-br from-[#4ade80] to-[#3b82f6]"
                       : "text-gray-500 bg-gray-200 cursor-not-allowed"
                   }`}
                   onClick={openAppointmentModal}
-                  disabled={!user} // Disable button if not authenticated
+                  disabled={!user}
                   title={!user ? "Please log in to book an appointment" : ""}
                 >
                   <Calendar size={18} className={user ? "text-white" : "text-gray-400"} />
                   Book Appointment
                 </button>
                 <button
-                  className="flex items-center justify-center gap-2 px-6 py-3 text-base font-medium text-[#ffc929] bg-yellow-50 hover:bg-yellow-100 rounded-full shadow-sm hover:shadow-md transform hover:-translate-y-1 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-pink-300"
+                  className="flex items-center justify-center gap-2 px-6 py-3 text-base font-medium text-[#4ade80] bg-green-50 hover:bg-green-100 rounded-full shadow-sm hover:shadow-md transform hover:-translate-y-1 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-300"
                   onClick={() => alert("Contact now...")}
                 >
-                  <Phone size={18} className="text-pink-500" />
+                  <Phone size={18} className="text-blue-500" />
                   Contact Now
                 </button>
               </div>
@@ -213,10 +214,10 @@ export default function VetDetails() {
               <div className="mt-6">
                 <p className="text-sm font-medium text-gray-500 mb-2">Specialized in</p>
                 <div className="flex flex-wrap gap-2">
-                  <span className="px-4 py-1.5 text-sm font-medium text-[#ffc929] bg-yellow-50 border border-yellow-100 rounded-full">
+                  <span className="px-4 py-1.5 text-sm font-medium text-[#4ade80] bg-green-50 border border-green-100 rounded-full">
                     {vet.veterinarianDetails.specialization}
                   </span>
-                  <span className="px-4 py-1.5 text-sm font-medium text-pink-700 bg-pink-50 border border-pink-100 rounded-full">
+                  <span className="px-4 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-100 rounded-full">
                     Animal Healthcare
                   </span>
                 </div>
@@ -226,17 +227,17 @@ export default function VetDetails() {
 
           <div className="px-6 md:px-8 lg:px-12 pb-10 space-y-8">
             {vet.about ? (
-              <div className="bg-gradient-to-r from-yellow-50 to-pink-50 p-8 rounded-2xl shadow-sm">
+              <div className="bg-gradient-to-r from-green-50 to-blue-50 p-8 rounded-2xl shadow-sm">
                 <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-3 mb-4">
-                  <User size={22} className="text-pink-500" />
+                  <User size={22} className="text-blue-500" />
                   About Dr. {vet.fullName.split(" ")[1] || vet.fullName}
                 </h2>
                 <p className="text-lg text-gray-700 leading-relaxed">{vet.about}</p>
               </div>
             ) : (
-              <div className="bg-yellow-50 p-8 rounded-2xl shadow-sm">
+              <div className="bg-green-50 p-8 rounded-2xl shadow-sm">
                 <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-3 mb-4">
-                  <User size={22} className="text-pink-500" />
+                  <User size={22} className="text-blue-500" />
                   About
                 </h2>
                 <p className="text-lg text-gray-500 italic">
@@ -246,17 +247,17 @@ export default function VetDetails() {
             )}
 
             <div className="grid md:grid-cols-2 gap-6">
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-yellow-100 hover:border-pink-200 hover:shadow-md transition-all duration-300">
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-green-100 hover:border-blue-200 hover:shadow-md transition-all duration-300">
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center">
-                    <MapPin size={20} className="text-pink-600" />
+                  <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                    <MapPin size={20} className="text-blue-600" />
                   </div>
                   <h3 className="text-xl font-semibold text-gray-800">Location & Contact</h3>
                 </div>
 
                 <div className="space-y-5">
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 mt-1 rounded-full bg-gradient-to-br from-[#ffc929] to-pink-500 flex items-center justify-center">
+                    <div className="w-10 h-10 mt-1 rounded-full bg-gradient-to-br from-[#4ade80] to-[#3b82f6] flex items-center justify-center">
                       <MapPin size={18} className="text-white" />
                     </div>
                     <div>
@@ -269,8 +270,8 @@ export default function VetDetails() {
                   </div>
 
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 mt-1 rounded-full bg-yellow-50 flex items-center justify-center">
-                      <Phone size={18} className="text-pink-500" />
+                    <div className="w-10 h-10 mt-1 rounded-full bg-green-50 flex items-center justify-center">
+                      <Phone size={18} className="text-blue-500" />
                     </div>
                     <div>
                       <p className="text-sm font-medium text-gray-500">Landline Phone</p>
@@ -284,15 +285,24 @@ export default function VetDetails() {
                     <div className="mt-6">
                       <p className="text-sm font-medium text-gray-500 mb-2">Map Location</p>
                       <MapViewer position={vet.veterinarianDetails.geolocation} />
+                      <a
+                        href={`https://www.google.com/maps?q=${vet.veterinarianDetails.geolocation.latitude},${vet.veterinarianDetails.geolocation.longitude}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-2 text-lg font-semibold text-teal-600 hover:underline flex items-center space-x-2"
+                      >
+                        <Globe className="w-5 h-5" />
+                        <span>View on Google Maps</span>
+                      </a>
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-yellow-100 hover:border-pink-200 hover:shadow-md transition-all duration-300">
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-green-100 hover:border-blue-200 hover:shadow-md transition-all duration-300">
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center">
-                    <Info size={20} className="text-pink-600" />
+                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                    <Info size={20} className="text-blue-600" />
                   </div>
                   <h3 className="text-xl font-semibold text-gray-800">Practice Details</h3>
                 </div>
@@ -300,8 +310,8 @@ export default function VetDetails() {
                 <div className="space-y-5">
                   {vet.veterinarianDetails?.averageConsultationDuration && (
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 mt-1 rounded-full bg-pink-50 flex items-center justify-center">
-                        <Clock size={18} className="text-pink-500" />
+                      <div className="w-10 h-10 mt-1 rounded-full bg-blue-50 flex items-center justify-center">
+                        <Clock size={18} className="text-blue-500" />
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-500">Consultation Duration</p>
@@ -314,8 +324,8 @@ export default function VetDetails() {
 
                   {vet.veterinarianDetails?.languagesSpoken?.length > 0 && (
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 mt-1 rounded-full bg-pink-50 flex items-center justify-center">
-                        <Languages size={18} className="text-pink-500" />
+                      <div className="w-10 h-10 mt-1 rounded-full bg-blue-50 flex items-center justify-center">
+                        <Languages size={18} className="text-blue-500" />
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-500">Languages</p>
@@ -323,7 +333,7 @@ export default function VetDetails() {
                           {vet.veterinarianDetails.languagesSpoken.map((language, index) => (
                             <span
                               key={index}
-                              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-pink-50 text-pink-700"
+                              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700"
                             >
                               {language}
                             </span>
@@ -337,10 +347,10 @@ export default function VetDetails() {
             </div>
 
             {vet.veterinarianDetails?.services?.length > 0 && (
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-yellow-100 hover:border-pink-200 hover:shadow-md transition-all duration-300">
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-green-100 hover:border-blue-200 hover:shadow-md transition-all duration-300">
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center">
-                    <Activity size={20} className="text-pink-600" />
+                  <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                    <Activity size={20} className="text-blue-600" />
                   </div>
                   <h3 className="text-xl font-semibold text-gray-800">Services Offered</h3>
                 </div>
@@ -349,14 +359,14 @@ export default function VetDetails() {
                   {vet.veterinarianDetails.services.map((service, index) => (
                     <div
                       key={index}
-                      className="flex items-center p-3 bg-yellow-50/50 rounded-xl hover:bg-yellow-50 transition-colors duration-300"
+                      className="flex items-center p-3 bg-green-50/50 rounded-xl hover:bg-green-50 transition-colors duration-300"
                     >
                       <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm mr-3">
-                        <Check size={16} className="text-pink-500" />
+                        <Check size={16} className="text-blue-500" />
                       </div>
                       <div>
                         <p className="text-gray-800 font-medium">{service.serviceName}</p>
-                        {service.fee && <p className="text-sm text-pink-600">{service.fee} TND</p>}
+                        {service.fee && <p className="text-sm text-blue-600">{service.fee} TND</p>}
                       </div>
                     </div>
                   ))}
@@ -365,10 +375,10 @@ export default function VetDetails() {
             )}
 
             {vet.veterinarianDetails?.openingHours && (
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-yellow-100 hover:border-pink-200 hover:shadow-md transition-all duration-300">
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-green-100 hover:border-blue-200 hover:shadow-md transition-all duration-300">
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center">
-                    <Clock size={20} className="text-pink-600" />
+                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                    <Clock size={20} className="text-blue-600" />
                   </div>
                   <h3 className="text-xl font-semibold text-gray-800">Opening Hours</h3>
                 </div>
@@ -378,11 +388,11 @@ export default function VetDetails() {
                     const sessionType = vet.veterinarianDetails.openingHours[day];
                     if (sessionType === "Closed") {
                       return (
-                        <div key={day} className="p-3 rounded-xl bg-gray-50">
+                        <div key={day} className="p-3 rounded-xl bg-red-50">
                           <p className="font-medium text-gray-700">
                             {day.charAt(0).toUpperCase() + day.slice(1)}
                           </p>
-                          <p className="text-pink-500 text-sm mt-1">Closed</p>
+                          <p className="text-red-500 text-sm mt-1">Closed</p>
                         </div>
                       );
                     }
@@ -395,12 +405,12 @@ export default function VetDetails() {
                     return (
                       <div
                         key={day}
-                        className="p-3 rounded-xl bg-yellow-50/50 hover:bg-yellow-50 transition-colors duration-300"
+                        className="p-3 rounded-xl bg-green-50/50 hover:bg-green-50 transition-colors duration-300"
                       >
                         <p className="font-medium text-gray-700">
                           {day.charAt(0).toUpperCase() + day.slice(1)}
                         </p>
-                        <div className="flex flex-col text-sm text-pink-700 mt-1">
+                        <div className="flex flex-col text-sm text-green-700 mt-1">
                           <p>
                             {start} - {end}
                           </p>
@@ -422,7 +432,7 @@ export default function VetDetails() {
         {vet.veterinarianDetails?.clinicPhotos?.length > 0 && (
           <div className="mt-12">
             <h3 className="text-2xl font-bold text-gray-800 mb-6 text-center flex items-center justify-center gap-3">
-              <Camera size={24} className="text-pink-500" />
+              <Camera size={24} className="text-blue-500" />
               Clinic Photos
             </h3>
 
@@ -430,10 +440,10 @@ export default function VetDetails() {
               {vet.veterinarianDetails.clinicPhotos.map((photo, index) => (
                 <div
                   key={index}
-                  className="group bg-white border border-yellow-100 rounded-2xl shadow-sm overflow-hidden hover:shadow-md hover:border-pink-200 transition-all duration-300 cursor-pointer"
+                  className="group bg-white border border-green-100 rounded-2xl shadow-sm overflow-hidden hover:shadow-md hover:border-blue-200 transition-all duration-300 cursor-pointer"
                   onClick={() => handlePhotoClick(index)}
                 >
-                  <div className="relative overflow-hidden mt-14">
+                  <div className="relative overflow-hidden">
                     <img
                       src={photo}
                       alt={`Clinic Photo ${index + 1}`}
@@ -453,11 +463,11 @@ export default function VetDetails() {
         )}
 
         {selectedPhotoIndex !== null && (
-          <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 mt-20">
+          <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50">
             <div className="relative max-w-5xl w-full p-4">
               <button
                 onClick={closeModal}
-                className="absolute top-4 right-4 text-white bg-pink-500 rounded-full p-2 hover:bg-pink-600 transition-all duration-300"
+                className="absolute top-4 right-4 text-white bg-blue-500 rounded-full p-2 hover:bg-blue-600 transition-all duration-300"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -467,7 +477,7 @@ export default function VetDetails() {
               <div className="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1/2 md:translate-x-0">
                 <button
                   onClick={prevPhoto}
-                  className="bg-pink-500 rounded-full p-3 text-white hover:bg-pink-600 transition-all duration-300 shadow-lg"
+                  className="bg-blue-500 rounded-full p-3 text-white hover:bg-blue-600 transition-all duration-300 shadow-lg"
                 >
                   <ChevronLeft size={28} />
                 </button>
@@ -483,7 +493,7 @@ export default function VetDetails() {
               <div className="absolute top-1/2 right-0 transform -translate-y-1/2 translate-x-1/2 md:translate-x-0">
                 <button
                   onClick={nextPhoto}
-                  className="bg-pink-500 rounded-full p-3 text-white hover:bg-pink-600 transition-all duration-300 shadow-lg"
+                  className="bg-blue-500 rounded-full p-3 text-white hover:bg-blue-600 transition-all duration-300 shadow-lg"
                 >
                   <ChevronRight size={28} />
                 </button>

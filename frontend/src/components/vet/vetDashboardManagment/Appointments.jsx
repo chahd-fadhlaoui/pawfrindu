@@ -17,8 +17,8 @@ import {
   MessageSquare,
   ArrowRight,
 } from "lucide-react";
-import axiosInstance from "../../utils/axiosInstance";
-import { useApp } from "../../context/AppContext";
+import axiosInstance from "../../../utils/axiosInstance";
+import { useApp } from "../../../context/AppContext";
 
 export default function VetAppointmentDashboard() {
   const { socket, user } = useApp();
@@ -103,24 +103,30 @@ export default function VetAppointmentDashboard() {
       setSocketError("Socket not initialized");
       return;
     }
-
+  
     socket.on("connect", () => {
       console.log("Connected to Socket.IO server:", socket.id);
       setSocketError(null);
       socket.emit("joinRoom", user._id.toString());
       console.log(`Joined room: ${user._id.toString()}`);
     });
-
+  
     socket.on("connect_error", (err) => {
       console.error("Socket connection error:", err.message);
       setSocketError("Failed to connect to real-time updates");
     });
-
+  
     socket.on("appointmentBooked", (data) => {
-      console.log("Appointment booked event:", data);
+      console.log("Événement appointmentBooked reçu dans VetAppointmentDashboard:", {
+        data: JSON.stringify(data, null, 2),
+        userId: user._id.toString(),
+        professionalId: data.professionalId?._id || data.professionalId,
+        isMatch: (data.professionalId?._id || data.professionalId)?.toString() === user._id.toString(),
+      });
       const vetId = user._id.toString();
-      const professionalId = (data.professionalId?._id || data.professionalId).toString();
+      const professionalId = (data.professionalId?._id || data.professionalId)?.toString();
       if (professionalId === vetId) {
+        console.log("Événement pertinent pour ce vétérinaire, traitement en cours...");
         const newAppointment = {
           id: data._id.toString(),
           petName: data.petName || "Unknown",
@@ -133,7 +139,7 @@ export default function VetAppointmentDashboard() {
           date: data.date,
           time: data.time,
           duration: data.duration || "30 minutes",
-          reason: statusConfig.reason || "General Checkup",
+          reason: data.reason || "General Checkup",
           provider: data.professionalId?.fullName || user.fullName || "Unknown",
           status: data.status || "pending",
           notes: data.notes || "",
@@ -147,6 +153,7 @@ export default function VetAppointmentDashboard() {
             const dateB = new Date(b.date);
             return dateA - dateB || a.time.localeCompare(b.time);
           });
+          console.log("Appointments mis à jour:", updated);
           return updated;
         });
         setFilteredAppointments((prev) => {
@@ -155,14 +162,16 @@ export default function VetAppointmentDashboard() {
             const dateB = new Date(b.date);
             return dateA - dateB || a.time.localeCompare(b.time);
           });
+          console.log("FilteredAppointments mis à jour:", updated);
           return activeFilter === "all" || activeFilter === "pending" ? updated : prev;
         });
+      } else {
+        console.log("Événement ignoré : professionalId ne correspond pas à user._id");
       }
     });
-
+  
     socket.on("appointmentConfirmed", (data) => {
       console.log("Appointment confirmed event:", data);
-      // Ensure appointmentId is a string for comparison
       const appointmentId = data.appointmentId.toString();
       if (data.professionalId?.toString() === user._id.toString()) {
         setAppointments((prev) =>
@@ -191,7 +200,7 @@ export default function VetAppointmentDashboard() {
         );
       }
     });
-
+  
     socket.on("appointmentCancelled", (data) => {
       console.log("Pet owner cancelled event:", data);
       const vetId = user._id.toString();
@@ -225,7 +234,7 @@ export default function VetAppointmentDashboard() {
         });
       }
     });
-
+  
     socket.on("vetAppointmentCancelled", (data) => {
       console.log("Vet cancelled event:", data);
       const vetId = user._id.toString();
@@ -243,7 +252,7 @@ export default function VetAppointmentDashboard() {
                 }
               : appt
           );
-          console.log("Updated appointments (vetCancelled):", updated); // Debug
+          console.log("Updated appointments (vetCancelled):", updated);
           return updated;
         });
         setFilteredAppointments((prev) => {
@@ -257,22 +266,81 @@ export default function VetAppointmentDashboard() {
                 }
               : appt
           );
-          console.log("Updated filteredAppointments (vetCancelled):", updated); // Debug
+          console.log("Updated filteredAppointments (vetCancelled):", updated);
           return activeFilter === "all" || activeFilter === "cancelled" ? updated : prev.filter((appt) => appt.status === activeFilter);
         });
       }
     });
-
+  
+    socket.on("appointmentUpdated", (data) => {
+      console.log("Appointment updated event:", data);
+      const vetId = user._id.toString();
+      const professionalId = (data.professionalId?._id || data.professionalId).toString();
+      const appointmentId = data._id.toString();
+      if (professionalId === vetId) {
+        const updatedAppointment = {
+          id: data._id.toString(),
+          petName: data.petName || "Unknown",
+          petType: data.petType || "Unknown",
+          petAge: data.petAge || "Unknown",
+          ownerName: data.petOwnerId?.fullName || "Unknown",
+          phone: data.petOwnerId?.petOwnerDetails?.phone || "",
+          email: data.petOwnerId?.email || "",
+          address: "",
+          date: data.date,
+          time: data.time,
+          duration: data.duration || "30 minutes",
+          reason: data.reason || "General Checkup",
+          provider: data.professionalId?.fullName || user.fullName || "Unknown",
+          status: data.status || "pending",
+          notes: data.notes || "",
+          createdAt: data.createdAt || new Date().toLocaleDateString("en-US"),
+          updatedAt: new Date().toLocaleDateString("en-US"),
+          isNew: false,
+        };
+        setAppointments((prev) =>
+          prev.map((appt) =>
+            appt.id === appointmentId ? updatedAppointment : appt
+          )
+        );
+        setFilteredAppointments((prev) => {
+          const updated = prev.map((appt) =>
+            appt.id === appointmentId ? updatedAppointment : appt
+          );
+          return activeFilter === "all" || activeFilter === data.status ? updated : prev.filter((appt) => appt.status === activeFilter);
+        });
+      }
+    });
+  
+    socket.on("appointmentDeleted", (data) => {
+      console.log("Appointment deleted event:", data);
+      const vetId = user._id.toString();
+      const professionalId = (data.professionalId?._id || data.professionalId).toString();
+      const appointmentId = data.appointmentId.toString();
+      if (professionalId === vetId) {
+        setAppointments((prev) => {
+          const updated = prev.filter((appt) => appt.id !== appointmentId);
+          console.log("Appointments after deletion:", updated);
+          return updated;
+        });
+        setFilteredAppointments((prev) => {
+          const updated = prev.filter((appt) => appt.id !== appointmentId);
+          console.log("FilteredAppointments after deletion:", updated);
+          return updated;
+        });
+      }
+    });
+  
     if (!socket.connected) {
       console.log("Socket not connected, attempting to connect");
       socket.connect();
     }
   }, [socket, user, activeFilter]);
-
+  
   useEffect(() => {
     fetchAppointments();
     setupSocketListeners();
-
+  
     return () => {
       if (socket) {
         socket.off("connect");
@@ -281,6 +349,8 @@ export default function VetAppointmentDashboard() {
         socket.off("appointmentConfirmed");
         socket.off("appointmentCancelled");
         socket.off("vetAppointmentCancelled");
+        socket.off("appointmentUpdated");
+        socket.off("appointmentDeleted");
       }
     };
   }, [setupSocketListeners]);

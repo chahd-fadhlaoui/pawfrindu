@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Stethoscope, Calendar, LogOut, ChevronLeft, ChevronRight, Menu, UserIcon, Bell } from "lucide-react";
-import { useApp } from "../../context/AppContext";
+import { useApp } from "../../../context/AppContext";
 
 const Sidebar = ({ activeTab, setActiveTab, isCollapsed, setIsCollapsed }) => {
   const [isMobileOpen, setIsMobileOpen] = useState(false);

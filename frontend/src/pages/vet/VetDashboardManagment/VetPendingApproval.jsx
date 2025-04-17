@@ -1,6 +1,6 @@
 import React from 'react';
 import { Stethoscope, PawPrint, Clock, Mail, CircleCheckBig, LogOut } from 'lucide-react'; // Add LogOut icon
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../../context/AppContext';
 
 const VetPendingApproval = () => {
   const { user, logout } = useApp(); // Get user and logout from AppContext

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { X, Calendar, Clock, Trash2, Check, ChevronLeft, ChevronRight, Eye, Edit } from "lucide-react";
-import axiosInstance from "../../utils/axiosInstance";
+import axiosInstance from "../../../utils/axiosInstance";
 
 const AppointmentActionModal = ({ appointment, action, onClose, onSuccess }) => {
   const [step, setStep] = useState(action === "view" ? 0 : action === "delete" ? 2 : 1);
@@ -600,7 +600,7 @@ const AppointmentActionModal = ({ appointment, action, onClose, onSuccess }) => 
                         key={index}
                         className={`
                           h-10 w-10 rounded-full flex items-center justify-center text-sm font-medium transition-all
-                          ${!day.isCurrentMonth ? "text-gray-300" : isPast || isFullyBooked ? "text-gray-400" : "text-gray-800"}
+                          ${!day.isCurrentMonth ? "text-gray-300" : isPast ? "text-gray-400" : isFullyBooked ? "text-red-500" : "text-gray-800"}
                           ${isToday ? "ring-2 ring-pink-300" : ""}
                           ${isSelected ? "bg-pink-400 text-white" : ""}
                           ${!day.isOpen || isPast || isFullyBooked ? "opacity-50 cursor-not-allowed" : "hover:bg-pink-100"}
@@ -629,9 +629,9 @@ const AppointmentActionModal = ({ appointment, action, onClose, onSuccess }) => 
                 <span>Selected</span>
               </div>
               <div className="flex items-center gap-1">
-                <div className="w-3 h-3 rounded-full bg-gray-400 opacity-50"></div>
-                <span>Fully Booked</span>
-              </div>
+  <div className="w-3 h-3 rounded-full bg-red-500 opacity-50"></div>
+  <span>Fully Booked</span>
+</div>
             </div>
           </div>
         );

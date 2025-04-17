@@ -20,12 +20,12 @@ import PetManagementDashboard from './pages/PetManagementDashboard';
 import Pets from './pages/Pets';
 import Profile from './pages/Profile';
 import TrainerDashboard from './pages/Trainer/TrainerDashboard';
-import  VetDashboard from './pages/VetDashboard/VetDashboard';
-import Veteriniandetail from './pages/Veteriniandetail';
-import Veterinarians from './pages/VetAppointment/Veterinarians';
-import VetDetails from './pages/VetAppointment/VetDetails';
+import  VetDashboard from './pages/vet/VetDashboardManagment/VetDashboard';
+import Veterinarians from './pages/vet/VetUserAppointment/Veterinarians';
+import VetDetails from './pages/vet/VetUserAppointment/VetDetails';
 import "leaflet/dist/leaflet.css";
-import VetPendingApproval from './pages/VetDashboard/VetPendingApproval';
+import VetPendingApproval from './pages/vet/VetDashboardManagment/VetPendingApproval';
+import MyVetappointments from './pages/vet/VetUserAppointment/MyVetappointments';
 import TrainerPendingApproval from './pages/TrainerDashboard/TrainerPendingApproval';
 
 const Layout = ({ children }) => {
@@ -84,10 +84,10 @@ const AppRoutes = () => {
       <Route path="/vet-pending-approval" element={<ProtectedRoute allowedRoles={["Vet"]}><VetPendingApproval/></ProtectedRoute>} /> 
       <Route path="/addPet" element={<ProtectedRoute allowedRoles={["PetOwner"]}><CreatePet /></ProtectedRoute>} />
       <Route path="/list/*" element={<ProtectedRoute allowedRoles={["PetOwner"]}><PetManagementDashboard /></ProtectedRoute>} />
+      <Route path="/Vetappointments" element={<ProtectedRoute allowedRoles={["PetOwner"]}><MyVetappointments/></ProtectedRoute>} /> 
       <Route path="/profile" element={<ProtectedRoute allowedRoles={["PetOwner", "Trainer", "Vet"]}><Profile /></ProtectedRoute>} />
       <Route path="/myprofile" element={<ProtectedRoute allowedRoles={["PetOwner", "Trainer", "Vet"]}><CreateProfile /></ProtectedRoute>} />
       <Route path="/candidates/:petId" element={<ProtectedRoute allowedRoles={["PetOwner", "Trainer", "Vet"]}><CandidatesPage /></ProtectedRoute>} />
-      <Route path="/veterinian/:petId" element={<ProtectedRoute allowedRoles={["Vet"]}><Veteriniandetail /></ProtectedRoute>} />
     </Routes>
   );
 };

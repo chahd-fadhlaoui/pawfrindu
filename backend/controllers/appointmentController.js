@@ -270,13 +270,6 @@ export const getMyAppointments = async (req, res) => {
         return res.status(403).json({ message: "You don’t own this appointment" });
       }
   
-      // Check if confirmed
-      if (appointment.status === "confirmed") {
-        return res.status(403).json({
-          message: "Cannot update a confirmed appointment directly. Contact the vet.",
-        });
-      }
-  
       // If date or time is being updated, check availability
       if ((date && date !== appointment.date) || (time && time !== appointment.time)) {
         const slotTaken = await Appointment.findOne({
@@ -298,6 +291,11 @@ export const getMyAppointments = async (req, res) => {
       appointment.time = time || appointment.time;
       appointment.reason = reason || appointment.reason;
       appointment.notes = notes || appointment.notes;
+  
+      // If the appointment was confirmed, set status to pending
+      if (appointment.status === "confirmed") {
+        appointment.status = "pending";
+      }
   
       const updatedAppointment = await appointment.save();
   
