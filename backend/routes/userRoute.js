@@ -6,12 +6,16 @@ import {
   forgotPassword,
   getAllUsers,
   getCurrentUser,
+  getTrainerById,
+  getTrainerReviews,
+  getTrainers,
   getUserStats,
   getVeterinarianById,
   getVeterinarians,
   login,
   register,
   resetPassword,
+  submitTrainerReview,
   updateProfile,
   updateUserByAdmin,
   updateVetProfile,
@@ -29,15 +33,19 @@ userRouter.post("/reset-password", resetPassword);
 userRouter.get('/validate-reset-token/:token', validateResetToken);
 userRouter.get('/veterinarians', getVeterinarians); 
 userRouter.get('/vet/:id', getVeterinarianById);
-
+userRouter.get('/trainers', getTrainers); 
+userRouter.get('/trainer/:id', getTrainerById);
+userRouter.get("/trainer/:trainerId/reviews", getTrainerReviews);
 
 
 // Protected Routes
 userRouter.get('/me', authenticate, getCurrentUser);
 console.log('GET /me route registered');
 userRouter.post("/profile", authenticate, createProfile);
-userRouter.put("/updateProfile", authenticate, updateProfile); // Nouvelle route PUT pour update
-userRouter.put("/updateVetProfile", authenticate, updateVetProfile); // New for Vet
+userRouter.put("/updateProfile", authenticate, updateProfile); 
+userRouter.put("/updateVetProfile", authenticate, updateVetProfile);
+userRouter.post("/trainer/:trainerId/reviews", authenticate, submitTrainerReview);
+
 // Admin-Only Route
 userRouter.get('/getAllUsers', authenticate, authorize('Admin'), getAllUsers);
 userRouter.put("/users/:userId", authenticate, authorize("Admin"), updateUserByAdmin); // update the role / adminType / isActive / isArchieve

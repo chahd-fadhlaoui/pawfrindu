@@ -1,9 +1,10 @@
+import { PawPrint } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useApp } from "../context/AppContext";
 import PetOwnerProfile from "../components/profile/PetOwnerProfile";
-import TrainerProfile from "../components/profile/TrainerProfile";
-import VetProfile from "../components/profile/VetProfile";
+import TrainerProfile from "../components/profile/trainer/TrainerProfile";
+import VetProfile from "../components/profile/Vet/VetProfile";
+import { useApp } from "../context/AppContext";
 
 const CreateProfile = () => {
   const navigate = useNavigate();
@@ -12,28 +13,28 @@ const CreateProfile = () => {
   const [formData, setFormData] = useState({
     image: "",
     gender: "",
+    about: "",
+    acceptedTerms: false,
     petOwnerDetails: {
-      address: "",
-      phone: "",
-      petExperience: {
-        hasPreviousPets: false,
-        yearsOfExperience: "",
-        experience_description: "",
+      address: {
+        governorate: "",
+        delegation: "",
+        street: "",
       },
+      phone: "",
     },
     trainerDetails: {
       governorate: "",
       delegation: "",
       certificationImage: "",
       trainingFacilityType: "",
-      geolocation: { latitude: 36.81897, longitude: 10.16579 }, // Tunis default
+      geolocation: { latitude: 36.81897, longitude: 10.16579 },
       serviceAreas: [],
       businessCardImage: "",
-      experienceYears: 0,
       phone: "",
-      landlinePhone: "",
-      languagesSpoken: ["Arabe"],
-      services: [{ serviceName: "", fee: "", duration: "" }],
+      secondaryPhone: "",
+      languagesSpoken: ["Arabic"],
+      services: [{ serviceName: "", fee: "" }],
       openingHours: {
         monday: "Closed", mondayStart: "", mondayEnd: "", mondayStart2: "", mondayEnd2: "",
         tuesday: "Closed", tuesdayStart: "", tuesdayEnd: "", tuesdayStart2: "", tuesdayEnd2: "",
@@ -46,12 +47,17 @@ const CreateProfile = () => {
       trainingPhotos: [],
       breedsTrained: [],
       averageSessionDuration: 60,
-      professionalAffiliations: "",
+      socialLinks: {
+        facebook: "",
+        instagram: "",
+        website: "",
+      },
     },
     veterinarianDetails: {
       governorate: "",
       delegation: "",
-      landlinePhone: "",
+      phone: "",
+      secondaryPhone: "",
       geolocation: { latitude: 36.8665367, longitude: 10.1647233 },
       diplomasAndTraining: "",
       services: [{ serviceName: "", fee: "" }],
@@ -68,24 +74,32 @@ const CreateProfile = () => {
       },
       clinicPhotos: [],
       businessCardImage: "",
+      specializations: [],
+      title: "",
     },
   });
   const [userRole, setUserRole] = useState("");
   const [formErrors, setFormErrors] = useState({});
-  const [progressPercentage, setProgressPercentage] = useState(0);
+  const [formSuccess, setFormSuccess] = useState({});
 
-  const totalSteps = userRole === "PetOwner" ? 3 : 5; // Trainer and Vet get 5 steps
-
+  const totalSteps = userRole === "PetOwner" ? 2 : userRole === "Trainer" ? 5 : 5; 
+  
   useEffect(() => {
-    if (!user) navigate("/login");
-    else setUserRole(user.role);
+    if (!user) {
+      navigate("/login");
+    } else {
+      setUserRole(user.role);
+    }
   }, [user, navigate]);
 
-  useEffect(() => {
-    setProgressPercentage((currentStep / totalSteps) * 100);
-  }, [currentStep, userRole]);
-
   const renderRoleComponent = () => {
+    if (!userRole) {
+      return (
+        <div className="text-center text-gray-600">
+          Loading user role...
+        </div>
+      );
+    }
     switch (userRole) {
       case "PetOwner":
         return <PetOwnerProfile {...commonProps} />;
@@ -94,7 +108,11 @@ const CreateProfile = () => {
       case "Vet":
         return <VetProfile {...commonProps} />;
       default:
-        return null;
+        return (
+          <div className="text-center text-red-600">
+            Invalid user role
+          </div>
+        );
     }
   };
 
@@ -103,6 +121,8 @@ const CreateProfile = () => {
     setFormData,
     formErrors,
     setFormErrors,
+    formSuccess,
+    setFormSuccess,
     currentStep,
     setCurrentStep,
     totalSteps,
@@ -113,29 +133,64 @@ const CreateProfile = () => {
     loading,
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-[#ffc929]/5 to-pink-50">
-      <div className="container flex items-center justify-center min-h-screen p-4 mx-auto">
-        <div className="w-full max-w-2xl p-8 bg-white shadow-xl rounded-2xl">
-          <h2 className="mb-6 text-2xl font-bold text-center text-gray-900">Complete Your Profile</h2>
+  const PawBackground = () => (
+    Array(6)
+      .fill(null)
+      .map((_, index) => (
+        <PawPrint
+          key={index}
+          className={`absolute w-8 h-8 opacity-10 animate-float text-[#ffc929] ${
+            index % 2 === 0 ? "top-1/4" : "top-3/4"
+          } ${index % 3 === 0 ? "left-1/4" : index % 3 === 1 ? "left-1/2" : "left-3/4"}`}
+          style={{ animationDelay: `${index * 0.5}s`, transform: `rotate(${index * 45}deg)` }}
+        />
+      ))
+  );
 
-          <div className="mb-6">
-            <div className="w-full bg-gray-200 rounded-full h-2.5">
-              <div
-                className="bg-[#ffc929] h-2.5 rounded-full transition-all duration-300"
-                style={{ width: `${progressPercentage}%` }}
-              ></div>
-            </div>
-            <p className="text-sm text-center text-gray-600 mt-1">
-              Step {currentStep} of {totalSteps} ({Math.round(progressPercentage)}%)
+  return (
+    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-white via-pink-50 to-[#ffc929]/10">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <PawBackground />
+      </div>
+      <div className="relative max-w-3xl mx-auto">
+        <div className="bg-white rounded-3xl shadow-2xl border border-[#ffc929]/10 p-8 animate-fadeIn">
+          <div className="mb-8 space-y-4 text-center">
+            <span className="inline-flex items-center px-4 py-2 text-sm font-semibold text-pink-500 bg-white border border-[#ffc929]/20 rounded-full shadow-sm">
+              <PawPrint className="w-4 h-4 mr-2 text-[#ffc929]" />
+              Create Your Profile
+            </span>
+            <h2 className="text-3xl font-bold text-gray-900">
+              Set Up Your {userRole || "Profile"}
+            </h2>
+            <p className="max-w-md mx-auto text-gray-600">
+              Share a bit about yourself to connect with the pet community!
             </p>
           </div>
 
           {error && (
-            <div className="p-3 mb-4 text-sm text-red-500 rounded-lg bg-red-50">
-              {error}
+            <div className="flex items-center gap-2 p-4 mb-6 border border-red-200 bg-red-50 rounded-xl animate-fadeIn">
+              <PawPrint size={20} className="text-red-500" />
+              <p className="text-sm text-red-600">{error}</p>
             </div>
           )}
+
+          <div className="flex justify-center gap-4 mb-8">
+            {Array.from({ length: totalSteps }, (_, i) => i + 1).map((step) => (
+              <button
+                key={step}
+                className={`w-10 h-10 rounded-full text-sm font-medium transition-all duration-300 ${
+                  step <= currentStep
+                    ? "bg-[#ffc929] text-white shadow-md"
+                    : "bg-gray-200 text-gray-600 hover:bg-[#ffc929]/20"
+                }`}
+                onClick={() => setCurrentStep(step)}
+                disabled={loading}
+                aria-label={`Go to step ${step}`}
+              >
+                {step}
+              </button>
+            ))}
+          </div>
 
           {renderRoleComponent()}
         </div>

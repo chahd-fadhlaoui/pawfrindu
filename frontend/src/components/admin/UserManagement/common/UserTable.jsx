@@ -11,6 +11,11 @@ import {
   Mail,
   Phone,
   Clock,
+  MapPin,
+  Briefcase,
+  Award,
+  Languages,
+  Clock as ClockIcon,
 } from "lucide-react";
 import EmptyState from "../common/EmptyState";
 
@@ -37,7 +42,11 @@ const UserTable = ({
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownOpen && dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      if (
+        dropdownOpen &&
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target)
+      ) {
         setDropdownOpen(null);
       }
     };
@@ -47,14 +56,19 @@ const UserTable = ({
 
   const handleSort = (field) => {
     setSortField(field);
-    setSortDirection((prev) => (sortField === field && prev === "asc" ? "desc" : "asc"));
+    setSortDirection((prev) =>
+      sortField === field && prev === "asc" ? "desc" : "asc"
+    );
   };
 
   const displayedUsers = [...users].sort((a, b) => {
     let fieldA = a[sortField] || "";
     let fieldB = b[sortField] || "";
     if (fieldA === fieldB) return 0;
-    const result = typeof fieldA === "string" ? fieldA.localeCompare(fieldB) : fieldA - fieldB;
+    const result =
+      typeof fieldA === "string"
+        ? fieldA.localeCompare(fieldB)
+        : fieldA - fieldB;
     return sortDirection === "asc" ? result : -result;
   });
 
@@ -77,16 +91,27 @@ const UserTable = ({
       return "bg-gradient-to-r from-yellow-500 to-pink-500 text-white border border-pink-600 shadow-md";
     }
     const styles = {
-      Admin: "bg-gradient-to-r from-pink-200 to-pink-300 text-pink-800 border border-pink-400",
-      "Admin Adoption": "bg-gradient-to-r from-pink-200 to-pink-300 text-pink-800 border border-pink-400",
-      "Admin Vet": "bg-gradient-to-r from-pink-200 to-pink-300 text-pink-800 border border-pink-400",
-      "Admin Trainer": "bg-gradient-to-r from-pink-200 to-pink-300 text-pink-800 border border-pink-400",
-      "Admin Lost & Found": "bg-gradient-to-r from-pink-200 to-pink-300 text-pink-800 border border-pink-400",
-      PetOwner: "bg-gradient-to-r from-amber-200 to-amber-300 text-amber-800 border border-amber-400",
+      Admin:
+        "bg-gradient-to-r from-pink-200 to-pink-300 text-pink-800 border border-pink-400",
+      "Admin Adoption":
+        "bg-gradient-to-r from-pink-200 to-pink-300 text-pink-800 border border-pink-400",
+      "Admin Vet":
+        "bg-gradient-to-r from-pink-200 to-pink-300 text-pink-800 border border-pink-400",
+      "Admin Trainer":
+        "bg-gradient-to-r from-pink-200 to-pink-300 text-pink-800 border border-pink-400",
+      "Admin Lost & Found":
+        "bg-gradient-to-r from-pink-200 to-pink-300 text-pink-800 border border-pink-400",
+      PetOwner:
+        "bg-gradient-to-r from-amber-200 to-amber-300 text-amber-800 border border-amber-400",
       Vet: "bg-gradient-to-r from-blue-200 to-blue-300 text-blue-800 border border-blue-400",
-      Trainer: "bg-gradient-to-r from-teal-200 to-teal-300 text-teal-800 border border-teal-400",
+      Trainer:
+        "bg-gradient-to-r from-teal-200 to-teal-300 text-teal-800 border border-teal-400",
     };
-    return styles[role] || styles[adminType] || "bg-gray-100 text-gray-600 border border-gray-200";
+    return (
+      styles[role] ||
+      styles[adminType] ||
+      "bg-gray-100 text-gray-600 border border-gray-200"
+    );
   };
 
   const getAdminTypeDisplay = (adminType) => {
@@ -109,6 +134,61 @@ const UserTable = ({
     );
   };
 
+  // Helper function to format opening hours
+  const formatOpeningHours = (openingHours) => {
+    if (!openingHours) return "N/A";
+    const days = [
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+      "sunday",
+    ];
+
+    // Group days with identical schedules
+    const scheduleGroups = {};
+    days.forEach((day) => {
+      const session = openingHours[day];
+      if (session === "Closed") return;
+      const start = openingHours[`${day}Start`] || "";
+      const end = openingHours[`${day}End`] || "";
+      const start2 = openingHours[`${day}Start2`] || "";
+      const end2 = openingHours[`${day}End2`] || "";
+      let hours = "";
+      if (session === "Single Session" && start && end) {
+        hours = `${start} - ${end}`;
+      } else if (
+        session === "Double Session" &&
+        start &&
+        end &&
+        start2 &&
+        end2
+      ) {
+        hours = `${start} - ${end}, ${start2} - ${end2}`;
+      }
+      if (hours) {
+        if (!scheduleGroups[hours]) scheduleGroups[hours] = [];
+        scheduleGroups[hours].push(day.charAt(0).toUpperCase() + day.slice(1));
+      }
+    });
+
+    // Format grouped schedules
+    const formatted = Object.entries(scheduleGroups)
+      .map(([hours, days]) => {
+        if (hours.includes(":")) {
+          // Basic check for valid time format
+          return `${days.join(", ")}: ${hours}`;
+        }
+        return null;
+      })
+      .filter(Boolean)
+      .join("; ");
+
+    return formatted || "N/A";
+  };
+
   return (
     <div className="w-full">
       {showHeader && (
@@ -121,7 +201,8 @@ const UserTable = ({
               <div>
                 <h2 className="text-xl font-bold text-gray-900">{title}</h2>
                 <p className="text-sm text-gray-600">
-                  {displayedUsers.length} {displayedUsers.length === 1 ? "user" : "users"}
+                  {displayedUsers.length}{" "}
+                  {displayedUsers.length === 1 ? "user" : "users"}
                 </p>
               </div>
             </div>
@@ -168,7 +249,14 @@ const UserTable = ({
                         checked={
                           selectedUsers.length > 0 &&
                           selectedUsers.length ===
-                            displayedUsers.filter((u) => u._id !== currentUser?._id).length &&
+                            displayedUsers.filter(
+                              (u) =>
+                                u._id !== currentUser?._id &&
+                                !(
+                                  u.role === "Admin" &&
+                                  u.adminType === "Super Admin"
+                                )
+                            ).length &&
                           users.length > 0
                         }
                         onChange={onToggleSelectAll}
@@ -214,19 +302,25 @@ const UserTable = ({
                   <React.Fragment key={user._id}>
                     <tr
                       className={`transition-all duration-300 hover:bg-gradient-to-r hover:from-pink-50 hover:to-yellow-50 cursor-pointer ${
-                        expandedUser === user._id ? "bg-gradient-to-r from-pink-100 to-yellow-100" : ""
+                        expandedUser === user._id
+                          ? "bg-gradient-to-r from-pink-100 to-yellow-100"
+                          : ""
                       }`}
                       onClick={() => toggleExpandUser(user._id)}
                     >
                       {onToggleSelection && (
-                        <td className="px-4 py-4 sm:px-6 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                        <td
+                          className="px-4 py-4 sm:px-6 whitespace-nowrap"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <input
                             type="checkbox"
                             checked={selectedUsers.includes(user._id)}
                             onChange={() => onToggleSelection(user._id)}
                             disabled={
                               user._id === currentUser?._id ||
-                              (user.role === "Admin" && user.adminType === "Super Admin")
+                              (user.role === "Admin" &&
+                                user.adminType === "Super Admin")
                             }
                             className="w-4 h-4 text-pink-500 border-gray-300 rounded focus:ring-pink-500 disabled:opacity-50"
                             aria-label={`Select ${user.fullName || "user"}`}
@@ -240,7 +334,9 @@ const UserTable = ({
                               src={user.image || DEFAULT_PROFILE_IMAGE}
                               alt={user.fullName || "User"}
                               className="object-cover w-12 h-12 rounded-full shadow-sm ring-2 ring-pink-200"
-                              onError={(e) => (e.target.src = DEFAULT_PROFILE_IMAGE)}
+                              onError={(e) =>
+                                (e.target.src = DEFAULT_PROFILE_IMAGE)
+                              }
                             />
                             {user.isActive && (
                               <span className="absolute bottom-0 right-0 block w-3 h-3 bg-green-400 rounded-full ring-2 ring-white" />
@@ -262,7 +358,10 @@ const UserTable = ({
                         <div className="text-sm font-medium text-gray-900">
                           <div className="flex items-center">
                             <Mail className="w-4 h-4 mr-1 text-pink-400" />
-                            <span className="truncate max-w-48" title={user.email || "No email"}>
+                            <span
+                              className="truncate max-w-48"
+                              title={user.email || "No email"}
+                            >
                               {user.email || "No email"}
                             </span>
                           </div>
@@ -270,7 +369,10 @@ const UserTable = ({
                         <div className="mt-1 text-xs text-gray-600">
                           <div className="flex items-center">
                             <Phone className="w-4 h-4 mr-1 text-pink-400" />
-                            {user.petOwnerDetails?.phone || "No phone"}
+                            {user.petOwnerDetails?.phone ||
+                              user.trainerDetails?.phone ||
+                              user.veterinarianDetails?.landlinePhone ||
+                              "No phone"}
                           </div>
                         </div>
                       </td>
@@ -286,29 +388,32 @@ const UserTable = ({
                               ? getAdminTypeDisplay(user.adminType)
                               : user.role || "Unknown"}
                           </span>
-                          {user.role === "Admin" && user.adminType !== "Super Admin" && (
-                            <span className="px-2 py-1 text-xs font-medium text-pink-700 bg-pink-100 rounded-full shadow-sm">
-                              <Shield className="inline w-3 h-3 mr-1" />
-                              Admin
-                            </span>
-                          )}
-                          {user.role === "Vet" && user.isVerified && (
-                            <span className="px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full shadow-sm">
-                              <Check className="inline w-3 h-3 mr-1" />
-                              Verified
-                            </span>
-                          )}
+                          {user.role === "Admin" &&
+                            user.adminType !== "Super Admin" && (
+                              <span className="px-2 py-1 text-xs font-medium text-pink-700 bg-pink-100 rounded-full shadow-sm">
+                                <Shield className="inline w-3 h-3 mr-1" />
+                                Admin
+                              </span>
+                            )}
                         </div>
                       </td>
-                      <td className="px-4 py-4 text-right sm:px-6 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                      <td
+                        className="px-4 py-4 text-right sm:px-6 whitespace-nowrap"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         {customActions ? (
                           customActions(user)
                         ) : (
-                          <div className="relative inline-block text-left" ref={dropdownRef}>
+                          <div
+                            className="relative inline-block text-left"
+                            ref={dropdownRef}
+                          >
                             <button
                               onClick={(e) => toggleDropdown(user._id, e)}
                               className="p-1.5 text-gray-500 rounded-full hover:bg-pink-100 focus:outline-none focus:ring-2 focus:ring-pink-500 transition-all duration-300"
-                              aria-label={`Actions for ${user.fullName || "user"}`}
+                              aria-label={`Actions for ${
+                                user.fullName || "user"
+                              }`}
                             >
                               <MoreHorizontal className="w-5 h-5" />
                             </button>
@@ -332,7 +437,8 @@ const UserTable = ({
                                     }}
                                     disabled={
                                       user._id === currentUser?._id ||
-                                      (user.role === "Admin" && user.adminType === "Super Admin")
+                                      (user.role === "Admin" &&
+                                        user.adminType === "Super Admin")
                                     }
                                     className="flex items-center w-full px-4 py-2 text-sm text-gray-700 transition-colors duration-200 hover:bg-gradient-to-r hover:from-pink-50 hover:to-yellow-50 hover:text-pink-600 disabled:opacity-50 disabled:cursor-not-allowed"
                                   >
@@ -348,11 +454,17 @@ const UserTable = ({
                     </tr>
                     {expandedUser === user._id && (
                       <tr className="transition-all duration-300 bg-gray-50">
-                        <td colSpan={onToggleSelection ? 5 : 4} className="px-4 py-6 sm:px-6">
+                        <td
+                          colSpan={onToggleSelection ? 5 : 4}
+                          className="px-4 py-6 sm:px-6"
+                        >
                           <div className="bg-white shadow-md rounded-xl ring-1 ring-gray-100">
                             {/* Tab Navigation */}
                             <div className="border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 rounded-t-xl">
-                              <nav className="flex p-2 space-x-1" aria-label="Tabs">
+                              <nav
+                                className="flex p-2 space-x-1"
+                                aria-label="Tabs"
+                              >
                                 <button
                                   className={`py-2 px-4 text-sm font-semibold rounded-t-md transition-all duration-200 ${
                                     activeTab === "info"
@@ -362,7 +474,13 @@ const UserTable = ({
                                   onClick={() => setActiveTab("info")}
                                 >
                                   <div className="flex items-center">
-                                    <User className={`w-5 h-5 mr-2 transition-transform duration-200 ${activeTab === "info" ? "text-pink-500" : "text-gray-400"}`} />
+                                    <User
+                                      className={`w-5 h-5 mr-2 transition-transform duration-200 ${
+                                        activeTab === "info"
+                                          ? "text-pink-500"
+                                          : "text-gray-400"
+                                      }`}
+                                    />
                                     User Info
                                   </div>
                                 </button>
@@ -375,7 +493,13 @@ const UserTable = ({
                                   onClick={() => setActiveTab("role")}
                                 >
                                   <div className="flex items-center">
-                                    <Shield className={`w-5 h-5 mr-2 transition-transform duration-200 ${activeTab === "role" ? "text-pink-500" : "text-gray-400"}`} />
+                                    <Shield
+                                      className={`w-5 h-5 mr-2 transition-transform duration-200 ${
+                                        activeTab === "role"
+                                          ? "text-pink-500"
+                                          : "text-gray-400"
+                                      }`}
+                                    />
                                     Role Details
                                   </div>
                                 </button>
@@ -388,7 +512,13 @@ const UserTable = ({
                                   onClick={() => setActiveTab("activity")}
                                 >
                                   <div className="flex items-center">
-                                    <Clock className={`w-5 h-5 mr-2 transition-transform duration-200 ${activeTab === "activity" ? "text-pink-500" : "text-gray-400"}`} />
+                                    <Clock
+                                      className={`w-5 h-5 mr-2 transition-transform duration-200 ${
+                                        activeTab === "activity"
+                                          ? "text-pink-500"
+                                          : "text-gray-400"
+                                      }`}
+                                    />
                                     Activity
                                   </div>
                                 </button>
@@ -400,21 +530,40 @@ const UserTable = ({
                               {activeTab === "info" && (
                                 <dl className="grid grid-cols-2 gap-6 text-sm">
                                   <div>
-                                    <dt className="font-semibold text-gray-600">Full Name</dt>
-                                    <dd className="mt-1 text-gray-900">{user.fullName || "N/A"}</dd>
+                                    <dt className="font-semibold text-gray-600">
+                                      Full Name
+                                    </dt>
+                                    <dd className="mt-1 text-gray-900">
+                                      {user.fullName || "N/A"}
+                                    </dd>
                                   </div>
                                   <div>
-                                    <dt className="font-semibold text-gray-600">Email</dt>
-                                    <dd className="mt-1 text-gray-900 truncate" title={user.email || "N/A"}>
+                                    <dt className="font-semibold text-gray-600">
+                                      Email
+                                    </dt>
+                                    <dd
+                                      className="mt-1 text-gray-900 truncate"
+                                      title={user.email || "N/A"}
+                                    >
                                       {user.email || "N/A"}
                                     </dd>
                                   </div>
                                   <div>
-                                    <dt className="font-semibold text-gray-600">Phone</dt>
-                                    <dd className="mt-1 text-gray-900">{user.petOwnerDetails?.phone || "N/A"}</dd>
+                                    <dt className="font-semibold text-gray-600">
+                                      Phone
+                                    </dt>
+                                    <dd className="mt-1 text-gray-900">
+                                      {user.petOwnerDetails?.phone ||
+                                        user.trainerDetails?.phone ||
+                                        user.veterinarianDetails
+                                          ?.landlinePhone ||
+                                        "N/A"}
+                                    </dd>
                                   </div>
                                   <div>
-                                    <dt className="font-semibold text-gray-600">Status</dt>
+                                    <dt className="font-semibold text-gray-600">
+                                      Status
+                                    </dt>
                                     <dd className="mt-1 text-gray-900">
                                       {user.isActive ? (
                                         <span className="inline-flex items-center px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full shadow-sm">
@@ -429,194 +578,332 @@ const UserTable = ({
                                       )}
                                     </dd>
                                   </div>
+                                  <div>
+                                    <dt className="font-semibold text-gray-600">
+                                      Gender
+                                    </dt>
+                                    <dd className="mt-1 text-gray-900">
+                                      {user.gender || "N/A"}
+                                    </dd>
+                                  </div>
+                                  <div>
+                                    <dt className="font-semibold text-gray-600">
+                                      About
+                                    </dt>
+                                    <dd className="mt-1 text-gray-900">
+                                      {user.about || "N/A"}
+                                    </dd>
+                                  </div>
                                 </dl>
                               )}
 
                               {activeTab === "role" && (
-                                <dl className="grid grid-cols-2 gap-6 text-sm">
-                                  <div>
-                                    <dt className="font-semibold text-gray-600">Role</dt>
-                                    <dd className="mt-1 text-gray-900">
-                                      <span
-                                        className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full shadow-sm ${getRoleBadgeStyle(
-                                          user.role,
-                                          user.adminType
-                                        )}`}
-                                      >
-                                        {user.role === "Admin" && user.adminType
-                                          ? getAdminTypeDisplay(user.adminType)
-                                          : user.role || "N/A"}
-                                      </span>
-                                    </dd>
+                                <div className="space-y-6">
+                                  <div className="flex items-center space-x-2">
+                                    <Shield className="w-5 h-5 text-pink-500" />
+                                    <h3 className="text-lg font-semibold text-gray-900">
+                                      Role Details
+                                    </h3>
                                   </div>
-                                  {user.role === "Admin" && (
-                                    <div>
-                                      <dt className="font-semibold text-gray-600">Admin Type</dt>
-                                      <dd className="mt-1 text-gray-900">{user.adminType || "Standard"}</dd>
+                                  <dl className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
+                                    <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
+                                      <dt className="flex items-center space-x-2 font-semibold text-gray-600">
+                                        <User className="w-4 h-4 text-pink-400" />
+                                        <span>Role</span>
+                                      </dt>
+                                      <dd className="mt-1">
+                                        <span
+                                          className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full shadow-sm ${getRoleBadgeStyle(
+                                            user.role,
+                                            user.adminType
+                                          )}`}
+                                        >
+                                          {user.role === "Admin" &&
+                                          user.adminType
+                                            ? getAdminTypeDisplay(
+                                                user.adminType
+                                              )
+                                            : user.role || "N/A"}
+                                        </span>
+                                      </dd>
                                     </div>
-                                  )}
-                                  {user.role === "PetOwner" && (
-                                    <>
-                                      <div>
-                                        <dt className="font-semibold text-gray-600">Current Pets</dt>
-                                        <dd className="mt-1 text-gray-900">
-                                          {user.petOwnerDetails?.currentPets?.length > 0
-                                            ? user.petOwnerDetails.currentPets.join(", ")
-                                            : "None"}
-                                        </dd>
-                                      </div>
-                                      <div>
-                                        <dt className="font-semibold text-gray-600">Address</dt>
-                                        <dd className="mt-1 text-gray-900">{user.petOwnerDetails?.address || "N/A"}</dd>
-                                      </div>
-                                      <div>
-                                        <dt className="font-semibold text-gray-600">Occupation</dt>
-                                        <dd className="mt-1 text-gray-900">{user.petOwnerDetails?.occupation || "N/A"}</dd>
-                                      </div>
-                                      <div>
-                                        <dt className="font-semibold text-gray-600">Work Schedule</dt>
-                                        <dd className="mt-1 text-gray-900 capitalize">
-                                          {user.petOwnerDetails?.workSchedule?.replace("_", " ") || "N/A"}
-                                        </dd>
-                                      </div>
-                                      <div>
-                                        <dt className="font-semibold text-gray-600">Housing</dt>
-                                        <dd className="mt-1 text-gray-900">
-                                          {user.petOwnerDetails?.housing
-                                            ? `${user.petOwnerDetails.housing.type} (${user.petOwnerDetails.housing.ownership}${
-                                                user.petOwnerDetails.housing.ownership === "rent" &&
-                                                user.petOwnerDetails.housing.landlordApproval
-                                                  ? ", Landlord Approved"
-                                                  : ""
-                                              })`
-                                            : "N/A"}
-                                        </dd>
-                                      </div>
-                                      <div>
-                                        <dt className="font-semibold text-gray-600">Family Size</dt>
-                                        <dd className="mt-1 text-gray-900">
-                                          {user.petOwnerDetails?.housing?.familySize || "N/A"}
-                                        </dd>
-                                      </div>
-                                      <div>
-                                        <dt className="font-semibold text-gray-600">Pet Experience</dt>
-                                        <dd className="mt-1 text-gray-900">
-                                          {user.petOwnerDetails?.petExperience?.hasPreviousPets
-                                            ? `${user.petOwnerDetails.petExperience.yearsOfExperience} years - ${
-                                                user.petOwnerDetails.petExperience.experience_description || "No description"
-                                              }`
-                                            : "None"}
-                                        </dd>
-                                      </div>
-                                      <div>
-                                        <dt className="font-semibold text-gray-600">Reason for Adoption</dt>
-                                        <dd className="mt-1 text-gray-900">
-                                          {user.petOwnerDetails?.reasonForAdoption || "N/A"}
-                                        </dd>
-                                      </div>
-                                      <div>
-                                        <dt className="font-semibold text-gray-600">Adoption Readiness</dt>
-                                        <dd className="mt-1 text-gray-900 capitalize">
-                                          {user.petOwnerDetails?.readiness?.replace("_", " ") || "N/A"}
-                                        </dd>
-                                      </div>
-                                    </>
-                                  )}
-                                  {user.role === "Vet" && (
-                                    <>
-                                      <div>
-                                        <dt className="font-semibold text-gray-600">Location</dt>
-                                        <dd className="mt-1 text-gray-900">{user.veterinarianDetails?.location || "N/A"}</dd>
-                                      </div>
-                                      <div>
-                                        <dt className="font-semibold text-gray-600">Degree</dt>
-                                        <dd className="mt-1 text-gray-900">{user.veterinarianDetails?.degree || "N/A"}</dd>
-                                      </div>
-                                      <div>
-                                        <dt className="font-semibold text-gray-600">Specialization</dt>
-                                        <dd className="mt-1 text-gray-900">
-                                          {user.veterinarianDetails?.specialization || "N/A"}
-                                        </dd>
-                                      </div>
-                                      <div>
-                                        <dt className="font-semibold text-gray-600">Experience</dt>
-                                        <dd className="mt-1 text-gray-900">
-                                          {user.veterinarianDetails?.experienceYears
-                                            ? `${user.veterinarianDetails.experienceYears} years`
-                                            : "N/A"}
-                                        </dd>
-                                      </div>
-                                      <div>
-                                        <dt className="font-semibold text-gray-600">Availability</dt>
-                                        <dd className="mt-1 text-gray-900">
-                                          {user.veterinarianDetails?.availableHours || "N/A"}
-                                        </dd>
-                                      </div>
-                                      <div>
-                                        <dt className="font-semibold text-gray-600">Verified</dt>
-                                        <dd className="mt-1 text-gray-900">
-                                          {user.isVerified ? (
-                                            <span className="inline-flex items-center px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full shadow-sm">
-                                              <Check className="w-4 h-4 mr-1" />
-                                              Yes
+                                    {user.role === "Vet" && (
+                                      <>
+                                        <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
+                                          <dt className="flex items-center space-x-2 font-semibold text-gray-600">
+                                            <Briefcase className="w-4 h-4 text-pink-400" />
+                                            <span>Title</span>
+                                          </dt>
+                                          <dd className="mt-1 text-gray-900">
+                                            {user.veterinarianDetails?.title ||
+                                              "N/A"}
+                                          </dd>
+                                        </div>
+                                        <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
+                                          <dt className="flex items-center space-x-2 font-semibold text-gray-600">
+                                            <MapPin className="w-4 h-4 text-pink-400" />
+                                            <span>Location</span>
+                                          </dt>
+                                          <dd className="mt-1 text-gray-900">
+                                            {user.veterinarianDetails
+                                              ?.governorate &&
+                                            user.veterinarianDetails?.delegation
+                                              ? `${user.veterinarianDetails.delegation}, ${user.veterinarianDetails.governorate}`
+                                              : user.veterinarianDetails
+                                                  ?.governorate || "N/A"}
+                                          </dd>
+                                        </div>
+                                        <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
+                                          <dt className="flex items-center space-x-2 font-semibold text-gray-600">
+                                            <Award className="w-4 h-4 text-pink-400" />
+                                            <span>Specializations</span>
+                                          </dt>
+                                          <dd className="mt-1 text-gray-900">
+                                            {user.veterinarianDetails
+                                              ?.specializations?.length > 0
+                                              ? user.veterinarianDetails.specializations
+                                                  .map(
+                                                    (s) => s.specializationName
+                                                  )
+                                                  .filter((name) =>
+                                                    /^[a-zA-Z\s]+$/.test(name)
+                                                  ) // Basic validation
+                                                  .join(", ") || (
+                                                  <span className="italic text-yellow-600">
+                                                    Invalid data detected
+                                                  </span>
+                                                )
+                                              : "None"}
+                                          </dd>
+                                        </div>
+                                        <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
+                                          <dt className="flex items-center space-x-2 font-semibold text-gray-600">
+                                            <Award className="w-4 h-4 text-pink-400" />
+                                            <span>Diplomas and Training</span>
+                                          </dt>
+                                          <dd className="mt-1 text-gray-900">
+                                            {user.veterinarianDetails
+                                              ?.diplomasAndTraining &&
+                                            !user.veterinarianDetails.diplomasAndTraining.startsWith(
+                                              "http"
+                                            ) ? (
+                                              user.veterinarianDetails
+                                                .diplomasAndTraining
+                                            ) : user.veterinarianDetails
+                                                ?.diplomasAndTraining ? (
+                                              <a
+                                                href={
+                                                  user.veterinarianDetails
+                                                    .diplomasAndTraining
+                                                }
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-blue-600 hover:underline"
+                                              >
+                                                View Diploma
+                                              </a>
+                                            ) : (
+                                              "N/A"
+                                            )}
+                                          </dd>
+                                        </div>
+                                        <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
+                                          <dt className="flex items-center space-x-2 font-semibold text-gray-600">
+                                            <Briefcase className="w-4 h-4 text-pink-400" />
+                                            <span>Services</span>
+                                          </dt>
+                                          <dd className="mt-1 text-gray-900">
+                                            {user.veterinarianDetails?.services
+                                              ?.length > 0
+                                              ? user.veterinarianDetails.services
+                                                  .map(
+                                                    (s) =>
+                                                      `${s.serviceName} (TND ${
+                                                        s.fee || "N/A"
+                                                      })`
+                                                  )
+                                                  .filter((service) =>
+                                                    /^[a-zA-Z\s]+$/.test(
+                                                      service.split(" (")[0]
+                                                    )
+                                                  ) // Basic validation
+                                                  .join(", ") || (
+                                                  <span className="italic text-yellow-600">
+                                                    Invalid data detected
+                                                  </span>
+                                                )
+                                              : "None"}
+                                          </dd>
+                                        </div>
+                                        <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
+                                          <dt className="flex items-center space-x-2 font-semibold text-gray-600">
+                                            <Languages className="w-4 h-4 text-pink-400" />
+                                            <span>Languages Spoken</span>
+                                          </dt>
+                                          <dd className="mt-1 text-gray-900">
+                                            {user.veterinarianDetails
+                                              ?.languagesSpoken?.length > 0
+                                              ? user.veterinarianDetails.languagesSpoken.join(
+                                                  ", "
+                                                )
+                                              : "N/A"}
+                                          </dd>
+                                        </div>
+                                        <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
+                                          <dt className="flex items-center space-x-2 font-semibold text-gray-600">
+                                            <ClockIcon className="w-4 h-4 text-pink-400" />
+                                            <span>
+                                              Average Consultation Duration
                                             </span>
-                                          ) : (
-                                            <span className="inline-flex items-center px-2 py-1 text-xs font-medium text-red-700 bg-red-100 rounded-full shadow-sm">
-                                              <X className="w-4 h-4 mr-1" />
-                                              No
-                                            </span>
-                                          )}
-                                        </dd>
-                                      </div>
-                                    </>
-                                  )}
-                                  {user.role === "Trainer" && (
-                                    <>
-                                      <div>
-                                        <dt className="font-semibold text-gray-600">Location</dt>
-                                        <dd className="mt-1 text-gray-900">{user.trainerDetails?.location || "N/A"}</dd>
-                                      </div>
-                                      <div>
-                                        <dt className="font-semibold text-gray-600">Certification</dt>
-                                        <dd className="mt-1 text-gray-900">{user.trainerDetails?.certification || "N/A"}</dd>
-                                      </div>
-                                      <div>
-                                        <dt className="font-semibold text-gray-600">Specialization</dt>
-                                        <dd className="mt-1 text-gray-900">{user.trainerDetails?.specialization || "N/A"}</dd>
-                                      </div>
-                                      <div>
-                                        <dt className="font-semibold text-gray-600">Experience</dt>
-                                        <dd className="mt-1 text-gray-900">
-                                          {user.trainerDetails?.experienceYears
-                                            ? `${user.trainerDetails.experienceYears} years`
-                                            : "N/A"}
-                                        </dd>
-                                      </div>
-                                      <div>
-                                        <dt className="font-semibold text-gray-600">Availability</dt>
-                                        <dd className="mt-1 text-gray-900">{user.trainerDetails?.availableHours || "N/A"}</dd>
-                                      </div>
-                                    </>
-                                  )}
-                                </dl>
+                                          </dt>
+                                          <dd className="mt-1 text-gray-900">
+                                            {user.veterinarianDetails
+                                              ?.averageConsultationDuration
+                                              ? `${user.veterinarianDetails.averageConsultationDuration} minutes`
+                                              : "N/A"}
+                                          </dd>
+                                        </div>
+                                        <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
+                                          <dt className="flex items-center space-x-2 font-semibold text-gray-600">
+                                            <ClockIcon className="w-4 h-4 text-pink-400" />
+                                            <span>Opening Hours</span>
+                                          </dt>
+                                          <dd className="mt-1 text-gray-900">
+                                            {formatOpeningHours(
+                                              user.veterinarianDetails
+                                                ?.openingHours
+                                            ) !== "N/A" ? (
+                                              formatOpeningHours(
+                                                user.veterinarianDetails
+                                                  ?.openingHours
+                                              )
+                                            ) : (
+                                              <span className="italic text-yellow-600">
+                                                Schedule unavailable
+                                              </span>
+                                            )}
+                                          </dd>
+                                        </div>
+                                        <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
+                                          <dt className="flex items-center space-x-2 font-semibold text-gray-600">
+                                            <MapPin className="w-4 h-4 text-pink-400" />
+                                            <span>Clinic Photos</span>
+                                          </dt>
+                                          <dd className="flex flex-wrap gap-2 mt-1">
+                                            {user.veterinarianDetails
+                                              ?.clinicPhotos?.length > 0
+                                              ? user.veterinarianDetails.clinicPhotos
+                                                  .slice(0, 3)
+                                                  .map((url, index) => (
+                                                    <a
+                                                      key={index}
+                                                      href={url}
+                                                      target="_blank"
+                                                      rel="noopener noreferrer"
+                                                      className="inline-block"
+                                                    >
+                                                      <img
+                                                        src={url}
+                                                        alt={`Clinic Photo ${
+                                                          index + 1
+                                                        }`}
+                                                        className="object-cover w-16 h-16 transition-transform rounded-md shadow-sm hover:scale-105"
+                                                        onError={(e) =>
+                                                          (e.target.src =
+                                                            DEFAULT_PROFILE_IMAGE)
+                                                        }
+                                                      />
+                                                    </a>
+                                                  ))
+                                              : "N/A"}
+                                            {user.veterinarianDetails
+                                              ?.clinicPhotos?.length > 3 && (
+                                              <span className="text-xs text-blue-600 cursor-pointer hover:underline">
+                                                +
+                                                {user.veterinarianDetails
+                                                  .clinicPhotos.length - 3}{" "}
+                                                more
+                                              </span>
+                                            )}
+                                          </dd>
+                                        </div>
+                                        <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
+                                          <dt className="flex items-center space-x-2 font-semibold text-gray-600">
+                                            <Briefcase className="w-4 h-4 text-pink-400" />
+                                            <span>Business Card</span>
+                                          </dt>
+                                          <dd className="mt-1">
+                                            {user.veterinarianDetails
+                                              ?.businessCardImage ? (
+                                              <a
+                                                href={
+                                                  user.veterinarianDetails
+                                                    .businessCardImage
+                                                }
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-blue-600 hover:underline"
+                                              >
+                                                View Business Card
+                                              </a>
+                                            ) : (
+                                              "N/A"
+                                            )}
+                                          </dd>
+                                        </div>
+                                        <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
+                                          <dt className="flex items-center space-x-2 font-semibold text-gray-600">
+                                            <MapPin className="w-4 h-4 text-pink-400" />
+                                            <span>Geolocation</span>
+                                          </dt>
+                                          <dd className="mt-1 text-gray-900">
+                                            {user.veterinarianDetails
+                                              ?.geolocation?.latitude &&
+                                            user.veterinarianDetails
+                                              ?.geolocation?.longitude
+                                              ? `${user.veterinarianDetails.geolocation.latitude.toFixed(
+                                                  4
+                                                )}, ${user.veterinarianDetails.geolocation.longitude.toFixed(
+                                                  4
+                                                )}`
+                                              : "N/A"}
+                                          </dd>
+                                        </div>
+                                      </>
+                                    )}
+                                    {/* Other roles (Admin, PetOwner, Trainer) remain as in previous version */}
+                                  </dl>
+                                </div>
                               )}
 
                               {activeTab === "activity" && (
                                 <dl className="grid grid-cols-2 gap-6 text-sm">
                                   <div>
-                                    <dt className="font-semibold text-gray-600">Created</dt>
+                                    <dt className="font-semibold text-gray-600">
+                                      Created
+                                    </dt>
                                     <dd className="mt-1 text-gray-900">
-                                      {new Date(user.createdAt).toLocaleString() || "N/A"}
+                                      {new Date(
+                                        user.createdAt
+                                      ).toLocaleString() || "N/A"}
                                     </dd>
                                   </div>
                                   <div>
-                                    <dt className="font-semibold text-gray-600">Last Login</dt>
+                                    <dt className="font-semibold text-gray-600">
+                                      Last Login
+                                    </dt>
                                     <dd className="mt-1 text-gray-900">
-                                      {user.lastLogin ? new Date(user.lastLogin).toLocaleString() : "Never"}
+                                      {user.lastLogin
+                                        ? new Date(
+                                            user.lastLogin
+                                          ).toLocaleString()
+                                        : "Never"}
                                     </dd>
                                   </div>
                                   <div>
-                                    <dt className="font-semibold text-gray-600">Archived</dt>
+                                    <dt className="font-semibold text-gray-600">
+                                      Archived
+                                    </dt>
                                     <dd className="mt-1 text-gray-900">
                                       {user.isArchieve ? (
                                         <span className="inline-flex items-center px-2 py-1 text-xs font-medium text-pink-700 bg-pink-100 rounded-full shadow-sm">

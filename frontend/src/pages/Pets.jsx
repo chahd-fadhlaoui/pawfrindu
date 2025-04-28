@@ -4,6 +4,7 @@ import { AppContext } from "../context/AppContext";
 import { Heart, PawPrint, MapPin, Coins, ChevronLeft, ChevronRight, Filter, X } from "lucide-react";
 import SearchBar from "../components/SearchBar";
 import { SPECIES_OPTIONS, breeds, ageRanges } from "../assets/Pet"; 
+import { FilterBadge, FilterSelect } from "../components/common/Filter";
 
 const PawIcon = ({ className, style }) => (
   <svg viewBox="0 0 24 24" className={className} style={style} fill="currentColor">
@@ -65,33 +66,6 @@ const PetCard = ({ pet, navigate, currencySymbol }) => {
   );
 };
 
-const FilterBadge = ({ label, value, onClear }) => (
-  <span className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium text-[#ffc929] bg-[#ffc929]/10 rounded-full">
-    {label}: {value}
-    <button onClick={onClear} className="ml-1 focus:outline-none">
-      <X size={14} />
-    </button>
-  </span>
-);
-
-const FilterSelect = ({ label, value, onChange, options, disabled }) => (
-  <div className="w-full sm:w-auto flex-1 min-w-[140px]">
-    <select
-      className={`w-full px-4 py-2.5 text-sm text-gray-700 bg-white border border-[#ffc929]/20 rounded-xl shadow-sm focus:ring-2 focus:ring-[#ffc929]/30 focus:border-[#ffc929] hover:border-[#ffc929]/50 transition-all duration-300 ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
-      value={value}
-      onChange={onChange}
-      aria-label={`Filter by ${label}`}
-      disabled={disabled}
-    >
-      <option value="">{label}</option>
-      {options.map((option) => (
-        <option key={option.value || option} value={option.value || option}>
-          {option.label || option}
-        </option>
-      ))}
-    </select>
-  </div>
-);
 
 export default function Pet() {
   const navigate = useNavigate();

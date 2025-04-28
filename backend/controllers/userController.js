@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import User from "../models/userModel.js";
 import { sendEmail } from "../services/emailService.js";
 import { io } from "../server.js"; // Import io from the server file
+import mongoose from "mongoose";
 
 // 🚀 Étape 1: Enregistrement de l'utilisateur sans détails spécifiques
 const register = async (req, res) => {
@@ -11,12 +12,19 @@ const register = async (req, res) => {
   const { fullName, email, password, role, adminType } = req.body;
 
   if (!fullName || !email || !password || !role) {
-    console.log("Missing fields:", { hasFullName: !!fullName, hasEmail: !!email, hasPassword: !!password, hasRole: !!role });
+    console.log("Missing fields:", {
+      hasFullName: !!fullName,
+      hasEmail: !!email,
+      hasPassword: !!password,
+      hasRole: !!role,
+    });
     return res.status(400).json({ message: "All fields are required." });
   }
 
   if (role === "Admin" && !adminType) {
-    return res.status(400).json({ message: "Admin type is required for Admin role." });
+    return res
+      .status(400)
+      .json({ message: "Admin type is required for Admin role." });
   }
 
   try {
@@ -42,7 +50,11 @@ const register = async (req, res) => {
     }
 
     const accessToken = jwt.sign(
-      { userId: savedUser._id, role: savedUser.role, adminType: savedUser.adminType },
+      {
+        userId: savedUser._id,
+        role: savedUser.role,
+        adminType: savedUser.adminType,
+      },
       process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: "72h" }
     );
@@ -80,14 +92,23 @@ const register = async (req, res) => {
     });
   } catch (error) {
     console.error("Signup Error:", error.stack);
-    res.status(500).json({ message: "Failed to create account", detail: error.message });
+    res
+      .status(500)
+      .json({ message: "Failed to create account", detail: error.message });
   }
 };
 
 // 🚀 Étape 2: Complétion du profil et génération du token
 const createProfile = async (req, res) => {
-  const { userId, image, gender } = req.body;
-  const { petOwnerDetails, trainerDetails, veterinarianDetails } = req.body;
+  const {
+    userId,
+    image,
+    gender,
+    about,
+    petOwnerDetails,
+    trainerDetails,
+    veterinarianDetails,
+  } = req.body;
 
   try {
     const user = await User.findById(userId);
@@ -103,6 +124,10 @@ const createProfile = async (req, res) => {
     if (gender) {
       user.gender = gender;
     }
+    // Update about if provided
+    if (about) {
+      user.about = about;
+    }
 
     // Role-specific logic
     if (user.role === "PetOwner") {
@@ -111,44 +136,45 @@ const createProfile = async (req, res) => {
           .status(400)
           .json({ message: "Address and phone are required for Pet Owner." });
       }
-      if (petOwnerDetails.petExperience && petOwnerDetails.petExperience._id) {
-        delete petOwnerDetails.petExperience._id; // Remove _id if present to avoid overwriting issues
-      }
       user.petOwnerDetails = petOwnerDetails;
     } else if (user.role === "Trainer") {
       if (
         !trainerDetails?.governorate ||
         !trainerDetails?.delegation ||
         !trainerDetails?.certificationImage ||
-        !trainerDetails?.trainingFacilityType
+        !trainerDetails?.trainingFacilityType ||
+        !trainerDetails?.phone
       ) {
         return res.status(400).json({
           message:
-            "Governorate, delegation, certification image, and training facility type are required for Trainer.",
+            "Governorate, delegation, certification image, training facility type and phone are required for Trainer.",
         });
       }
       // Ensure geolocation is provided for fixed-location facility types
       if (
-        ["Fixed Facility", "Public Space", "Rural Area"].includes(
-          trainerDetails.trainingFacilityType
-        ) &&
+        trainerDetails.trainingFacilityType === "Fixed Facility" &&
         (!trainerDetails.geolocation?.latitude ||
           !trainerDetails.geolocation?.longitude)
       ) {
         return res.status(400).json({
           message:
-            "Geolocation (latitude and longitude) is required for Fixed Facility, Public Space, or Rural Area trainers.",
+            "Geolocation (latitude and longitude) is required for Fixed Facility trainers.",
         });
       }
-      user.trainerDetails = trainerDetails;
+      user.trainerDetails = {
+        ...trainerDetails,
+        reviews: trainerDetails.reviews || [],
+        rating: trainerDetails.rating || 0,
+      };
     } else if (user.role === "Vet") {
       if (
         !veterinarianDetails?.governorate ||
-        !veterinarianDetails?.diplomasAndTraining
+        !veterinarianDetails?.diplomasAndTraining ||
+        !veterinarianDetails?.phone
       ) {
         return res.status(400).json({
           message:
-            "Governorate and diplomas/training details are required for Veterinarian.",
+            "Governorate and diplomas/training details and phone are required for Veterinarian.",
         });
       }
       user.veterinarianDetails = veterinarianDetails;
@@ -171,6 +197,7 @@ const createProfile = async (req, res) => {
       fullName: user.fullName,
       image: user.image,
       gender: user.gender,
+      about: user.about,
       petOwnerDetails: user.petOwnerDetails,
       trainerDetails: user.trainerDetails,
       veterinarianDetails: user.veterinarianDetails,
@@ -187,7 +214,6 @@ const createProfile = async (req, res) => {
     res.status(500).json({ message: "Failed to complete profile." });
   }
 };
-
 
 // 🚀 Étape 3: Connexion après enregistrement et complétion du profil
 const login = async (req, res) => {
@@ -209,7 +235,9 @@ const login = async (req, res) => {
 
     if (!user.password) {
       console.error("User has no password in DB:", user._id);
-      return res.status(500).json({ message: "User password is missing in database" });
+      return res
+        .status(500)
+        .json({ message: "User password is missing in database" });
     }
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
@@ -222,7 +250,12 @@ const login = async (req, res) => {
     let shouldUpdateLastLogin = false; // Default to false
 
     // Log initial state
-    console.log("Initial state - isActive:", user.isActive, "lastLogin:", user.lastLogin);
+    console.log(
+      "Initial state - isActive:",
+      user.isActive,
+      "lastLogin:",
+      user.lastLogin
+    );
 
     // Vet-specific logic
     if (user.role === "Vet") {
@@ -253,7 +286,12 @@ const login = async (req, res) => {
     }
 
     // Log decision
-    console.log("Decision - redirectTo:", redirectTo, "shouldUpdateLastLogin:", shouldUpdateLastLogin);
+    console.log(
+      "Decision - redirectTo:",
+      redirectTo,
+      "shouldUpdateLastLogin:",
+      shouldUpdateLastLogin
+    );
 
     // Update lastLogin if applicable
     if (shouldUpdateLastLogin) {
@@ -272,7 +310,8 @@ const login = async (req, res) => {
       {
         userId: user._id,
         role: user.role,
-        adminType: user.adminType || (user.role === "Admin" ? "Super Admin" : undefined),
+        adminType:
+          user.adminType || (user.role === "Admin" ? "Super Admin" : undefined),
         isActive: user.isActive,
       },
       process.env.ACCESS_TOKEN_SECRET,
@@ -285,7 +324,8 @@ const login = async (req, res) => {
         fullName: user.fullName,
         email: user.email,
         role: user.role,
-        adminType: user.adminType || (user.role === "Admin" ? "Super Admin" : undefined),
+        adminType:
+          user.adminType || (user.role === "Admin" ? "Super Admin" : undefined),
         isActive: user.isActive,
         lastLogin: user.lastLogin,
         petOwnerDetails: user.petOwnerDetails || undefined,
@@ -300,11 +340,11 @@ const login = async (req, res) => {
     console.error("Login Error:", error.stack);
     res.status(500).json({ message: "Login failed", detail: error.message });
   }
-}; 
+};
 
 // 🚀 Get current user profile
 const getCurrentUser = async (req, res) => {
-  console.log('Handling GET /api/user/me for user:', req.user._id);
+  console.log("Handling GET /api/user/me for user:", req.user._id);
   try {
     const user = await User.findById(req.user._id).select("-password");
     if (!user) {
@@ -318,13 +358,17 @@ const getCurrentUser = async (req, res) => {
     // Vet-specific logic (mirrors login function)
     if (user.role === "Vet") {
       if (!user.isActive && !user.lastLogin) {
-        console.log("Case 1: Inactive vet, first fetch - skipping lastLogin update");
+        console.log(
+          "Case 1: Inactive vet, first fetch - skipping lastLogin update"
+        );
         shouldUpdateLastLogin = false;
       } else if (user.isActive) {
         console.log("Case 2/3: Active vet - updating lastLogin");
         shouldUpdateLastLogin = true;
       } else if (!user.isActive && user.lastLogin) {
-        console.log("Case 4: Inactive vet, previously logged in - skipping lastLogin update");
+        console.log(
+          "Case 4: Inactive vet, previously logged in - skipping lastLogin update"
+        );
         shouldUpdateLastLogin = false;
       }
     } else {
@@ -348,7 +392,8 @@ const getCurrentUser = async (req, res) => {
         email: user.email,
         role: user.role,
         isActive: user.isActive,
-        adminType: user.adminType || (user.role === "Admin" ? "Super Admin" : undefined),
+        adminType:
+          user.adminType || (user.role === "Admin" ? "Super Admin" : undefined),
         about: user.about,
         image: user.image,
         lastLogin: user.lastLogin,
@@ -361,9 +406,9 @@ const getCurrentUser = async (req, res) => {
     console.log("Profile fetched successfully for user:", user._id);
   } catch (error) {
     console.error("Get Current User Error:", error.stack);
-    res.status(500).json({ 
-      message: "Failed to fetch user profile", 
-      detail: error.message 
+    res.status(500).json({
+      message: "Failed to fetch user profile",
+      detail: error.message,
     });
   }
 };
@@ -380,14 +425,15 @@ const verifyToken = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
     req.userId = decoded.userId;
     req.userRole = decoded.role;
-    req.adminType = decoded.adminType || (decoded.role === "Admin" ? "Super Admin" : undefined); // Secours pour anciens tokens
+    req.adminType =
+      decoded.adminType ||
+      (decoded.role === "Admin" ? "Super Admin" : undefined); // Secours pour anciens tokens
     next();
   } catch (error) {
     console.error("Token Verification Error:", error);
     return res.status(401).json({ message: "Invalid or expired token" });
   }
 };
-
 
 const forgotPassword = async (req, res) => {
   const { email } = req.body;
@@ -426,7 +472,6 @@ const forgotPassword = async (req, res) => {
     res.status(500).json({ message: "Failed to process password reset" });
   }
 };
-
 
 const resetPassword = async (req, res) => {
   const { token, newPassword } = req.body;
@@ -496,7 +541,6 @@ const resetPassword = async (req, res) => {
   }
 };
 
-
 const validateResetToken = async (req, res) => {
   const { token } = req.params;
 
@@ -528,19 +572,20 @@ const validateResetToken = async (req, res) => {
 // 🚀 Get all users - simple version
 const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find()
-      .select('-password -resetPasswordToken -resetPasswordExpiry');
+    const users = await User.find().select(
+      "-password -resetPasswordToken -resetPasswordExpiry"
+    );
 
     res.json({
       success: true,
       count: users.length,
-      users
+      users,
     });
   } catch (error) {
     console.error("Get All Users Error:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      message: "Failed to fetch users" 
+      message: "Failed to fetch users",
     });
   }
 };
@@ -573,7 +618,8 @@ const updateProfile = async (req, res) => {
 
     if (user.role === "PetOwner" && petOwnerDetails) {
       if (
-        (petOwnerDetails.address === undefined && !user.petOwnerDetails?.address) ||
+        (petOwnerDetails.address === undefined &&
+          !user.petOwnerDetails?.address) ||
         (petOwnerDetails.phone === undefined && !user.petOwnerDetails?.phone)
       ) {
         return res.status(400).json({
@@ -655,7 +701,6 @@ const updateUserByAdmin = async (req, res) => {
   }
 };
 
-
 const approveUser = async (req, res) => {
   const { userId } = req.params;
 
@@ -728,8 +773,14 @@ const deleteUserByAdmin = async (req, res) => {
 const getUserStats = async (req, res) => {
   try {
     const totalUsers = await User.countDocuments();
-    const activeUsers = await User.countDocuments({ isActive: true, isArchieve: false });
-    const inactiveUsers = await User.countDocuments({ isActive: false, isArchieve: false });
+    const activeUsers = await User.countDocuments({
+      isActive: true,
+      isArchieve: false,
+    });
+    const inactiveUsers = await User.countDocuments({
+      isActive: false,
+      isArchieve: false,
+    });
     const archivedUsers = await User.countDocuments({ isArchieve: true });
     const pendingUsers = await User.countDocuments({
       $or: [{ role: "Vet" }, { role: "Trainer" }],
@@ -750,21 +801,23 @@ const getUserStats = async (req, res) => {
     });
   } catch (error) {
     console.error("Get User Stats Error:", error);
-    res.status(500).json({ success: false, message: "Failed to fetch user stats" });
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch user stats" });
   }
 };
 
-// Vets module 
+// Vets module
 
 // Get all active veterinarians - accessible to any authenticated user
 const getVeterinarians = async (req, res) => {
   try {
-    const veterinarians = await User.find({ 
-      role: "Vet", 
+    const veterinarians = await User.find({
+      role: "Vet",
       isActive: true,
-      isArchieve: false 
+      isArchieve: false,
     })
-      .select('fullName email image veterinarianDetails')
+      .select("fullName email image veterinarianDetails")
       .lean();
 
     console.log("Raw veterinarians from DB:", veterinarians); // Debug raw data
@@ -782,27 +835,31 @@ const getVeterinarians = async (req, res) => {
     });
   } catch (error) {
     console.error("Get Veterinarians Error:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      message: "Failed to fetch veterinarians" 
+      message: "Failed to fetch veterinarians",
     });
   }
 };
 
-
 const getVeterinarianById = async (req, res) => {
-  console.log('Handling GET /api/user/veterinarians/:id for vet:', req.params.id);
+  console.log(
+    "Handling GET /api/user/veterinarians/:id for vet:",
+    req.params.id
+  );
   try {
-    const vet = await User.findOne({ 
-      _id: req.params.id, 
-      role: "Vet", 
-      isActive: true, 
-      isArchieve: false 
+    const vet = await User.findOne({
+      _id: req.params.id,
+      role: "Vet",
+      isActive: true,
+      isArchieve: false,
     }).select("fullName image about veterinarianDetails"); // Exclude sensitive fields like email
 
     if (!vet) {
       console.log("Vet not found for ID:", req.params.id);
-      return res.status(404).json({ success: false, message: "Veterinarian not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Veterinarian not found" });
     }
     console.log("Vet found:", vet._id);
 
@@ -819,10 +876,10 @@ const getVeterinarianById = async (req, res) => {
     console.log("Vet details fetched successfully for vet:", vet._id);
   } catch (error) {
     console.error("Get Veterinarian By ID Error:", error.stack);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      message: "Failed to fetch veterinarian details", 
-      detail: error.message 
+      message: "Failed to fetch veterinarian details",
+      detail: error.message,
     });
   }
 };
@@ -833,7 +890,9 @@ const updateVetProfile = async (req, res) => {
     console.log("Received update request:", req.body);
 
     if (req.user._id.toString() !== userId) {
-      return res.status(403).json({ message: "You can only update your own profile" });
+      return res
+        .status(403)
+        .json({ message: "You can only update your own profile" });
     }
 
     const user = await User.findById(userId);
@@ -859,27 +918,36 @@ const updateVetProfile = async (req, res) => {
 
       if (veterinarianDetails.averageConsultationDuration) {
         const validDurations = [10, 15, 20, 25, 30, 45, 50, 55, 60];
-        const duration = parseInt(veterinarianDetails.averageConsultationDuration);
+        const duration = parseInt(
+          veterinarianDetails.averageConsultationDuration
+        );
         if (!validDurations.includes(duration)) {
-          return res.status(400).json({ message: "Invalid consultation duration" });
+          return res
+            .status(400)
+            .json({ message: "Invalid consultation duration" });
         }
         vetDetails.averageConsultationDuration = duration;
       }
 
       if (veterinarianDetails.governorate) {
-        const validGovernorates = [
-          "Ariana", "Beja", "Ben Arous", "Bizerte", "Gabes", "Gafsa", "Jendouba", "Kairouan",
-          "Kasserine", "Kebili", "Kef", "Mahdia", "Manouba", "Medenine", "Monastir", "Nabeul",
-          "Sfax", "Sidi Bouzid", "Siliana", "Sousse", "Tataouine", "Tozeur", "Tunis", "Zaghouan"
-        ];
-        if (!validGovernorates.includes(veterinarianDetails.governorate)) {
-          return res.status(400).json({ message: "Invalid governorate" });
-        }
         vetDetails.governorate = veterinarianDetails.governorate;
       }
 
-      if (veterinarianDetails.delegation) vetDetails.delegation = veterinarianDetails.delegation;
-      if (veterinarianDetails.landlinePhone) vetDetails.landlinePhone = veterinarianDetails.landlinePhone;
+      if (veterinarianDetails.delegation)
+        vetDetails.delegation = veterinarianDetails.delegation;
+      if (veterinarianDetails.phone) {
+        vetDetails.phone = veterinarianDetails.phone;
+      } else if (
+        veterinarianDetails.phone === null ||
+        veterinarianDetails.phone === ""
+      ) {
+        return res
+          .status(400)
+          .json({ message: "Phone is required for Veterinarian" });
+      }
+      if (veterinarianDetails.secondaryPhone !== undefined) {
+        vetDetails.secondaryPhone = veterinarianDetails.secondaryPhone;
+      }
 
       if (veterinarianDetails.services) {
         vetDetails.services = veterinarianDetails.services.map((s) => ({
@@ -889,26 +957,36 @@ const updateVetProfile = async (req, res) => {
       }
 
       if (veterinarianDetails.languagesSpoken) {
-        const validLanguages = ["Français", "Anglais", "Arabe"];
-        if (!veterinarianDetails.languagesSpoken.every((lang) => validLanguages.includes(lang))) {
-          return res.status(400).json({ message: "Invalid language" });
-        }
         vetDetails.languagesSpoken = veterinarianDetails.languagesSpoken;
       }
 
       if (veterinarianDetails.openingHours) {
         const validSessions = ["Single Session", "Double Session", "Closed"];
-        for (const day of ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]) {
+        for (const day of [
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday",
+          "saturday",
+          "sunday",
+        ]) {
           if (veterinarianDetails.openingHours[day]) {
-            if (!validSessions.includes(veterinarianDetails.openingHours[day])) {
-              return res.status(400).json({ message: `Invalid session type for ${day}` });
+            if (
+              !validSessions.includes(veterinarianDetails.openingHours[day])
+            ) {
+              return res
+                .status(400)
+                .json({ message: `Invalid session type for ${day}` });
             }
             vetDetails.openingHours = vetDetails.openingHours || {};
-            vetDetails.openingHours[day] = veterinarianDetails.openingHours[day];
+            vetDetails.openingHours[day] =
+              veterinarianDetails.openingHours[day];
             ["Start", "End", "Start2", "End2"].forEach((suffix) => {
               const key = `${day}${suffix}`;
               if (veterinarianDetails.openingHours[key]) {
-                vetDetails.openingHours[key] = veterinarianDetails.openingHours[key];
+                vetDetails.openingHours[key] =
+                  veterinarianDetails.openingHours[key];
               }
             });
           }
@@ -917,13 +995,17 @@ const updateVetProfile = async (req, res) => {
 
       if (veterinarianDetails.geolocation) {
         vetDetails.geolocation = {
-          latitude: parseFloat(veterinarianDetails.geolocation.latitude) || 36.8665367,
-          longitude: parseFloat(veterinarianDetails.geolocation.longitude) || 10.1647233,
+          latitude:
+            parseFloat(veterinarianDetails.geolocation.latitude) || 36.8665367,
+          longitude:
+            parseFloat(veterinarianDetails.geolocation.longitude) || 10.1647233,
         };
       }
 
-      if (veterinarianDetails.clinicPhotos) vetDetails.clinicPhotos = veterinarianDetails.clinicPhotos;
-      if (veterinarianDetails.businessCardImage) vetDetails.businessCardImage = veterinarianDetails.businessCardImage;
+      if (veterinarianDetails.clinicPhotos)
+        vetDetails.clinicPhotos = veterinarianDetails.clinicPhotos;
+      if (veterinarianDetails.businessCardImage)
+        vetDetails.businessCardImage = veterinarianDetails.businessCardImage;
 
       // Fields that CANNOT be updated (diplomasAndTraining and specializations are ignored)
       user.veterinarianDetails = vetDetails;
@@ -952,9 +1034,262 @@ const updateVetProfile = async (req, res) => {
     });
   } catch (error) {
     console.error("Update Vet Profile Error:", error);
-    res.status(500).json({ message: "Failed to update vet profile", detail: error.message });
+    res
+      .status(500)
+      .json({ message: "Failed to update vet profile", detail: error.message });
   }
 };
+
+// Trainer module
+// Get all active trainers - accessible to any authenticated user
+const getTrainers = async (req, res) => {
+  try {
+    const trainers = await User.find({
+      role: "Trainer",
+      isActive: true,
+      isArchieve: false,
+    })
+      .select("fullName email image trainerDetails")
+      .lean();
+
+    console.log("Raw trainers from DB:", trainers);
+
+    if (!trainers.length) {
+      console.log("No active trainers found");
+    } else {
+      console.log(`Found ${trainers.length} active trainers`);
+    }
+
+    res.json({
+      success: true,
+      count: trainers.length,
+      trainers,
+    });
+  } catch (error) {
+    console.error("Get Trainers Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch trainers",
+    });
+  }
+};
+
+// Get trainer by ID - accessible to any authenticated user// Get trainer by ID
+const getTrainerById = async (req, res) => {
+  console.log(
+    "Handling GET /api/user/trainers/:id for trainer:",
+    req.params.id
+  );
+  try {
+    const trainer = await User.findOne({
+      _id: req.params.id,
+      role: "Trainer",
+      isActive: true,
+      isArchieve: false,
+    }).select("fullName image about trainerDetails");
+
+    if (!trainer) {
+      console.log("Trainer not found for ID:", req.params.id);
+      return res
+        .status(404)
+        .json({ success: false, message: "Trainer not found" });
+    }
+    console.log("Trainer found:", trainer._id);
+
+    res.json({
+      success: true,
+      trainer: {
+        _id: trainer._id,
+        fullName: trainer.fullName,
+        about: trainer.about,
+        image: trainer.image,
+        trainerDetails: trainer.trainerDetails || undefined,
+      },
+    });
+    console.log(
+      "Trainer details fetched successfully for trainer:",
+      trainer._id
+    );
+  } catch (error) {
+    console.error("Get Trainer By ID Error:", error.stack);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch trainer details",
+      detail: error.message,
+    });
+  }
+};
+
+// Submit a review for a trainer
+const submitTrainerReview = async (req, res) => {
+  const { trainerId } = req.params;
+  const { rating, comment } = req.body;
+  const userId = req.user._id;
+
+  try {
+    // Validate trainerId
+    if (!mongoose.Types.ObjectId.isValid(trainerId)) {
+      return res.status(400).json({ message: "Invalid trainer ID" });
+    }
+
+    const trainer = await User.findOne({
+      _id: trainerId,
+      role: "Trainer",
+      isActive: true,
+      isArchieve: false,
+    });
+
+    if (!trainer) {
+      return res.status(404).json({ message: "Trainer not found" });
+    }
+
+    // Ensure trainerDetails exists
+    if (!trainer.trainerDetails) {
+      trainer.trainerDetails = {};
+    }
+    if (!trainer.trainerDetails.reviews) {
+      trainer.trainerDetails.reviews = [];
+    }
+
+    // Check if user has already reviewed
+    const existingReview = trainer.trainerDetails.reviews.find(
+      (review) => review.userId.toString() === userId.toString()
+    );
+    if (existingReview) {
+      return res
+        .status(400)
+        .json({ message: "You have already reviewed this trainer" });
+    }
+
+    // Validate rating
+    if (!rating || rating < 1 || rating > 5) {
+      return res
+        .status(400)
+        .json({ message: "Rating must be between 1 and 5" });
+    }
+
+    // Add review
+    const newReview = {
+      userId,
+      rating,
+      comment: comment || "",
+      createdAt: new Date(),
+    };
+    trainer.trainerDetails.reviews.push(newReview);
+
+    // Update average rating
+    const totalRatings = trainer.trainerDetails.reviews.reduce(
+      (sum, review) => sum + review.rating,
+      0
+    );
+    trainer.trainerDetails.rating =
+      trainer.trainerDetails.reviews.length > 0
+        ? totalRatings / trainer.trainerDetails.reviews.length
+        : 0;
+
+    await trainer.save();
+
+    // Emit Socket.IO event for new review
+    io.emit("trainerReviewSubmitted", {
+      trainerId,
+      review: newReview,
+      newRating: trainer.trainerDetails.rating,
+      message: "New review submitted for trainer",
+    });
+
+    res.status(201).json({
+      message: "Review submitted successfully",
+      review: newReview,
+      newRating: trainer.trainerDetails.rating,
+    });
+  } catch (error) {
+    console.error("Submit Trainer Review Error:", error.stack);
+    res
+      .status(500)
+      .json({ message: "Failed to submit review", detail: error.message });
+  }
+};
+
+// Get reviews for a trainer
+const getTrainerReviews = async (req, res) => {
+  const { trainerId } = req.params;
+
+  try {
+    console.log("Fetching reviews for trainerId:", trainerId);
+
+    // Validate trainerId
+    if (!mongoose.Types.ObjectId.isValid(trainerId)) {
+      console.log("Invalid trainer ID:", trainerId);
+      return res.status(400).json({ message: "Invalid trainer ID" });
+    }
+
+    console.log("Executing User.findOne for trainerId:", trainerId);
+    const trainer = await User.findOne({
+      _id: trainerId,
+      role: "Trainer",
+      isActive: true,
+      isArchieve: false,
+    }).select("trainerDetails.reviews trainerDetails.rating");
+
+    if (!trainer) {
+      console.log("Trainer not found for ID:", trainerId);
+      return res.status(404).json({ message: "Trainer not found" });
+    }
+
+    console.log("Trainer found:", trainer._id);
+    console.log("Raw trainerDetails:", trainer.trainerDetails);
+
+    // Initialize trainerDetails if missing
+    const trainerDetails = trainer.trainerDetails || {};
+    console.log("Processed trainerDetails:", trainerDetails);
+
+    // Ensure reviews is an array
+    const reviews = Array.isArray(trainerDetails.reviews) ? trainerDetails.reviews : [];
+    console.log("Processed reviews:", reviews);
+
+    // Ensure rating is a number
+    const rating = typeof trainerDetails.rating === "number" ? trainerDetails.rating : 0;
+    console.log("Processed rating:", rating);
+
+    // Manually populate userId fields if reviews exist
+    const populatedReviews = await Promise.all(
+      reviews.map(async (review) => {
+        if (review.userId) {
+          const user = await User.findById(review.userId)
+            .select("fullName image")
+            .lean()
+            .catch((err) => {
+              console.error("Failed to fetch user for review:", review.userId, err);
+              return { fullName: "Anonymous", image: null };
+            });
+          return {
+            ...review.toObject(),
+            userId: user || { fullName: "Anonymous", image: null },
+          };
+        }
+        return review.toObject();
+      })
+    );
+
+    console.log("Populated reviews:", populatedReviews);
+
+    res.json({
+      success: true,
+      rating,
+      reviews: populatedReviews,
+    });
+  } catch (error) {
+    console.error("Get Trainer Reviews Error:", {
+      trainerId,
+      error: error.message,
+      stack: error.stack,
+      trainerDetailsExists: !!trainer?.trainerDetails,
+      reviewsType: trainer?.trainerDetails?.reviews ? typeof trainer.trainerDetails.reviews : "undefined",
+    });
+    res.status(500).json({ message: "Failed to fetch reviews", detail: error.message });
+  }
+};
+
 export {
   createProfile,
   forgotPassword,
@@ -972,5 +1307,9 @@ export {
   getUserStats,
   getVeterinarians,
   getVeterinarianById,
-  updateVetProfile
+  updateVetProfile,
+  getTrainers,
+  getTrainerById,
+  submitTrainerReview,
+  getTrainerReviews,
 };

@@ -46,12 +46,12 @@ export const breeds = {
       { 
         value: "puppy", 
         label: "Puppy (0-1 year)", 
-        description: "Young, playful, and still growing" 
+        description: "Baby and playful" 
       },
       { 
         value: "young", 
         label: "Young (1-3 years)", 
-        description: "Energetic and in prime physical condition" 
+        description: "Youthful and energetic" 
       },
       { 
         value: "adult", 
@@ -68,26 +68,26 @@ export const breeds = {
       { 
         value: "kitten", 
         label: "Kitten (0-1 year)", 
-        description: "Playful and developing" 
+        description: "Young and curious" 
       },
       { 
         value: "young", 
         label: "Young (1-3 years)", 
-        description: "Active and exploring" 
+        description: "Youthful and playful" 
       },
       { 
         value: "adult", 
         label: "Adult (3-8 years)", 
-        description: "Settled and confident" 
+        description: "Mature and independent" 
       },
       { 
         value: "senior", 
         label: "Senior (8+ years)", 
-        description: "Relaxed and gentle" 
+        description: "Calm and requires special care" 
       }
     ],
     other: [
-      { 
+      {
         value: "young", 
         label: "Young", 
         description: "Early stage of life" 

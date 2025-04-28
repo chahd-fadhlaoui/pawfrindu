@@ -1,4 +1,3 @@
-// frontend/src/components/MapPicker.js
 import React, { useState, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import L from "leaflet";

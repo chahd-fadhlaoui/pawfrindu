@@ -1,6 +1,6 @@
+import { CircleCheckBig, Clock, LogOut, Mail, PawPrint, User } from 'lucide-react';
 import React from 'react';
-import { User, PawPrint, Clock, Mail, CircleCheckBig, LogOut } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../../context/AppContext';
 
 const TrainerPendingApproval = () => {
   const { user, logout } = useApp();

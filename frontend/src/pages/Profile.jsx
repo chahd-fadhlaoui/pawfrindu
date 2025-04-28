@@ -50,7 +50,6 @@ const Profile = () => {
     setPetsLoading(true);
     try {
       const response = await axiosInstance.get("/api/pet/my-adopted-pets");
-      console.log("Raw Adopted Pets Response (Full):", JSON.stringify(response.data, null, 2));
       if (response.data.success) {
         response.data.data.forEach((pet) => {
           if (pet.candidateStatus !== "approved") {
@@ -69,6 +68,7 @@ const Profile = () => {
       setPetsLoading(false);
     }
   };
+  
   const handleInputChange = (field, value) => {
     setEditableData((prev) => ({
       ...prev,
@@ -155,8 +155,6 @@ const Profile = () => {
     setSelectedPet(null);
   };
 
-
-
   if (loading && !user)
     return (
       <div className="flex items-center justify-center h-screen bg-gradient-to-br from-rose-50 to-pink-50">
@@ -178,7 +176,7 @@ const Profile = () => {
               />
             ))}
           </div>
-          <div className="relative z-10 bg-white p-8 rounded-full shadow-xl border-2 border-rose-200">
+          <div className="relative z-10 p-8 bg-white border-2 rounded-full shadow-xl border-[#ffc929]/20">
             <Loader2 className="w-12 h-12 text-[#ffc929] animate-spin" />
           </div>
           <span className="relative z-10 text-lg font-medium text-pink-700">Loading your profile...</span>
@@ -188,12 +186,12 @@ const Profile = () => {
 
   if (error)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-rose-50 to-pink-50 p-6">
-        <div className="text-pink-700 p-8 text-center bg-white rounded-2xl mx-auto max-w-2xl shadow-lg border-2 border-rose-200">
-          <div className="mb-4 inline-flex items-center justify-center w-16 h-16 rounded-full bg-rose-100 text-rose-500">
+      <div className="flex items-center justify-center min-h-screen p-6 bg-gradient-to-r from-rose-50 to-pink-50">
+        <div className="max-w-2xl p-8 mx-auto text-center text-pink-700 bg-white border-2 shadow-lg rounded-2xl border-[#ffc929]/20">
+          <div className="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-rose-100 text-rose-500">
             <X className="w-8 h-8" />
           </div>
-          <h2 className="text-2xl font-semibold mb-2">Profile Error</h2>
+          <h2 className="mb-2 text-2xl font-semibold">Profile Error</h2>
           <p className="text-rose-600">Error fetching your pet profile: {error}</p>
         </div>
       </div>
@@ -201,144 +199,227 @@ const Profile = () => {
 
   if (!user)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-rose-50 to-pink-50 p-6">
-        <div className="text-center p-8 text-gray-600 bg-white rounded-2xl mx-auto max-w-2xl shadow-lg border-2 border-rose-200">
-          <div className="mb-4 inline-flex items-center justify-center w-16 h-16 rounded-full bg-rose-100 text-rose-500">
+      <div className="flex items-center justify-center min-h-screen p-6 bg-gradient-to-r from-rose-50 to-pink-50">
+        <div className="max-w-2xl p-8 mx-auto text-center text-gray-600 bg-white border-2 shadow-lg rounded-2xl border-[#ffc929]/20">
+          <div className="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-rose-100 text-rose-500">
             <User className="w-8 h-8" />
           </div>
-          <h2 className="text-2xl font-semibold mb-2">No Profile Found</h2>
+          <h2 className="mb-2 text-2xl font-semibold">No Profile Found</h2>
           <p>No pet parent profile available</p>
         </div>
       </div>
     );
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-rose-50 to-pink-50 px-6 py-12">
-      <div className="max-w-5xl mx-auto">
-        {/* Profile Card */}
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-rose-200 transition-all duration-500 hover:shadow-xl relative z-10">
-          {/* Header Background */}
-          <div className="relative h-56 bg-gradient-to-r from-rose-100 to-[#ffc929] overflow-hidden">
-            <div className="absolute inset-0 opacity-20">
-              {[...Array(10)].map((_, i) => (
-                <PawPrint
-                  key={`header-paw-${i}`}
-                  className="absolute text-white"
-                  style={{
-                    top: `${Math.random() * 100}%`,
-                    left: `${Math.random() * 100}%`,
-                    width: `${15 + Math.random() * 20}px`,
-                    height: `${15 + Math.random() * 20}px`,
-                    transform: `rotate(${Math.random() * 360}deg)`,
-                  }}
-                  fill="currentColor"
-                />
-              ))}
-            </div>
+  const PawBackground = () => (
+    Array(8).fill(null).map((_, index) => (
+      <svg 
+        key={index} 
+        viewBox="0 0 24 24" 
+        className={`absolute w-8 h-8 opacity-5 animate-float ${index % 2 === 0 ? "text-[#ffc929]" : "text-pink-300"}`}
+        style={{ 
+          animationDelay: `${index * 0.5}s`, 
+          transform: `rotate(${index * 45}deg)`,
+          top: `${Math.random() * 100}%`,
+          left: `${Math.random() * 100}%`,
+        }}
+        fill="currentColor"
+      >
+        <path d="M12,17.5c2.33,2.33,5.67,2.33,8,0s2.33-5.67,0-8s-5.67-2.33-8,0S9.67,15.17,12,17.5z M7.5,14.5 c-1.96,1.96-1.96,4.04,0,6s4.04,1.96,6,0s1.96-4.04,0-6S9.46,12.54,7.5,14.5z M18.5,3.5c-1.96-1.96-4.04-1.96-6,0s-1.96,4.04,0,6 s4.04,1.96,6,0S20.46,5.46,18.5,3.5z M3.5,9.5c-1.96,1.96-1.96,4.04,0,6s4.04,1.96,6,0s1.96-4.04,0-6S5.46,7.54,3.5,9.5z" />
+      </svg>
+    ))
+  );
 
-            {/* Profile Image */}
-            <div className="absolute -bottom-30 mt-5 left-10">
-              <div className="relative group">
-                {isEditing ? (
-                  <div className="w-36 h-36">
-                    <ImageUpload
-                      currentImage={tempImage}
-                      onImageSelected={handleImageSelected}
-                      loading={uploadLoading}
-                      maxSize={5}
-                      showRemove={tempImage !== DEFAULT_PROFILE_IMAGE}
-                      onRemove={handleRemoveImage}
-                      className="w-36 h-36 rounded-full border-4 border-white shadow-lg transition-all duration-300"
-                    />
-                  </div>
-                ) : (
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-white to-pink-50">
+      {/* Background with paw prints */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <PawBackground />
+      </div>
+      
+      <div className="relative mx-auto max-w-7xl">
+        {/* Header section with welcome banner */}
+        <div className="relative h-64 overflow-hidden bg-gradient-to-r from-[#ffc929] to-pink-500 rounded-b-3xl shadow-xl">
+          <div className="absolute inset-0 opacity-20">
+            {[...Array(15)].map((_, i) => (
+              <PawPrint
+                key={`header-paw-${i}`}
+                className="absolute text-white"
+                style={{
+                  top: `${Math.random() * 100}%`,
+                  left: `${Math.random() * 100}%`,
+                  width: `${15 + Math.random() * 20}px`,
+                  height: `${15 + Math.random() * 20}px`,
+                  transform: `rotate(${Math.random() * 360}deg)`,
+                }}
+                fill="currentColor"
+              />
+            ))}
+          </div>
+          
+          <div className="relative flex flex-col items-center justify-center h-full px-6 text-center text-white">
+            <span className="inline-flex items-center px-4 py-2 mb-3 text-sm font-semibold bg-white rounded-full shadow-sm text-pink-500 border border-[#ffc929]/20">
+              <Heart className="w-4 h-4 mr-2 text-[#ffc929]" />Pet Parent Profile
+            </span>
+            <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
+              <span className="block">Welcome,</span>
+              <span className="block text-white">{editableData.fullName || "Pet Lover"}</span>
+            </h1>
+          </div>
+          
+          {/* Edit Button */}
+          <div className="absolute top-6 right-6">
+            {!isEditing ? (
+              <button
+                onClick={() => setIsEditing(true)}
+                className="flex items-center gap-2 px-4 py-2 text-pink-600 transition-all duration-300 bg-white border rounded-lg shadow-md hover:bg-[#ffc929]/10 border-[#ffc929]/20"
+              >
+                <Edit className="w-4 h-4" />
+                <span className="text-sm font-medium">Edit Profile</span>
+              </button>
+            ) : (
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleCancelEdit}
+                  className="flex items-center gap-2 px-4 py-2 text-gray-500 transition-all duration-300 bg-white border rounded-lg shadow-md hover:bg-[#ffc929]/10 border-[#ffc929]/20"
+                >
+                  <X className="w-4 h-4" />
+                  <span className="text-sm font-medium">Cancel</span>
+                </button>
+                <button
+                  onClick={handleSaveChanges}
+                  disabled={uploadLoading}
+                  className={`flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#ffc929] to-pink-500 text-white rounded-lg shadow-md ${uploadLoading ? "opacity-70 cursor-not-allowed" : "hover:from-pink-500 hover:to-[#ffc929]"} transition-all duration-300`}
+                >
+                  {uploadLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Save className="w-4 h-4" />
+                  )}
+                  <span className="text-sm font-medium">{uploadLoading ? "Saving..." : "Save"}</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {/* Profile Section */}
+        <div className="px-6 py-6 md:flex md:items-start md:gap-8 lg:gap-12">
+          {/* Left column - Profile image and basic info */}
+          <div className="md:w-1/3 lg:w-1/4">
+            <div className="relative mb-6 -mt-20 md:-mt-24">
+              {isEditing ? (
+                <div className="mx-auto w-36 h-36 md:w-48 md:h-48">
+                  <ImageUpload
+                    currentImage={tempImage}
+                    onImageSelected={handleImageSelected}
+                    loading={uploadLoading}
+                    maxSize={5}
+                    showRemove={tempImage !== DEFAULT_PROFILE_IMAGE}
+                    onRemove={handleRemoveImage}
+                    className="transition-all duration-300 border-4 border-white rounded-full shadow-xl w-36 h-36 md:w-48 md:h-48"
+                  />
+                </div>
+              ) : (
+                <div className="relative mx-auto w-36 h-36 md:w-48 md:h-48">
                   <img
                     src={tempImage || DEFAULT_PROFILE_IMAGE}
                     alt={editableData.fullName}
-                    className="w-36 h-36 rounded-full border-4 border-white shadow-lg object-cover transition-all duration-300"
+                    className="object-cover w-full h-full transition-all duration-300 border-4 border-white rounded-full shadow-xl"
                   />
-                )}
-                <div className="absolute -bottom-2 -right-2 bg-pink-600 rounded-full p-2 shadow-md">
-                  <PawPrint className="w-5 h-5 text-white" fill="white" />
-                </div>
-              </div>
-            </div>
-
-            {/* Edit Button */}
-            <div className="absolute top-6 right-6">
-              {!isEditing ? (
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-white text-pink-600 rounded-lg shadow-md hover:bg-rose-100 transition-all duration-300 border border-rose-200"
-                >
-                  <Edit className="w-4 h-4" />
-                  <span className="text-sm font-medium">Edit Profile</span>
-                </button>
-              ) : (
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={handleCancelEdit}
-                    className="flex items-center gap-2 px-4 py-2 bg-white text-gray-500 rounded-lg shadow-md hover:bg-rose-100 transition-all duration-300 border border-rose-200"
-                  >
-                    <X className="w-4 h-4" />
-                    <span className="text-sm font-medium">Cancel</span>
-                  </button>
-                  <button
-                    onClick={handleSaveChanges}
-                    disabled={uploadLoading}
-                    className={`flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#ffc929] to-rose-500 text-white rounded-lg shadow-md ${uploadLoading ? "opacity-70 cursor-not-allowed" : "hover:from-rose-500 hover:to-[#ffc929]"} transition-all duration-300`}
-                  >
-                    {uploadLoading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Save className="w-4 h-4" />
-                    )}
-                    <span className="text-sm font-medium">{uploadLoading ? "Saving..." : "Save"}</span>
-                  </button>
+                  <div className="absolute p-2 bg-[#ffc929] rounded-full shadow-md -bottom-2 -right-2">
+                    <PawPrint className="w-5 h-5 text-white" fill="white" />
+                  </div>
                 </div>
               )}
             </div>
-          </div>
-
-          {/* Profile Info */}
-          <div className="pt-24 pb-8 px-10">
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-pink-600 mb-1">
-                {isEditing ? (
-                  <input
-                    type="text"
-                    value={editableData.fullName}
-                    onChange={(e) => handleInputChange("fullName", e.target.value)}
-                    className="w-full px-3 py-2 border border-rose-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-300 bg-rose-50 text-pink-600 font-bold text-2xl shadow-sm placeholder-rose-400"
-                    placeholder="Your Name"
-                  />
-                ) : (
-                  editableData.fullName || "Pet Lover"
-                )}
-              </h1>
-              <div className="flex items-center gap-3">
-                <span className="text-pink-600 font-medium">{user.role || "Pet Parent"}</span>
-                <div className="flex items-center text-[#ffc929]">
-                  <Heart className="w-4 h-4 mr-1" fill="currentColor" />
-                  <span className="text-sm font-medium">Pet Enthusiast</span>
+            
+            {/* Basic info panel */}
+            <div className="p-6 mb-6 bg-white border-2 backdrop-blur-sm bg-opacity-90 shadow-xl rounded-3xl border-[#ffc929]/20">
+              <div className="mb-4 text-center">
+                <h2 className="mb-1 text-2xl font-bold text-pink-600">
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editableData.fullName}
+                      onChange={(e) => handleInputChange("fullName", e.target.value)}
+                      className="w-full px-3 py-2 text-xl font-bold text-pink-600 border rounded-lg shadow-sm border-[#ffc929]/30 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/50 bg-[#ffc929]/5 placeholder-rose-400"
+                      placeholder="Your Name"
+                    />
+                  ) : (
+                    editableData.fullName || "Pet Lover"
+                  )}
+                </h2>
+                <div className="flex items-center justify-center gap-3">
+                  <span className="font-medium text-pink-600">{user.role || "Pet Parent"}</span>
+                  <div className="flex items-center text-[#ffc929]">
+                    <Heart className="w-4 h-4 mr-1" fill="currentColor" />
+                    <span className="text-sm font-medium">Pet Enthusiast</span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Contact info */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 p-3 transition-all rounded-lg bg-[#ffc929]/5 hover:bg-[#ffc929]/10">
+                  <Mail className="text-[#ffc929]" size={18} />
+                  <div>
+                    <p className="text-xs font-medium text-gray-500">Email</p>
+                    <p className="text-sm font-medium text-gray-700">{user.email}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3 p-3 transition-all rounded-lg bg-[#ffc929]/5 hover:bg-[#ffc929]/10">
+                  <Phone className="text-[#ffc929]" size={18} />
+                  <div>
+                    <p className="text-xs font-medium text-gray-500">Phone</p>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editableData.phone}
+                        onChange={(e) => handleInputChange("phone", e.target.value)}
+                        className="w-full px-2 py-1 text-sm text-gray-700 transition-all duration-300 bg-white border rounded border-[#ffc929]/30 focus:outline-none focus:ring-1 focus:ring-[#ffc929]"
+                      />
+                    ) : (
+                      <p className="text-sm font-medium text-gray-700">{editableData.phone}</p>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3 p-3 transition-all rounded-lg bg-[#ffc929]/5 hover:bg-[#ffc929]/10">
+                  <MapPin className="text-[#ffc929]" size={18} />
+                  <div>
+                    <p className="text-xs font-medium text-gray-500">Location</p>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editableData.location}
+                        onChange={(e) => handleInputChange("location", e.target.value)}
+                        className="w-full px-2 py-1 text-sm text-gray-700 transition-all duration-300 bg-white border rounded border-[#ffc929]/30 focus:outline-none focus:ring-1 focus:ring-[#ffc929]"
+                      />
+                    ) : (
+                      <p className="text-sm font-medium text-gray-700">{editableData.location}</p>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
-
+          </div>
+          
+          {/* Right column - Tabs and content */}
+          <div className="md:w-2/3 lg:w-3/4">
             {/* Tabs */}
-            <div className="flex border-b border-rose-200 mb-8">
+            <div className="flex mb-6 overflow-x-auto bg-white border-2 backdrop-blur-sm shadow-lg rounded-full border-[#ffc929]/20">
               {[
                 { key: "about", label: "About Me", icon: User },
                 { key: "pets", label: "My Adopted Pets", icon: PawPrint },
-                { key: "contact", label: "Contact", icon: Mail },
               ].map((tab) => (
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
-                  className={`flex items-center gap-2 py-3 px-5 font-medium text-sm transition-all duration-300 border-b-2 ${
+                  className={`flex items-center gap-2 py-3 px-6 font-medium text-sm transition-all duration-300 ${
                     activeTab === tab.key
-                      ? "text-pink-600 border-pink-500"
-                      : "text-gray-500 border-transparent hover:text-rose-600 hover:border-rose-300"
+                      ? "text-white bg-gradient-to-r from-[#ffc929] to-pink-500 rounded-full shadow-md"
+                      : "text-gray-500 hover:text-[#ffc929]"
                   }`}
                 >
                   <tab.icon className="w-4 h-4" />
@@ -346,28 +427,29 @@ const Profile = () => {
                 </button>
               ))}
             </div>
-
-            {/* Content */}
+            
+            {/* Tab content */}
             <div className="animate-fadeIn">
               {activeTab === "about" && (
-                <div className="bg-white rounded-xl">
-                  <h2 className="text-xl font-bold text-pink-600 mb-4 flex items-center gap-2">
-                    <span className="bg-rose-100 p-2 rounded-lg text-pink-500">
+                <div className="p-8 mb-6 bg-white border-2 backdrop-blur-sm bg-opacity-90 shadow-xl rounded-3xl border-[#ffc929]/20">
+                  <h2 className="flex items-center gap-2 mb-6 text-xl font-bold text-pink-600">
+                    <span className="p-2 text-white rounded-lg bg-gradient-to-r from-[#ffc929] to-pink-500">
                       <User className="w-5 h-5" />
                     </span>
                     About Me
                   </h2>
-                  <div className="bg-rose-50 p-6 rounded-xl border border-rose-200">
+                  
+                  <div className="p-6 border-2 rounded-2xl bg-[#ffc929]/5 border-[#ffc929]/20">
                     {isEditing ? (
                       <textarea
                         value={editableData.about || ""}
                         onChange={(e) => handleInputChange("about", e.target.value)}
-                        className="w-full p-4 border border-rose-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-300 bg-white text-gray-700 text-base resize-none shadow-sm transition-all duration-300"
+                        className="w-full p-4 text-base text-gray-700 transition-all duration-300 bg-white border shadow-sm resize-none border-[#ffc929]/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#ffc929]/30"
                         rows={6}
                         placeholder="Tell us about yourself and your love for pets..."
                       />
                     ) : (
-                      <p className="text-gray-700 text-base leading-relaxed">
+                      <p className="text-base leading-relaxed text-gray-700">
                         {editableData.about || "I'm a passionate pet parent who loves spending time with my furry companions! Every day with them brings joy and adventure to my life."}
                       </p>
                     )}
@@ -376,169 +458,118 @@ const Profile = () => {
               )}
 
               {activeTab === "pets" && (
-                <div>
-                  <h2 className="text-xl font-bold text-pink-600 mb-4 flex items-center gap-2">
-                    <span className="bg-rose-100 p-2 rounded-lg text-pink-500">
+                <div className="p-8 mb-6 bg-white border-2 backdrop-blur-sm bg-opacity-90 shadow-xl rounded-3xl border-[#ffc929]/20">
+                  <h2 className="flex items-center gap-2 mb-6 text-xl font-bold text-pink-600">
+                    <span className="p-2 text-white rounded-lg bg-gradient-to-r from-[#ffc929] to-pink-500">
                       <PawPrint className="w-5 h-5" />
                     </span>
                     My Furry Family
                   </h2>
+                  
                   {petsLoading ? (
-                    <div className="flex justify-center items-center py-12 bg-rose-50 rounded-xl border border-rose-200">
+                    <div className="flex items-center justify-center py-12">
                       <Loader2 className="w-10 h-10 text-[#ffc929] animate-spin" />
                     </div>
                   ) : adoptedPets.length > 0 ? (
-                    <div className="grid gap-6 sm:grid-cols-2">
+                    <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2">
                       {adoptedPets.map((pet) => (
                         <div
                           key={pet._id}
-                          className="bg-white rounded-xl shadow-md overflow-hidden border border-rose-200 hover:shadow-lg transition-all duration-300"
+                          className="overflow-hidden transition-all duration-300 bg-white border-2 shadow-lg rounded-2xl border-[#ffc929]/20 hover:shadow-xl hover:scale-[1.02] group"
                         >
-                          <div className="flex flex-col sm:flex-row">
-                            {/* Pet Image */}
-                            <div className="w-full sm:w-2/5 h-48 sm:h-full bg-rose-50 relative overflow-hidden">
-                              <img
-                                src={pet.image || DEFAULT_PET_IMAGE}
-                                alt={pet.name}
-                                className="object-cover w-full h-full"
-                                onError={(e) => (e.target.src = DEFAULT_PET_IMAGE)}
-                              />
-                              <div className="absolute top-3 left-3 bg-rose-500 text-white text-xs font-semibold px-2 py-1 rounded-md shadow-sm">
-                                {pet.species === "dog" ? (
-                                  <span className="flex items-center gap-1">
-                                    <Dog className="w-3 h-3" /> Dog
-                                  </span>
-                                ) : pet.species === "cat" ? (
-                                  <span className="flex items-center gap-1">
-                                    <Cat className="w-3 h-3" /> Cat
-                                  </span>
-                                ) : (
-                                  pet.species
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Pet Info */}
-                            <div className="w-full sm:w-3/5 p-5">
-                              <div className="flex justify-between items-start mb-3">
-                                <h3 className="text-xl font-bold text-pink-600">{pet.name}</h3>
-                               
-                              </div>
-
-                              <div className="space-y-2">
-                                <div className="flex items-center text-gray-600 text-sm">
-                                  <div className="bg-rose-100 p-1 rounded-md mr-2">
-                                    <PawPrint className="w-3 h-3 text-rose-500" />
-                                  </div>
-                                  <span className="font-medium">Breed:</span>
-                                  <span className="ml-2">{pet.breed || "Mixed"}</span>
-                                </div>
-
-                                <div className="flex items-center text-gray-600 text-sm">
-                                  <div className="bg-rose-100 p-1 rounded-md mr-2">
-                                    <Calendar className="w-3 h-3 text-rose-500" />
-                                  </div>
-                                  <span className="font-medium">Age:</span>
-                                  <span className="ml-2">{pet.age || "Unknown"}</span>
-                                </div>
-
-                                <div className="flex items-center text-gray-600 text-sm">
-                                  <div className="bg-rose-100 p-1 rounded-md mr-2">
-                                    <Calendar className="w-3 h-3 text-rose-500" />
-                                  </div>
-                                  <span className="font-medium">Adopted:</span>
-                                  <span className="ml-2">
-                                    {pet.adoptedDate ? new Date(pet.adoptedDate).toLocaleDateString() : "Date not available"}
-                                  </span>
-                                </div>
-                              </div>
-
-                              {pet.description && (
-                                <p className="mt-3 text-sm text-gray-500 line-clamp-2">{pet.description}</p>
+                          <div className="relative w-full h-48 overflow-hidden bg-gradient-to-br from-white to-pink-50">
+                            <img
+                              src={pet.image || DEFAULT_PET_IMAGE}
+                              alt={pet.name}
+                              className="object-cover w-full h-full transition-transform duration-400 group-hover:scale-110"
+                              onError={(e) => (e.target.src = DEFAULT_PET_IMAGE)}
+                            />
+                            <div className="absolute px-2 py-1 text-xs font-semibold text-white rounded-md shadow-sm top-3 left-3 bg-[#ffc929]">
+                              {pet.species === "dog" ? (
+                                <span className="flex items-center gap-1">
+                                  <Dog className="w-3 h-3" /> Dog
+                                </span>
+                              ) : pet.species === "cat" ? (
+                                <span className="flex items-center gap-1">
+                                  <Cat className="w-3 h-3" /> Cat
+                                </span>
+                              ) : (
+                                pet.species
                               )}
+                            </div>
+                            <div className="absolute p-2 text-white rounded-full shadow-md transition-all duration-300 right-3 top-3 bg-gradient-to-r from-[#ffc929] to-pink-500">
+                              <Heart className="w-4 h-4" fill="currentColor" />
+                            </div>
+                          </div>
 
-                              <div className="mt-4">
-                                <button
-                                  onClick={() => handleOpenModal(pet)}
-                                  className="px-3 py-1.5 bg-rose-100 text-pink-600 text-xs font-medium rounded-md hover:bg-rose-200 transition-colors duration-300"
-                                >
-                                  View Details
-                                </button>
+                          <div className="p-5 space-y-4">
+                            <div className="flex items-start justify-between">
+                              <h3 className="text-xl font-bold transition-colors duration-300 text-pink-600 group-hover:text-[#ffc929]">
+                                {pet.name}
+                              </h3>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2">
+                              <div className="p-2 transition-all rounded-lg bg-[#ffc929]/5 hover:bg-[#ffc929]/10">
+                                <p className="text-xs font-medium text-gray-500">Breed</p>
+                                <p className="text-sm font-medium text-gray-700">{pet.breed || "Mixed"}</p>
+                              </div>
+                              
+                              <div className="p-2 transition-all rounded-lg bg-[#ffc929]/5 hover:bg-[#ffc929]/10">
+                                <p className="text-xs font-medium text-gray-500">Age</p>
+                                <p className="text-sm font-medium text-gray-700">{pet.age || "Unknown"}</p>
+                              </div>
+                              
+                              <div className="p-2 transition-all rounded-lg bg-[#ffc929]/5 hover:bg-[#ffc929]/10 col-span-2">
+                                <p className="text-xs font-medium text-gray-500">Adopted</p>
+                                <p className="text-sm font-medium text-gray-700">
+                                  {pet.adoptedDate ? new Date(pet.adoptedDate).toLocaleDateString() : "Date not available"}
+                                </p>
                               </div>
                             </div>
+
+                            {pet.description && (
+                              <p className="text-sm text-gray-500 line-clamp-2">{pet.description}</p>
+                            )}
+
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleOpenModal(pet); }}
+                              className="flex items-center justify-center w-full gap-2 px-4 py-3 font-medium transition-all duration-300 rounded-xl text-white bg-gradient-to-r from-[#ffc929] to-pink-500 hover:from-pink-500 hover:to-[#ffc929] shadow-md"
+                            >
+                              <PawPrint className="w-4 h-4" />
+                              View Full Details
+                            </button>
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-12 bg-rose-50 rounded-xl border border-rose-200">
-                      <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-rose-100 mb-4">
-                        <PawPrint className="w-10 h-10 text-rose-200" />
+                    <div className="py-12 text-center border-2 rounded-2xl bg-[#ffc929]/5 border-[#ffc929]/20">
+                      <div className="inline-flex items-center justify-center w-20 h-20 mb-4 rounded-full bg-gradient-to-r from-[#ffc929]/20 to-pink-100">
+                        <PawPrint className="w-10 h-10 text-[#ffc929]" />
                       </div>
-                      <h3 className="text-lg font-medium text-pink-600 mb-2">No Pets Yet</h3>
-                      <p className="text-gray-500 max-w-md mx-auto text-sm">
+                      <h3 className="mb-2 text-lg font-medium text-pink-600">No Pets Yet</h3>
+                      <p className="max-w-md mx-auto text-sm text-gray-500">
                         You haven't adopted any pets yet. When you do, they'll appear here with all their adorable details!
                       </p>
                     </div>
                   )}
                 </div>
               )}
-
-              {activeTab === "contact" && (
-                <div>
-                  <h2 className="text-xl font-bold text-pink-600 mb-4 flex items-center gap-2">
-                    <span className="bg-rose-100 p-2 rounded-lg text-pink-500">
-                      <Mail className="w-5 h-5" />
-                    </span>
-                    Contact Information
-                  </h2>
-                  <div className="bg-rose-50 p-6 rounded-xl border border-rose-200">
-                    <div className="grid gap-5 sm:grid-cols-2">
-                      {[
-                        { icon: Mail, label: "Email", value: user.email, editable: false, bgColor: "bg-rose-100", iconColor: "text-rose-500" },
-                        { icon: Phone, label: "Phone", value: editableData.phone, field: "phone", editable: true, bgColor: "bg-[#ffc929]", iconColor: "text-white" },
-                        { icon: MapPin, label: "Location", value: editableData.location, field: "location", editable: true, bgColor: "bg-rose-100", iconColor: "text-rose-500" },
-                      ].map((item, index) => (
-                        <div
-                          key={item.label}
-                          className={`flex items-center gap-4 p-4 bg-white rounded-lg border border-rose-200 ${index === 2 ? "sm:col-span-2" : ""}`}
-                        >
-                          <div className={`${item.bgColor} p-3 rounded-lg`}>
-                            <item.icon className={`w-5 h-5 ${item.iconColor}`} />
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="text-sm font-semibold text-rose-600 mb-1">{item.label}</h3>
-                            {isEditing && item.editable ? (
-                              <input
-                                type="text"
-                                value={item.value}
-                                onChange={(e) => handleInputChange(item.field, e.target.value)}
-                                className="w-full px-3 py-2 border border-rose-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-300 bg-white text-gray-700 text-sm transition-all duration-300"
-                              />
-                            ) : (
-                              <p className="text-gray-800 font-medium">{item.value}</p>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>
-
-        {/* Modal for Pet Details */}
-        {selectedPet && showModal && (
-          <PetDetailsModal
-            pet={selectedPet}
-            onClose={handleCloseModal}
-            actionLoading={actionLoading}
-            showOwner={true}
-          />
-        )}
       </div>
+
+      {/* Modal for Pet Details */}
+      {selectedPet && showModal && (
+        <PetDetailsModal
+          pet={selectedPet}
+          onClose={handleCloseModal}
+          actionLoading={actionLoading}
+          showOwner={true}
+        />
+      )}
 
       {/* Add animations */}
       <style jsx>{`
@@ -555,7 +586,7 @@ const Profile = () => {
           to { opacity: 1; transform: translateY(0); }
         }
         .animate-fadeIn {
-          animation: fadeIn 0.4s ease-out forwards;
+          animation: fadeIn 0.5s ease-in-out forwards;
         }
       `}</style>
     </div>

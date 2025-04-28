@@ -1,4 +1,4 @@
-// App.jsx
+import "leaflet/dist/leaflet.css";
 import React from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import ResetPasswordConfirmation from './components/auth/ResetPasswordConfirmation';
@@ -19,26 +19,27 @@ import PetDetails from './pages/PetDetails';
 import PetManagementDashboard from './pages/PetManagementDashboard';
 import Pets from './pages/Pets';
 import Profile from './pages/Profile';
-import TrainerDashboard from './pages/Trainer/TrainerDashboard';
-import  VetDashboard from './pages/vet/VetDashboardManagment/VetDashboard';
-import Veterinarians from './pages/vet/VetUserAppointment/Veterinarians';
-import VetDetails from './pages/vet/VetUserAppointment/VetDetails';
-import "leaflet/dist/leaflet.css";
+import TrainerDashboard from './pages/Trainer/TrainerDashboard/TrainerDashboard';
+import TrainerPendingApproval from './pages/Trainer/TrainerUserSide/TrainerPendingApproval';
+import VetDashboard from './pages/vet/VetDashboardManagment/VetDashboard';
 import VetPendingApproval from './pages/vet/VetDashboardManagment/VetPendingApproval';
 import MyVetappointments from './pages/vet/VetUserAppointment/MyVetappointments';
-import TrainerPendingApproval from './pages/TrainerDashboard/TrainerPendingApproval';
+import VetDetails from './pages/vet/VetUserAppointment/VetDetails';
+import Veterinarians from './pages/vet/VetUserAppointment/Veterinarians';
+import Trainers from "./pages/Trainer/TrainerUserSide/Trainers";
+import TrainerDetails from "./pages/Trainer/TrainerUserSide/TrainerDetails";
 
 const Layout = ({ children }) => {
   const location = useLocation();
   const { user } = useApp(); 
 
   const isAdminPage = location.pathname.startsWith('/admin');
-  const isTrainerPage = location.pathname.startsWith('/trainer');
+  const isTrainerPage = location.pathname === '/trainer' || location.pathname.startsWith('/trainer-pending-approval');
   const isVetPage = location.pathname === '/vet';
     const isHomePage = location.pathname === '/';
   const isForbiddenPage = location.pathname === '/forbidden';
   const isAdminLoginPage = location.pathname === '/AdminLoginPage';
-  const isVetPendingPage = location.pathname === '/vet-pending-approval'; // Add this check
+  const isVetPendingPage = location.pathname === '/vet-pending-approval'; 
 
 
   const showHeaderFooter = 
@@ -69,7 +70,10 @@ const AppRoutes = () => {
       <Route path="/" element={<PublicRoute><Home /></PublicRoute>} />
       <Route path="/pets" element={<Pets />} />
       <Route path="/vets" element={<Veterinarians/>} />
+      <Route path="/trainers" element={<Trainers/>} />
+
       <Route path="/vet/:id" element={<VetDetails />} />
+      <Route path="/trainer/:id" element={<TrainerDetails />} />
       <Route path="/pets/:species" element={<Pets />} />
       <Route path="/petsdetails/:petId" element={<PetDetails />} />
       <Route path="/login" element={<Auth />} />
