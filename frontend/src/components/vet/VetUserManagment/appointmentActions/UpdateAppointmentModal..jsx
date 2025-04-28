@@ -1,65 +1,106 @@
-import React, { useState, useEffect } from "react";
-import { X, Calendar, Clock, Trash2, Check, ChevronLeft, ChevronRight, Eye, Edit } from "lucide-react";
-import axiosInstance from "../../../utils/axiosInstance";
+import React, { useState, useEffect, useMemo } from "react";
+import { X, Check, ChevronLeft, ChevronRight, Calendar, Clock } from "lucide-react";
+import axiosInstance from "../../../../utils/axiosInstance";
 
-const AppointmentActionModal = ({ appointment, action, onClose, onSuccess }) => {
-  const [step, setStep] = useState(action === "view" ? 0 : action === "delete" ? 2 : 1);
+const UpdateAppointmentModal = ({ appointment, onClose, onSuccess }) => {
+  const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [availableSlots, setAvailableSlots] = useState([]);
   const [reservedSlots, setReservedSlots] = useState([]);
-  const [reservedSlotsByDate, setReservedSlotsByDate] = useState({});
-  const [currentDate, setCurrentDate] = useState(new Date(appointment.date));
-  const [selectedDate, setSelectedDate] = useState(new Date(appointment.date));
+  const [reservedSlotsByDate, setReservedSlotsByDate] = useState(null);
+  const [currentDate, setCurrentDate] = useState(normalizeDate(new Date(appointment.date)));
+  const [selectedDate, setSelectedDate] = useState(normalizeDate(new Date(appointment.date)));
   const [selectedTime, setSelectedTime] = useState(appointment.time);
   const [vet, setVet] = useState(null);
   const [formData, setFormData] = useState({
-    date: new Date(appointment.date).toLocaleDateString("en-CA"),
+    date: formatDate(normalizeDate(new Date(appointment.date))),
     time: appointment.time,
     reason: appointment.reason || "",
     notes: appointment.notes || "",
   });
   const [showSuccess, setShowSuccess] = useState(false);
-  const [selectedAction, setSelectedAction] = useState(action);
-  const [cancellationReason, setCancellationReason] = useState("");
-  const [showReschedulePrompt, setShowReschedulePrompt] = useState(false);
 
   const professionalId = appointment.professionalId?._id || appointment.professionalId;
   const professionalType = appointment.professionalType;
   const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   const consultationDuration = vet?.veterinarianDetails?.averageConsultationDuration || 30;
 
-  // Fetch initial vet data
+  // Utility functions
+  function normalizeDate(date) {
+    if (!(date instanceof Date) || isNaN(date)) {
+      console.error("Invalid date input:", date);
+      return new Date();
+    }
+    const newDate = new Date(date);
+    newDate.setUTCHours(0, 0, 0, 0);
+    return newDate;
+  }
+
+  function formatDate(date) {
+    if (!(date instanceof Date) || isNaN(date)) {
+      console.error("Invalid date for formatting:", date);
+      return "";
+    }
+    return `${date.getUTCFullYear()}-${(date.getUTCMonth() + 1).toString().padStart(2, "0")}-${date.getUTCDate().toString().padStart(2, "0")}`;
+  }
+
+  function formatTimeSlot(time) {
+    const [hours, minutes] = time.split(":").map(Number);
+    return new Date(0, 0, 0, hours, minutes).toLocaleTimeString([], {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  }
+
+  function getGeneralHours() {
+    if (!vet?.veterinarianDetails?.openingHours) return "Availability not specified";
+    const openDays = weekdays
+      .map((day) => day.toLowerCase())
+      .filter((day) => vet.veterinarianDetails.openingHours[day] !== "Closed");
+    if (openDays.length === 0) return "No regular hours available";
+    return `Open: ${openDays.map((d) => d.charAt(0).toUpperCase() + d.slice(1)).join(", ")}`;
+  }
+
+  // Fetch initial vet data and reserved slots
   useEffect(() => {
     const fetchInitialData = async () => {
+      console.log("fetchInitialData triggered for currentDate:", currentDate.toISOString());
       setLoading(true);
+      setReservedSlotsByDate(null); // Reset to null to ensure fresh data
+      
       try {
-        const endpoint =
-          professionalType === "Vet" ? `/api/user/vet/${professionalId}` : `/api/user/trainer/${professionalId}`;
+        const year = currentDate.getUTCFullYear();
+        const month = currentDate.getUTCMonth() + 1; // Month is 0-indexed
+        
+        const endpoint = professionalType === "Vet" 
+          ? `/api/user/vet/${professionalId}` 
+          : `/api/user/trainer/${professionalId}`;
+          
         const [professionalResponse, reservedResponse] = await Promise.all([
           axiosInstance.get(endpoint),
           axiosInstance.get(`/api/appointments/reserved-month`, {
-            params: {
-              professionalId,
-              year: currentDate.getFullYear(),
-              month: currentDate.getMonth() + 1,
-              professionalType,
-            },
+            params: { professionalId, year, month, professionalType },
           }),
         ]);
+        
         const vetData = professionalResponse.data.vet;
-        if (!vetData) {
-          throw new Error(`No ${professionalType} data returned`);
-        }
+        if (!vetData) throw new Error(`No ${professionalType} data returned`);
         setVet(vetData);
-        setReservedSlotsByDate(reservedResponse.data.reservedSlotsByDate || {});
+        
+        const reservedData = reservedResponse.data.reservedSlotsByDate || {};
+        console.log("Fetched reserved slots for", `${year}-${month}:`, reservedData);
+        setReservedSlotsByDate(reservedData);
       } catch (err) {
         console.error("Fetch Initial Data Error:", err.message, err.response?.data);
         setError(`Failed to load ${professionalType.toLowerCase()} data: ${err.message}`);
+        setReservedSlotsByDate({}); // Fallback to empty object
       } finally {
         setLoading(false);
       }
     };
+    
     fetchInitialData();
   }, [professionalId, currentDate, professionalType]);
 
@@ -69,7 +110,7 @@ const AppointmentActionModal = ({ appointment, action, onClose, onSuccess }) => 
       if (!selectedDate || !vet) return;
       setLoading(true);
       try {
-        const formattedDate = selectedDate.toISOString().split("T")[0];
+        const formattedDate = formatDate(selectedDate);
         const response = await axiosInstance.get(`/api/appointments/reserved/${professionalId}`, {
           params: { date: formattedDate, professionalType },
         });
@@ -86,118 +127,190 @@ const AppointmentActionModal = ({ appointment, action, onClose, onSuccess }) => 
 
   // Calculate available slots
   useEffect(() => {
-    if (selectedDate && vet) {
+    if (selectedDate && vet && reservedSlotsByDate !== null) {
       const slots = getAvailableTimeSlots(selectedDate);
       setAvailableSlots(slots);
     } else {
       setAvailableSlots([]);
     }
-  }, [selectedDate, reservedSlots, vet]);
+  }, [selectedDate, reservedSlots, reservedSlotsByDate, vet]);
 
-  // Helper functions for update action
-  const isDayOpen = (date) => {
+  function isDayOpen(date) {
     const dayOfWeek = weekdays[date.getDay()].toLowerCase();
     const openingHours =
       professionalType === "Vet" ? vet?.veterinarianDetails?.openingHours : vet?.trainerDetails?.openingHours;
     return openingHours?.[dayOfWeek] !== "Closed";
-  };
+  }
 
-  const getPotentialTimeSlots = (date) => {
+  function getPotentialTimeSlots(date) {
     if (!vet) return [];
     const details = professionalType === "Vet" ? vet.veterinarianDetails : vet.trainerDetails;
     if (!details?.openingHours) return [];
     const dayOfWeek = weekdays[date.getDay()].toLowerCase();
     const openingHours = details.openingHours;
-
     if (!openingHours || openingHours[dayOfWeek] === "Closed") return [];
 
     const slots = [];
     const sessionType = openingHours[dayOfWeek];
     const start1 = openingHours[`${dayOfWeek}Start`];
     const end1 = openingHours[`${dayOfWeek}End`];
-
     if (start1 && end1) slots.push(...generateTimeSlots(start1, end1, consultationDuration));
-
     if (sessionType === "Double Session") {
       const start2 = openingHours[`${dayOfWeek}Start2`];
       const end2 = openingHours[`${dayOfWeek}End2`];
       if (start2 && end2) slots.push(...generateTimeSlots(start2, end2, consultationDuration));
     }
-
     return slots;
-  };
+  }
 
-  const generateTimeSlots = (startTime, endTime, duration) => {
+  function generateTimeSlots(startTime, endTime, duration) {
     const slots = [];
     const [startHour, startMinute] = startTime.split(":").map(Number);
     const [endHour, endMinute] = endTime.split(":").map(Number);
-
     const startDate = new Date();
     startDate.setHours(startHour, startMinute, 0, 0);
-
     const endDate = new Date();
     endDate.setHours(endHour, endMinute, 0, 0);
     endDate.setMinutes(endDate.getMinutes() - duration);
-
     let currentTime = new Date(startDate);
-
     while (currentTime <= endDate) {
       const hours = currentTime.getHours().toString().padStart(2, "0");
       const minutes = currentTime.getMinutes().toString().padStart(2, "0");
       slots.push(`${hours}:${minutes}`);
       currentTime.setMinutes(currentTime.getMinutes() + duration);
     }
-
     return slots;
-  };
+  }
 
-  const getAvailableTimeSlots = (date) => {
-    const potentialSlots = getPotentialTimeSlots(date);
-    return potentialSlots.filter((slot) => !reservedSlots.includes(slot));
-  };
+  function getAvailableTimeSlots(date) {
+    const normalizedDate = normalizeDate(date);
+    const potentialSlots = getPotentialTimeSlots(normalizedDate);
+    const dateStr = formatDate(normalizedDate);
+    const reserved = [...new Set([...(reservedSlotsByDate?.[dateStr] || []), ...reservedSlots])];
+    return potentialSlots.filter((slot) => !reserved.includes(slot));
+  }
 
-  const isDayFullyBooked = (date) => {
-    const potentialSlots = getPotentialTimeSlots(date);
-    const dateStr = date.toISOString().split("T")[0];
-    const reserved = reservedSlotsByDate[dateStr] || [];
-    return potentialSlots.length > 0 && potentialSlots.every((slot) => reserved.includes(slot));
-  };
-
-  const getDaysInMonthView = () => {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const firstDayOfMonth = new Date(year, month, 1);
-    const lastDayOfMonth = new Date(year, month + 1, 0);
+  function isDayFullyBooked(date) {
+    // Early return for missing data
+    if (!vet || !vet.veterinarianDetails?.openingHours || reservedSlotsByDate === null) return false;
+    
+    const normalizedDate = normalizeDate(date);
+    const dateStr = formatDate(normalizedDate);
+    const dayOfWeek = weekdays[normalizedDate.getDay()];
+    
+    // Get potential slots for this day
+    const potentialSlots = getPotentialTimeSlots(normalizedDate);
+    
+    // If no potential slots, day isn't open so can't be fully booked
+    if (potentialSlots.length === 0) return false;
+    
+    // Get reserved slots for this date - carefully checking structure
+    const reservedSlotsForDate = reservedSlotsByDate[dateStr] || [];
+    
+    // IMPORTANT: Fix how we're getting reserved slots
+    // Use reservedSlots only if it's for the same date, otherwise just use reservedSlotsForDate
+    const allReservedSlots = dateStr === formatDate(selectedDate) 
+      ? [...new Set([...reservedSlotsForDate, ...reservedSlots])]
+      : reservedSlotsForDate;
+    
+    // Calculate available slots correctly
+    const availableSlots = potentialSlots.filter(slot => !allReservedSlots.includes(slot));
+    const isFullyBooked = availableSlots.length === 0;
+    
+    // Debug Fridays
+    if (dayOfWeek === "Friday") {
+      console.log(`Processing Friday ${dateStr}:`, {
+        potentialSlots,
+        reservedSlotsForDate, 
+        allReservedSlots,
+        availableSlots,
+        isFullyBooked: availableSlots.length === 0  // Be explicit here
+      });
+    }
+    
+    return availableSlots.length === 0;  // Return the actual calculation
+  }
+  const getDaysInMonthView = useMemo(() => {
+    if (!vet || !vet.veterinarianDetails?.openingHours || reservedSlotsByDate === null) {
+      console.log("getDaysInMonthView: Data not ready, returning empty array");
+      return [];
+    }
+    
+    const year = currentDate.getUTCFullYear();
+    const month = currentDate.getUTCMonth();
+    
+    // Create proper UTC dates
+    const firstDayOfMonth = new Date(Date.UTC(year, month, 1));
+    firstDayOfMonth.setUTCHours(0, 0, 0, 0);
+    
+    const lastDayOfMonth = new Date(Date.UTC(year, month + 1, 0));
+    lastDayOfMonth.setUTCHours(0, 0, 0, 0);
+    
     const result = [];
-
+    
+    // Get the day of week for the first day (0 = Sunday, 6 = Saturday)
     const firstDayOfWeek = firstDayOfMonth.getDay();
-    for (let i = firstDayOfWeek - 1; i >= 0; i--) {
-      const date = new Date(year, month, -i);
-      result.push({ date, isCurrentMonth: false, isOpen: isDayOpen(date), isFullyBooked: isDayFullyBooked(date) });
+    
+    // Add days from previous month
+    for (let i = 0; i < firstDayOfWeek; i++) {
+      const date = new Date(Date.UTC(year, month, 1 - (firstDayOfWeek - i)));
+      date.setUTCHours(0, 0, 0, 0);
+      const isOpen = isDayOpen(date);
+      const isFullyBooked = isOpen ? isDayFullyBooked(date) : false;
+      
+      result.push({
+        date,
+        isCurrentMonth: false,
+        isOpen,
+        isFullyBooked
+      });
     }
-
+    
+    // Add days from current month
     for (let i = 1; i <= lastDayOfMonth.getDate(); i++) {
-      const date = new Date(year, month, i);
-      result.push({ date, isCurrentMonth: true, isOpen: isDayOpen(date), isFullyBooked: isDayFullyBooked(date) });
+      const date = new Date(Date.UTC(year, month, i));
+      date.setUTCHours(0, 0, 0, 0);
+      const isOpen = isDayOpen(date);
+      const isFullyBooked = isOpen ? isDayFullyBooked(date) : false;
+      
+      result.push({
+        date,
+        isCurrentMonth: true,
+        isOpen,
+        isFullyBooked
+      });
     }
-
+    
+    // Add days from next month to complete the grid
     const lastDayOfWeek = lastDayOfMonth.getDay();
-    for (let i = 1; i < 7 - lastDayOfWeek; i++) {
-      const date = new Date(year, month + 1, i);
-      result.push({ date, isCurrentMonth: false, isOpen: isDayOpen(date), isFullyBooked: isDayFullyBooked(date) });
+    const daysToAdd = 6 - lastDayOfWeek;
+    
+    for (let i = 1; i <= daysToAdd; i++) {
+      const date = new Date(Date.UTC(year, month + 1, i));
+      date.setUTCHours(0, 0, 0, 0);
+      const isOpen = isDayOpen(date);
+      const isFullyBooked = isOpen ? isDayFullyBooked(date) : false;
+      
+      result.push({
+        date,
+        isCurrentMonth: false,
+        isOpen,
+        isFullyBooked
+      });
     }
-
+    
     return result;
-  };
+  }, [currentDate, vet, reservedSlotsByDate]);
 
   const handleDateSelect = (date) => {
-    if (isDayFullyBooked(date)) {
+    const normalizedDate = normalizeDate(date);
+    if (isDayFullyBooked(normalizedDate)) {
       setError("This day is fully booked. Please select another date.");
       return;
     }
-    setSelectedDate(date);
+    setSelectedDate(normalizedDate);
     setSelectedTime(null);
-    setFormData({ ...formData, date: date.toLocaleDateString("en-CA"), time: "" });
+    setFormData({ ...formData, date: formatDate(normalizedDate), time: "" });
     setError(null);
   };
 
@@ -207,48 +320,25 @@ const AppointmentActionModal = ({ appointment, action, onClose, onSuccess }) => 
     setError(null);
   };
 
-  const handlePrevMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
-  const handleNextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+  const handlePrevMonth = () => {
+    const newDate = new Date(currentDate); // Create a new Date object
+    newDate.setUTCMonth(newDate.getUTCMonth() - 1, 1); // Set to first day of previous month
+    newDate.setUTCHours(0, 0, 0, 0); // Normalize time
+    console.log("Moving to previous month:", newDate.toISOString());
+    setCurrentDate(newDate);
+  };
+  
 
+  const handleNextMonth = () => {
+    const newDate = new Date(currentDate); // Create a new Date object
+    newDate.setUTCMonth(newDate.getUTCMonth() + 1, 1); // Set to first day of next month
+    newDate.setUTCHours(0, 0, 0, 0); // Normalize time
+    console.log("Moving to next month:", newDate.toISOString());
+    setCurrentDate(newDate);
+  };
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-  };
-
-  const handleDelete = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      // Calculate time until appointment
-      const appointmentDateTime = new Date(appointment.date);
-      const [hours, minutes] = appointment.time.split(":").map(Number);
-      appointmentDateTime.setHours(hours, minutes);
-      const hoursUntilAppointment = (appointmentDateTime - new Date()) / (1000 * 60 * 60);
-
-      if (appointment.status === "confirmed" && hoursUntilAppointment < 24 && !cancellationReason) {
-        setError("Please provide a reason for cancelling within 24 hours.");
-        setLoading(false);
-        return;
-      }
-
-      const response = await axiosInstance.delete(`/api/appointments/cancel/${appointment._id}`, {
-        data: { reason: cancellationReason },
-      });
-
-      if (response.data.success) {
-        setShowSuccess(true);
-        setTimeout(() => {
-          setShowSuccess(false);
-          // Show reschedule prompt for ALL cancellations
-          setShowReschedulePrompt(true);
-        }, 2000);
-      }
-    } catch (err) {
-      console.error("Delete/Cancel Error:", err);
-      setError(err.response?.data?.message || "Failed to process appointment");
-    } finally {
-      setLoading(false);
-    }
   };
 
   const handleUpdate = async () => {
@@ -290,271 +380,28 @@ const AppointmentActionModal = ({ appointment, action, onClose, onSuccess }) => 
     }
   };
 
-  const formatTimeSlot = (time) => {
-    const [hours, minutes] = time.split(":").map(Number);
-    return new Date(0, 0, 0, hours, minutes).toLocaleTimeString([], {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
-
-  const getGeneralHours = () => {
-    if (!vet?.veterinarianDetails?.openingHours) {
-      return "Availability not specified";
-    }
-    const openDays = weekdays
-      .map((day) => day.toLowerCase())
-      .filter((day) => vet.veterinarianDetails.openingHours[day] !== "Closed");
-    if (openDays.length === 0) return "No regular hours available";
-    return `Open: ${openDays.map((d) => d.charAt(0).toUpperCase() + d.slice(1)).join(", ")}`;
-  };
-
-  const formatOpeningHours = (day) => {
-    const details = professionalType === "Vet" ? vet?.veterinarianDetails : vet?.trainerDetails;
-    if (!details?.openingHours) return "Not specified";
-    const hours = details.openingHours[day];
-    if (!hours || hours === "Closed") return "Closed";
-
-    const start1 = details.openingHours[`${day}Start`];
-    const end1 = details.openingHours[`${day}End`];
-    let timeString = start1 && end1 ? `${start1} - ${end1}` : "N/A";
-
-    if (hours === "Double Session") {
-      const start2 = details.openingHours[`${day}Start2`];
-      const end2 = details.openingHours[`${day}End2`];
-      if (start2 && end2) {
-        timeString += `, ${start2} - ${end2}`;
-      }
-    }
-
-    return timeString;
-  };
-
-  const renderActionSelection = () => (
-    <div className="space-y-6 p-6">
-      <h3 className="text-xl font-semibold text-gray-800">What would you like to do?</h3>
-      <div className="grid grid-cols-1 gap-4">
-        <button
-          onClick={() => setSelectedAction("view")}
-          className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-300 ${
-            selectedAction === "view"
-              ? "border-pink-300 bg-pink-50 text-pink-700"
-              : "border-gray-200 hover:bg-pink-50 hover:border-pink-300"
-          }`}
-        >
-          <Eye size={20} className="text-pink-500" />
-          <span className="text-sm font-medium">View Details</span>
-        </button>
-        <button
-          onClick={() => setSelectedAction("update")}
-          className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-300 ${
-            selectedAction === "update"
-              ? "border-yellow-300 bg-yellow-50 text-yellow-700"
-              : "border-gray-200 hover:bg-yellow-50 hover:border-yellow-300"
-          }`}
-          disabled={appointment.status === "confirmed" || appointment.status === "cancelled"}
-        >
-          <Edit size={20} className="text-yellow-500" />
-          <span className="text-sm font-medium">Update Appointment</span>
-        </button>
-        <button
-          onClick={() => setSelectedAction("delete")}
-          className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-300 ${
-            selectedAction === "delete"
-              ? "border-red-300 bg-red-50 text-red-700"
-              : "border-gray-200 hover:bg-red-50 hover:border-red-300"
-          }`}
-        >
-          <Trash2 size={20} className="text-red-500" />
-          <span className="text-sm font-medium">Cancel Appointment</span>
-        </button>
-      </div>
-      <button
-        onClick={() => {
-          if (!selectedAction) {
-            setError("Please select an action");
-            return;
-          }
-          setStep(selectedAction === "view" ? 0 : selectedAction === "delete" ? 2 : 1);
-          setError(null);
-        }}
-        className="w-full px-6 py-2 text-sm font-medium text-white bg-gradient-to-r from-pink-400 to-yellow-300 rounded-xl shadow-sm hover:from-pink-500 hover:to-yellow-400 transition-all duration-300 disabled:opacity-50"
-        disabled={!selectedAction || loading}
-      >
-        Continue
-      </button>
-    </div>
-  );
-
-  const renderViewDetails = () => (
-    <div className="space-y-6 p-6">
-      <h3 className="text-xl font-semibold text-gray-800">{professionalType} Details</h3>
-      {loading ? (
-        <div className="text-center">
-          <div className="inline-block w-6 h-6 border-2 border-pink-400 border-t-transparent rounded-full animate-spin"></div>
-          <p className="mt-2 text-sm text-gray-600">Loading details...</p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <p className="text-sm text-gray-700">
-            <strong>Name:</strong> {vet?.fullName || "Unknown"}
-          </p>
-          <p className="text-sm text-gray-700">
-            <strong>Email:</strong> {vet?.email || "N/A"}
-          </p>
-          {professionalType === "Vet" && (
-            <p className="text-sm text-gray-700">
-              <strong>Specialization:</strong>{" "}
-              {vet?.veterinarianDetails?.specializations?.[0]?.specializationName || "N/A"}
-            </p>
-          )}
-          {professionalType === "Trainer" && (
-            <>
-              <p className="text-sm text-gray-700">
-                <strong>Training Specialty:</strong> {vet?.trainerDetails?.specialization || "N/A"}
-              </p>
-              <p className="text-sm text-gray-700">
-                <strong>Experience:</strong> {vet?.trainerDetails?.experienceYears || "N/A"} years
-              </p>
-            </>
-          )}
-          <p className="text-sm text-gray-700">
-            <strong>Opening Hours:</strong>
-          </p>
-          <ul className="list-disc pl-5 text-sm text-gray-600">
-            {["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"].map((day) => (
-              <li key={day}>
-                {day.charAt(0).toUpperCase() + day.slice(1)}: {formatOpeningHours(day)}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-      <button
-        onClick={onClose}
-        className="w-full px-6 py-2 text-sm font-medium text-white bg-gradient-to-r from-pink-400 to-yellow-300 rounded-xl shadow-sm hover:from-pink-500 hover:to-yellow-400 transition-all duration-300"
-      >
-        Close
-      </button>
-    </div>
-  );
-
   const renderStepContent = () => {
-    if (showSuccess && !showReschedulePrompt) {
+    if (showSuccess) {
       return (
         <div className="py-8 flex flex-col items-center justify-center space-y-4">
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
             <Check size={32} className="text-green-500" />
           </div>
-          <h3 className="text-xl font-bold text-gray-800">
-            {selectedAction === "delete" ? "Appointment Cancelled!" : "Appointment Updated!"}
-          </h3>
+          <h3 className="text-xl font-bold text-gray-800">Appointment Updated!</h3>
           <p className="text-center text-gray-600 text-sm">
-            {selectedAction === "delete"
-              ? `Your appointment for ${appointment.petName} has been cancelled.`
-              : `Your appointment for ${appointment.petName} has been updated to ${selectedDate.toLocaleDateString()} at ${formatTimeSlot(formData.time)}.`}
+            Your appointment for {appointment.petName} has been updated to {selectedDate.toLocaleDateString()} at{" "}
+            {formatTimeSlot(formData.time)}.
           </p>
         </div>
       );
     }
 
-    if (showReschedulePrompt) {
-      return (
-        <div className="space-y-6 p-6">
-          <h3 className="text-xl font-semibold text-gray-800">Reschedule Your Appointment</h3>
-          <p className="text-sm text-gray-600">
-            Your appointment for {appointment.petName} has been cancelled. Would you like to book a new one with{" "}
-            {vet?.fullName || "this professional"}?
-          </p>
-          <div className="flex justify-end gap-4">
-            <button
-              onClick={() => {
-                onSuccess({
-                  action: appointment.status === "pending" ? "delete" : "cancel",
-                  appointmentId: appointment._id,
-                });
-                onClose();
-              }}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all"
-            >
-              Maybe Later
-            </button>
-            <button
-              onClick={() => {
-                window.location.href = "/vets"; // Adjust to your booking route
-              }}
-              className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-pink-400 to-yellow-300 rounded-xl hover:from-pink-500 hover:to-yellow-400 transition-all"
-            >
-              Book Now
-            </button>
-          </div>
-        </div>
-      );
-    }
-
-    if (step === 0) {
-      return renderViewDetails();
-    }
-
-    if (selectedAction === "delete") {
-      // Calculate time until appointment
-      const appointmentDateTime = new Date(appointment.date);
-      const [hours, minutes] = appointment.time.split(":").map(Number);
-      appointmentDateTime.setHours(hours, minutes);
-      const hoursUntilAppointment = (appointmentDateTime - new Date()) / (1000 * 60 * 60);
-      const isLastMinute = appointment.status === "confirmed" && hoursUntilAppointment < 24;
-
-      return (
-        <div className="space-y-4 p-6">
-          <p className="text-sm text-gray-600">
-            Are you sure you want to {appointment.status === "pending" ? "delete" : "cancel"} your appointment with{" "}
-            {vet?.fullName || appointment.professionalId?.fullName || "Unknown"} for {appointment.petName} on{" "}
-            {new Date(appointment.date).toLocaleDateString()} at {appointment.time}?
-          </p>
-          {isLastMinute && (
-            <>
-              <p className="text-sm text-yellow-600">
-                Note: Cancellations within 24 hours require a reason to help the {professionalType.toLowerCase()} plan
-                their schedule.
-              </p>
-              <textarea
-                value={cancellationReason}
-                onChange={(e) => setCancellationReason(e.target.value)}
-                placeholder="Reason for cancellation (required)"
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-pink-300 text-sm"
-                rows="3"
-              />
-            </>
-          )}
-          {error && <p className="text-sm text-red-500">{error}</p>}
-          <div className="flex justify-end gap-4">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all"
-              disabled={loading}
-            >
-              No, Keep It
-            </button>
-            <button
-              onClick={handleDelete}
-              className="px-4 py-2 text-sm font-medium text-white bg-red-400 rounded-xl hover:bg-red-500 transition-all disabled:opacity-50"
-              disabled={loading}
-            >
-              {loading ? "Processing..." : appointment.status === "pending" ? "Yes, Delete" : "Yes, Cancel"}
-            </button>
-          </div>
-        </div>
-      );
-    }
-
-    // Update steps
     switch (step) {
-      case 1:
+      case 1: // Select Date
         return (
           <div className="space-y-4 p-6">
             <h3 className="text-xl font-semibold text-gray-800">Select a Date</h3>
-            {loading ? (
+            {loading || !vet || !vet.veterinarianDetails?.openingHours || reservedSlotsByDate === null ? (
               <div className="text-center">
                 <div className="inline-block w-6 h-6 border-2 border-pink-400 border-t-transparent rounded-full animate-spin"></div>
                 <p className="mt-2 text-sm text-gray-600">Loading calendar...</p>
@@ -564,19 +411,13 @@ const AppointmentActionModal = ({ appointment, action, onClose, onSuccess }) => 
             ) : (
               <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
                 <div className="flex items-center justify-between mb-4">
-                  <button
-                    onClick={handlePrevMonth}
-                    className="p-2 rounded-full hover:bg-pink-50 transition-colors"
-                  >
+                  <button onClick={handlePrevMonth} className="p-2 rounded-full hover:bg-pink-50 transition-colors">
                     <ChevronLeft size={20} className="text-pink-400" />
                   </button>
                   <h4 className="text-lg font-semibold text-gray-800">
                     {currentDate.toLocaleString("default", { month: "long", year: "numeric" })}
                   </h4>
-                  <button
-                    onClick={handleNextMonth}
-                    className="p-2 rounded-full hover:bg-pink-50 transition-colors"
-                  >
+                  <button onClick={handleNextMonth} className="p-2 rounded-full hover:bg-pink-50 transition-colors">
                     <ChevronRight size={20} className="text-pink-400" />
                   </button>
                 </div>
@@ -588,10 +429,11 @@ const AppointmentActionModal = ({ appointment, action, onClose, onSuccess }) => 
                   ))}
                 </div>
                 <div className="grid grid-cols-7 gap-1">
-                  {getDaysInMonthView().map((day, index) => {
+                  {getDaysInMonthView.map((day, index) => {
                     const today = new Date();
+                    today.setUTCHours(0, 0, 0, 0);
                     const isToday = day.date.toDateString() === today.toDateString();
-                    const isPast = day.date < new Date(today.setHours(0, 0, 0, 0));
+                    const isPast = day.date < today;
                     const isSelected = selectedDate && day.date.toDateString() === selectedDate.toDateString();
                     const isFullyBooked = day.isFullyBooked;
 
@@ -600,10 +442,10 @@ const AppointmentActionModal = ({ appointment, action, onClose, onSuccess }) => 
                         key={index}
                         className={`
                           h-10 w-10 rounded-full flex items-center justify-center text-sm font-medium transition-all
-                          ${!day.isCurrentMonth ? "text-gray-300" : isPast ? "text-gray-400" : isFullyBooked ? "text-red-500" : "text-gray-800"}
+                          ${!day.isCurrentMonth ? "text-gray-300" : isPast ? "text-gray-400" : isFullyBooked ? "text-red-600" : "text-gray-800"}
                           ${isToday ? "ring-2 ring-pink-300" : ""}
                           ${isSelected ? "bg-pink-400 text-white" : ""}
-                          ${!day.isOpen || isPast || isFullyBooked ? "opacity-50 cursor-not-allowed" : "hover:bg-pink-100"}
+                          ${isFullyBooked ? "ring-2 ring-red-500 bg-red-100 text-black opacity-50 cursor-not-allowed" : isPast || !day.isOpen ? "bg-gray-300 opacity-50 cursor-not-allowed" : "hover:bg-pink-100"}
                         `}
                         onClick={() => !isPast && day.isOpen && !isFullyBooked && handleDateSelect(day.date)}
                         disabled={isPast || !day.isOpen || isFullyBooked}
@@ -629,13 +471,13 @@ const AppointmentActionModal = ({ appointment, action, onClose, onSuccess }) => 
                 <span>Selected</span>
               </div>
               <div className="flex items-center gap-1">
-  <div className="w-3 h-3 rounded-full bg-red-500 opacity-50"></div>
-  <span>Fully Booked</span>
-</div>
+                <div className="w-3 h-3 rounded-full ring-2 ring-red-500 bg-red-100"></div>
+                <span>Fully Booked</span>
+              </div>
             </div>
           </div>
         );
-      case 2:
+      case 2: // Choose Time
         return (
           <div className="space-y-4 p-6">
             <div className="flex items-center justify-between">
@@ -659,9 +501,7 @@ const AppointmentActionModal = ({ appointment, action, onClose, onSuccess }) => 
                       day: "numeric",
                     })}
                   </p>
-                  <p className="text-xs text-gray-600 mt-1">
-                    Consultation duration: {consultationDuration} minutes
-                  </p>
+                  <p className="text-xs text-gray-600 mt-1">Consultation duration: {consultationDuration} minutes</p>
                 </div>
               </div>
             </div>
@@ -711,10 +551,10 @@ const AppointmentActionModal = ({ appointment, action, onClose, onSuccess }) => 
                 </button>
               </div>
             )}
-            {error && step === 2 && <p className="text-sm text-red-500">{error}</p>}
+            {error && <p className="text-sm text-red-500">{error}</p>}
           </div>
         );
-      case 3:
+      case 3: // Confirm Details
         return (
           <div className="space-y-5 p-6">
             <div className="flex items-center justify-between">
@@ -788,7 +628,6 @@ const AppointmentActionModal = ({ appointment, action, onClose, onSuccess }) => 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-hidden mt-20">
       <div className="bg-white rounded-tl-2xl rounded-tr-3xl rounded-br-2xl rounded-bl-3xl w-full max-w-lg shadow-lg border border-gray-100 mx-4 my-8 max-h-[85vh] flex flex-col">
-        {/* Header */}
         <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-pink-50 to-yellow-50 sticky top-0 z-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -802,21 +641,10 @@ const AppointmentActionModal = ({ appointment, action, onClose, onSuccess }) => 
               )}
               <div>
                 <h2 className="text-lg font-semibold text-gray-800">
-                  {selectedAction === "delete"
-                    ? "Cancel Appointment"
-                    : selectedAction === "update"
-                    ? "Update Appointment"
-                    : selectedAction === "view"
-                    ? "Appointment Details"
-                    : "Manage Appointment"}
+                  {vet ? `${vet.fullName} (${professionalType})` : "Loading..."}
                 </h2>
                 {vet ? (
-                  <div>
-                    <p className="text-sm text-gray-600">
-                      {vet.fullName} ({professionalType})
-                    </p>
-                    <p className="text-xs text-gray-500">{getGeneralHours()}</p>
-                  </div>
+                  <p className="text-xs text-gray-500">{getGeneralHours()}</p>
                 ) : (
                   <p className="text-sm text-gray-600">Loading details...</p>
                 )}
@@ -828,37 +656,30 @@ const AppointmentActionModal = ({ appointment, action, onClose, onSuccess }) => 
           </div>
         </div>
 
-        {/* Steps Progress */}
-        {!showSuccess && !showReschedulePrompt && selectedAction !== "view" && selectedAction && selectedAction !== "delete" && (
-          <div className="flex justify-between px-6 py-4 bg-gray-50 shrink-0">
-            {["Select Date", "Choose Time", "Confirm Details"].map((label, index) => (
-              <div key={index} className="flex flex-col items-center">
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all
-                    ${step > index + 1 ? "bg-green-400 text-white" : step === index + 1 ? "bg-pink-400 text-white" : "bg-gray-200 text-gray-500"}
-                  `}
-                >
-                  {step > index + 1 ? <Check size={16} /> : index + 1}
-                </div>
-                <span
-                  className={`text-xs mt-1 ${step >= index + 1 ? "text-gray-800 font-medium" : "text-gray-500"}`}
-                >
-                  {label}
-                </span>
+        <div className="flex justify-between px-6 py-4 bg-gray-50 shrink-0">
+          {["Select Date", "Choose Time", "Confirm Details"].map((label, index) => (
+            <div key={index} className="flex flex-col items-center">
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all
+                  ${step > index + 1 ? "bg-green-400 text-white" : step === index + 1 ? "bg-pink-400 text-white" : "bg-gray-200 text-gray-500"}
+                `}
+              >
+                {step > index + 1 ? <Check size={16} /> : index + 1}
               </div>
-            ))}
-          </div>
-        )}
-
-        {/* Main Content */}
-        <div className="max-h-[50vh] overflow-y-auto p-0 flex-1">
-          {selectedAction ? renderStepContent() : renderActionSelection()}
+              <span
+                className={`text-xs mt-1 ${step >= index + 1 ? "text-gray-800 font-medium" : "text-gray-500"}`}
+              >
+                {label}
+              </span>
+            </div>
+          ))}
         </div>
 
-        {/* Footer Buttons */}
-        {!showSuccess && !showReschedulePrompt && selectedAction && selectedAction !== "view" && (
+        <div className="max-h-[50vh] overflow-y-auto p-0 flex-1">{renderStepContent()}</div>
+
+        {!showSuccess && (
           <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-between items-center shrink-0">
-            {step > 1 && selectedAction !== "delete" ? (
+            {step > 1 ? (
               <button
                 onClick={() => setStep(step - 1)}
                 className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-pink-500 transition-colors"
@@ -869,8 +690,7 @@ const AppointmentActionModal = ({ appointment, action, onClose, onSuccess }) => 
             ) : (
               <div></div>
             )}
-
-            {selectedAction === "delete" ? null : step < 3 ? (
+            {step < 3 ? (
               <button
                 onClick={() => {
                   if (step === 1 && !selectedDate) {
@@ -916,4 +736,4 @@ const AppointmentActionModal = ({ appointment, action, onClose, onSuccess }) => 
   );
 };
 
-export default AppointmentActionModal;
+export default UpdateAppointmentModal;

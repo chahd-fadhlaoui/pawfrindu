@@ -46,6 +46,10 @@ const appointmentSchema = new mongoose.Schema(
       enum: ["owned", "adopted", "other"],
       required: true,
     },
+    breed: { type: String, default: "Unknown" }, // Add breed
+    gender: { type: String, default: "Unknown" }, // Add gender
+    address: { type: String, default: "Unknown" }, // Add address
+    isTrained: { type: Boolean, default: false }, // Add isTrained
     reason: {
       type: String,
       required: true,

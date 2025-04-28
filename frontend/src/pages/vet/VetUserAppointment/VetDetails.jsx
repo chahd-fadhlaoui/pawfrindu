@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate,useLocation} from "react-router-dom";
 import axiosInstance from "../../../utils/axiosInstance";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import {
   Stethoscope,
   MapPin,
@@ -19,7 +21,7 @@ import {
   Globe,
 } from "lucide-react";
 import MapViewer from "../../../components/map/MapViewer";
-import AppointmentModal from "../../../components/vet/VetUserManagment/AppointmentModal";
+import AppointmentModal from "../../../components/vet/VetUserManagment/appointmentForm/AppointmentModal";
 import { useApp } from "../../../context/AppContext";
 
 const PawIcon = ({ className, style }) => (
@@ -82,19 +84,18 @@ export default function VetDetails() {
       (prev) => (prev - 1 + vet.veterinarianDetails.clinicPhotos.length) % vet.veterinarianDetails.clinicPhotos.length
     );
 
-  const openAppointmentModal = () => {
-    if (!user) {
-      navigate("/login", { state: { from: `/vets/${id}` } });
-      return;
-    }
-    setIsModalOpen(true);
-  };
+    const openAppointmentModal = () => {
+      if (!user) {
+        navigate("/login", { state: { from: `/vet/${id}` } });
+        return;
+      }
+      setIsModalOpen(true);
+    };
 
   const closeAppointmentModal = () => setIsModalOpen(false);
   const handleBookingSuccess = (data) => {
     console.log("Appointment booked successfully:", data);
     closeAppointmentModal();
-    alert("Appointment booked successfully!");
   };
 
   if (loading) {
@@ -116,7 +117,7 @@ export default function VetDetails() {
           <p className="text-xl font-medium text-blue-600">{error || "Veterinarian not found"}</p>
           <button
             onClick={() => navigate("/veterinarians")}
-            className="mt-6 flex items-center gap-2 mx-auto px-6 py-3 text-base font-medium text-white bg-gradient-to-br from-[#4ade80] to-[#3b82f6] rounded-xl shadow-lg hover:shadow-blue-200/50 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="mt-6 flex items-center gap-2 mx-auto px-6 py-3 text-base font-medium text-white bg-gradient-to-br  from-[#10b981] to-[#34d399] rounded-xl shadow-lg hover:shadow-blue-200/50 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
           >
             <ChevronLeft size={20} />
             Back to Veterinarians
@@ -149,7 +150,7 @@ export default function VetDetails() {
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <button
           onClick={() => navigate("/vets")}
-          className="group flex items-center gap-2 mb-10 px-5 py-3 text-base font-medium text-white bg-gradient-to-br from-[#4ade80] to-[#3b82f6] rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="group flex items-center gap-2 mb-10 px-5 py-3 text-base font-medium text-white bg-gradient-to-br  from-[#10b981] to-[#34d399] rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400"
         >
           <ChevronLeft size={18} className="group-hover:-translate-x-1 transition-transform duration-300" />
           Back to Veterinarians
@@ -186,28 +187,13 @@ export default function VetDetails() {
                   {vet.veterinarianDetails?.degree || "Degree not specified"}
                 </p>
               </div>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <button
-                  className={`flex items-center justify-center gap-2 px-6 py-3 text-base font-medium rounded-full shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-400 ${
-                    user
-                      ? "text-white bg-gradient-to-br from-[#4ade80] to-[#3b82f6]"
-                      : "text-gray-500 bg-gray-200 cursor-not-allowed"
-                  }`}
-                  onClick={openAppointmentModal}
-                  disabled={!user}
-                  title={!user ? "Please log in to book an appointment" : ""}
-                >
-                  <Calendar size={18} className={user ? "text-white" : "text-gray-400"} />
-                  Book Appointment
-                </button>
-                <button
-                  className="flex items-center justify-center gap-2 px-6 py-3 text-base font-medium text-[#4ade80] bg-green-50 hover:bg-green-100 rounded-full shadow-sm hover:shadow-md transform hover:-translate-y-1 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-300"
-                  onClick={() => alert("Contact now...")}
-                >
-                  <Phone size={18} className="text-blue-500" />
-                  Contact Now
-                </button>
-              </div>
+              <button
+  className="flex items-center justify-center gap-2 px-6 py-3 text-base font-medium text-white bg-gradient-to-br  from-[#10b981] to-[#34d399] rounded-full shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+  onClick={openAppointmentModal}
+>
+  <Calendar size={18} className="text-white" />
+  Book Appointment
+</button>
             </div>
 
             {vet.veterinarianDetails?.specialization && (

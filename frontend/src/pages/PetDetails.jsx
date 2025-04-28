@@ -11,6 +11,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
+import { toast } from "react-toastify";
 import React, { Suspense, lazy, useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useApp } from "../context/AppContext";
@@ -40,8 +41,8 @@ const PetDetails = () => {
 
   // Derive hasApplied synchronously from applications state
   console.log("Applications state in PetDetails:", applications);
-  const hasApplied = user && applications.some((app) => 
-    app.pet._id === petId && 
+  const hasApplied = user && applications.some((app) =>
+    app.pet._id === petId &&
     (typeof app.user === 'string' ? app.user === user._id : app.user?._id === user._id)
   );
   console.log("hasApplied:", hasApplied, { petId, userId: user?._id });
@@ -50,7 +51,7 @@ const PetDetails = () => {
     userId: typeof app.user === 'string' ? app.user : app.user?._id,
     status: app.status
   })));
-  
+
   const fetchPetDetails = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -133,7 +134,8 @@ const PetDetails = () => {
   }, [petId, user, fetchPetDetails, getMyAdoptionRequests, socket]);
 
   const handleApplyNowClick = () => {
-    if (!user) return navigate("/login", { state: { from: `/pet/${petId}` } });
+    if (!user)
+      return navigate("/login", { state: { from: `/petsdetails/${petId}` } }); // Updated to match route
     if (hasApplied) return;
     setShowForm(true);
   };
@@ -143,12 +145,17 @@ const PetDetails = () => {
     try {
       const result = await getMyAdoptionRequests();
       if (result.success) {
-        console.log("Applications after success:", result.data);
+        toast.success("Application submitted successfully!", {
+          autoClose: 1500, // Close toast after 1.5 seconds
+        });
+        navigate("/list/requests"); // Navigate immediately
       } else {
         setError("Failed to refresh adoption requests");
+        toast.error("Failed to refresh adoption requests");
       }
     } catch (err) {
       setError("Error syncing adoption requests: " + err.message);
+      toast.error("Error syncing adoption requests");
     }
   };
 
@@ -276,27 +283,28 @@ const PetDetails = () => {
                     </div>
                   ) : (
                     <div className="flex items-center gap-4">
-                      <button
-                        onClick={handleApplyNowClick}
-                        disabled={hasApplied}
-                        className={`
-                          flex-1 py-4 px-6 text-lg font-semibold rounded-xl shadow-lg transition-all duration-300 
-                          group flex items-center justify-center gap-2 relative overflow-hidden
-                          ${hasApplied
-                            ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                            : "bg-gradient-to-r from-[#ffc929] to-[#ffa726] text-white hover:from-[#ffdd58] hover:to-[#ffab00] hover:scale-[1.02] focus:ring-4 focus:ring-[#ffc929]/50"}
-                        `}
-                        aria-label={hasApplied ? "Application submitted" : "Apply to adopt"}
-                      >
-                        {hasApplied
-                          ? "Application Submitted"
-                          : petInfo.fee === 0
-                          ? "Apply Now"
-                          : `Adopt for ${petInfo.fee}${currencySymbol}`}
-                        {!hasApplied && (
+                      {hasApplied ? (
+                        <button
+                          onClick={() => navigate("/list/requests")}
+                          className="flex-1 py-4 px-6 text-lg font-semibold rounded-xl shadow-lg transition-all duration-300 
+                            group flex items-center justify-center gap-2 relative overflow-hidden
+                            bg-[#ffc929] text-white hover:scale-[1.02] focus:ring-4 focus:ring-blue-300/50"
+                        >
+                          View Your Application
                           <ChevronLeft size={20} className="transition-transform rotate-180 group-hover:translate-x-1" />
-                        )}
-                      </button>
+                        </button>
+                      ) : (
+                        <button
+                          onClick={handleApplyNowClick}
+                          className="flex-1 py-4 px-6 text-lg font-semibold rounded-xl shadow-lg transition-all duration-300 
+                            group flex items-center justify-center gap-2 relative overflow-hidden
+                            bg-gradient-to-r from-[#ffc929] to-[#ffa726] text-white hover:from-[#ffdd58] hover:to-[#ffab00] hover:scale-[1.02] focus:ring-4 focus:ring-[#ffc929]/50"
+                          aria-label="Apply to adopt"
+                        >
+                          {petInfo.fee === 0 ? "Apply Now" : `Adopt for ${petInfo.fee}${currencySymbol}`}
+                          <ChevronLeft size={20} className="transition-transform rotate-180 group-hover:translate-x-1" />
+                        </button>
+                      )}
                     </div>
                   )}
                   {!isOwner && !hasApplied && (

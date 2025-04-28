@@ -263,19 +263,20 @@ export default function Veterinarians() {
 
         <div className="bg-white backdrop-blur-sm bg-opacity-90 border-2 border-[#4ade80]/20 shadow-xl rounded-3xl p-8 mb-10">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <button
-              onClick={() => setIsFilterOpen(!isFilterOpen)}
-              className="flex items-center gap-2 px-4 py-2.5 text-white bg-gradient-to-r from-[#4ade80] to-[#3b82f6] rounded-xl shadow-md hover:from-[#3b82f6] hover:to-[#4ade80] transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#4ade80]/30"
-            >
-              <Filter size={16} />
-              {isFilterOpen ? "Hide" : "Filter"}
-            </button>
-            <SearchBar
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by name, specialty, or location..."
-              className="flex-grow max-w-md shadow-xl sm:flex-grow-0 sm:mx-auto"
-            />
+          <button
+  onClick={() => setIsFilterOpen(!isFilterOpen)}
+  className="flex items-center gap-2 px-4 py-2.5 text-white bg-gradient-to-r from-[#10b981] to-[#34d399] rounded-xl shadow-md hover:from-[#34d399] hover:to-[#10b981] transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#10b981]/30"
+>
+  <Filter size={16} />
+  {isFilterOpen ? "Hide" : "Filter"}
+</button>
+<SearchBar
+  value={searchQuery}
+  onChange={(e) => setSearchQuery(e.target.value)}
+  placeholder="Search appointments..."
+  className="flex-grow max-w-md shadow-xl sm:flex-grow-0 sm:mx-auto"
+  iconColor="text-blue-500" // Add this prop if supported
+/>
             {filteredVets.length > 0 && (
               <span className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-[#4ade80] bg-[#4ade80]/10 border border-[#4ade80]/20 rounded-full shadow-inner">
                 <Stethoscope size={16} className="text-[#4ade80]" /> {filteredVets.length} Vets Available

@@ -495,7 +495,7 @@ function Step4({ formData, setCurrentStep }) {
   );
 }
 
-function PetApplicationForm({ petId, petName, petImage, onClose }) {
+function PetApplicationForm({ petId, petName, petImage, onClose, onSubmitSuccess }) {
   const { user } = useApp();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState(() => {
@@ -582,13 +582,14 @@ function PetApplicationForm({ petId, petName, petImage, onClose }) {
         if (typeof onSubmitSuccess === 'function') {
           onSubmitSuccess();
         }
-        setTimeout(() => onClose(), 3000);
+        onClose(); // Close immediately
       } else {
         setError(response.data.message);
         if (response.data.message === "You have already applied to adopt this pet") {
           if (typeof onSubmitSuccess === 'function') {
             onSubmitSuccess();
           }
+          onClose();
         }
       }
     } catch (err) {
@@ -596,8 +597,9 @@ function PetApplicationForm({ petId, petName, petImage, onClose }) {
       setError(errorMessage);
       if (errorMessage === "You have already applied to adopt this pet") {
         if (typeof onSubmitSuccess === 'function') {
-          onSubmitSuccess(); // Trigger UI refresh
+          onSubmitSuccess();
         }
+        onClose();
       }
     } finally {
       setSubmitting(false);

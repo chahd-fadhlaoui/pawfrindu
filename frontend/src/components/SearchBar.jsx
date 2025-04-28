@@ -1,13 +1,11 @@
 import React from "react";
 import { Search, X } from "lucide-react";
 
-const SearchBar = ({ value, onChange, placeholder = "Search..." }) => {
+const SearchBar = ({ value, onChange, placeholder = "Search...", iconColor }) => {
   return (
     <div className="relative flex-grow w-full max-w-md">
       <div className="relative flex items-center transition-all duration-300 bg-white border border-pink-100 shadow-sm rounded-xl hover:shadow-md focus-within:ring-2 focus-within:ring-pink-300 focus-within:border-pink-500">
-        <Search
-          className={`absolute left-4 w-5 h-5 text-pink-500 transition-transform duration-300 ${value ? "scale-110" : "scale-100"}`}
-        />
+      <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${iconColor || "text-pink-500"}`} size={20} />
         <input
           type="text"
           value={value}

@@ -1,89 +1,156 @@
 import Appointment from "../models/appointmentModel.js";
 import User from "../models/userModel.js";
+import Pet from "../models/petModel.js"; 
 import { io } from "../server.js";
 
 export const bookAppointment = async (req, res) => {
-    const {
+  const {
+    professionalId,
+    professionalType,
+    date,
+    time,
+    duration,
+    petId,
+    petName,
+    petType,
+    petAge,
+    petSource,
+    reason,
+    notes,
+    breed,
+    gender,
+    address,
+    isTrained,
+  } = req.body;
+
+  try {
+    // Verify user is a PetOwner
+    const petOwner = await User.findById(req.user._id);
+    if (!petOwner || petOwner.role !== "PetOwner") {
+      return res.status(403).json({ message: "Only pet owners can book appointments" });
+    }
+
+    // Verify professional exists and matches the type
+    const professional = await User.findById(professionalId);
+    if (!professional || professional.role !== professionalType || !professional.isActive) {
+      return res.status(404).json({ message: `${professionalType} not found or not available` });
+    }
+
+    // Validate date format (YYYY-MM-DD)
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(date)) {
+      console.error("Invalid date format:", date);
+      return res.status(400).json({ message: "Invalid date format. Use YYYY-MM-DD" });
+    }
+    console.log("Received date:", date);
+
+    // Validate date is a valid calendar date
+    const parsedDate = new Date(date);
+    if (isNaN(parsedDate.getTime()) || parsedDate.toISOString().split("T")[0] !== date) {
+      console.error("Invalid calendar date:", date);
+      return res.status(400).json({ message: "Invalid calendar date" });
+    }
+
+    // Use the date string directly
+    const dateStr = date;
+    console.log("Stored date string:", dateStr);
+
+    // Check if the slot is already booked for the professional
+    const slotTaken = await Appointment.findOne({
       professionalId,
-      professionalType, // "Vet" or "Trainer"
-      date,
+      professionalType,
+      date: dateStr,
+      time,
+      status: { $ne: "cancelled" },
+    });
+    if (slotTaken) {
+      return res.status(400).json({ message: "This time slot is already booked" });
+    }
+
+    let appointmentData = {
+      petOwnerId: req.user._id,
+      professionalId,
+      professionalType,
+      date: dateStr,
       time,
       duration,
-      petName,
-      petType,
-      petAge,
-      petSource,
       reason,
       notes,
-    } = req.body;
-  
-    try {
-      // Verify user is a PetOwner
-      const petOwner = await User.findById(req.user._id);
-      if (!petOwner || petOwner.role !== "PetOwner") {
-        return res.status(403).json({ message: "Only pet owners can book appointments" });
+      status: "pending",
+    };
+
+    // Handle platform vs. non-platform pets
+    if (petId) {
+      // Platform pet: Validate petId and fetch pet details
+      const pet = await Pet.findById(petId);
+      if (!pet) {
+        console.error("Pet not found for petId:", petId);
+        return res.status(404).json({ message: "Pet not found" });
       }
-  
-      // Verify professional exists and matches the type
-      const professional = await User.findById(professionalId);
-      if (!professional || professional.role !== professionalType || !professional.isActive) {
-        return res.status(404).json({ message: `${professionalType} not found or not available` });
+      console.log("Pet found:", { petId, petName: pet.name, ownerId: pet.owner?.toString(), userId: req.user._id?.toString() });
+      appointmentData.petId = petId;
+      appointmentData.petName = pet.name;
+      appointmentData.petType = pet.species;
+      appointmentData.petAge = pet.age || "Unknown";
+      appointmentData.petSource = "adopted";
+      appointmentData.breed = pet.breed || "Unknown";
+      appointmentData.gender = pet.gender || "Unknown";
+      appointmentData.address = address || "Unknown";
+      appointmentData.isTrained = pet.isTrained ?? false;
+    } else {
+      // Non-platform pet: Require petName, petType, petSource
+      if (!petName || !petType || !petSource) {
+        return res.status(400).json({ message: "petName, petType, and petSource are required for non-platform pets" });
       }
-  
-      // Check if the slot is already booked for the professional
-      const slotTaken = await Appointment.findOne({
-        professionalId,
-        professionalType,
-        date,
-        time,
-        status: { $ne: "cancelled" },
-      });
-      if (slotTaken) {
-        return res.status(400).json({ message: "This time slot is already booked" });
-      }
-  
-      // Create new appointment
-      const appointment = new Appointment({
-        petOwnerId: req.user._id,
-        professionalId,
-        professionalType,
-        date,
-        time,
-        duration,
-        petName,
-        petType,
-        petAge,
-        petSource,
-        reason,
-        notes,
-        status: "pending",
-      });
-  
-      const savedAppointment = await appointment.save();
-  
-      // Populate professional details for the Socket.IO event
-      const populatedAppointment = await Appointment.findById(savedAppointment._id)
-        .populate("petOwnerId", "fullName email petOwnerDetails.phone")
-        .populate("professionalId", "fullName");
-  
-      // Emit Socket.IO event with full appointment data
-      io.emit("appointmentBooked", populatedAppointment.toObject());
-  
-      res.status(201).json({
-        success: true,
-        message: "Appointment booked successfully",
-        appointment: {
-          ...populatedAppointment.toObject(),
-          ownerName: populatedAppointment.petOwnerId.fullName,
-          phone: populatedAppointment.petOwnerId.petOwnerDetails?.phone || "",
-          email: populatedAppointment.petOwnerId.email,
-        },
-      });
-    } catch (error) {
-      console.error("Book Appointment Error:", error);
-      res.status(500).json({ message: "Failed to book appointment", detail: error.message });
+      appointmentData.petName = petName;
+      appointmentData.petType = petType;
+      appointmentData.petAge = petAge || "Unknown";
+      appointmentData.petSource = petSource;
+      appointmentData.breed = breed || "Unknown";
+      appointmentData.gender = gender || "Unknown";
+      appointmentData.address = address || "Unknown";
+      appointmentData.isTrained = isTrained ?? false;
     }
-  };
+
+    // Create new appointment
+    const appointment = new Appointment(appointmentData);
+    const savedAppointment = await appointment.save();
+
+    // Populate professional and petOwner details for the Socket.IO event
+    const populatedAppointment = await Appointment.findById(savedAppointment._id)
+      .populate("petOwnerId", "fullName email petOwnerDetails.phone")
+      .populate("professionalId", "fullName");
+
+    // Emit Socket.IO event with full appointment data
+    io.emit("appointmentBooked", {
+      ...populatedAppointment.toObject(),
+      petId: savedAppointment.petId?.toString(),
+      breed: savedAppointment.breed || "Unknown",
+      gender: savedAppointment.gender || "Unknown",
+      address: savedAppointment.address || "Unknown",
+      isTrained: savedAppointment.isTrained ?? false,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Appointment booked successfully",
+      appointment: {
+        ...populatedAppointment.toObject(),
+        ownerName: populatedAppointment.petOwnerId.fullName,
+        phone: populatedAppointment.petOwnerId.petOwnerDetails?.phone || "",
+        email: populatedAppointment.petOwnerId.email,
+        petId: savedAppointment.petId?.toString(),
+        breed: savedAppointment.breed || "Unknown",
+        gender: savedAppointment.gender || "Unknown",
+        address: savedAppointment.address || "Unknown",
+        isTrained: savedAppointment.isTrained ?? false,
+      },
+    });
+  } catch (error) {
+    console.error("Book Appointment Error:", error);
+    res.status(500).json({ message: "Failed to book appointment", detail: error.message });
+  }
+};
 export const getUserBookedDates = async (req, res) => {
     try {
       const appointments = await Appointment.find({
@@ -518,38 +585,75 @@ export const vetDeleteAppointment = async (req, res) => {
       const appointments = await Appointment.find({
         professionalId: req.user._id,
         professionalType: "Vet",
-        // status: { $ne: "cancelled" }, // Uncomment if excluding cancelled appointments
       })
         .populate("petOwnerId", "fullName email petOwnerDetails.phone petOwnerDetails.address")
         .sort({ date: 1, time: 1 });
   
       console.log("Found appointments:", appointments.length);
-      const formattedAppointments = appointments.map((appt) => {
-        console.log("Formatting appointment ID:", appt._id);
-        return {
-          id: appt._id.toString(),
-          petName: appt.petName,
-          petType: appt.petType,
-          petAge: appt.petAge || "Unknown",
-          ownerName: appt.petOwnerId?.fullName || "Unknown",
-          phone: appt.petOwnerId?.petOwnerDetails?.phone || "",
-          email: appt.petOwnerId?.email || "",
-          address: appt.petOwnerId?.petOwnerDetails?.address || "",
-          date: appt.date,
-          time: appt.time,
-          duration: `${appt.duration} minutes`,
-          reason: appt.reason,
-          provider: vet.fullName,
-          status: appt.status || "pending", // Fallback status
-          notes: appt.notes || "",
-          createdAt: new Date(appt.createdAt).toLocaleDateString("en-US"),
-          updatedAt: new Date(appt.updatedAt).toLocaleDateString("en-US"),
-          isNew: appt.status === "pending",
-          vaccines: [], // Placeholder
-          medications: [], // Placeholder
-        };
-      });
+      const formattedAppointments = await Promise.all(
+        appointments.map(async (appt) => {
+          console.log("Formatting appointment ID:", appt._id, "petId:", appt.petId?.toString());
+          let petData = {};
+          if (appt.petId) {
+            try {
+              const pet = await Pet.findById(appt.petId).select(
+                "name species breed age gender city isTrained fee image"
+              );
+              if (pet) {
+                petData = pet.toObject();
+                console.log("Pet found for petId:", appt.petId.toString(), "Pet data:", petData);
+              } else {
+                console.warn("No pet found for petId:", appt.petId.toString());
+              }
+            } catch (petErr) {
+              console.error(`Error fetching pet ${appt.petId.toString()}:`, petErr.message);
+            }
+          } else {
+            console.log("No petId for appointment, using Appointment fields:", {
+              petName: appt.petName,
+              petType: appt.petType,
+              petAge: appt.petAge,
+              breed: appt.breed,
+              gender: appt.gender,
+              city: appt.city,
+              isTrained: appt.isTrained,
+            });
+          }
   
+          return {
+            id: appt._id.toString(),
+            petId: appt.petId?.toString(),
+            petName: petData.name || appt.petName || "Unknown",
+            petType: petData.species || appt.petType || "Unknown",
+            petAge: petData.age || appt.petAge || "Unknown",
+            breed: petData.breed || appt.breed || "Unknown",
+            gender: petData.gender || appt.gender || "Unknown",
+            city: petData.city || appt.city || "Unknown",
+            isTrained: petData.isTrained ?? appt.isTrained ?? false,
+            fee: petData.fee || null,
+            image: petData.image || null,
+            ownerName: appt.petOwnerId?.fullName || "Unknown",
+            phone: appt.petOwnerId?.petOwnerDetails?.phone || "",
+            email: appt.petOwnerId?.email || "",
+            address: appt.petOwnerId?.petOwnerDetails?.address || "",
+            date: appt.date,
+            time: appt.time,
+            duration: `${appt.duration} minutes`,
+            reason: appt.reason,
+            provider: vet.fullName,
+            status: appt.status || "pending",
+            notes: appt.notes || "",
+            createdAt: new Date(appt.createdAt).toLocaleDateString("en-US"),
+            updatedAt: new Date(appt.updatedAt).toLocaleDateString("en-US"),
+            isNew: appt.status === "pending",
+            vaccines: [],
+            medications: [],
+            isPlatformPet: !!appt.petId,
+          };
+        })
+      );
+  
+      console.log("Returning formatted appointments:", formattedAppointments.length);
       res.json({ success: true, appointments: formattedAppointments });
     } catch (error) {
       console.error("Get Vet Appointments Error:", {

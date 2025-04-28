@@ -16,4 +16,4 @@ appointmentRouter.put("/confirm/:appointmentId", authenticate, confirmAppointmen
 appointmentRouter.delete("/vet-delete/:appointmentId", authenticate, vetDeleteAppointment);
 appointmentRouter.put("/complete/:appointmentId", authenticate, completeAppointment);
 appointmentRouter.get("/vet-appointments", authenticate, getVetAppointments); // New route
-export default appointmentRouter; 
+export default appointmentRouter;   

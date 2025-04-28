@@ -10,10 +10,13 @@ import NavigationButtons from "../components/ui/NavigationButtons";
 import ProgressIndicator from "../components/ui/ProgressIndicator";
 import RightPanel from "../components/ui/RightPanel";
 import LoadingWrapper from "../components/LoadingWrapper";
+import {useLocation } from "react-router-dom"; // Add useLocation
+import { toast } from "react-toastify";
 
 const Auth = () => {
   const navigate = useNavigate();
   const { login, register, error, loading, clearError } = useApp();
+  const location = useLocation(); // Add useLocation to access state.from
   const [mode, setMode] = useState("login");
   const [selectedRole, setSelectedRole] = useState("pet-owner");
   const [showPassword, setShowPassword] = useState(false);
@@ -21,14 +24,19 @@ const Auth = () => {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [signupData, setSignupData] = useState(null);
 
-  // Handle login submission
-  const handleLogin = async (email, password) => {
-    const result = await login(email, password);
-    if (result.success) {
-      navigate(result.redirectTo);
-    }
-  };
-
+// Handle login submission
+const handleLogin = async (email, password) => {
+  const result = await login(email, password);
+  if (result.success) {
+    const redirectTo = location.state?.from || result.redirectTo || "/pets";
+    console.log("Redirecting to:", redirectTo, "Location state:", location.state); // Debug log
+    toast.success("Login successful!"); // Add success toast
+    navigate(redirectTo, { replace: true });
+  } else {
+    console.error("Login failed:", result.error); // Debug log
+    toast.error(result.error || "Login failed"); // Show error to user
+  }
+};
   const handleValidationChange = (isValid, formData) => {
     setSignupData(formData);
     clearError();
