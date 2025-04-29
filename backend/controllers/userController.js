@@ -9,7 +9,7 @@ import mongoose from "mongoose";
 // 🚀 Étape 1: Enregistrement de l'utilisateur sans détails spécifiques
 const register = async (req, res) => {
   console.log("Received registration request with body:", req.body);
-  const { fullName, email, password, role, adminType } = req.body;
+  const { fullName, email, password, role } = req.body;
 
   if (!fullName || !email || !password || !role) {
     console.log("Missing fields:", {
@@ -21,11 +21,7 @@ const register = async (req, res) => {
     return res.status(400).json({ message: "All fields are required." });
   }
 
-  if (role === "Admin" && !adminType) {
-    return res
-      .status(400)
-      .json({ message: "Admin type is required for Admin role." });
-  }
+  
 
   try {
     const existingUser = await User.findOne({ email });
@@ -40,7 +36,6 @@ const register = async (req, res) => {
       email,
       password: hashedPassword,
       role,
-      ...(role === "Admin" ? { adminType } : {}),
     });
 
     const savedUser = await newUser.save();
@@ -53,7 +48,6 @@ const register = async (req, res) => {
       {
         userId: savedUser._id,
         role: savedUser.role,
-        adminType: savedUser.adminType,
       },
       process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: "72h" }
@@ -75,7 +69,6 @@ const register = async (req, res) => {
       fullName: savedUser.fullName,
       email: savedUser.email,
       role: savedUser.role,
-      adminType: savedUser.adminType,
       message: "A new user has registered",
     });
 
@@ -87,7 +80,6 @@ const register = async (req, res) => {
         fullName: savedUser.fullName,
         email: savedUser.email,
         role: savedUser.role,
-        adminType: savedUser.adminType,
       },
     });
   } catch (error) {
@@ -310,8 +302,6 @@ const login = async (req, res) => {
       {
         userId: user._id,
         role: user.role,
-        adminType:
-          user.adminType || (user.role === "Admin" ? "Super Admin" : undefined),
         isActive: user.isActive,
       },
       process.env.ACCESS_TOKEN_SECRET,
@@ -324,8 +314,6 @@ const login = async (req, res) => {
         fullName: user.fullName,
         email: user.email,
         role: user.role,
-        adminType:
-          user.adminType || (user.role === "Admin" ? "Super Admin" : undefined),
         isActive: user.isActive,
         lastLogin: user.lastLogin,
         petOwnerDetails: user.petOwnerDetails || undefined,
@@ -392,8 +380,6 @@ const getCurrentUser = async (req, res) => {
         email: user.email,
         role: user.role,
         isActive: user.isActive,
-        adminType:
-          user.adminType || (user.role === "Admin" ? "Super Admin" : undefined),
         about: user.about,
         image: user.image,
         lastLogin: user.lastLogin,
@@ -425,9 +411,6 @@ const verifyToken = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
     req.userId = decoded.userId;
     req.userRole = decoded.role;
-    req.adminType =
-      decoded.adminType ||
-      (decoded.role === "Admin" ? "Super Admin" : undefined); // Secours pour anciens tokens
     next();
   } catch (error) {
     console.error("Token Verification Error:", error);
@@ -668,7 +651,7 @@ const updateProfile = async (req, res) => {
 
 const updateUserByAdmin = async (req, res) => {
   const { userId } = req.params;
-  const { role, adminType, isActive, isArchieve } = req.body;
+  const { role, isActive, isArchieve } = req.body;
 
   try {
     const user = await User.findById(userId);
@@ -678,7 +661,6 @@ const updateUserByAdmin = async (req, res) => {
 
     // Update fields if provided
     if (role) user.role = role;
-    if (role === "Admin" && adminType) user.adminType = adminType;
     if (typeof isActive === "boolean") user.isActive = isActive;
     if (typeof isArchieve === "boolean") user.isArchieve = isArchieve;
 
@@ -688,7 +670,6 @@ const updateUserByAdmin = async (req, res) => {
     io.emit("userUpdatedByAdmin", {
       userId: user._id,
       role: user.role,
-      adminType: user.adminType,
       isActive: user.isActive,
       isArchieve: user.isArchieve,
       message: "User updated by admin",
