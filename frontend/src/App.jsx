@@ -28,6 +28,8 @@ import VetDetails from './pages/vet/VetUserAppointment/VetDetails';
 import Veterinarians from './pages/vet/VetUserAppointment/Veterinarians';
 import Trainers from "./pages/Trainer/TrainerUserSide/Trainers";
 import TrainerDetails from "./pages/Trainer/TrainerUserSide/TrainerDetails";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentFailed from "./pages/PaymentFailed";
 
 const Layout = ({ children }) => {
   const location = useLocation();
@@ -76,6 +78,8 @@ const AppRoutes = () => {
       <Route path="/trainer/:id" element={<TrainerDetails />} />
       <Route path="/pets/:species" element={<Pets />} />
       <Route path="/petsdetails/:petId" element={<PetDetails />} />
+      <Route path="/payment-success" element={<PaymentSuccess />} />
+      <Route path="/payment-failed" element={<PaymentFailed />} />
       <Route path="/login" element={<Auth />} />
       <Route path="/AdminLoginPage" element={<AdminLoginPage />} />
 

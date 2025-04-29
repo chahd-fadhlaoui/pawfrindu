@@ -29,7 +29,6 @@ const PetDetails = () => {
     loading: contextLoading,
     pets,
     applications,
-    applyToAdopt,
     socket,
     getMyAdoptionRequests,
   } = useApp();
@@ -38,19 +37,12 @@ const PetDetails = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState(null);
 
-  // Derive hasApplied synchronously from applications state
-  console.log("Applications state in PetDetails:", applications);
   const hasApplied = user && applications.some((app) =>
     app.pet._id === petId &&
     (typeof app.user === 'string' ? app.user === user._id : app.user?._id === user._id)
   );
-  console.log("hasApplied:", hasApplied, { petId, userId: user?._id });
-  console.log("Applications content:", applications.map(app => ({
-    petId: app.pet._id,
-    userId: typeof app.user === 'string' ? app.user : app.user?._id,
-    status: app.status
-  })));
 
   const fetchPetDetails = useCallback(async () => {
     setIsLoading(true);
@@ -116,28 +108,63 @@ const PetDetails = () => {
       }
     };
 
-    const handleCandidateStatusUpdated = (data) => {
-      if (data.petId === petId) {
-        fetchPetDetails();
+    const handlePaymentInitiated = (data) => {
+      if (data.petId === petId && data.userId === user?._id) {
+        setPaymentStatus('pending');
+        toast.info('Payment initiated, redirecting to payment page...');
+      }
+    };
+
+    const handlePaymentStatusUpdated = (data) => {
+      if (data.petId === petId && data.userId === user?._id) {
+        setPaymentStatus(data.status);
+        if (data.status === 'completed') {
+          toast.success('Payment successful! Pet purchased.');
+          fetchPetDetails();
+        } else if (data.status === 'failed') {
+          toast.error('Payment failed. Please try again.');
+        }
       }
     };
 
     socket.on("petUpdated", handlePetUpdated);
     socket.on("adoptionApplied", handleAdoptionApplied);
-    socket.on("candidateStatusUpdated", handleCandidateStatusUpdated);
+    socket.on("paymentInitiated", handlePaymentInitiated);
+    socket.on("paymentStatusUpdated", handlePaymentStatusUpdated);
 
     return () => {
       socket.off("petUpdated", handlePetUpdated);
       socket.off("adoptionApplied", handleAdoptionApplied);
-      socket.off("candidateStatusUpdated", handleCandidateStatusUpdated);
+      socket.off("paymentInitiated", handlePaymentInitiated);
+      socket.off("paymentStatusUpdated", handlePaymentStatusUpdated);
     };
   }, [petId, user, fetchPetDetails, getMyAdoptionRequests, socket]);
 
-  const handleApplyNowClick = () => {
-    if (!user)
-      return navigate("/login", { state: { from: `/petsdetails/${petId}` } }); // Updated to match route
-    if (hasApplied) return;
-    setShowForm(true);
+  const handleApplyOrPay = async () => {
+    if (!user) {
+      return navigate("/login", { state: { from: `/petsdetails/${petId}` } });
+    }
+    if (hasApplied || petInfo.status === 'sold') return;
+
+    if (petInfo.fee > 0) {
+      console.log('Initiating payment with:', { petId, userId: user._id });
+      try {
+        const response = await axiosInstance.post('/api/payment/initiate-payment', {
+          petId,
+          userId: user._id,
+        });
+        if (response.data.success) {
+          window.location.href = response.data.payUrl;
+        } else {
+          toast.error(response.data.message || 'Failed to initiate payment');
+        }
+      } catch (error) {
+        console.error('Payment error:', error.response?.data || error.message);
+        toast.error('Error initiating payment: ' + (error.response?.data?.message || error.message));
+      }
+    } else {
+      setShowForm(true);
+    }
   };
 
   const handleApplicationSuccess = async () => {
@@ -145,10 +172,8 @@ const PetDetails = () => {
     try {
       const result = await getMyAdoptionRequests();
       if (result.success) {
-        toast.success("Application submitted successfully!", {
-          autoClose: 1500, // Close toast after 1.5 seconds
-        });
-        navigate("/list/requests"); // Navigate immediately
+        toast.success("Application submitted successfully!", { autoClose: 1500 });
+        navigate("/list/requests");
       } else {
         setError("Failed to refresh adoption requests");
         toast.error("Failed to refresh adoption requests");
@@ -205,7 +230,6 @@ const PetDetails = () => {
   return (
     <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-white via-pink-50 to-[#ffc929]/10">
       <div className="mx-auto space-y-12 max-w-7xl">
-        {/* Header */}
         <div className="pt-16 space-y-6 text-center animate-fadeIn" style={{ animationDelay: "0.2s" }}>
           <button
             onClick={() => navigate("/pets")}
@@ -228,11 +252,9 @@ const PetDetails = () => {
           </p>
         </div>
 
-        {/* Main Content */}
         <main className="space-y-10">
           <div className="bg-white rounded-3xl shadow-2xl border border-[#ffc929]/10 overflow-hidden">
             <div className="grid gap-12 p-8 md:grid-cols-2 lg:p-12">
-              {/* Pet Image */}
               <div className="relative group">
                 <div className="absolute -inset-4 bg-gradient-to-br from-[#ffc929]/20 to-pink-200/20 rounded-3xl blur-xl opacity-40 group-hover:opacity-60 transition-opacity duration-300" />
                 <img
@@ -244,7 +266,6 @@ const PetDetails = () => {
                 />
               </div>
 
-              {/* Pet Details */}
               <div className="space-y-6">
                 <div className="space-y-2">
                   <h2 className="text-3xl font-bold text-gray-900">{petInfo.name}</h2>
@@ -255,14 +276,15 @@ const PetDetails = () => {
                   </p>
                 </div>
 
-                {/* Status Badges */}
                 <div className="flex flex-wrap gap-3">
                   {[
                     petInfo.isTrained && { icon: Zap, text: "Trained", color: "text-[#ffc929] bg-[#ffc929]/10" },
                     petInfo.fee === 0
                       ? { icon: DollarSign, text: "Free", color: "text-green-600 bg-green-50" }
-                      : { icon: DollarSign, text: "Fee Required", color: "text-pink-600 bg-pink-50" },
+                      : { icon: DollarSign, text: `Fee: ${petInfo.fee}${currencySymbol}`, color: "text-pink-600 bg-pink-50" },
                     hasApplied && { icon: CheckCircle, text: "Applied", color: "text-blue-600 bg-blue-50" },
+                    petInfo.status === 'sold' && { icon: CheckCircle, text: "Sold", color: "text-red-600 bg-red-50" },
+                    paymentStatus === 'pending' && { icon: AlertCircle, text: "Payment Pending", color: "text-yellow-600 bg-yellow-50" },
                   ]
                     .filter(Boolean)
                     .map(({ icon: Icon, text, color }, idx) => (
@@ -275,11 +297,14 @@ const PetDetails = () => {
                     ))}
                 </div>
 
-                {/* Action Buttons */}
                 <div className="space-y-3">
                   {isOwner ? (
                     <div className="px-6 py-4 font-semibold text-center text-gray-600 bg-gray-100 rounded-xl">
                       You Own This Pet
+                    </div>
+                  ) : petInfo.status === 'sold' ? (
+                    <div className="px-6 py-4 font-semibold text-center text-red-600 bg-red-100 rounded-xl">
+                      This Pet Has Been Sold
                     </div>
                   ) : (
                     <div className="flex items-center gap-4">
@@ -295,13 +320,14 @@ const PetDetails = () => {
                         </button>
                       ) : (
                         <button
-                          onClick={handleApplyNowClick}
-                          className="flex-1 py-4 px-6 text-lg font-semibold rounded-xl shadow-lg transition-all duration-300 
+                          onClick={handleApplyOrPay}
+                          disabled={paymentStatus === 'pending'}
+                          className={`flex-1 py-4 px-6 text-lg font-semibold rounded-xl shadow-lg transition-all duration-300 
                             group flex items-center justify-center gap-2 relative overflow-hidden
-                            bg-gradient-to-r from-[#ffc929] to-[#ffa726] text-white hover:from-[#ffdd58] hover:to-[#ffab00] hover:scale-[1.02] focus:ring-4 focus:ring-[#ffc929]/50"
-                          aria-label="Apply to adopt"
+                            ${paymentStatus === 'pending' ? 'bg-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-[#ffc929] to-[#ffa726] hover:from-[#ffdd58] hover:to-[#ffab00] hover:scale-[1.02] focus:ring-4 focus:ring-[#ffc929]/50'} text-white`}
+                          aria-label={petInfo.fee === 0 ? "Apply to adopt" : "Pay to adopt"}
                         >
-                          {petInfo.fee === 0 ? "Apply Now" : `Adopt for ${petInfo.fee}${currencySymbol}`}
+                          {petInfo.fee === 0 ? "Apply Now" : `Pay ${petInfo.fee}${currencySymbol}`}
                           <ChevronLeft size={20} className="transition-transform rotate-180 group-hover:translate-x-1" />
                         </button>
                       )}
@@ -309,12 +335,11 @@ const PetDetails = () => {
                   )}
                   {!isOwner && !hasApplied && (
                     <p className="text-sm text-center text-gray-500">
-                      {petInfo.fee === 0 ? "Adopt for free today!" : "A small fee secures your new companion"}
+                      {petInfo.fee === 0 ? "Adopt for free today!" : "Pay to secure your new companion"}
                     </p>
                   )}
                 </div>
 
-                {/* Pet Info Grid */}
                 <div className="grid grid-cols-2 gap-4 bg-white/80 p-6 rounded-xl shadow-md border border-[#ffc929]/10">
                   {[
                     { icon: MapPin, label: "Location", value: petInfo.city },
@@ -331,7 +356,6 @@ const PetDetails = () => {
                   ))}
                 </div>
 
-                {/* About Section */}
                 <div className="bg-white/80 p-6 rounded-xl shadow-md border border-[#ffc929]/10 group">
                   <h2 className="flex items-center gap-2 mb-3 text-xl font-semibold text-gray-800">
                     <PawPrint size={24} className="text-[#ffc929] group-hover:animate-bounce transition-transform" />
@@ -366,11 +390,11 @@ const PetDetails = () => {
                 <p>Review <span className="font-medium">{petInfo.name}</span>'s profile above.</p>
                 <p>
                   Click{" "}
-                  <span className="font-medium">{petInfo.fee === 0 ? "Apply Now" : "Adopt"}</span>.
+                  <span className="font-medium">{petInfo.fee === 0 ? "Apply Now" : "Pay"}</span>.
                 </p>
-                <p>{petInfo.fee === 0 ? "Complete the application form." : "Proceed with payment."}</p>
+                <p>{petInfo.fee === 0 ? "Complete the application form." : "Complete the payment via ClicToPay."}</p>
                 <p>
-                  {petInfo.fee === 0 ? "Await The Pet Owner's Approval." : "The Pet Owner will contact you."}
+                  {petInfo.fee === 0 ? "Await The Pet Owner's Approval." : "The Pet Owner will contact you after payment."}
                 </p>
               </HelpSection>
             </Suspense>
@@ -378,7 +402,7 @@ const PetDetails = () => {
         </main>
       </div>
 
-      {showForm && !isOwner && !hasApplied && (
+      {showForm && !isOwner && !hasApplied && petInfo.fee === 0 && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
           <div className="relative w-full max-w-lg p-6 bg-white shadow-2xl rounded-2xl">
             <button
