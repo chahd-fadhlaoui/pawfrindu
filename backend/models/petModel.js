@@ -30,7 +30,7 @@ const petSchema = new mongoose.Schema({
   }],
   owner: { type: mongoose.Schema.Types.ObjectId, ref: "user", required: true },
   isApproved: { type: Boolean, default: false },
-  isArchived: { type: Boolean, default: false } // Nouveau champ pour l'archivage
+  isArchived: { type: Boolean, default: false } 
 }, { timestamps: true });
 
 const Pet = mongoose.models.Pet || mongoose.model("Pet", petSchema);

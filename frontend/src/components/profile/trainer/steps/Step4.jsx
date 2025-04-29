@@ -5,8 +5,9 @@ import Input from "../../../common/Input";
 import Select from "../../../common/Select";
 import { Tooltip } from "../../../Tooltip";
 import { SectionHeader } from "../../common/SectionHeader";
-import { ErrorMessage } from "../../common/ErrorMessage";
 import { FaPaw } from "react-icons/fa";
+import { trainingCategories } from "../../../../assets/trainer"; 
+import { ErrorMessage } from "../../common/ErrorMessage"; 
 
 const Step4 = ({
   formData,
@@ -60,18 +61,37 @@ const Step4 = ({
   };
 
   const handleAddService = () => {
-    const lastService = formData.trainerDetails.services.slice(-1)[0];
+    const currentServices = formData.trainerDetails.services;
+    const lastService = currentServices.slice(-1)[0];
+
+    // Check if both services are already added
+    if (currentServices.length >= 2) {
+      setFormErrors((prev) => ({
+        ...prev,
+        services: "You can only add up to two services: Basic Training and Guard Dog Training.",
+      }));
+      return;
+    }
+
+    // Check if the last service is valid and not a duplicate
     if (
       !lastService ||
-      (lastService?.serviceName?.trim() && lastService?.fee >= 0)
+      (lastService?.serviceName?.trim() &&
+        lastService?.fee >= 0 &&
+        !currentServices.some(
+          (service, index) =>
+            service.serviceName === lastService.serviceName && index !== currentServices.length - 1
+        ))
     ) {
       addService();
       setServiceSuccess("Service added successfully!");
-      setTimeout(() => setServiceSuccess(null), 2000);
+      setTimeout(() => setServiceSuccess(null), 2000); // Fixed setTimeout syntax
     } else {
       setFormErrors((prev) => ({
         ...prev,
-        services: "Please fill out the current service before adding a new one",
+        services: lastService?.serviceName?.trim()
+          ? "This service has already been added."
+          : "Please fill out the current service before adding a new one.",
       }));
     }
   };
@@ -87,6 +107,9 @@ const Step4 = ({
     const schedule = formData.trainerDetails.openingHours[day];
     return schedule === "Closed" ? "closed" : "open";
   };
+
+  // Disable Add Service button if two services are added
+  const isAddServiceDisabled = formData.trainerDetails.services.length >= 2;
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -106,7 +129,7 @@ const Step4 = ({
               Services Offered <span className="text-red-500">*</span>
             </label>
             <Tooltip
-              text="List all training services you provide with their corresponding fees."
+              text="Select up to two training services (Basic Training and Guard Dog Training) with their corresponding fees."
               ariaLabel="Services information"
             >
               <button
@@ -121,8 +144,13 @@ const Step4 = ({
           <button
             type="button"
             onClick={handleAddService}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#ffc929] to-[#ffa726] rounded-xl hover:from-[#ffa726] hover:to-[#ffc929] shadow-md hover:shadow-lg focus:ring-2 focus:ring-[#ffc929]/50 focus:outline-none ${animationClass}`}
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#ffc929] to-[#ffa726] rounded-xl shadow-md focus:ring-2 focus:ring-[#ffc929]/50 focus:outline-none ${animationClass} ${
+              isAddServiceDisabled
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:from-[#ffa726] hover:to-[#ffc929] hover:shadow-lg"
+            }`}
             aria-label="Add new service"
+            disabled={isAddServiceDisabled}
           >
             <Plus size={18} />
             Add Service
@@ -130,7 +158,7 @@ const Step4 = ({
         </div>
 
         <p className="text-sm text-gray-500">
-          Enter the services you offer (e.g., Obedience Training, Agility Training) and their fees in {currencySymbol}.
+          Select the services you offer and their fees in {currencySymbol}. You can add up to two services.
         </p>
 
         <div className="space-y-3">
@@ -149,7 +177,7 @@ const Step4 = ({
                     <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#ffc929]/20 text-xs">
                       {index + 1}
                     </span>
-                    {service.serviceName || "New Service"}
+                    {service.serviceName || "Select a Service"}
                   </h4>
                   <button
                     type="button"
@@ -168,24 +196,26 @@ const Step4 = ({
                     >
                       Service Name
                     </label>
-                    <Input
+                    <Select
                       id={`service-name-${index}`}
-                      type="text"
                       value={service.serviceName || ""}
                       onChange={(e) => handleServiceChange(index, "serviceName", e.target.value)}
-                      placeholder="e.g., Obedience Training"
-                      className={`w-full px-4 py-3 text-sm border-2 rounded-xl shadow-sm focus:ring-2 focus:ring-[#ffc929]/50 focus:border-[#ffc929] ${animationClass} ${
-                        formErrors[`services[${index}].serviceName`] ? "border-red-500 bg-red-50/30" : "border-[#ffc929]/20"
-                      }`}
-                      aria-describedby={`service-name-help-${index}`}
-                    />
-                    <p id={`service-name-help-${index}`} className="mt-1 text-xs text-gray-500">
-                      Enter the name of the service.
-                    </p>
-                    <ErrorMessage
-                      id={`service-name-error-${index}`}
                       error={formErrors[`services[${index}].serviceName`]}
-                    />
+                      className={animationClass}
+                      aria-describedby={`service-name-help-${index}`}
+                    >
+                      <option value="" disabled>
+                        Select a service
+                      </option>
+                      {trainingCategories.map((category) => (
+                        <option key={category.id} value={category.name}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </Select>
+                    <p id={`service-name-help-${index}`} className="mt-1 text-xs text-gray-500">
+                      Select the training service.
+                    </p>
                   </div>
                   <div className="relative">
                     <label
@@ -340,9 +370,8 @@ const Step4 = ({
                               value: e.target.value,
                             })
                           }
-                          className={`w-full px-4 py-3 text-sm border-2 rounded-xl shadow-sm focus:ring-2 focus:ring-[#ffc929]/50 focus:border-[#ffc929] ${animationClass} ${
-                            scheduleErrors[day] ? "border-red-500 bg-red-50/30" : "border-[#ffc929]/20"
-                          }`}
+                          error={scheduleErrors[day]}
+                          className={animationClass}
                           aria-describedby={`schedule-type-help-${day}`}
                         >
                           <option value="Closed">Closed</option>

@@ -1,38 +1,44 @@
 import fs from 'fs';
 import { v2 as cloudinary } from 'cloudinary';
- 
+import path from 'path';
+
 export const uploadImage = async (req, res) => {
   try {
-    const file = req.file; 
+    const file = req.file;
+    console.log('Received file:', file);
 
     if (!file) {
       return res.status(400).json({ message: 'No image file provided' });
     }
 
-    console.log("📂 Fichier reçu:", file); // Vérifie le chemin du fichier
+    const filePath = path.resolve(file.path);
+    console.log('Checking file at:', filePath);
 
-    if (!fs.existsSync(file.path)) {
-      return res.status(500).json({ message: '⚠️ Le fichier n\'existe pas sur le serveur' });
+    if (!fs.existsSync(filePath)) {
+      return res.status(500).json({ message: 'File does not exist on server' });
     }
 
-    // Upload vers Cloudinary
-    const result = await cloudinary.uploader.upload(file.path, {
+    // Upload to Cloudinary
+    const result = await cloudinary.uploader.upload(filePath, {
       folder: 'profile-photos',
       width: 500,
       height: 500,
       crop: 'fill',
     });
 
-    console.log("✅ Image uploadée avec succès:", result.secure_url);
+    console.log('Image uploaded to Cloudinary:', result.secure_url);
 
-    // Supprimer le fichier local après upload
-    fs.unlinkSync(file.path);
+    // Delete the local file
+    try {
+      fs.unlinkSync(filePath);
+      console.log('Local file deleted:', filePath);
+    } catch (unlinkErr) {
+      console.error('Failed to delete local file:', unlinkErr);
+    }
 
     res.status(200).json({ success: true, url: result.secure_url });
-    console.log("📤 Réponse envoyée au frontend:", { success: true, url: result.secure_url });
-
   } catch (error) {
-    console.error('❌ Erreur d\'upload:', error);
-    res.status(500).json({ success: false, message: error.message || 'Erreur lors de l\'upload' });
+    console.error('Upload error:', error);
+    res.status(500).json({ success: false, message: error.message || 'Error uploading image' });
   }
 };

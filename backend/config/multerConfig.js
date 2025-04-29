@@ -1,25 +1,29 @@
 import multer from 'multer';
 import path from 'path';
 
-// Configuration du stockage des fichiers
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/'); // Dossier temporaire pour stocker les fichiers
+    const uploadPath = path.join(process.cwd(), 'uploads');
+    console.log('Multer saving file to:', uploadPath);
+    cb(null, uploadPath);
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + '-' + file.originalname); // Nom unique pour le fichier
+    const filename = `${Date.now()}-${file.originalname}`;
+    console.log('Generated filename:', filename);
+    cb(null, filename);
   },
 });
 
-// Configuration de multer
-const upload = multer({ 
+const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // Limite de taille à 5 Mo
+  limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image')) {
-      cb(null, true); // Accepter le fichier
+    if (file.mimetype.startsWith('image/')) {
+      console.log('File accepted:', file.mimetype);
+      cb(null, true);
     } else {
-      cb(new Error('Please upload an image file'), false); // Rejeter le fichier
+      console.log('File rejected:', file.mimetype);
+      cb(new Error('Please upload an image file'), false);
     }
   },
 });

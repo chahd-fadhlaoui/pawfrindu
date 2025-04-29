@@ -1,15 +1,16 @@
-import express from 'express';
 import cors from 'cors';
 import 'dotenv/config';
-import connectDB from './config/mongodb.js';
-import connectCloudinary from './config/cloudinary.js';
-import userRouter from './routes/userRoute.js';
-import uploadRouter from './routes/uploadRoutes.js';
-import petRouter from './routes/petRoute.js';
-import { createServer } from 'http';
-import { Server } from 'socket.io';
+import express from 'express';
 import fs from 'fs';
+import { createServer } from 'http';
+import path from 'path';
+import { Server } from 'socket.io';
+import connectCloudinary from './config/cloudinary.js';
+import connectDB from './config/mongodb.js';
 import appointmentRouter from './routes/appointmentRoute.js';
+import petRouter from './routes/petRoute.js';
+import uploadRouter from './routes/uploadRoutes.js';
+import userRouter from './routes/userRoute.js';
 
 // App config
 const app = express();
@@ -45,9 +46,14 @@ app.use('/api/pet', petRouter);
 app.use("/api/appointments", appointmentRouter);
 
 // Create 'uploads' directory if it doesn’t exist
-const uploadDir = 'uploads';
+const uploadDir = path.join(process.cwd(), 'uploads');
 if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir);
+  try {
+    fs.mkdirSync(uploadDir, { recursive: true });
+    console.log('Uploads directory created successfully');
+  } catch (err) {
+    console.error('Failed to create uploads directory:', err);
+  }
 }
 
 // Socket.io connection
