@@ -12,6 +12,7 @@ import {
   PawPrint,
   Loader2,
   Eye,
+  Mail,
 } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 import EditForm from "../../components/EditForm";
@@ -95,6 +96,13 @@ const PetCard = ({ pet, onEdit, onDelete, onViewCandidates, disabled, currencySy
         <StatusBadge status={pet.status} className="absolute top-3 right-3" />
       </div>
       <div className="p-6 space-y-4">
+        {/* Check Email Message for Sold Pets */}
+        {pet.status === "sold" && (
+          <div className="relative flex items-center gap-3 p-4 text-sm font-semibold text-white bg-gradient-to-r from-[#ffc929] to-[#ffa726] rounded-2xl border border-[#ffc929]/30 shadow-md animate-fadeIn hover:shadow-lg transition-all duration-300">
+            <Mail size={20} className="transition-transform duration-300 group-hover:scale-110" />
+            <span>Check your email for buyer's contact details</span>
+          </div>
+        )}
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-semibold text-gray-800 truncate transition-colors duration-300 hover:text-pink-500">{pet.name}</h3>
           <Tooltip text="View Details">
@@ -161,7 +169,8 @@ const PetCard = ({ pet, onEdit, onDelete, onViewCandidates, disabled, currencySy
 
 const PetPostsTab = ({ setSelectedPet, setApprovalMessage }) => {
   const navigate = useNavigate();
-  const { user, userPets, updatePet, deletePet, currencySymbol, setError, clearError, loading, setLoading } = useApp();  const [selectedPetLocal, setSelectedPetLocal] = useState(null);
+  const { user, userPets, updatePet, deletePet, currencySymbol, setError, clearError, loading, setLoading } = useApp();
+  const [selectedPetLocal, setSelectedPetLocal] = useState(null);
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
     action: "",
@@ -178,7 +187,7 @@ const PetPostsTab = ({ setSelectedPet, setApprovalMessage }) => {
   const [hoveredPetId, setHoveredPetId] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [editFormData, setEditFormData] = useState(null);
-  
+
   const handleEdit = useCallback(
     (petId, petName) => {
       const pet = userPets.find((p) => p._id === petId);
@@ -253,7 +262,7 @@ const PetPostsTab = ({ setSelectedPet, setApprovalMessage }) => {
         setLoading(false);
       }
     },
-    [selectedPetLocal, editFormData, updatePet, setApprovalMessage, setError, clearError, setSelectedPet, setLoading]  
+    [selectedPetLocal, editFormData, updatePet, setApprovalMessage, setError, clearError, setSelectedPet, setLoading]
   );
 
   const handleInputChange = useCallback((field, value) => {
@@ -285,12 +294,23 @@ const PetPostsTab = ({ setSelectedPet, setApprovalMessage }) => {
 
   const clearFilter = (filterType) => {
     switch (filterType) {
-      case "status": setFilterStatus(""); break;
-      case "species": setFilterSpecies(""); break;
-      case "gender": setFilterGender(""); break;
-      case "trained": setFilterTrained(""); break;
-      case "approved": setFilterApproved(""); break;
-      default: break;
+      case "status":
+        setFilterStatus("");
+        break;
+      case "species":
+        setFilterSpecies("");
+        break;
+      case "gender":
+        setFilterGender("");
+        break;
+      case "trained":
+        setFilterTrained("");
+        break;
+      case "approved":
+        setFilterApproved("");
+        break;
+      default:
+        break;
     }
     setCurrentPage(1);
   };
@@ -304,14 +324,16 @@ const PetPostsTab = ({ setSelectedPet, setApprovalMessage }) => {
     setCurrentPage(1);
   };
 
-  const filteredPets = userPets.filter((pet) => !pet.isArchived).filter((pet) => {
-    const statusMatch = !filterStatus || pet.status === filterStatus;
-    const speciesMatch = !filterSpecies || pet.species === filterSpecies;
-    const genderMatch = !filterGender || pet.gender === filterGender;
-    const trainedMatch = !filterTrained || String(pet.isTrained) === filterTrained;
-    const approvedMatch = !filterApproved || String(pet.isApproved) === filterApproved;
-    return statusMatch && speciesMatch && genderMatch && trainedMatch && approvedMatch;
-  });
+  const filteredPets = userPets
+    .filter((pet) => !pet.isArchived)
+    .filter((pet) => {
+      const statusMatch = !filterStatus || pet.status === filterStatus;
+      const speciesMatch = !filterSpecies || pet.species === filterSpecies;
+      const genderMatch = !filterGender || pet.gender === filterGender;
+      const trainedMatch = !filterTrained || String(pet.isTrained) === filterTrained;
+      const approvedMatch = !filterApproved || String(pet.isApproved) === filterApproved;
+      return statusMatch && speciesMatch && genderMatch && trainedMatch && approvedMatch;
+    });
 
   const totalPages = Math.ceil(filteredPets.length / ITEMS_PER_PAGE);
   const paginatedPets = filteredPets.slice(
@@ -394,7 +416,9 @@ const PetPostsTab = ({ setSelectedPet, setApprovalMessage }) => {
           <div className="flex flex-wrap gap-2 mt-6">
             <span className="text-sm font-medium text-gray-600">Applied Filters:</span>
             {filterStatus && <FilterBadge label="Status" value={filterStatus} onClear={() => clearFilter("status")} />}
-            {filterSpecies && <FilterBadge label="Species" value={filterSpecies} onClear={() => clearFilter("species")} />}
+            {filterSpecies && (
+              <FilterBadge label="Species" value={filterSpecies} onClear={() => clearFilter("species")} />
+            )}
             {filterGender && <FilterBadge label="Gender" value={filterGender} onClear={() => clearFilter("gender")} />}
             {filterTrained && (
               <FilterBadge
@@ -486,7 +510,9 @@ const PetPostsTab = ({ setSelectedPet, setApprovalMessage }) => {
                             />
                           </div>
                         </td>
-                        <td className="px-6 py-4 font-medium text-gray-800 transition-colors duration-300 hover:text-pink-500">{pet.name}</td>
+                        <td className="px-6 py-4 font-medium text-gray-800 transition-colors duration-300 hover:text-pink-500">
+                          {pet.name}
+                        </td>
                         <td className="max-w-xs px-6 py-4 text-gray-600 truncate">{pet.description}</td>
                         <td className="px-6 py-4 text-gray-600">{pet.breed || "-"}</td>
                         <td className="px-6 py-4 text-gray-600">{pet.age}</td>
@@ -494,7 +520,15 @@ const PetPostsTab = ({ setSelectedPet, setApprovalMessage }) => {
                           {pet.fee === 0 ? "Free" : `${pet.fee} ${currencySymbol}`}
                         </td>
                         <td className="px-6 py-4">
-                          <StatusBadge status={pet.status} />
+                          <div className="flex flex-col gap-2">
+                            <StatusBadge status={pet.status} />
+                            {pet.status === "sold" && (
+                              <div className="relative flex items-center gap-2 p-2 text-xs font-semibold text-white bg-gradient-to-r from-[#ffc929] to-[#ffa726] rounded-lg border border-[#ffc929]/30 shadow-sm animate-fadeIn hover:shadow-md transition-all duration-300">
+                                <Mail size={16} className="transition-transform duration-300 group-hover:scale-110" />
+                                <span>Check email for buyer details</span>
+                              </div>
+                            )}
+                          </div>
                         </td>
                         <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center gap-3">
@@ -599,7 +633,9 @@ const PetPostsTab = ({ setSelectedPet, setApprovalMessage }) => {
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages || loading}
                 className={`p-2 rounded-full ${
-                  currentPage === totalPages || loading ? "text-gray-300 cursor-not-allowed" : "text-[#ffc929] hover:bg-[#ffc929]/10"
+                  currentPage === totalPages || loading
+                    ? "text-gray-300 cursor-not-allowed"
+                    : "text-[#ffc929] hover:bg-[#ffc929]/10"
                 } transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/30`}
                 aria-label="Next page"
               >

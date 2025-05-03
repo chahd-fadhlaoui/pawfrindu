@@ -29,13 +29,7 @@ const PawIcon = ({ className, style }) => (
   </svg>
 );
 
-const allServices = [
-  "Obedience Training",
-  "Behavioral Training",
-  "Agility Training",
-  "Puppy Training",
-  "Guarding",
-];
+const allServices = ["Basic Training", "Guard Dog Training"];
 const allAvailability = ["Weekdays", "Weekends", "Evenings"];
 const sortOptions = ["Rating High-Low", "Rating Low-High"];
 const allBreeds = [
@@ -53,14 +47,26 @@ const TrainerCard = ({ trainer, navigate }) => {
       : `${process.env.REACT_APP_API_URL}/${trainer.image}`
     : "/placeholder-trainer.png";
 
+  // Determine location display based on trainingFacilityType
+  const locationDisplay =
+    trainer.trainerDetails?.trainingFacilityType === "Mobile"
+      ? trainer.trainerDetails?.serviceAreas?.length > 0
+        ? `${trainer.trainerDetails.serviceAreas
+            .map((area) => area.governorate)
+            .join(", ")}`
+        : "Service areas not specified"
+      : `${trainer.trainerDetails?.governorate || "Unknown"}${
+          trainer.trainerDetails?.delegation
+            ? `, ${trainer.trainerDetails.delegation}`
+            : ""
+        }`;
+
   return (
     <div
       onClick={() => navigate(`/trainer/${trainer._id}`)}
       className="relative bg-white border-2 border-[#ffc929]/20 rounded-3xl shadow-md overflow-hidden transition-all duration-500 hover:shadow-xl hover:scale-[1.02] cursor-pointer group focus:outline-none focus:ring-2 focus:ring-[#ffc929]/30"
       tabIndex={0}
-      aria-label={`View details for ${trainer.fullName} in ${
-        trainer.trainerDetails?.governorate || "Unknown"
-      }${trainer.trainerDetails?.delegation ? `, ${trainer.trainerDetails.delegation}` : ""}`}
+      aria-label={`View details for ${trainer.fullName} - ${locationDisplay}`}
     >
       <div className="relative w-full h-56 overflow-hidden bg-gradient-to-br from-white to-pink-50 rounded-t-3xl">
         <img
@@ -81,10 +87,7 @@ const TrainerCard = ({ trainer, navigate }) => {
           <div className="flex items-center justify-between text-base font-medium text-gray-700">
             <span className="flex items-center gap-2 px-3 py-1 border border-[#ffc929]/20 rounded-full shadow-sm bg-[#ffc929]/5">
               <MapPin size={16} className="text-[#ffc929]" />
-              {trainer.trainerDetails?.governorate || "Unknown"}{" "}
-              {trainer.trainerDetails?.delegation
-                ? `, ${trainer.trainerDetails.delegation}`
-                : ""}
+              {locationDisplay}
             </span>
             {trainer.trainerDetails?.rating !== undefined && (
               <span className="flex items-center gap-2 px-3 py-1 rounded-full border border-[#ffc929]/20 shadow-sm bg-[#ffc929]/5">
@@ -203,30 +206,49 @@ export default function Trainers() {
     }
 
     if (selectedGovernorate) {
-      filtered = filtered.filter(
-        (trainer) =>
-          trainer.trainerDetails?.governorate?.toLowerCase() === selectedGovernorate.toLowerCase()
-      );
+      filtered = filtered.filter((trainer) => {
+        if (trainer.trainerDetails?.trainingFacilityType === "Mobile") {
+          return trainer.trainerDetails?.serviceAreas?.some(
+            (area) =>
+              area.governorate?.toLowerCase() === selectedGovernorate.toLowerCase()
+          );
+        }
+        return (
+          trainer.trainerDetails?.governorate?.toLowerCase() ===
+          selectedGovernorate.toLowerCase()
+        );
+      });
     }
 
     if (selectedDelegation) {
-      filtered = filtered.filter(
-        (trainer) =>
-          trainer.trainerDetails?.delegation?.toLowerCase() === selectedDelegation.toLowerCase()
-      );
+      filtered = filtered.filter((trainer) => {
+        // Only apply delegation filter to Fixed Facility trainers
+        if (trainer.trainerDetails?.trainingFacilityType === "Mobile") {
+          return true; // Mobile trainers are not filtered by delegation
+        }
+        return (
+          trainer.trainerDetails?.delegation?.toLowerCase() ===
+          selectedDelegation.toLowerCase()
+        );
+      });
     }
 
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter(
-        (trainer) =>
+      filtered = filtered.filter((trainer) => {
+        const serviceAreasString = trainer.trainerDetails?.serviceAreas
+          ?.map((area) => area.governorate)
+          .join(" ");
+        return (
           trainer.fullName?.toLowerCase().includes(query) ||
           trainer.trainerDetails?.governorate?.toLowerCase().includes(query) ||
           trainer.trainerDetails?.delegation?.toLowerCase().includes(query) ||
+          serviceAreasString?.toLowerCase().includes(query) ||
           trainer.trainerDetails?.services?.some((service) =>
             service?.serviceName?.toLowerCase().includes(query)
           )
-      );
+        );
+      });
     }
 
     if (sortOrder) {

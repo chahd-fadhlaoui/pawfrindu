@@ -1,12 +1,12 @@
 import { Heart, PawPrint } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Alert } from "../components/Alert";
+import HelpSection from "../components/common/HelpSection";
 import PetDetailsModal from "../components/PetDetailsModal";
 import AdoptionRequestsTab from "../components/PetManagement/AdoptionRequestsTab";
 import PetPostsTab from "../components/PetManagement/PetPostsTab";
 import { useApp } from "../context/AppContext";
-import HelpSection from "../components/common/HelpSection";
 
 // PawIcon matching Pet component
 const PawIcon = ({ className, style }) => (

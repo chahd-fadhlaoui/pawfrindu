@@ -85,7 +85,7 @@ const Step4 = ({
     ) {
       addService();
       setServiceSuccess("Service added successfully!");
-      setTimeout(() => setServiceSuccess(null), 2000); // Fixed setTimeout syntax
+      setTimeout(() => setServiceSuccess(null), 2000);
     } else {
       setFormErrors((prev) => ({
         ...prev,
@@ -110,6 +110,17 @@ const Step4 = ({
 
   // Disable Add Service button if two services are added
   const isAddServiceDisabled = formData.trainerDetails.services.length >= 2;
+
+  // Get available services for a given service index (exclude services selected in other entries)
+  const getAvailableServices = (currentIndex) => {
+    const selectedServices = formData.trainerDetails.services
+      .filter((_, index) => index !== currentIndex) // Exclude the current service
+      .map((service) => service.serviceName)
+      .filter((name) => name); // Exclude empty selections
+    return trainingCategories.filter(
+      (category) => !selectedServices.includes(category.name)
+    );
+  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -207,7 +218,7 @@ const Step4 = ({
                       <option value="" disabled>
                         Select a service
                       </option>
-                      {trainingCategories.map((category) => (
+                      {getAvailableServices(index).map((category) => (
                         <option key={category.id} value={category.name}>
                           {category.name}
                         </option>

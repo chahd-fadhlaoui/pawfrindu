@@ -23,7 +23,7 @@ const server = createServer(app);
 // Initialize Socket.io
 const io = new Server(server, {
   cors: {
-    origin: 'http://localhost:5173',
+    origin: 'https://6823-41-226-63-222.ngrok-free.app',
     methods: ['GET', 'POST'],
     credentials: true,
   },
@@ -35,7 +35,7 @@ connectCloudinary();
 // Middlewares
 app.use(express.json());
 app.use(cors({
-  origin: ['http://localhost:5173'], // Explicit array for clarity
+  origin: ['https://6823-41-226-63-222.ngrok-free.app'], // Explicit array for clarity
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization'],

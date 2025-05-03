@@ -10,15 +10,15 @@ import {
   PawPrint,
   X,
   Zap,
-} from "lucide-react";
-import { toast } from "react-toastify";
-import React, { Suspense, lazy, useCallback, useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { useApp } from "../context/AppContext";
-import axiosInstance from "../utils/axiosInstance";
+} from 'lucide-react';
+import { toast } from 'react-toastify';
+import React, { Suspense, lazy, useCallback, useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useApp } from '../context/AppContext';
+import axiosInstance from '../utils/axiosInstance';
 
-const PetApplicationForm = lazy(() => import("../components/PetApplicationForm"));
-const HelpSection = lazy(() => import("../components/common/HelpSection"));
+const PetApplicationForm = lazy(() => import('../components/PetApplicationForm'));
+const HelpSection = lazy(() => import('../components/common/HelpSection'));
 
 const PetDetails = () => {
   const navigate = useNavigate();
@@ -55,12 +55,12 @@ const PetDetails = () => {
         if (response.data.success) {
           setPetInfo(response.data.data);
         } else {
-          throw new Error(response.data.message || "Failed to fetch pet details");
+          throw new Error(response.data.message || 'Failed to fetch pet details');
         }
       }
       setError(null);
     } catch (err) {
-      setError(err.message || "An error occurred while fetching pet details");
+      setError(err.message || 'An error occurred while fetching pet details');
       setPetInfo(null);
     } finally {
       setIsLoading(false);
@@ -76,9 +76,9 @@ const PetDetails = () => {
     const fetchApplications = async () => {
       const result = await getMyAdoptionRequests();
       if (result.success) {
-        console.log("Fetched applications on mount:", result.data);
+        console.log('Fetched applications on mount:', result.data);
       } else {
-        console.error("Failed to fetch applications:", result.error);
+        console.error('Failed to fetch applications:', result.error);
       }
     };
     fetchApplications();
@@ -98,12 +98,12 @@ const PetDetails = () => {
         try {
           const result = await getMyAdoptionRequests();
           if (!result.success) {
-            console.error("Failed to refresh applications:", result.error);
+            console.error('Failed to refresh applications:', result.error);
             setError(result.error);
           }
         } catch (err) {
-          console.error("Socket sync failed:", err);
-          setError("Failed to sync adoption status");
+          console.error('Socket sync failed:', err);
+          setError('Failed to sync adoption status');
         }
       }
     };
@@ -120,29 +120,29 @@ const PetDetails = () => {
         setPaymentStatus(data.status);
         if (data.status === 'completed') {
           toast.success('Payment successful! Pet purchased.');
-          fetchPetDetails();
+          fetchPetDetails(); // Refresh pet status (should be 'sold')
         } else if (data.status === 'failed') {
           toast.error('Payment failed. Please try again.');
         }
       }
     };
 
-    socket.on("petUpdated", handlePetUpdated);
-    socket.on("adoptionApplied", handleAdoptionApplied);
-    socket.on("paymentInitiated", handlePaymentInitiated);
-    socket.on("paymentStatusUpdated", handlePaymentStatusUpdated);
+    socket.on('petUpdated', handlePetUpdated);
+    socket.on('adoptionApplied', handleAdoptionApplied);
+    socket.on('paymentInitiated', handlePaymentInitiated);
+    socket.on('paymentStatusUpdated', handlePaymentStatusUpdated);
 
     return () => {
-      socket.off("petUpdated", handlePetUpdated);
-      socket.off("adoptionApplied", handleAdoptionApplied);
-      socket.off("paymentInitiated", handlePaymentInitiated);
-      socket.off("paymentStatusUpdated", handlePaymentStatusUpdated);
+      socket.off('petUpdated', handlePetUpdated);
+      socket.off('adoptionApplied', handleAdoptionApplied);
+      socket.off('paymentInitiated', handlePaymentInitiated);
+      socket.off('paymentStatusUpdated', handlePaymentStatusUpdated);
     };
   }, [petId, user, fetchPetDetails, getMyAdoptionRequests, socket]);
 
   const handleApplyOrPay = async () => {
     if (!user) {
-      return navigate("/login", { state: { from: `/petsdetails/${petId}` } });
+      return navigate('/login', { state: { from: `/petsdetails/${petId}` } });
     }
     if (hasApplied || petInfo.status === 'sold') return;
 
@@ -154,13 +154,28 @@ const PetDetails = () => {
           userId: user._id,
         });
         if (response.data.success) {
-          window.location.href = response.data.payUrl;
+          // Open payment page in new window
+          const paymentWindow = window.open(response.data.payUrl, '_blank');
+          if (!paymentWindow) {
+            throw new Error('Failed to open payment window. Please allow pop-ups.');
+          }
+
+          // Monitor payment window
+          const checkWindowClosed = setInterval(() => {
+            if (paymentWindow.closed) {
+              clearInterval(checkWindowClosed);
+              if (paymentStatus !== 'completed' && paymentStatus !== 'failed') {
+                toast.error('Payment window closed without completion. Please try again.');
+                setPaymentStatus(null);
+              }
+            }
+          }, 1000);
         } else {
           toast.error(response.data.message || 'Failed to initiate payment');
         }
       } catch (error) {
         console.error('Payment error:', error.response?.data || error.message);
-        toast.error('Error initiating payment: ' + (error.response?.data?.message || error.message));
+        toast.error(`Error initiating payment: ${error.response?.data?.error || error.response?.data?.message || error.message}`);
       }
     } else {
       setShowForm(true);
@@ -172,21 +187,21 @@ const PetDetails = () => {
     try {
       const result = await getMyAdoptionRequests();
       if (result.success) {
-        toast.success("Application submitted successfully!", { autoClose: 1500 });
-        navigate("/list/requests");
+        toast.success('Application submitted successfully!', { autoClose: 1500 });
+        navigate('/list/requests');
       } else {
-        setError("Failed to refresh adoption requests");
-        toast.error("Failed to refresh adoption requests");
+        setError('Failed to refresh adoption requests');
+        toast.error('Failed to refresh adoption requests');
       }
     } catch (err) {
-      setError("Error syncing adoption requests: " + err.message);
-      toast.error("Error syncing adoption requests");
+      setError('Error syncing adoption requests: ' + err.message);
+      toast.error('Error syncing adoption requests');
     }
   };
 
   const handleImageError = (e) => {
-    e.target.src = "https://placehold.co/600x600?text=No+Image";
-    e.target.classList.add("opacity-50");
+    e.target.src = 'https://placehold.co/600x600?text=No+Image';
+    e.target.classList.add('opacity-50');
   };
 
   if (contextLoading || isLoading) {
@@ -211,7 +226,7 @@ const PetDetails = () => {
             <p className="mb-4 text-sm text-gray-500">We couldn't fetch the pet details. Please try again.</p>
           </div>
           <button
-            onClick={() => navigate("/pets")}
+            onClick={() => navigate('/pets')}
             className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#ffc929] to-[#ffa726] text-white font-semibold rounded-full hover:shadow-lg hover:from-[#ffa726] hover:to-[#ffc929] transition-all duration-300"
           >
             <ChevronLeft size={20} /> Back to Pets
@@ -224,15 +239,15 @@ const PetDetails = () => {
   if (!petInfo) return null;
 
   const isOwner = user && petInfo.owner?._id === user._id;
-  const imageUrl = petInfo.image || "https://placehold.co/600x600?text=No+Image";
+  const imageUrl = petInfo.image || 'https://placehold.co/600x600?text=No+Image';
   const longDescription = petInfo.description && petInfo.description.length > 200;
 
   return (
     <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-white via-pink-50 to-[#ffc929]/10">
       <div className="mx-auto space-y-12 max-w-7xl">
-        <div className="pt-16 space-y-6 text-center animate-fadeIn" style={{ animationDelay: "0.2s" }}>
+        <div className="pt-16 space-y-6 text-center animate-fadeIn" style={{ animationDelay: '0.2s' }}>
           <button
-            onClick={() => navigate("/pets")}
+            onClick={() => navigate('/pets')}
             className="absolute left-0 top-16 group inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#ffc929] to-[#ffa726] text-white font-medium rounded-full shadow-md hover:shadow-lg hover:from-[#ffa726] hover:to-[#ffc929] transition-all duration-300"
             aria-label="Back to pets"
           >
@@ -278,13 +293,13 @@ const PetDetails = () => {
 
                 <div className="flex flex-wrap gap-3">
                   {[
-                    petInfo.isTrained && { icon: Zap, text: "Trained", color: "text-[#ffc929] bg-[#ffc929]/10" },
+                    petInfo.isTrained && { icon: Zap, text: 'Trained', color: 'text-[#ffc929] bg-[#ffc929]/10' },
                     petInfo.fee === 0
-                      ? { icon: DollarSign, text: "Free", color: "text-green-600 bg-green-50" }
-                      : { icon: DollarSign, text: `Fee: ${petInfo.fee}${currencySymbol}`, color: "text-pink-600 bg-pink-50" },
-                    hasApplied && { icon: CheckCircle, text: "Applied", color: "text-blue-600 bg-blue-50" },
-                    petInfo.status === 'sold' && { icon: CheckCircle, text: "Sold", color: "text-red-600 bg-red-50" },
-                    paymentStatus === 'pending' && { icon: AlertCircle, text: "Payment Pending", color: "text-yellow-600 bg-yellow-50" },
+                      ? { icon: DollarSign, text: 'Free', color: 'text-green-600 bg-green-50' }
+                      : { icon: DollarSign, text: `Fee: ${petInfo.fee}${currencySymbol}`, color: 'text-pink-600 bg-pink-50' },
+                    hasApplied && { icon: CheckCircle, text: 'Applied', color: 'text-blue-600 bg-blue-50' },
+                    petInfo.status === 'sold' && { icon: CheckCircle, text: 'Sold', color: 'text-red-600 bg-red-50' },
+                    paymentStatus === 'pending' && { icon: AlertCircle, text: 'Payment Pending', color: 'text-yellow-600 bg-yellow-50' },
                   ]
                     .filter(Boolean)
                     .map(({ icon: Icon, text, color }, idx) => (
@@ -310,7 +325,7 @@ const PetDetails = () => {
                     <div className="flex items-center gap-4">
                       {hasApplied ? (
                         <button
-                          onClick={() => navigate("/list/requests")}
+                          onClick={() => navigate('/list/requests')}
                           className="flex-1 py-4 px-6 text-lg font-semibold rounded-xl shadow-lg transition-all duration-300 
                             group flex items-center justify-center gap-2 relative overflow-hidden
                             bg-[#ffc929] text-white hover:scale-[1.02] focus:ring-4 focus:ring-blue-300/50"
@@ -325,9 +340,9 @@ const PetDetails = () => {
                           className={`flex-1 py-4 px-6 text-lg font-semibold rounded-xl shadow-lg transition-all duration-300 
                             group flex items-center justify-center gap-2 relative overflow-hidden
                             ${paymentStatus === 'pending' ? 'bg-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-[#ffc929] to-[#ffa726] hover:from-[#ffdd58] hover:to-[#ffab00] hover:scale-[1.02] focus:ring-4 focus:ring-[#ffc929]/50'} text-white`}
-                          aria-label={petInfo.fee === 0 ? "Apply to adopt" : "Pay to adopt"}
+                          aria-label={petInfo.fee === 0 ? 'Apply to adopt' : 'Pay to adopt'}
                         >
-                          {petInfo.fee === 0 ? "Apply Now" : `Pay ${petInfo.fee}${currencySymbol}`}
+                          {petInfo.fee === 0 ? 'Apply Now' : `Pay ${petInfo.fee}${currencySymbol}`}
                           <ChevronLeft size={20} className="transition-transform rotate-180 group-hover:translate-x-1" />
                         </button>
                       )}
@@ -335,16 +350,16 @@ const PetDetails = () => {
                   )}
                   {!isOwner && !hasApplied && (
                     <p className="text-sm text-center text-gray-500">
-                      {petInfo.fee === 0 ? "Adopt for free today!" : "Pay to secure your new companion"}
+                      {petInfo.fee === 0 ? 'Adopt for free today!' : 'Pay to secure your new companion'}
                     </p>
                   )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 bg-white/80 p-6 rounded-xl shadow-md border border-[#ffc929]/10">
                   {[
-                    { icon: MapPin, label: "Location", value: petInfo.city },
-                    { icon: Calendar, label: "Age", value: petInfo.age.charAt(0).toUpperCase() + petInfo.age.slice(1) },
-                    { icon: Info, label: "Gender", value: petInfo.gender.charAt(0).toUpperCase() + petInfo.gender.slice(1) },
+                    { icon: MapPin, label: 'Location', value: petInfo.city },
+                    { icon: Calendar, label: 'Age', value: petInfo.age.charAt(0).toUpperCase() + petInfo.age.slice(1) },
+                    { icon: Info, label: 'Gender', value: petInfo.gender.charAt(0).toUpperCase() + petInfo.gender.slice(1) },
                   ].map(({ icon: Icon, label, value }) => (
                     <div key={label} className="flex items-start gap-3 hover:bg-[#ffc929]/5 p-2 rounded-lg transition-colors">
                       <Icon size={20} className="text-[#ffc929] mt-0.5" />
@@ -363,7 +378,7 @@ const PetDetails = () => {
                   </h2>
                   <p
                     className={`text-sm leading-relaxed text-gray-700 ${
-                      longDescription && !descriptionExpanded ? "line-clamp-3" : ""
+                      longDescription && !descriptionExpanded ? 'line-clamp-3' : ''
                     }`}
                   >
                     {petInfo.description || `${petInfo.name} is waiting for a loving home!`}
@@ -373,7 +388,7 @@ const PetDetails = () => {
                       onClick={() => setDescriptionExpanded(!descriptionExpanded)}
                       className="mt-2 text-[#ffc929] text-sm font-medium hover:underline"
                     >
-                      {descriptionExpanded ? "Show Less" : "Read More"}
+                      {descriptionExpanded ? 'Show Less' : 'Read More'}
                     </button>
                   )}
                 </div>
@@ -387,14 +402,18 @@ const PetDetails = () => {
                 title={`How to Adopt ${petInfo.name}`}
                 className="max-w-4xl mx-auto bg-white rounded-3xl shadow-lg p-6 border border-[#ffc929]/10"
               >
-                <p>Review <span className="font-medium">{petInfo.name}</span>'s profile above.</p>
                 <p>
-                  Click{" "}
-                  <span className="font-medium">{petInfo.fee === 0 ? "Apply Now" : "Pay"}</span>.
+                  Review <span className="font-medium">{petInfo.name}</span>'s profile above.
                 </p>
-                <p>{petInfo.fee === 0 ? "Complete the application form." : "Complete the payment via ClicToPay."}</p>
                 <p>
-                  {petInfo.fee === 0 ? "Await The Pet Owner's Approval." : "The Pet Owner will contact you after payment."}
+                  Click{' '}
+                  <span className="font-medium">{petInfo.fee === 0 ? 'Apply Now' : 'Pay'}</span>.
+                </p>
+                <p>{petInfo.fee === 0 ? 'Complete the application form.' : 'Complete the payment via ClicToPay.'}</p>
+                <p>
+                  {petInfo.fee === 0
+                    ? "Await The Pet Owner's Approval."
+                    : 'The Pet Owner will contact you after payment.'}
                 </p>
               </HelpSection>
             </Suspense>

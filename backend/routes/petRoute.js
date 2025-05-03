@@ -8,17 +8,17 @@ import {
   deletePet,
   finalizeAdoption,
   getAllPets,
+  getMyAdoptedPets,
   getMyAdoptionRequests,
   getMyPets,
   getPetById,
   getPetCandidates,
+  getPetStats,
   modifyPetStatus,
+  sendRejectionEmail,
   unarchivePet,
   updateCandidateStatus,
-  updatePet,
-  getPetStats,
-  getMyAdoptedPets,
-  sendRejectionEmail,
+  updatePet
 } from '../controllers/petController.js';
 import { authenticate, authorize } from '../middlewares/authMiddleware.js';
 const petRouter = express.Router();
@@ -40,8 +40,8 @@ petRouter.get('/mypets', getMyPets);  // Récupérer les pets de l'utilisateur c
 petRouter.put('/updatedPet/:id', updatePet);  // Mettre à jour un pet
 petRouter.delete("/deletePet/:id", deletePet);// Supprimer un pet
 petRouter.get('/:petId/candidates', getPetCandidates); // Nouvelle route pour les candidats
-petRouter.put('/:petId/candidate/:candidateId/status', updateCandidateStatus);
-petRouter.put('/:petId/candidate/:candidateId/finalize', finalizeAdoption);  
+petRouter.put('/:petId/candidate/:candidateId/status', updateCandidateStatus);  // Mettre à jour le statut d'un candidat
+petRouter.put('/:petId/candidate/:candidateId/finalize', finalizeAdoption);   // Finaliser l'adoption d'un pet
 petRouter.put('/archivePet/:id', archivePet);  // Archiver un pet (pet owners et admins)
 
 petRouter.post('/:petId/apply', applyToAdopt);  // Postuler pour adopter un pet
@@ -58,5 +58,6 @@ petRouter.delete('/deleteAdminPet/:id', deleteAdminPet);  // Supprimer un pet
 petRouter.put('/unarchivePet/:id',unarchivePet); 
 petRouter.get("/stats", getPetStats);
 petRouter.post("/send-rejection-email", authenticate, authorize("Admin"), sendRejectionEmail);
+
 
 export default petRouter;

@@ -130,4 +130,48 @@ export const emailTemplates = {
         </div>
       `,
   }),
+  petSoldToFormerOwner: (data) => ({
+    subject: `Your Pet ${data.petName} Has Been Sold`,
+    html: `
+        ${emailStyles}
+        <div class="email-container">
+          <h1>Your Pet ${data.petName} Has Been Sold 🐾</h1>
+          <p>Hello ${data.formerOwnerFullName},</p>
+          <p>We are pleased to inform you that your pet <strong>${data.petName}</strong> has been successfully sold to a new owner.</p>
+          <p>Please contact the new owner to coordinate any necessary details:</p>
+          <ul>
+            <li><strong>Name:</strong> ${data.newOwnerFullName}</li>
+            <li><strong>Email:</strong> ${data.newOwnerEmail}</li>
+            <li><strong>Phone:</strong> ${data.newOwnerPhone || "Not provided"}</li>
+          </ul>
+          <a href="mailto:${data.newOwnerEmail}" class="button" style="background-color: #4CAF50;">Contact New Owner</a>
+          <div class="footer">
+            <p>If you have any questions, please contact our support team.</p>
+            <p>Best regards,<br>The PawFrindu Team</p>
+          </div>
+        </div>
+      `,
+  }),
+
+  petPurchaseToNewOwner: (data) => ({
+    subject: `Congratulations on Your New Pet ${data.petName}!`,
+    html: `
+        ${emailStyles}
+        <div class="email-container">
+          <h1>Congratulations, ${data.newOwnerFullName}! 🎉</h1>
+          <p>You have successfully purchased <strong>${data.petName}</strong>! Welcome to your new furry friend!</p>
+          <p>The former owner should contact you soon to coordinate any details. If they haven't reached out, you can contact them using the information below:</p>
+          <ul>
+            <li><strong>Name:</strong> ${data.formerOwnerFullName}</li>
+            <li><strong>Email:</strong> ${data.formerOwnerEmail}</li>
+            <li><strong>Phone:</strong> ${data.formerOwnerPhone || "Not provided"}</li>
+          </ul>
+          <a href="mailto:${data.formerOwnerEmail}" class="button" style="background-color: #4CAF50;">Contact Former Owner</a>
+          <div class="footer">
+            <p>We wish you and ${data.petName} many happy moments together!</p>
+            <p>Best regards,<br>The PawFrindu Team</p>
+          </div>
+        </div>
+      `,
+  }),
 };

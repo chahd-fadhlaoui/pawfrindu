@@ -1135,22 +1135,44 @@ export const getMyAdoptedPets = async (req, res) => {
   try {
     const userId = req.user._id;
 
+    // Find the user to get their currentPets
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Get pet IDs from currentPets, filter out invalid entries
+    const currentPetIds = (user.petOwnerDetails?.currentPets || [])
+      .filter(pet => pet && pet.petId) // Ensure pet and petId exist
+      .map(pet => pet.petId);
+
+    // Find pets where:
+    // 1. User is an approved candidate (adopted pets)
+    // 2. Pet is in user's currentPets (sold pets)
     const pets = await Pet.find({
-      candidates: {
-        $elemMatch: {
-          user: userId,
-          status: "approved",
+      $or: [
+        {
+          candidates: {
+            $elemMatch: {
+              user: userId,
+              status: 'approved',
+            },
+          },
+          status: 'adopted',
         },
-      },
-      status: "adopted",
+        {
+          _id: { $in: currentPetIds },
+          status: 'sold',
+        },
+      ],
       isArchived: false,
     })
       .select(
-        "name species city image status candidates breed age gender fee isTrained description owner updatedAt"
+        'name species city image status candidates breed age gender fee isTrained description owner updatedAt'
       )
-      .populate("owner", "fullName");
+      .populate('owner', 'fullName');
 
-    console.log("Adopted pets fetched (Full):", JSON.stringify(pets, null, 2)); // Log full pets
+    console.log('Adopted/Sold pets fetched:', JSON.stringify(pets, null, 2));
 
     const adoptedPets = pets.map((pet) => {
       const candidate = pet.candidates.find(
@@ -1168,10 +1190,10 @@ export const getMyAdoptedPets = async (req, res) => {
         city: pet.city,
         image: pet.image,
         description: pet.description,
-        owner: pet.owner ? pet.owner.fullName : "Unknown",
+        owner: pet.owner ? pet.owner.fullName : 'Unknown',
         status: pet.status,
         adoptedDate: pet.updatedAt,
-        candidateStatus: candidate ? candidate.status : "N/A", // Include for debugging
+        candidateStatus: candidate ? candidate.status : 'N/A',
       };
     });
 
@@ -1181,10 +1203,10 @@ export const getMyAdoptedPets = async (req, res) => {
       data: adoptedPets,
     });
   } catch (error) {
-    console.error("Get My Adopted Pets Error:", error);
+    console.error('Get My Adopted Pets Error:', error);
     return res.status(500).json({
       success: false,
-      message: "Error fetching adopted pets",
+      message: 'Error fetching adopted pets',
       error: error.message,
     });
   }
@@ -1239,3 +1261,4 @@ export const sendRejectionEmail = async (req, res) => {
     });
   }
 };
+

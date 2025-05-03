@@ -1,5 +1,19 @@
 import { useState, useEffect } from "react";
-import { Mail, MapPin, Phone, Heart, Dog, Cat, Edit, Save, X, Loader2, User, Calendar, PawPrint } from "lucide-react";
+import {
+  Mail,
+  MapPin,
+  Phone,
+  Heart,
+  Dog,
+  Cat,
+  Edit,
+  Save,
+  X,
+  Loader2,
+  User,
+  Calendar,
+  PawPrint,
+} from "lucide-react";
 import { useApp } from "../context/AppContext";
 import axiosInstance from "../utils/axiosInstance";
 import ImageUpload from "../components/ImageUpload";
@@ -53,7 +67,10 @@ const Profile = () => {
       if (response.data.success) {
         response.data.data.forEach((pet) => {
           if (pet.candidateStatus !== "approved") {
-            console.warn(`Unexpected pet with candidateStatus: ${pet.candidateStatus}`, pet);
+            console.warn(
+              `Unexpected pet with candidateStatus: ${pet.candidateStatus}`,
+              pet
+            );
           }
         });
         setAdoptedPets(response.data.data);
@@ -68,7 +85,7 @@ const Profile = () => {
       setPetsLoading(false);
     }
   };
-  
+
   const handleInputChange = (field, value) => {
     setEditableData((prev) => ({
       ...prev,
@@ -118,14 +135,24 @@ const Profile = () => {
         },
       });
 
-      const result = await axiosInstance.put("/api/user/updateProfile", updatedData);
+      const result = await axiosInstance.put(
+        "/api/user/updateProfile",
+        updatedData
+      );
       console.log("Profile updated successfully:", result.data);
 
       await fetchUserProfile();
       setIsEditing(false);
     } catch (error) {
-      console.error("Error saving profile:", error.response?.data?.message || error.message);
-      alert(`Error saving profile: ${error.response?.data?.message || error.message}`);
+      console.error(
+        "Error saving profile:",
+        error.response?.data?.message || error.message
+      );
+      alert(
+        `Error saving profile: ${
+          error.response?.data?.message || error.message
+        }`
+      );
     } finally {
       setUploadLoading(false);
     }
@@ -179,7 +206,9 @@ const Profile = () => {
           <div className="relative z-10 p-8 bg-white border-2 rounded-full shadow-xl border-[#ffc929]/20">
             <Loader2 className="w-12 h-12 text-[#ffc929] animate-spin" />
           </div>
-          <span className="relative z-10 text-lg font-medium text-pink-700">Loading your profile...</span>
+          <span className="relative z-10 text-lg font-medium text-pink-700">
+            Loading your profile...
+          </span>
         </div>
       </div>
     );
@@ -192,7 +221,9 @@ const Profile = () => {
             <X className="w-8 h-8" />
           </div>
           <h2 className="mb-2 text-2xl font-semibold">Profile Error</h2>
-          <p className="text-rose-600">Error fetching your pet profile: {error}</p>
+          <p className="text-rose-600">
+            Error fetching your pet profile: {error}
+          </p>
         </div>
       </div>
     );
@@ -210,24 +241,27 @@ const Profile = () => {
       </div>
     );
 
-  const PawBackground = () => (
-    Array(8).fill(null).map((_, index) => (
-      <svg 
-        key={index} 
-        viewBox="0 0 24 24" 
-        className={`absolute w-8 h-8 opacity-5 animate-float ${index % 2 === 0 ? "text-[#ffc929]" : "text-pink-300"}`}
-        style={{ 
-          animationDelay: `${index * 0.5}s`, 
-          transform: `rotate(${index * 45}deg)`,
-          top: `${Math.random() * 100}%`,
-          left: `${Math.random() * 100}%`,
-        }}
-        fill="currentColor"
-      >
-        <path d="M12,17.5c2.33,2.33,5.67,2.33,8,0s2.33-5.67,0-8s-5.67-2.33-8,0S9.67,15.17,12,17.5z M7.5,14.5 c-1.96,1.96-1.96,4.04,0,6s4.04,1.96,6,0s1.96-4.04,0-6S9.46,12.54,7.5,14.5z M18.5,3.5c-1.96-1.96-4.04-1.96-6,0s-1.96,4.04,0,6 s4.04,1.96,6,0S20.46,5.46,18.5,3.5z M3.5,9.5c-1.96,1.96-1.96,4.04,0,6s4.04,1.96,6,0s1.96-4.04,0-6S5.46,7.54,3.5,9.5z" />
-      </svg>
-    ))
-  );
+  const PawBackground = () =>
+    Array(8)
+      .fill(null)
+      .map((_, index) => (
+        <svg
+          key={index}
+          viewBox="0 0 24 24"
+          className={`absolute w-8 h-8 opacity-5 animate-float ${
+            index % 2 === 0 ? "text-[#ffc929]" : "text-pink-300"
+          }`}
+          style={{
+            animationDelay: `${index * 0.5}s`,
+            transform: `rotate(${index * 45}deg)`,
+            top: `${Math.random() * 100}%`,
+            left: `${Math.random() * 100}%`,
+          }}
+          fill="currentColor"
+        >
+          <path d="M12,17.5c2.33,2.33,5.67,2.33,8,0s2.33-5.67,0-8s-5.67-2.33-8,0S9.67,15.17,12,17.5z M7.5,14.5 c-1.96,1.96-1.96,4.04,0,6s4.04,1.96,6,0s1.96-4.04,0-6S9.46,12.54,7.5,14.5z M18.5,3.5c-1.96-1.96-4.04-1.96-6,0s-1.96,4.04,0,6 s4.04,1.96,6,0S20.46,5.46,18.5,3.5z M3.5,9.5c-1.96,1.96-1.96,4.04,0,6s4.04,1.96,6,0s1.96-4.04,0-6S5.46,7.54,3.5,9.5z" />
+        </svg>
+      ));
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white to-pink-50">
@@ -235,7 +269,7 @@ const Profile = () => {
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <PawBackground />
       </div>
-      
+
       <div className="relative mx-auto max-w-7xl">
         {/* Header section with welcome banner */}
         <div className="relative h-64 overflow-hidden bg-gradient-to-r from-[#ffc929] to-pink-500 rounded-b-3xl shadow-xl">
@@ -255,17 +289,20 @@ const Profile = () => {
               />
             ))}
           </div>
-          
+
           <div className="relative flex flex-col items-center justify-center h-full px-6 text-center text-white">
             <span className="inline-flex items-center px-4 py-2 mb-3 text-sm font-semibold bg-white rounded-full shadow-sm text-pink-500 border border-[#ffc929]/20">
-              <Heart className="w-4 h-4 mr-2 text-[#ffc929]" />Pet Parent Profile
+              <Heart className="w-4 h-4 mr-2 text-[#ffc929]" />
+              Pet Parent Profile
             </span>
             <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
               <span className="block">Welcome,</span>
-              <span className="block text-white">{editableData.fullName || "Pet Lover"}</span>
+              <span className="block text-white">
+                {editableData.fullName || "Pet Lover"}
+              </span>
             </h1>
           </div>
-          
+
           {/* Edit Button */}
           <div className="absolute top-6 right-6">
             {!isEditing ? (
@@ -288,20 +325,26 @@ const Profile = () => {
                 <button
                   onClick={handleSaveChanges}
                   disabled={uploadLoading}
-                  className={`flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#ffc929] to-pink-500 text-white rounded-lg shadow-md ${uploadLoading ? "opacity-70 cursor-not-allowed" : "hover:from-pink-500 hover:to-[#ffc929]"} transition-all duration-300`}
+                  className={`flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#ffc929] to-pink-500 text-white rounded-lg shadow-md ${
+                    uploadLoading
+                      ? "opacity-70 cursor-not-allowed"
+                      : "hover:from-pink-500 hover:to-[#ffc929]"
+                  } transition-all duration-300`}
                 >
                   {uploadLoading ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
                     <Save className="w-4 h-4" />
                   )}
-                  <span className="text-sm font-medium">{uploadLoading ? "Saving..." : "Save"}</span>
+                  <span className="text-sm font-medium">
+                    {uploadLoading ? "Saving..." : "Save"}
+                  </span>
                 </button>
               </div>
             )}
           </div>
         </div>
-        
+
         {/* Profile Section */}
         <div className="px-6 py-6 md:flex md:items-start md:gap-8 lg:gap-12">
           {/* Left column - Profile image and basic info */}
@@ -332,7 +375,7 @@ const Profile = () => {
                 </div>
               )}
             </div>
-            
+
             {/* Basic info panel */}
             <div className="p-6 mb-6 bg-white border-2 backdrop-blur-sm bg-opacity-90 shadow-xl rounded-3xl border-[#ffc929]/20">
               <div className="mb-4 text-center">
@@ -341,7 +384,9 @@ const Profile = () => {
                     <input
                       type="text"
                       value={editableData.fullName}
-                      onChange={(e) => handleInputChange("fullName", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("fullName", e.target.value)
+                      }
                       className="w-full px-3 py-2 text-xl font-bold text-pink-600 border rounded-lg shadow-sm border-[#ffc929]/30 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/50 bg-[#ffc929]/5 placeholder-rose-400"
                       placeholder="Your Name"
                     />
@@ -350,24 +395,28 @@ const Profile = () => {
                   )}
                 </h2>
                 <div className="flex items-center justify-center gap-3">
-                  <span className="font-medium text-pink-600">{user.role || "Pet Parent"}</span>
+                  <span className="font-medium text-pink-600">
+                    {user.role || "Pet Parent"}
+                  </span>
                   <div className="flex items-center text-[#ffc929]">
                     <Heart className="w-4 h-4 mr-1" fill="currentColor" />
                     <span className="text-sm font-medium">Pet Enthusiast</span>
                   </div>
                 </div>
               </div>
-              
+
               {/* Contact info */}
               <div className="space-y-3">
                 <div className="flex items-center gap-3 p-3 transition-all rounded-lg bg-[#ffc929]/5 hover:bg-[#ffc929]/10">
                   <Mail className="text-[#ffc929]" size={18} />
                   <div>
                     <p className="text-xs font-medium text-gray-500">Email</p>
-                    <p className="text-sm font-medium text-gray-700">{user.email}</p>
+                    <p className="text-sm font-medium text-gray-700">
+                      {user.email}
+                    </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-3 p-3 transition-all rounded-lg bg-[#ffc929]/5 hover:bg-[#ffc929]/10">
                   <Phone className="text-[#ffc929]" size={18} />
                   <div>
@@ -376,35 +425,45 @@ const Profile = () => {
                       <input
                         type="text"
                         value={editableData.phone}
-                        onChange={(e) => handleInputChange("phone", e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("phone", e.target.value)
+                        }
                         className="w-full px-2 py-1 text-sm text-gray-700 transition-all duration-300 bg-white border rounded border-[#ffc929]/30 focus:outline-none focus:ring-1 focus:ring-[#ffc929]"
                       />
                     ) : (
-                      <p className="text-sm font-medium text-gray-700">{editableData.phone}</p>
+                      <p className="text-sm font-medium text-gray-700">
+                        {editableData.phone}
+                      </p>
                     )}
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-3 p-3 transition-all rounded-lg bg-[#ffc929]/5 hover:bg-[#ffc929]/10">
                   <MapPin className="text-[#ffc929]" size={18} />
                   <div>
-                    <p className="text-xs font-medium text-gray-500">Location</p>
+                    <p className="text-xs font-medium text-gray-500">
+                      Location
+                    </p>
                     {isEditing ? (
                       <input
                         type="text"
                         value={editableData.location}
-                        onChange={(e) => handleInputChange("location", e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("location", e.target.value)
+                        }
                         className="w-full px-2 py-1 text-sm text-gray-700 transition-all duration-300 bg-white border rounded border-[#ffc929]/30 focus:outline-none focus:ring-1 focus:ring-[#ffc929]"
                       />
                     ) : (
-                      <p className="text-sm font-medium text-gray-700">{editableData.location}</p>
+                      <p className="text-sm font-medium text-gray-700">
+                        {editableData.location}
+                      </p>
                     )}
                   </div>
                 </div>
               </div>
             </div>
           </div>
-          
+
           {/* Right column - Tabs and content */}
           <div className="md:w-2/3 lg:w-3/4">
             {/* Tabs */}
@@ -427,7 +486,7 @@ const Profile = () => {
                 </button>
               ))}
             </div>
-            
+
             {/* Tab content */}
             <div className="animate-fadeIn">
               {activeTab === "about" && (
@@ -438,19 +497,22 @@ const Profile = () => {
                     </span>
                     About Me
                   </h2>
-                  
+
                   <div className="p-6 border-2 rounded-2xl bg-[#ffc929]/5 border-[#ffc929]/20">
                     {isEditing ? (
                       <textarea
                         value={editableData.about || ""}
-                        onChange={(e) => handleInputChange("about", e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("about", e.target.value)
+                        }
                         className="w-full p-4 text-base text-gray-700 transition-all duration-300 bg-white border shadow-sm resize-none border-[#ffc929]/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#ffc929]/30"
                         rows={6}
                         placeholder="Tell us about yourself and your love for pets..."
                       />
                     ) : (
                       <p className="text-base leading-relaxed text-gray-700">
-                        {editableData.about || "I'm a passionate pet parent who loves spending time with my furry companions! Every day with them brings joy and adventure to my life."}
+                        {editableData.about ||
+                          "I'm a passionate pet parent who loves spending time with my furry companions! Every day with them brings joy and adventure to my life."}
                       </p>
                     )}
                   </div>
@@ -465,7 +527,7 @@ const Profile = () => {
                     </span>
                     My Furry Family
                   </h2>
-                  
+
                   {petsLoading ? (
                     <div className="flex items-center justify-center py-12">
                       <Loader2 className="w-10 h-10 text-[#ffc929] animate-spin" />
@@ -482,7 +544,9 @@ const Profile = () => {
                               src={pet.image || DEFAULT_PET_IMAGE}
                               alt={pet.name}
                               className="object-cover w-full h-full transition-transform duration-400 group-hover:scale-110"
-                              onError={(e) => (e.target.src = DEFAULT_PET_IMAGE)}
+                              onError={(e) =>
+                                (e.target.src = DEFAULT_PET_IMAGE)
+                              }
                             />
                             <div className="absolute px-2 py-1 text-xs font-semibold text-white rounded-md shadow-sm top-3 left-3 bg-[#ffc929]">
                               {pet.species === "dog" ? (
@@ -511,29 +575,50 @@ const Profile = () => {
 
                             <div className="grid grid-cols-2 gap-2">
                               <div className="p-2 transition-all rounded-lg bg-[#ffc929]/5 hover:bg-[#ffc929]/10">
-                                <p className="text-xs font-medium text-gray-500">Breed</p>
-                                <p className="text-sm font-medium text-gray-700">{pet.breed || "Mixed"}</p>
-                              </div>
-                              
-                              <div className="p-2 transition-all rounded-lg bg-[#ffc929]/5 hover:bg-[#ffc929]/10">
-                                <p className="text-xs font-medium text-gray-500">Age</p>
-                                <p className="text-sm font-medium text-gray-700">{pet.age || "Unknown"}</p>
-                              </div>
-                              
-                              <div className="p-2 transition-all rounded-lg bg-[#ffc929]/5 hover:bg-[#ffc929]/10 col-span-2">
-                                <p className="text-xs font-medium text-gray-500">Adopted</p>
+                                <p className="text-xs font-medium text-gray-500">
+                                  Breed
+                                </p>
                                 <p className="text-sm font-medium text-gray-700">
-                                  {pet.adoptedDate ? new Date(pet.adoptedDate).toLocaleDateString() : "Date not available"}
+                                  {pet.breed || "Mixed"}
+                                </p>
+                              </div>
+
+                              <div className="p-2 transition-all rounded-lg bg-[#ffc929]/5 hover:bg-[#ffc929]/10">
+                                <p className="text-xs font-medium text-gray-500">
+                                  Age
+                                </p>
+                                <p className="text-sm font-medium text-gray-700">
+                                  {pet.age || "Unknown"}
+                                </p>
+                              </div>
+
+                              <div className="p-2 transition-all rounded-lg bg-[#ffc929]/5 hover:bg-[#ffc929]/10 col-span-2">
+                                <p className="text-xs font-medium text-gray-500">
+                                  {pet.status === "adopted"
+                                    ? "Adopted"
+                                    : "Purchased"}
+                                </p>
+                                <p className="text-sm font-medium text-gray-700">
+                                  {pet.adoptedDate
+                                    ? new Date(
+                                        pet.adoptedDate
+                                      ).toLocaleDateString()
+                                    : "Date not available"}
                                 </p>
                               </div>
                             </div>
 
                             {pet.description && (
-                              <p className="text-sm text-gray-500 line-clamp-2">{pet.description}</p>
+                              <p className="text-sm text-gray-500 line-clamp-2">
+                                {pet.description}
+                              </p>
                             )}
 
                             <button
-                              onClick={(e) => { e.stopPropagation(); handleOpenModal(pet); }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenModal(pet);
+                              }}
                               className="flex items-center justify-center w-full gap-2 px-4 py-3 font-medium transition-all duration-300 rounded-xl text-white bg-gradient-to-r from-[#ffc929] to-pink-500 hover:from-pink-500 hover:to-[#ffc929] shadow-md"
                             >
                               <PawPrint className="w-4 h-4" />
@@ -548,9 +633,12 @@ const Profile = () => {
                       <div className="inline-flex items-center justify-center w-20 h-20 mb-4 rounded-full bg-gradient-to-r from-[#ffc929]/20 to-pink-100">
                         <PawPrint className="w-10 h-10 text-[#ffc929]" />
                       </div>
-                      <h3 className="mb-2 text-lg font-medium text-pink-600">No Pets Yet</h3>
+                      <h3 className="mb-2 text-lg font-medium text-pink-600">
+                        No Pets Yet
+                      </h3>
                       <p className="max-w-md mx-auto text-sm text-gray-500">
-                        You haven't adopted any pets yet. When you do, they'll appear here with all their adorable details!
+                        You haven't adopted or purchased any pets yet. When you
+                        do, they'll appear here with all their adorable details!
                       </p>
                     </div>
                   )}
@@ -574,16 +662,28 @@ const Profile = () => {
       {/* Add animations */}
       <style jsx>{`
         @keyframes float {
-          0% { transform: translateY(0) rotate(0deg); }
-          50% { transform: translateY(-10px) rotate(5deg); }
-          100% { transform: translateY(0) rotate(0deg); }
+          0% {
+            transform: translateY(0) rotate(0deg);
+          }
+          50% {
+            transform: translateY(-10px) rotate(5deg);
+          }
+          100% {
+            transform: translateY(0) rotate(0deg);
+          }
         }
         .animate-float {
           animation: float 3s ease-in-out infinite;
         }
         @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
         .animate-fadeIn {
           animation: fadeIn 0.5s ease-in-out forwards;
