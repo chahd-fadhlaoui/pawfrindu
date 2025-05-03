@@ -1,7 +1,6 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Filter, Calendar, X, Trash2, Edit, Eye, ChevronUp, ChevronDown, Clock, User, AlertTriangle, SearchX, MapPin, PawPrint } from "lucide-react";
+import { ChevronLeft, ChevronRight, Filter, Calendar, X, Trash2, Edit, Eye, ChevronUp, ChevronDown, Clock, User, AlertTriangle, SearchX, MapPin, PawPrint, CalendarX } from "lucide-react";
 import EmptyState from "../../../components/EmptyState";
 import { Tooltip } from "../../../components/Tooltip";
 import axiosInstance from "../../../utils/axiosInstance";
@@ -14,19 +13,20 @@ const STATUS_STYLES = {
   pending: "bg-yellow-100 text-yellow-700 border-yellow-200",
   confirmed: "bg-green-100 text-green-700 border-green-200",
   cancelled: "bg-red-100 text-red-700 border-red-200",
+  notAvailable: "bg-orange-100 text-orange-700 border-orange-200",
 };
 
 const ITEMS_PER_PAGE = 9;
-const STATUS_OPTIONS = ["pending", "confirmed", "cancelled"];
+const STATUS_OPTIONS = ["pending", "confirmed", "cancelled", "notAvailable"];
 const PROFESSIONAL_TYPE_OPTIONS = ["Vet", "Trainer"];
 
 const StatusBadge = ({ status }) => (
   <span
     className={`inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-full border shadow-sm transition-all duration-300 ${
-      STATUS_STYES[status] || "bg-gray-100 text-gray-600 border-gray-200"
+      STATUS_STYLES[status] || "bg-gray-100 text-gray-600 border-gray-200"
     } hover:opacity-80`}
   >
-    {status.charAt(0).toUpperCase() + status.slice(1)}
+    {status === "notAvailable" ? "Not Available" : status.charAt(0).toUpperCase() + status.slice(1)}
   </span>
 );
 
@@ -40,7 +40,7 @@ const FilterSelect = ({ label, value, onChange, options, icon }) => (
       <option value="">{label}</option>
       {options.map((option) => (
         <option key={option} value={option}>
-          {option.charAt(0).toUpperCase() + option.slice(1)}
+          {option === "notAvailable" ? "Not Available" : option.charAt(0).toUpperCase() + option.slice(1)}
         </option>
       ))}
     </select>
@@ -50,7 +50,7 @@ const FilterSelect = ({ label, value, onChange, options, icon }) => (
 
 const FilterBadge = ({ label, value, onClear }) => (
   <span className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium text-pink-600 bg-pink-50 rounded-full border border-pink-200 shadow-sm">
-    {label}: {value.charAt(0).toUpperCase() + value.slice(1)}
+    {label}: {value === "notAvailable" ? "Not Available" : value.charAt(0).toUpperCase() + value.slice(1)}
     <button onClick={onClear} className="ml-1 text-pink-600 hover:text-pink-800 transition-colors duration-300">
       <X size={14} />
     </button>
@@ -81,7 +81,7 @@ const AppointmentCard = ({ appointment, onAction, disabled }) => {
                 appointment.status
               )}`}
             >
-              {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+              {appointment.status === "notAvailable" ? "Not Available" : appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
             </span>
             <h3 className="text-lg font-semibold text-gray-800 mt-2">{appointment.petName}</h3>
           </div>
@@ -120,8 +120,34 @@ const AppointmentCard = ({ appointment, onAction, disabled }) => {
           </div>
         </div>
         <div className="flex flex-wrap gap-3 mt-4 border-t border-gray-100 pt-4">
-          {appointment.status !== "cancelled" && (
-            <>
+          {appointment.status !== "cancelled" && appointment.status !== "notAvailable" && (
+            <Tooltip text="Cancel Appointment">
+              <button
+                onClick={() => onAction(appointment, "delete")}
+                className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors focus:outline-none focus:ring-2 focus:ring-red-300 flex items-center gap-1"
+                disabled={disabled}
+              >
+                <Trash2 size={16} />
+                Delete
+              </button>
+            </Tooltip>
+          )}
+          {appointment.status === "cancelled" && (
+            <div className="w-full text-center">
+              <span className="text-sm text-gray-500">
+                This appointment has been cancelled
+              </span>
+            </div>
+          )}
+          {appointment.status === "notAvailable" && (
+            <div className="w-full text-center">
+              <span className="text-sm text-gray-500">
+                This appointment has been marked as not available
+              </span>
+            </div>
+          )}
+          <div className="ml-auto flex gap-3">
+            {appointment.status !== "cancelled" && (
               <Tooltip text="Update Appointment">
                 <button
                   onClick={() => onAction(appointment, "update")}
@@ -132,33 +158,18 @@ const AppointmentCard = ({ appointment, onAction, disabled }) => {
                   Update
                 </button>
               </Tooltip>
-              <Tooltip text="Cancel Appointment">
-                <button
-                  onClick={() => onAction(appointment, "delete")}
-                  className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors focus:outline-none focus:ring-2 focus:ring-red-300 flex items-center gap-1"
-                  disabled={disabled}
-                >
-                  <Trash2 size={16} />
-                  Delete
-                </button>
-              </Tooltip>
-            </>
-          )}
-          {appointment.status === "cancelled" && (
-            <div className="w-full text-center">
-              <span className="text-sm text-gray-500">This appointment has been cancelled</span>
-            </div>
-          )}
-          <Tooltip text="View Details">
-            <button
-              onClick={() => onAction(appointment, "view")}
-              className="px-4 py-2 text-sm font-medium text-pink-600 bg-pink-50 rounded-lg hover:bg-pink-100 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-300 flex items-center gap-1 ml-auto"
-              disabled={disabled}
-            >
-              <Eye size={16} />
-              View Details
-            </button>
-          </Tooltip>
+            )}
+            <Tooltip text="View Details">
+              <button
+                onClick={() => onAction(appointment, "view")}
+                className="px-4 py-2 text-sm font-medium text-pink-600 bg-pink-50 rounded-lg hover:bg-pink-100 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-300 flex items-center gap-1"
+                disabled={disabled}
+              >
+                <Eye size={16} />
+                View Details
+              </button>
+            </Tooltip>
+          </div>
         </div>
       </div>
     </div>
@@ -243,7 +254,7 @@ const MyVetappointments = () => {
               time: data.time,
               petName: data.petName,
               status: "pending",
-              location: data.location || "Pet Care Center",
+              city: data.location || "Pet Care Center",
             },
             ...prev,
           ].sort((a, b) => new Date(b.date) - new Date(a.date)));
@@ -257,6 +268,23 @@ const MyVetappointments = () => {
         setAppointments((prev) =>
           prev.map((appt) =>
             appt._id === data.appointmentId ? { ...appt, status: "confirmed" } : appt
+          )
+        );
+      }
+    });
+
+    socket.on("appointmentNotAvailable", (data) => {
+      console.log("Appointment not available event:", data);
+      if (data.petOwnerId === user._id.toString()) {
+        setAppointments((prev) =>
+          prev.map((appt) =>
+            appt._id === data.appointmentId
+              ? {
+                  ...appt,
+                  status: "notAvailable",
+                  cancellationReason: data.cancellationReason || appt.cancellationReason,
+                }
+              : appt
           )
         );
       }
@@ -309,6 +337,7 @@ const MyVetappointments = () => {
       socket.off("roomJoined");
       socket.off("appointmentBooked");
       socket.off("appointmentConfirmed");
+      socket.off("appointmentNotAvailable");
       socket.off("vetAppointmentCancelled");
       socket.off("appointmentCancelled");
       socket.off("appointmentDeleted");
@@ -401,7 +430,7 @@ const MyVetappointments = () => {
           appt._id === appointment._id
             ? {
                 ...appointment,
-                status: appt.status === "confirmed" ? "pending" : appointment.status,
+                status: appt.status === "confirmed" || appt.status === "notAvailable" ? "pending" : appointment.status,
               }
             : appt
         )
@@ -677,6 +706,8 @@ function getStatusColor(status) {
       return "bg-green-400";
     case "cancelled":
       return "bg-red-400";
+    case "notAvailable":
+      return "bg-orange-400";
     default:
       return "bg-gray-400";
   }
@@ -690,11 +721,11 @@ function getStatusBadgeColor(status) {
       return "bg-green-100 text-green-700";
     case "cancelled":
       return "bg-red-100 text-red-700";
+    case "notAvailable":
+      return "bg-orange-100 text-orange-700";
     default:
       return "bg-gray-100 text-gray-700";
   }
 }
 
 export default MyVetappointments;
-
-

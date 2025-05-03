@@ -3,6 +3,8 @@ import User from "../models/userModel.js";
 import Pet from "../models/petModel.js"; 
 import { io } from "../server.js";
 
+
+// user part appointment
 export const bookAppointment = async (req, res) => {
   const {
     professionalId,
@@ -360,7 +362,7 @@ export const getMyAppointments = async (req, res) => {
       appointment.notes = notes || appointment.notes;
   
       // If the appointment was confirmed, set status to pending
-      if (appointment.status === "confirmed") {
+      if (["confirmed", "notAvailable"].includes(appointment.status)) {
         appointment.status = "pending";
       }
   
@@ -663,3 +665,132 @@ export const vetDeleteAppointment = async (req, res) => {
       res.status(500).json({ message: "Failed to fetch appointments", detail: error.message });
     }
   };
+export const AppointmentNotAvailable = async (req, res) => {
+  const { appointmentId } = req.params;
+  const { reason } = req.body;
+
+  try {
+    if (!appointmentId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: "Invalid appointment ID format" });
+    }
+
+    const appointment = await Appointment.findById(appointmentId);
+    if (!appointment) {
+      return res.status(404).json({ message: "Appointment not found" });
+    }
+
+    if (appointment.professionalId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "You are not authorized to mark this appointment as not available" });
+    }
+
+    if (appointment.status !== "pending") {
+      return res.status(400).json({ message: "Only pending appointments can be marked as not available" });
+    }
+
+    appointment.status = "notAvailable";
+    appointment.cancellationReason = reason || "";
+    const updatedAppointment = await appointment.save();
+
+    const populatedAppointment = await Appointment.findById(updatedAppointment._id)
+      .populate("petOwnerId", "fullName email petOwnerDetails.phone")
+      .populate("professionalId", "fullName");
+
+    io.emit("appointmentNotAvailable", {
+      appointmentId: updatedAppointment._id.toString(),
+      professionalId: updatedAppointment.professionalId.toString(),
+      petOwnerId: updatedAppointment.petOwnerId.toString(),
+      date: updatedAppointment.date,
+      time: updatedAppointment.time,
+      petName: updatedAppointment.petName,
+      status: updatedAppointment.status,
+      cancellationReason: updatedAppointment.cancellationReason,
+    });
+
+    res.json({
+      success: true,
+      message: "Appointment marked as not available successfully",
+      appointment: populatedAppointment.toObject(),
+    });
+  } catch (error) {
+    console.error("Set Not Available Error:", error);
+    res.status(500).json({ message: "Failed to mark appointment as not available", detail: error.message });
+  }
+};
+
+
+export const updateVetAppointmentStatus = async (req, res) => {
+  const { appointmentId } = req.params;
+  const { status, reason, completionNotes } = req.body;
+
+  try {
+    // Validate appointmentId
+    if (!appointmentId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: "Invalid appointment ID format" });
+    }
+
+    // Validate status
+    const validStatuses = ["pending", "confirmed", "cancelled", "notAvailable", "completed"];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ message: "Invalid status value" });
+    }
+
+    // Find the appointment
+    const appointment = await Appointment.findById(appointmentId);
+    if (!appointment) {
+      return res.status(404).json({ message: "Appointment not found" });
+    }
+
+    // Check if the user is the assigned professional
+    if (appointment.professionalId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "You are not authorized to update this appointment" });
+    }
+
+    // Update appointment
+    appointment.status = status;
+    appointment.updatedAt = new Date();
+
+    // Handle fields based on status
+    appointment.cancellationReason = ["cancelled", "notAvailable"].includes(status) ? (reason || null) : null;
+    appointment.completionNotes = status === "completed" ? (completionNotes || null) : null;
+    appointment.confirmedAt = status === "confirmed" ? new Date() : null;
+    appointment.completedAt = status === "completed" ? new Date() : null;
+
+    const updatedAppointment = await appointment.save();
+
+    // Populate details for response and Socket.IO
+    const populatedAppointment = await Appointment.findById(updatedAppointment._id)
+      .populate("petOwnerId", "fullName email petOwnerDetails.phone")
+      .populate("professionalId", "fullName");
+
+    // Emit Socket.IO event based on status
+    const socketEventMap = {
+      confirmed: "appointmentConfirmed",
+      cancelled: "vetAppointmentCancelled",
+      notAvailable: "appointmentNotAvailable",
+      completed: "appointmentCompleted",
+      pending: "appointmentUpdated",
+    };
+
+    const socketEvent = socketEventMap[status];
+    io.emit(socketEvent, {
+      appointmentId: updatedAppointment._id.toString(),
+      professionalId: updatedAppointment.professionalId.toString(),
+      petOwnerId: updatedAppointment.petOwnerId.toString(),
+      date: updatedAppointment.date,
+      time: updatedAppointment.time,
+      petName: updatedAppointment.petName,
+      status: updatedAppointment.status,
+      cancellationReason: updatedAppointment.cancellationReason || null,
+      completionNotes: updatedAppointment.completionNotes || null,
+    });
+
+    res.json({
+      success: true,
+      message: `Appointment status updated to ${status} successfully`,
+      appointment: populatedAppointment.toObject(),
+    });
+  } catch (error) {
+    console.error("Update Appointment Status Error:", error);
+    res.status(500).json({ message: "Failed to update appointment status", detail: error.message });
+  }
+};

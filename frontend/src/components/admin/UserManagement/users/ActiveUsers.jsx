@@ -24,17 +24,7 @@ const ActiveUsers = ({ refreshTrigger, showHeader = true }) => {
 
   const roleOptions = [
     { value: "", label: "All Roles" },
-    {
-      label: "Admin",
-      value: "Admin",
-      subOptions: [
-        { value: "Admin|Super Admin", label: "Super Admin" },
-        { value: "Admin|Admin Adoption", label: "Admin Adoption" },
-        { value: "Admin|Admin Vet", label: "Admin Vet" },
-        { value: "Admin|Admin Trainer", label: "Admin Trainer" },
-        { value: "Admin|Admin Lost & Found", label: "Admin Lost & Found" },
-      ],
-    },
+    { value: "Admin", label: "Admin" },
     { value: "PetOwner", label: "Pet Owner" },
     { value: "Vet", label: "Veterinarian" },
     { value: "Trainer", label: "Trainer" },
@@ -53,13 +43,7 @@ const ActiveUsers = ({ refreshTrigger, showHeader = true }) => {
     }
 
     if (roleFilter) {
-      const [role, adminType] = roleFilter.split("|");
-      filtered = filtered.filter((user) => {
-        if (role === "Admin" && !adminType) return user.role === "Admin";
-        if (role === "Admin" && adminType)
-          return user.role === "Admin" && user.adminType === adminType;
-        return (user.role || "").toLowerCase() === role.toLowerCase();
-      });
+      filtered = filtered.filter((user) => user.role.toLowerCase() === roleFilter.toLowerCase());
     }
 
     return filtered;
@@ -99,7 +83,7 @@ const ActiveUsers = ({ refreshTrigger, showHeader = true }) => {
 
   const toggleSelectAll = () => {
     const selectableUsers = currentUsers
-      .filter((user) => user._id !== currentUser?._id && !(user.role === "Admin" && user.adminType === "Super Admin"))
+      .filter((user) => user._id !== currentUser?._id)
       .map((user) => user._id);
     setSelectedUsers((prev) =>
       prev.length === selectableUsers.length ? [] : selectableUsers
@@ -107,13 +91,8 @@ const ActiveUsers = ({ refreshTrigger, showHeader = true }) => {
   };
 
   const handleToggleActive = (userId) => {
-    const user = filteredUsers.find((u) => u._id === userId);
     if (userId === currentUser?._id) {
       setActionError("You cannot deactivate your own account.");
-      return;
-    }
-    if (user.role === "Admin" && user.adminType === "Super Admin") {
-      setActionError("Super Admin accounts cannot be deactivated.");
       return;
     }
     setSelectedUserId(userId);
@@ -137,14 +116,6 @@ const ActiveUsers = ({ refreshTrigger, showHeader = true }) => {
     if (selectedUsers.length === 0) return;
     if (selectedUsers.includes(currentUser?._id)) {
       setActionError("You cannot deactivate your own account in a bulk action.");
-      return;
-    }
-    const hasSuperAdmin = selectedUsers.some((userId) => {
-      const user = filteredUsers.find((u) => u._id === userId);
-      return user.role === "Admin" && user.adminType === "Super Admin";
-    });
-    if (hasSuperAdmin) {
-      setActionError("Bulk deactivation cannot include Super Admin accounts.");
       return;
     }
     setConfirmAction("bulkDeactivate");
@@ -243,7 +214,7 @@ const ActiveUsers = ({ refreshTrigger, showHeader = true }) => {
               className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-all duration-300 rounded-lg shadow-md bg-gradient-to-r from-yellow-500 to-pink-500 hover:from-yellow-600 hover:to-pink-600 focus:outline-none focus:ring-2 focus:ring-yellow-400"
             >
               <Plus className="w-4 h-4" />
-              Add User
+              Add Admin
             </button>
             {selectedUsers.length > 0 && (
               <button
@@ -282,7 +253,7 @@ const ActiveUsers = ({ refreshTrigger, showHeader = true }) => {
             </div>
             <p className="text-lg font-semibold text-gray-700">No active users found</p>
             <p className="text-sm text-gray-500">
-              {searchQuery || roleFilter ? "Try adjusting your search or filters" : "Add a user to get started"}
+              {searchQuery || roleFilter ? "Try adjusting your search or filters" : "Add an admin to get started"}
             </p>
             {(searchQuery || roleFilter) && (
               <button
@@ -310,12 +281,7 @@ const ActiveUsers = ({ refreshTrigger, showHeader = true }) => {
                     {user._id !== currentUser?._id && (
                       <button
                         onClick={() => handleToggleActive(user._id)}
-                        disabled={user.role === "Admin" && user.adminType === "Super Admin"}
-                        className={`flex items-center gap-1 px-3 py-1 text-xs font-medium text-white rounded-lg shadow-sm transition-all duration-300 ${
-                          user.role === "Admin" && user.adminType === "Super Admin"
-                            ? "bg-gray-400 cursor-not-allowed"
-                            : "bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 focus:ring-2 focus:ring-red-400"
-                        }`}
+                        className="flex items-center gap-1 px-3 py-1 text-xs font-medium text-white rounded-lg shadow-sm transition-all duration-300 bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 focus:ring-2 focus:ring-red-400"
                       >
                         <X className="w-3 h-3" />
                         Deactivate
@@ -324,7 +290,7 @@ const ActiveUsers = ({ refreshTrigger, showHeader = true }) => {
                   </div>
                 )}
                 title="Active Users"
-                showHeader={false} // Header is handled above
+                showHeader={false}
               />
             </div>
           </div>

@@ -597,284 +597,347 @@ const UserTable = ({
                                 </dl>
                               )}
 
-                              {activeTab === "role" && (
-                                <div className="space-y-6">
-                                  <div className="flex items-center space-x-2">
-                                    <Shield className="w-5 h-5 text-pink-500" />
-                                    <h3 className="text-lg font-semibold text-gray-900">
-                                      Role Details
-                                    </h3>
-                                  </div>
-                                  <dl className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
-                                    <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
-                                      <dt className="flex items-center space-x-2 font-semibold text-gray-600">
-                                        <User className="w-4 h-4 text-pink-400" />
-                                        <span>Role</span>
-                                      </dt>
-                                      <dd className="mt-1">
-                                        <span
-                                          className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full shadow-sm ${getRoleBadgeStyle(
-                                            user.role,
-                                            user.adminType
-                                          )}`}
-                                        >
-                                          {user.role === "Admin" &&
-                                          user.adminType
-                                            ? getAdminTypeDisplay(
-                                                user.adminType
-                                              )
-                                            : user.role || "N/A"}
-                                        </span>
-                                      </dd>
-                                    </div>
-                                    {user.role === "Vet" && (
-                                      <>
-                                        <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
-                                          <dt className="flex items-center space-x-2 font-semibold text-gray-600">
-                                            <Briefcase className="w-4 h-4 text-pink-400" />
-                                            <span>Title</span>
-                                          </dt>
-                                          <dd className="mt-1 text-gray-900">
-                                            {user.veterinarianDetails?.title ||
-                                              "N/A"}
-                                          </dd>
-                                        </div>
-                                        <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
-                                          <dt className="flex items-center space-x-2 font-semibold text-gray-600">
-                                            <MapPin className="w-4 h-4 text-pink-400" />
-                                            <span>Location</span>
-                                          </dt>
-                                          <dd className="mt-1 text-gray-900">
-                                            {user.veterinarianDetails
-                                              ?.governorate &&
-                                            user.veterinarianDetails?.delegation
-                                              ? `${user.veterinarianDetails.delegation}, ${user.veterinarianDetails.governorate}`
-                                              : user.veterinarianDetails
-                                                  ?.governorate || "N/A"}
-                                          </dd>
-                                        </div>
-                                        <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
-                                          <dt className="flex items-center space-x-2 font-semibold text-gray-600">
-                                            <Award className="w-4 h-4 text-pink-400" />
-                                            <span>Specializations</span>
-                                          </dt>
-                                          <dd className="mt-1 text-gray-900">
-                                            {user.veterinarianDetails
-                                              ?.specializations?.length > 0
-                                              ? user.veterinarianDetails.specializations
-                                                  .map(
-                                                    (s) => s.specializationName
-                                                  )
-                                                  .filter((name) =>
-                                                    /^[a-zA-Z\s]+$/.test(name)
-                                                  ) // Basic validation
-                                                  .join(", ") || (
-                                                  <span className="italic text-yellow-600">
-                                                    Invalid data detected
-                                                  </span>
-                                                )
-                                              : "None"}
-                                          </dd>
-                                        </div>
-                                        <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
-                                          <dt className="flex items-center space-x-2 font-semibold text-gray-600">
-                                            <Award className="w-4 h-4 text-pink-400" />
-                                            <span>Diplomas and Training</span>
-                                          </dt>
-                                          <dd className="mt-1 text-gray-900">
-                                            {user.veterinarianDetails
-                                              ?.diplomasAndTraining &&
-                                            !user.veterinarianDetails.diplomasAndTraining.startsWith(
-                                              "http"
-                                            ) ? (
-                                              user.veterinarianDetails
-                                                .diplomasAndTraining
-                                            ) : user.veterinarianDetails
-                                                ?.diplomasAndTraining ? (
-                                              <a
-                                                href={
-                                                  user.veterinarianDetails
-                                                    .diplomasAndTraining
-                                                }
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-blue-600 hover:underline"
-                                              >
-                                                View Diploma
-                                              </a>
-                                            ) : (
-                                              "N/A"
-                                            )}
-                                          </dd>
-                                        </div>
-                                        <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
-                                          <dt className="flex items-center space-x-2 font-semibold text-gray-600">
-                                            <Briefcase className="w-4 h-4 text-pink-400" />
-                                            <span>Services</span>
-                                          </dt>
-                                          <dd className="mt-1 text-gray-900">
-                                            {user.veterinarianDetails?.services
-                                              ?.length > 0
-                                              ? user.veterinarianDetails.services
-                                                  .map(
-                                                    (s) =>
-                                                      `${s.serviceName} (TND ${
-                                                        s.fee || "N/A"
-                                                      })`
-                                                  )
-                                                  .filter((service) =>
-                                                    /^[a-zA-Z\s]+$/.test(
-                                                      service.split(" (")[0]
-                                                    )
-                                                  ) // Basic validation
-                                                  .join(", ") || (
-                                                  <span className="italic text-yellow-600">
-                                                    Invalid data detected
-                                                  </span>
-                                                )
-                                              : "None"}
-                                          </dd>
-                                        </div>
-                                        <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
-                                          <dt className="flex items-center space-x-2 font-semibold text-gray-600">
-                                            <Languages className="w-4 h-4 text-pink-400" />
-                                            <span>Languages Spoken</span>
-                                          </dt>
-                                          <dd className="mt-1 text-gray-900">
-                                            {user.veterinarianDetails
-                                              ?.languagesSpoken?.length > 0
-                                              ? user.veterinarianDetails.languagesSpoken.join(
-                                                  ", "
-                                                )
-                                              : "N/A"}
-                                          </dd>
-                                        </div>
-                                        <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
-                                          <dt className="flex items-center space-x-2 font-semibold text-gray-600">
-                                            <ClockIcon className="w-4 h-4 text-pink-400" />
-                                            <span>
-                                              Average Consultation Duration
-                                            </span>
-                                          </dt>
-                                          <dd className="mt-1 text-gray-900">
-                                            {user.veterinarianDetails
-                                              ?.averageConsultationDuration
-                                              ? `${user.veterinarianDetails.averageConsultationDuration} minutes`
-                                              : "N/A"}
-                                          </dd>
-                                        </div>
-                                        <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
-                                          <dt className="flex items-center space-x-2 font-semibold text-gray-600">
-                                            <ClockIcon className="w-4 h-4 text-pink-400" />
-                                            <span>Opening Hours</span>
-                                          </dt>
-                                          <dd className="mt-1 text-gray-900">
-                                            {formatOpeningHours(
-                                              user.veterinarianDetails
-                                                ?.openingHours
-                                            ) !== "N/A" ? (
-                                              formatOpeningHours(
-                                                user.veterinarianDetails
-                                                  ?.openingHours
-                                              )
-                                            ) : (
-                                              <span className="italic text-yellow-600">
-                                                Schedule unavailable
-                                              </span>
-                                            )}
-                                          </dd>
-                                        </div>
-                                        <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
-                                          <dt className="flex items-center space-x-2 font-semibold text-gray-600">
-                                            <MapPin className="w-4 h-4 text-pink-400" />
-                                            <span>Clinic Photos</span>
-                                          </dt>
-                                          <dd className="flex flex-wrap gap-2 mt-1">
-                                            {user.veterinarianDetails
-                                              ?.clinicPhotos?.length > 0
-                                              ? user.veterinarianDetails.clinicPhotos
-                                                  .slice(0, 3)
-                                                  .map((url, index) => (
-                                                    <a
-                                                      key={index}
-                                                      href={url}
-                                                      target="_blank"
-                                                      rel="noopener noreferrer"
-                                                      className="inline-block"
-                                                    >
-                                                      <img
-                                                        src={url}
-                                                        alt={`Clinic Photo ${
-                                                          index + 1
-                                                        }`}
-                                                        className="object-cover w-16 h-16 transition-transform rounded-md shadow-sm hover:scale-105"
-                                                        onError={(e) =>
-                                                          (e.target.src =
-                                                            DEFAULT_PROFILE_IMAGE)
-                                                        }
-                                                      />
-                                                    </a>
-                                                  ))
-                                              : "N/A"}
-                                            {user.veterinarianDetails
-                                              ?.clinicPhotos?.length > 3 && (
-                                              <span className="text-xs text-blue-600 cursor-pointer hover:underline">
-                                                +
-                                                {user.veterinarianDetails
-                                                  .clinicPhotos.length - 3}{" "}
-                                                more
-                                              </span>
-                                            )}
-                                          </dd>
-                                        </div>
-                                        <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
-                                          <dt className="flex items-center space-x-2 font-semibold text-gray-600">
-                                            <Briefcase className="w-4 h-4 text-pink-400" />
-                                            <span>Business Card</span>
-                                          </dt>
-                                          <dd className="mt-1">
-                                            {user.veterinarianDetails
-                                              ?.businessCardImage ? (
-                                              <a
-                                                href={
-                                                  user.veterinarianDetails
-                                                    .businessCardImage
-                                                }
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-blue-600 hover:underline"
-                                              >
-                                                View Business Card
-                                              </a>
-                                            ) : (
-                                              "N/A"
-                                            )}
-                                          </dd>
-                                        </div>
-                                        <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
-                                          <dt className="flex items-center space-x-2 font-semibold text-gray-600">
-                                            <MapPin className="w-4 h-4 text-pink-400" />
-                                            <span>Geolocation</span>
-                                          </dt>
-                                          <dd className="mt-1 text-gray-900">
-                                            {user.veterinarianDetails
-                                              ?.geolocation?.latitude &&
-                                            user.veterinarianDetails
-                                              ?.geolocation?.longitude
-                                              ? `${user.veterinarianDetails.geolocation.latitude.toFixed(
-                                                  4
-                                                )}, ${user.veterinarianDetails.geolocation.longitude.toFixed(
-                                                  4
-                                                )}`
-                                              : "N/A"}
-                                          </dd>
-                                        </div>
-                                      </>
-                                    )}
-                                    {/* Other roles (Admin, PetOwner, Trainer) remain as in previous version */}
-                                  </dl>
-                                </div>
-                              )}
+{activeTab === "role" && (
+  <div className="space-y-6">
+    <div className="flex items-center space-x-2">
+      <Shield className="w-5 h-5 text-pink-500" />
+      <h3 className="text-lg font-semibold text-gray-900">Role Details</h3>
+    </div>
+    <dl className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
+      <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
+        <dt className="flex items-center space-x-2 font-semibold text-gray-600">
+          <User className="w-4 h-4 text-pink-400" />
+          <span>Role</span>
+        </dt>
+        <dd className="mt-1">
+          <span
+            className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full shadow-sm ${getRoleBadgeStyle(
+              user.role,
+              user.adminType
+            )}`}
+          >
+            {user.role === "Admin" && user.adminType
+              ? getAdminTypeDisplay(user.adminType)
+              : user.role || "N/A"}
+          </span>
+        </dd>
+      </div>
+
+      {/* Trainer Details */}
+      {user.role === "Trainer" && (
+        <>
+          <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
+            <dt className="flex items-center space-x-2 font-semibold text-gray-600">
+              <MapPin className="w-4 h-4 text-pink-400" />
+              <span>Location</span>
+            </dt>
+            <dd className="mt-1 text-gray-900">
+              {user.trainerDetails?.governorate && user.trainerDetails?.delegation
+                ? `${user.trainerDetails.delegation}, ${user.trainerDetails.governorate}`
+                : user.trainerDetails?.governorate || "N/A"}
+            </dd>
+          </div>
+          <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
+            <dt className="flex items-center space-x-2 font-semibold text-gray-600">
+              <Phone className="w-4 h-4 text-pink-400" />
+              <span>Phone</span>
+            </dt>
+            <dd className="mt-1 text-gray-900">
+              {user.trainerDetails?.phone || "N/A"}
+            </dd>
+          </div>
+          <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
+            <dt className="flex items-center space-x-2 font-semibold text-gray-600">
+              <Briefcase className="w-4 h-4 text-pink-400" />
+              <span>Training Facility Type</span>
+            </dt>
+            <dd className="mt-1 text-gray-900">
+              {user.trainerDetails?.trainingFacilityType || "N/A"}
+            </dd>
+          </div>
+          <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
+            <dt className="flex items-center space-x-2 font-semibold text-gray-600">
+              <Award className="w-4 h-4 text-pink-400" />
+              <span>Certification</span>
+            </dt>
+            <dd className="mt-1 text-gray-900">
+              {user.trainerDetails?.certificationImage ? (
+                <a
+                  href={user.trainerDetails.certificationImage}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline"
+                >
+                  View Certification
+                </a>
+              ) : (
+                "N/A"
+              )}
+            </dd>
+          </div>
+          <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
+            <dt className="flex items-center space-x-2 font-semibold text-gray-600">
+              <MapPin className="w-4 h-4 text-pink-400" />
+              <span>Geolocation</span>
+            </dt>
+            <dd className="mt-1 text-gray-900">
+              {user.trainerDetails?.geolocation?.latitude &&
+              user.trainerDetails?.geolocation?.longitude
+                ? `${user.trainerDetails.geolocation.latitude.toFixed(4)}, ${user.trainerDetails.geolocation.longitude.toFixed(4)}`
+                : "N/A"}
+            </dd>
+          </div>
+          <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
+            <dt className="flex items-center space-x-2 font-semibold text-gray-600">
+              <Award className="w-4 h-4 text-pink-400" />
+              <span>Rating</span>
+            </dt>
+            <dd className="mt-1 text-gray-900">
+              {user.trainerDetails?.rating
+                ? `${user.trainerDetails.rating.toFixed(1)} / 5`
+                : "No ratings"}
+            </dd>
+          </div>
+          <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
+            <dt className="flex items-center space-x-2 font-semibold text-gray-600">
+              <User className="w-4 h-4 text-pink-400" />
+              <span>Reviews</span>
+            </dt>
+            <dd className="mt-1 text-gray-900">
+              {user.trainerDetails?.reviews?.length > 0
+                ? `${user.trainerDetails.reviews.length} review(s)`
+                : "No reviews"}
+            </dd>
+          </div>
+        </>
+      )}
+
+      {/* Veterinarian Details (Existing Code) */}
+      {user.role === "Vet" && (
+        <>
+          <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
+            <dt className="flex items-center space-x-2 font-semibold text-gray-600">
+              <Briefcase className="w-4 h-4 text-pink-400" />
+              <span>Title</span>
+            </dt>
+            <dd className="mt-1 text-gray-900">
+              {user.veterinarianDetails?.title || "N/A"}
+            </dd>
+          </div>
+          <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
+            <dt className="flex items-center space-x-2 font-semibold text-gray-600">
+              <MapPin className="w-4 h-4 text-pink-400" />
+              <span>Location</span>
+            </dt>
+            <dd className="mt-1 text-gray-900">
+              {user.veterinarianDetails?.governorate &&
+              user.veterinarianDetails?.delegation
+                ? `${user.veterinarianDetails.delegation}, ${user.veterinarianDetails.governorate}`
+                : user.veterinarianDetails?.governorate || "N/A"}
+            </dd>
+          </div>
+          <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
+            <dt className="flex items-center space-x-2 font-semibold text-gray-600">
+              <Award className="w-4 h-4 text-pink-400" />
+              <span>Specializations</span>
+            </dt>
+            <dd className="mt-1 text-gray-900">
+              {user.veterinarianDetails?.specializations?.length > 0
+                ? user.veterinarianDetails.specializations
+                    .map((s) => s.specializationName)
+                    .filter((name) => /^[a-zA-Z\s]+$/.test(name))
+                    .join(", ") || (
+                    <span className="italic text-yellow-600">
+                      Invalid data detected
+                    </span>
+                  )
+                : "None"}
+            </dd>
+          </div>
+          <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
+            <dt className="flex items-center space-x-2 font-semibold text-gray-600">
+              <Award className="w-4 h-4 text-pink-400" />
+              <span>Diplomas and Training</span>
+            </dt>
+            <dd className="mt-1 text-gray-900">
+              {user.veterinarianDetails?.diplomasAndTraining &&
+              !user.veterinarianDetails.diplomasAndTraining.startsWith("http") ? (
+                user.veterinarianDetails.diplomasAndTraining
+              ) : user.veterinarianDetails?.diplomasAndTraining ? (
+                <a
+                  href={user.veterinarianDetails.diplomasAndTraining}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline"
+                >
+                  View Diploma
+                </a>
+              ) : (
+                "N/A"
+              )}
+            </dd>
+          </div>
+          <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
+            <dt className="flex items-center space-x-2 font-semibold text-gray-600">
+              <Briefcase className="w-4 h-4 text-pink-400" />
+              <span>Services</span>
+            </dt>
+            <dd className="mt-1 text-gray-900">
+              {user.veterinarianDetails?.services?.length > 0
+                ? user.veterinarianDetails.services
+                    .map((s) => `${s.serviceName} (TND ${s.fee || "N/A"})`)
+                    .filter((service) => /^[a-zA-Z\s]+$/.test(service.split(" (")[0]))
+                    .join(", ") || (
+                    <span className="italic text-yellow-600">
+                      Invalid data detected
+                    </span>
+                  )
+                : "None"}
+            </dd>
+          </div>
+          <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
+            <dt className="flex items-center space-x-2 font-semibold text-gray-600">
+              <Languages className="w-4 h-4 text-pink-400" />
+              <span>Languages Spoken</span>
+            </dt>
+            <dd className="mt-1 text-gray-900">
+              {user.veterinarianDetails?.languagesSpoken?.length > 0
+                ? user.veterinarianDetails.languagesSpoken.join(", ")
+                : "N/A"}
+            </dd>
+          </div>
+          <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
+            <dt className="flex items-center space-x-2 font-semibold text-gray-600">
+              <ClockIcon className="w-4 h-4 text-pink-400" />
+              <span>Average Consultation Duration</span>
+            </dt>
+            <dd className="mt-1 text-gray-900">
+              {user.veterinarianDetails?.averageConsultationDuration
+                ? `${user.veterinarianDetails.averageConsultationDuration} minutes`
+                : "N/A"}
+            </dd>
+          </div>
+          <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
+            <dt className="flex items-center space-x-2 font-semibold text-gray-600">
+              <ClockIcon className="w-4 h-4 text-pink-400" />
+              <span>Opening Hours</span>
+            </dt>
+            <dd className="mt-1 text-gray-900">
+              {formatOpeningHours(user.veterinarianDetails?.openingHours) !==
+              "N/A" ? (
+                formatOpeningHours(user.veterinarianDetails?.openingHours)
+              ) : (
+                <span className="italic text-yellow-600">
+                  Schedule unavailable
+                </span>
+              )}
+            </dd>
+          </div>
+          <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
+            <dt className="flex items-center space-x-2 font-semibold text-gray-600">
+              <MapPin className="w-4 h-4 text-pink-400" />
+              <span>Clinic Photos</span>
+            </dt>
+            <dd className="flex flex-wrap gap-2 mt-1">
+              {user.veterinarianDetails?.clinicPhotos?.length > 0
+                ? user.veterinarianDetails.clinicPhotos
+                    .slice(0, 3)
+                    .map((url, index) => (
+                      <a
+                        key={index}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block"
+                      >
+                        <img
+                          src={url}
+                          alt={`Clinic Photo ${index + 1}`}
+                          className="object-cover w-16 h-16 transition-transform rounded-md shadow-sm hover:scale-105"
+                          onError={(e) => (e.target.src = DEFAULT_PROFILE_IMAGE)}
+                        />
+                      </a>
+                    ))
+                : "N/A"}
+              {user.veterinarianDetails?.clinicPhotos?.length > 3 && (
+                <span className="text-xs text-blue-600 cursor-pointer hover:underline">
+                  +{user.veterinarianDetails.clinicPhotos.length - 3} more
+                </span>
+              )}
+            </dd>
+          </div>
+          <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
+            <dt className="flex items-center space-x-2 font-semibold text-gray-600">
+              <Briefcase className="w-4 h-4 text-pink-400" />
+              <span>Business Card</span>
+            </dt>
+            <dd className="mt-1">
+              {user.veterinarianDetails?.businessCardImage ? (
+                <a
+                  href={user.veterinarianDetails.businessCardImage}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline"
+                >
+                  View Business Card
+                </a>
+              ) : (
+                "N/A"
+              )}
+            </dd>
+          </div>
+          <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
+            <dt className="flex items-center space-x-2 font-semibold text-gray-600">
+              <MapPin className="w-4 h-4 text-pink-400" />
+              <span>Geolocation</span>
+            </dt>
+            <dd className="mt-1 text-gray-900">
+              {user.veterinarianDetails?.geolocation?.latitude &&
+              user.veterinarianDetails?.geolocation?.longitude
+                ? `${user.veterinarianDetails.geolocation.latitude.toFixed(4)}, ${user.veterinarianDetails.geolocation.longitude.toFixed(4)}`
+                : "N/A"}
+            </dd>
+          </div>
+        </>
+      )}
+
+      {/* Other Roles (Admin, PetOwner) */}
+      {user.role === "Admin" && (
+        <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
+          <dt className="flex items-center space-x-2 font-semibold text-gray-600">
+            <Shield className="w-4 h-4 text-pink-400" />
+            <span>Admin Type</span>
+          </dt>
+          <dd className="mt-1 text-gray-900">
+            {getAdminTypeDisplay(user.adminType) || "N/A"}
+          </dd>
+        </div>
+      )}
+      {user.role === "PetOwner" && (
+        <>
+          <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
+            <dt className="flex items-center space-x-2 font-semibold text-gray-600">
+              <MapPin className="w-4 h-4 text-pink-400" />
+              <span>Address</span>
+            </dt>
+            <dd className="mt-1 text-gray-900">
+              {user.petOwnerDetails?.address || "N/A"}
+            </dd>
+          </div>
+          <div className="p-4 transition-shadow rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
+            <dt className="flex items-center space-x-2 font-semibold text-gray-600">
+              <Phone className="w-4 h-4 text-pink-400" />
+              <span>Phone</span>
+            </dt>
+            <dd className="mt-1 text-gray-900">
+              {user.petOwnerDetails?.phone || "N/A"}
+            </dd>
+          </div>
+        </>
+      )}
+    </dl>
+  </div>
+)}
 
                               {activeTab === "activity" && (
                                 <dl className="grid grid-cols-2 gap-6 text-sm">

@@ -1,4 +1,4 @@
-import { Eye, EyeOff, Loader2, X, User, Shield, Mail, Lock } from "lucide-react";
+import { Eye, EyeOff, Loader2, X, User, Mail, Lock } from "lucide-react";
 import React, { memo, useState } from "react";
 import axiosInstance from "../../../../utils/axiosInstance";
 
@@ -7,23 +7,11 @@ export const AddUserModal = memo(({ isOpen, onClose, onAddUser }) => {
     fullName: "",
     email: "",
     password: "",
-    role: "",
   });
   const [formError, setFormError] = useState(null);
   const [formSuccess, setFormSuccess] = useState(null);
   const [formLoading, setFormLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
-  const formRoleOptions = [
-    { value: "Admin|Super Admin", label: "Super Admin" },
-    { value: "Admin|Admin Adoption", label: "Admin Adoption" },
-    { value: "Admin|Admin Vet", label: "Admin Vet" },
-    { value: "Admin|Admin Trainer", label: "Admin Trainer" },
-    { value: "Admin|Admin Lost & Found", label: "Admin Lost & Found" },
-    { value: "PetOwner", label: "Pet Owner" },
-    { value: "Vet", label: "Veterinarian" },
-    { value: "Trainer", label: "Trainer" },
-  ];
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -33,7 +21,7 @@ export const AddUserModal = memo(({ isOpen, onClose, onAddUser }) => {
   };
 
   const validateForm = () => {
-    if (!formData.fullName || !formData.email || !formData.password || !formData.role) {
+    if (!formData.fullName || !formData.email || !formData.password) {
       setFormError("All fields are required.");
       return false;
     }
@@ -56,13 +44,11 @@ export const AddUserModal = memo(({ isOpen, onClose, onAddUser }) => {
     setFormSuccess(null);
     setFormLoading(true);
 
-    const [role, adminType] = formData.role.split("|");
     const payload = {
       fullName: formData.fullName,
       email: formData.email,
       password: formData.password,
-      role,
-      ...(role === "Admin" && adminType && { adminType }),
+      role: "Admin",
     };
 
     try {
@@ -72,9 +58,8 @@ export const AddUserModal = memo(({ isOpen, onClose, onAddUser }) => {
           _id: response.data.user._id,
           fullName: formData.fullName,
           email: formData.email,
-          role,
-          ...(role === "Admin" && adminType && { adminType }),
-          isActive: role === "Vet" || role === "Trainer" ? false : true,
+          role: "Admin",
+          isActive: true,
           isArchieve: false,
           lastLogin: null,
         };
@@ -82,7 +67,7 @@ export const AddUserModal = memo(({ isOpen, onClose, onAddUser }) => {
         setTimeout(() => {
           onAddUser(newUser);
           onClose();
-          setFormData({ fullName: "", email: "", password: "", role: "" });
+          setFormData({ fullName: "", email: "", password: "" });
           setFormSuccess(null);
         }, 1500);
       }
@@ -94,18 +79,6 @@ export const AddUserModal = memo(({ isOpen, onClose, onAddUser }) => {
   };
 
   if (!isOpen) return null;
-
-  const getRoleBadgeStyle = (roleValue) => {
-    const [role] = roleValue.split("|");
-    const styles = {
-      "Admin|Super Admin": "bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-md",
-      Admin: "bg-gradient-to-r from-yellow-500 to-pink-500 text-white shadow-md",
-      PetOwner: "bg-gradient-to-r from-yellow-100 to-pink-100 text-yellow-700",
-      Vet: "bg-gradient-to-r from-blue-100 to-blue-200 text-blue-700",
-      Trainer: "bg-gradient-to-r from-teal-100 to-teal-200 text-teal-700",
-    };
-    return styles[roleValue] || styles[role] || "bg-gray-100 text-gray-600";
-  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 animate-fadeIn">
@@ -119,7 +92,7 @@ export const AddUserModal = memo(({ isOpen, onClose, onAddUser }) => {
             <div className="flex items-center justify-center p-2 rounded-lg bg-[#FEF3C7]">
               <User className="w-5 h-5 text-yellow-500" />
             </div>
-            <h2 className="text-xl font-bold text-gray-900">Add New User</h2>
+            <h2 className="text-xl font-bold text-gray-900">Add New Admin</h2>
           </div>
           <button
             onClick={onClose}
@@ -196,46 +169,17 @@ export const AddUserModal = memo(({ isOpen, onClose, onAddUser }) => {
               <p className="mt-1 text-xs text-gray-500">Password must be at least 6 characters long</p>
             </div>
 
-            {/* Role */}
-            <div>
-              <label className="block mb-1.5 text-sm font-medium text-gray-700">
-                <Shield className="inline w-4 h-4 mr-2 text-gray-400" />
-                User Role
-              </label>
-              <select
-                name="role"
-                value={formData.role}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-[#ffc929] focus:border-[#ffc929] transition-all duration-300 appearance-none"
-                required
-              >
-                <option value="" className="text-gray-600">
-                  Select a role
-                </option>
-                {formRoleOptions.map((option) => (
-                  <option key={option.value} value={option.value} className="text-gray-600">
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Role Badge */}
-            {formData.role && (
-              <div className="p-3 rounded-lg bg-gray-50">
-                <p className="mb-2 text-sm font-medium text-gray-700">Selected Role:</p>
-                <div className="flex flex-wrap items-center gap-2">
-                  <span
-                    className={`px-3 py-1.5 text-xs font-medium rounded-full ${getRoleBadgeStyle(
-                      formData.role
-                    )}`}
-                  >
-                    {formRoleOptions.find((option) => option.value === formData.role)?.label ||
-                      formData.role}
-                  </span>
-                </div>
+            {/* Role Information */}
+            <div className="p-3 rounded-lg bg-gray-50">
+              <p className="mb-2 text-sm font-medium text-gray-700">Role:</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <span
+                  className="px-3 py-1.5 text-xs font-medium rounded-full bg-gradient-to-r from-yellow-500 to-pink-500 text-white shadow-md"
+                >
+                  Admin
+                </span>
               </div>
-            )}
+            </div>
           </div>
 
           {/* Error/Success Messages */}
@@ -275,7 +219,7 @@ export const AddUserModal = memo(({ isOpen, onClose, onAddUser }) => {
                   Creating User...
                 </>
               ) : (
-                <>Add User</>
+                <>Add Admin</>
               )}
             </button>
           </div>
