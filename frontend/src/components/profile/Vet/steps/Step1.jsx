@@ -2,8 +2,8 @@ import { Camera, CheckCircle, Globe, Info, Loader2, LucideUserPen, Phone, User }
 import React, { useState } from "react";
 import { FaFemale, FaMale, FaTransgender } from "react-icons/fa";
 import { Tooltip } from "../../../Tooltip";
-import { SectionHeader } from "../../common/SectionHeader";
 import { ErrorMessage } from "../../common/ErrorMessage";
+import { SectionHeader } from "../../common/SectionHeader";
 
 const Step1 = ({
   formData,

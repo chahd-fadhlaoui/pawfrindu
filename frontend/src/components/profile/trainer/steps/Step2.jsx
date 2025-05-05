@@ -2,10 +2,10 @@ import { Award, Camera, CheckCircle, FileText, GraduationCap, Info, Loader2, Plu
 import React, { useState } from "react";
 import { FaFacebook, FaGlobe, FaInstagram } from "react-icons/fa";
 import { TiBusinessCard } from "react-icons/ti";
-import { Tooltip } from "../../../Tooltip";
-import { SectionHeader } from "../../common/SectionHeader";
-import { ErrorMessage } from "../../common/ErrorMessage";
 import { breeds, SPECIES_OPTIONS } from "../../../../assets/Pet";
+import { Tooltip } from "../../../Tooltip";
+import { ErrorMessage } from "../../common/ErrorMessage";
+import { SectionHeader } from "../../common/SectionHeader";
 
 const Step2 = ({
   formData,

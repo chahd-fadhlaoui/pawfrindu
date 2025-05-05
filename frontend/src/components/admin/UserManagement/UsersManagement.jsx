@@ -48,8 +48,8 @@ const UsersManagement = ({ hideHeader = false }) => {
   }, [allUsers]); // Re-fetch when allUsers changes (e.g., after refresh)
 
   const handleRefresh = async (e) => {
-    e.preventDefault(); // Ensure event doesn’t propagate
-    e.stopPropagation(); // Stop event bubbling
+    e.preventDefault();
+    e.stopPropagation(); 
     try {
       await triggerRefresh(); // Fetch context data
       await fetchUserStats(); // Fetch stats for UI update
@@ -148,10 +148,10 @@ const UsersManagement = ({ hideHeader = false }) => {
       </div>
 
       <div className="p-6">
-        {activeTab === "active" && <ActiveUsers showHeader={false} />}
-        {activeTab === "inactive" && <InactiveUsers showHeader={false} />}
-        {activeTab === "archived" && <ArchivedUsers showHeader={false} />}
-        {activeTab === "pending" && <PendingApprovals showHeader={false} />}
+        {activeTab === "active" && <ActiveUsers />}
+        {activeTab === "inactive" && <InactiveUsers />}
+        {activeTab === "archived" && <ArchivedUsers />}
+        {activeTab === "pending" && <PendingApprovals />}
       </div>
     </div>
   );

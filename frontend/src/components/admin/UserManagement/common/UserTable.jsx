@@ -31,8 +31,7 @@ const UserTable = ({
   onToggleSelectAll,
   customActions,
   title = "Active Users",
-  showHeader = true,
-}) => {
+$}) => {
   const [sortField, setSortField] = useState("fullName");
   const [sortDirection, setSortDirection] = useState("asc");
   const [dropdownOpen, setDropdownOpen] = useState(null);
@@ -191,33 +190,11 @@ const UserTable = ({
 
   return (
     <div className="w-full">
-      {showHeader && (
-        <div className="p-4 mb-6 transition-all duration-300 bg-white shadow-lg rounded-xl sm:p-6 ring-1 ring-gray-100">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="p-2 rounded-lg shadow-sm bg-gradient-to-br from-pink-100 to-yellow-100">
-                <UserCheck className="w-6 h-6 text-pink-500" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">{title}</h2>
-                <p className="text-sm text-gray-600">
-                  {displayedUsers.length}{" "}
-                  {displayedUsers.length === 1 ? "user" : "users"}
-                </p>
-              </div>
-            </div>
-            <span className="px-3 py-1 text-sm font-semibold text-white rounded-full shadow-md bg-gradient-to-r from-pink-500 to-yellow-500">
-              {displayedUsers.length}
-            </span>
-          </div>
-        </div>
-      )}
-
       {selectedUsers.length > 0 && (
-        <div className="p-4 mb-6 transition-all duration-300 bg-white shadow-lg rounded-xl ring-1 ring-gray-100">
+        <div className="p-4 mb-6 transition-all duration-300 bg-white shadow-lg rounded-xl">
           <div className="flex items-center justify-between sm:gap-4">
             <div className="flex items-center space-x-3">
-              <span className="inline-flex items-center px-2.5 py-1 text-sm font-semibold text-white bg-gradient-to-r from-pink-500 to-yellow-500 rounded-full shadow-md">
+              <span className="inline-flex items-center px-2.5 py-1 text-sm font-semibold text-white bg-gradient-to-r from-pink-500 to-yellow-500 rounded-full shadow-sm">
                 {selectedUsers.length}
               </span>
               <span className="text-sm font-medium text-gray-800">
@@ -237,10 +214,10 @@ const UserTable = ({
       {displayedUsers.length === 0 ? (
         <EmptyState customMessage="No users available at this time." />
       ) : (
-        <div className="overflow-hidden bg-white shadow-lg rounded-xl ring-1 ring-gray-100">
+        <div className="overflow-hidden bg-white shadow-lg rounded-xl">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+              <thead className="bg-gray-50">
                 <tr>
                   {onToggleSelectAll && (
                     <th className="px-4 py-3 text-xs font-semibold tracking-wider text-left text-gray-600 uppercase sm:px-6">

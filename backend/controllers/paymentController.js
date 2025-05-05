@@ -50,10 +50,10 @@ export const initiatePayment = async (req, res) => {
         phoneNumber: pet.owner?.petOwnerDetails?.phone || '22777777',
         email: pet.owner?.email || 'test.user@gmail.com',
         orderId: petId,
-        webhook: 'https://6823-41-226-63-222.ngrok-free.app/api/payment/payment-webhook',
+        webhook: 'https://5063-41-62-77-218.ngrok-free.app/api/payment/payment-webhook',
         theme: 'light',
-        successUrl: 'https://6823-41-226-63-222.ngrok-free.app/payment-success',
-        failUrl: 'https://6823-41-226-63-222.ngrok-free.app/payment-failed',
+        successUrl: 'http://localhost:5173/payment-success',
+        failUrl: 'http://localhost:5173/payment-failed',
       },
       {
         headers: {
@@ -209,7 +209,7 @@ export const handlePaymentWebhook = async (req, res) => {
       const userAgent = req.headers['user-agent'] || '';
       const isBrowser = /Mozilla|Chrome|Safari|Firefox|Edge/i.test(userAgent);
       if (req.method === 'GET' && isBrowser) {
-        return res.redirect('https://6823-41-226-63-222.ngrok-free.app/payment-failed');
+        return res.redirect('http://localhost:5173/payment-failed');
       }
       return res.status(400).json({
         success: false,
@@ -224,7 +224,7 @@ export const handlePaymentWebhook = async (req, res) => {
       const userAgent = req.headers['user-agent'] || '';
       const isBrowser = /Mozilla|Chrome|Safari|Firefox|Edge/i.test(userAgent);
       if (req.method === 'GET' && isBrowser) {
-        return res.redirect('https://6823-41-226-63-222.ngrok-free.app/payment-failed');
+        return res.redirect('http://localhost:5173/payment-failed');
       }
       return res.status(400).json({
         success: false,
@@ -244,7 +244,7 @@ export const handlePaymentWebhook = async (req, res) => {
       const userAgent = req.headers['user-agent'] || '';
       const isBrowser = /Mozilla|Chrome|Safari|Firefox|Edge/i.test(userAgent);
       if (req.method === 'GET' && isBrowser) {
-        return res.redirect('https://6823-41-226-63-222.ngrok-free.app/payment-failed');
+        return res.redirect('http://localhost:5173/payment-failed');
       }
       return res.status(404).json({ success: false, message: 'Pet not found' });
     }
@@ -253,7 +253,7 @@ export const handlePaymentWebhook = async (req, res) => {
       const userAgent = req.headers['user-agent'] || '';
       const isBrowser = /Mozilla|Chrome|Safari|Firefox|Edge/i.test(userAgent);
       if (req.method === 'GET' && isBrowser) {
-        return res.redirect('https://6823-41-226-63-222.ngrok-free.app/payment-failed');
+        return res.redirect('http://localhost:5173/payment-failed');
       }
       return res.status(404).json({ success: false, message: 'Payment record not found' });
     }
@@ -264,7 +264,7 @@ export const handlePaymentWebhook = async (req, res) => {
       const userAgent = req.headers['user-agent'] || '';
       const isBrowser = /Mozilla|Chrome|Safari|Firefox|Edge/i.test(userAgent);
       if (req.method === 'GET' && isBrowser) {
-        return res.redirect('https://6823-41-226-63-222.ngrok-free.app/payment-failed');
+        return res.redirect('http://localhost:5173/payment-failed');
       }
       return res.status(400).json({ success: false, message: 'Pet is already sold' });
     }
@@ -381,8 +381,8 @@ export const handlePaymentWebhook = async (req, res) => {
     if (req.method === 'GET' && isBrowser) {
       return res.redirect(
         status === 'completed'
-          ? 'https://6823-41-226-63-222.ngrok-free.app/payment-success'
-          : 'https://6823-41-226-63-222.ngrok-free.app/payment-failed'
+          ? 'http://localhost:5173/payment-success'
+          : 'http://localhost:5173/payment-failed'
       );
     }
 
@@ -397,7 +397,7 @@ export const handlePaymentWebhook = async (req, res) => {
     const userAgent = req.headers['user-agent'] || '';
     const isBrowser = /Mozilla|Chrome|Safari|Firefox|Edge/i.test(userAgent);
     if (req.method === 'GET' && isBrowser) {
-      return res.redirect('https://6823-41-226-63-222.ngrok-free.app/payment-failed');
+      return res.redirect('http://localhost:5173/payment-failed');
     }
     res.status(500).json({
       success: false,

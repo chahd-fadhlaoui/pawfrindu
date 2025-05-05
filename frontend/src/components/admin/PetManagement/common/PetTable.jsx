@@ -25,11 +25,10 @@ const PetTable = ({
   onToggleSelectAll,
   customActions,
   title = "All Pets",
-  showHeader = true,
   bulkAction = "archive",
 }) => {
-  const [sortField, setSortField] = useState("name");
-  const [sortDirection, setSortDirection] = useState("asc");
+  const [sortField, setSortField] = useState("updatedAt"); // Default to sorting by updatedAt
+  const [sortDirection, setSortDirection] = useState("desc"); // Default to descending order
   const [dropdownOpen, setDropdownOpen] = useState(null);
   const [expandedPet, setExpandedPet] = useState(null);
   const [activeTab, setActiveTab] = useState("info");
@@ -53,11 +52,21 @@ const PetTable = ({
   };
 
   const displayedPets = [...pets].sort((a, b) => {
-    let fieldA = a[sortField] || "";
-    let fieldB = b[sortField] || "";
-    if (fieldA === fieldB) return 0;
-    const result = typeof fieldA === "string" ? fieldA.localeCompare(fieldB) : fieldA - fieldB;
-    return sortDirection === "asc" ? result : -result;
+    let fieldA, fieldB;
+
+    if (sortField === "updatedAt") {
+      // Use updatedAt if available, otherwise fall back to createdAt
+      fieldA = a.updatedAt ? new Date(a.updatedAt) : new Date(a.createdAt);
+      fieldB = b.updatedAt ? new Date(b.updatedAt) : new Date(b.createdAt);
+      return sortDirection === "asc" ? fieldA - fieldB : fieldB - fieldA;
+    } else {
+      // Handle other fields (name, species, status)
+      fieldA = a[sortField] || "";
+      fieldB = b[sortField] || "";
+      if (fieldA === fieldB) return 0;
+      const result = typeof fieldA === "string" ? fieldA.localeCompare(fieldB) : fieldA - fieldB;
+      return sortDirection === "asc" ? result : -result;
+    }
   });
 
   const toggleDropdown = (petId, e) => {
@@ -138,27 +147,6 @@ const PetTable = ({
 
   return (
     <div className="w-full">
-      {showHeader && (
-        <div className="p-4 mb-6 transition-all duration-300 bg-white shadow-md rounded-xl sm:p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="p-2 bg-pink-100 rounded-lg">
-                <PawPrint className="w-6 h-6 text-pink-500" />
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
-                <p className="text-sm text-gray-600">
-                  {displayedPets.length} {displayedPets.length === 1 ? "pet" : "pets"}
-                </p>
-              </div>
-            </div>
-            <span className="px-2 py-1 text-sm font-medium text-white rounded-full bg-gradient-to-r from-yellow-500 to-pink-500">
-              {displayedPets.length}
-            </span>
-          </div>
-        </div>
-      )}
-
       {selectedPets.length > 0 && (
         <div className="p-4 mb-6 transition-all duration-300 bg-white shadow-md rounded-xl">
           <div className="flex items-center justify-between sm:gap-4">
@@ -229,6 +217,15 @@ const PetTable = ({
                     <div className="flex items-center">
                       <span>Status</span>
                       {getSortIcon("status")}
+                    </div>
+                  </th>
+                  <th
+                    className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase transition-colors cursor-pointer sm:px-6 hover:text-pink-600"
+                    onClick={() => handleSort("updatedAt")}
+                  >
+                    <div className="flex items-center">
+                      <span>Last Updated</span>
+                      {getSortIcon("updatedAt")}
                     </div>
                   </th>
                   <th className="px-4 py-3 text-xs font-medium tracking-wider text-right text-gray-500 uppercase sm:px-6">
@@ -310,6 +307,13 @@ const PetTable = ({
                           </span>
                         </div>
                       </td>
+                      <td className="px-4 py-4 sm:px-6 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {pet.updatedAt
+                            ? new Date(pet.updatedAt).toLocaleDateString()
+                            : new Date(pet.createdAt).toLocaleDateString()}
+                        </div>
+                      </td>
                       <td className="px-4 py-4 text-right sm:px-6 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                         {customActions ? (
                           customActions(pet)
@@ -344,7 +348,7 @@ const PetTable = ({
                     </tr>
                     {expandedPet === pet._id && (
                       <tr className="transition-all duration-300 bg-gray-50">
-                        <td colSpan={onToggleSelection ? 5 : 4} className="px-4 py-4 sm:px-6">
+                        <td colSpan={onToggleSelection ? 6 : 5} className="px-4 py-4 sm:px-6">
                           <div className="bg-white rounded-lg shadow-sm">
                             {/* Tab Navigation */}
                             <div className="border-b border-gray-200">
@@ -376,7 +380,7 @@ const PetTable = ({
                                   </div>
                                 </button>
                                 <button
-                                  className={`py-2 px-4 text-sm font-medium border-b-2 ${
+                                  className={`py-2 px-4 text-sm font-medium border d="true" border-b-2 ${
                                     activeTab === "candidates"
                                       ? "border-pink-500 text-pink-600"
                                       : "border-transparent text-gray-500 hover:text-pink-600 hover:border-gray-300"

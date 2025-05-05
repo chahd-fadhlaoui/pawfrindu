@@ -9,7 +9,7 @@ import ConfirmationModal from "../../../ConfirmationModal";
 import { useApp } from "../../../../context/AppContext";
 import EmptyState from "../common/EmptyState";
 
-const ArchivedPets = ({ showHeader = true, onPetChange }) => {
+const ArchivedPets = ({onPetChange }) => {
   const {
     pets,
     loading,
@@ -233,34 +233,6 @@ const ArchivedPets = ({ showHeader = true, onPetChange }) => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      {showHeader && (
-        <div className="overflow-hidden bg-white shadow-lg rounded-xl animate-fade-in">
-          <div
-            className="flex items-center px-4 py-5 border-l-4 sm:px-6 bg-gradient-to-r from-white to-gray-50"
-            style={{
-              borderImage: "linear-gradient(to bottom, #f59e0b, #ec4899) 1",
-            }}
-          >
-            <div className="flex items-center flex-1">
-              <div className="p-2 rounded-lg shadow-sm bg-pink-50">
-                <PawPrint className="w-6 h-6 text-pink-500" />
-              </div>
-              <div className="ml-4">
-                <h2 className="text-xl font-bold tracking-tight text-gray-900">
-                  Archived Pets
-                </h2>
-                <p className="text-sm text-gray-500">
-                  Manage archived pet listings
-                </p>
-              </div>
-            </div>
-            <span className="px-3 py-1 text-sm font-medium text-pink-800 bg-pink-100 rounded-full shadow-sm">
-              {filteredPets.length} Archived
-            </span>
-          </div>
-        </div>
-      )}
 
       {/* Filters and Actions */}
       <div className="p-4 bg-white shadow-md rounded-xl animate-fade-in">
@@ -397,7 +369,6 @@ const ArchivedPets = ({ showHeader = true, onPetChange }) => {
               </div>
             )}
             title="Archived Pets"
-            showHeader={false}
             bulkAction="archive"
             className="overflow-hidden shadow-xl rounded-xl animate-fade-in"
           />

@@ -17,6 +17,7 @@ import {
   resetPassword,
   submitTrainerReview,
   updateProfile,
+  updateTrainerProfile,
   updateUserByAdmin,
   updateVetProfile,
   validateResetToken,
@@ -45,6 +46,8 @@ userRouter.post("/profile", authenticate, createProfile);
 userRouter.put("/updateProfile", authenticate, updateProfile); 
 userRouter.put("/updateVetProfile", authenticate, updateVetProfile);
 userRouter.post("/trainer/:trainerId/reviews", authenticate, submitTrainerReview);
+userRouter.put("/updateTrainerProfile", authenticate, updateTrainerProfile);
+
 
 // Admin-Only Route
 userRouter.get('/getAllUsers', authenticate, authorize('Admin'), getAllUsers);

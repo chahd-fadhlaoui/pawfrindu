@@ -1,7 +1,7 @@
 import cors from 'cors';
 import 'dotenv/config';
 import express from 'express';
-import fs from 'fs'; 
+import fs from 'fs';
 import { createServer } from 'http';
 import path from 'path';
 import { Server } from 'socket.io';
@@ -23,7 +23,7 @@ const server = createServer(app);
 // Initialize Socket.io
 const io = new Server(server, {
   cors: {
-    origin: 'https://6823-41-226-63-222.ngrok-free.app',
+    origin: 'http://localhost:5173',
     methods: ['GET', 'POST'],
     credentials: true,
   },
@@ -35,7 +35,7 @@ connectCloudinary();
 // Middlewares
 app.use(express.json());
 app.use(cors({
-  origin: ['https://6823-41-226-63-222.ngrok-free.app'], // Explicit array for clarity
+  origin: ['http://localhost:5173'], // Explicit array for clarity
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization'],

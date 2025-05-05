@@ -9,7 +9,7 @@ import ConfirmationModal from "../../../ConfirmationModal";
 import { useApp } from "../../../../context/AppContext";
 import EmptyState from "../common/EmptyState";
 
-const PendingApprovals = ({ showHeader = true }) => {
+const PendingApprovals = () => {
   const { allUsers: users, loading, error, user: currentUser, updateUsers } = useApp();
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -203,29 +203,6 @@ const PendingApprovals = ({ showHeader = true }) => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      {showHeader && (
-        <div className="overflow-hidden bg-white shadow-lg rounded-xl animate-fadeIn">
-          <div
-            className="flex items-center px-4 py-5 border-l-4 sm:px-6"
-            style={{ borderImage: "linear-gradient(to bottom, #f59e0b, #ec4899) 1" }}
-          >
-            <div className="flex items-center flex-1">
-              <div className="p-2 rounded-lg bg-[#FEF3C7]">
-                <Users className="w-6 h-6 text-yellow-500" />
-              </div>
-              <div className="ml-4">
-                <h2 className="text-lg font-bold text-gray-900 sm:text-xl">Pending Approvals</h2>
-                <p className="text-sm text-gray-500">Review trainers and vets awaiting approval</p>
-              </div>
-            </div>
-            <span className="px-3 py-1 text-sm font-medium text-yellow-800 bg-yellow-100 rounded-full">
-              {filteredUsers.length} Pending
-            </span>
-          </div>
-        </div>
-      )}
-
       {/* Filters and Actions */}
       <div className="p-4 bg-white shadow-md rounded-xl">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -297,8 +274,6 @@ const PendingApprovals = ({ showHeader = true }) => {
         />
       ) : (
         <>
-          <div className="bg-white shadow-xl rounded-xl animate-fadeIn">
-            <div className="p-4 sm:p-6">
               <UserTable
                 users={currentUsers}
                 selectedUsers={selectedUsers}
@@ -329,10 +304,7 @@ const PendingApprovals = ({ showHeader = true }) => {
                   </div>
                 )}
                 title="Pending Approvals"
-                showHeader={false} // Header handled above
               />
-            </div>
-          </div>
           {totalPages > 1 && (
             <div className="flex justify-center mt-6">
               <PaginationControls

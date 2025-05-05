@@ -1,9 +1,9 @@
 import { Camera, CheckCircle, Globe, Info, Loader2, LucideUserPen, Phone, User } from "lucide-react";
 import React, { useState } from "react";
 import { FaFemale, FaMale, FaTransgender } from "react-icons/fa";
-import { Tooltip } from "../../../Tooltip"; // Ensure this component is available in your project
-import { SectionHeader } from "../../common/SectionHeader"; // Ensure this component is available
-import { ErrorMessage } from "../../common/ErrorMessage"; // Ensure this component is available
+import { Tooltip } from "../../../Tooltip";
+import { ErrorMessage } from "../../common/ErrorMessage";
+import { SectionHeader } from "../../common/SectionHeader";
 
 const Step1 = ({
   formData,

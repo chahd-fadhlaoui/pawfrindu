@@ -1,10 +1,10 @@
+import { CheckCircle, Edit, GraduationCap, Info } from "lucide-react";
 import React from "react";
-import { AlertCircle, CheckCircle, Edit, Info, GraduationCap } from "lucide-react";
 import { TiBusinessCard } from "react-icons/ti";
-import { Tooltip } from "../../../Tooltip";
-import { SectionHeader } from "../../common/SectionHeader";
-import { ErrorMessage } from "../../common/ErrorMessage";
 import MapViewer from "../../../map/MapViewer";
+import { Tooltip } from "../../../Tooltip";
+import { ErrorMessage } from "../../common/ErrorMessage";
+import { SectionHeader } from "../../common/SectionHeader";
 
 const Step5 = ({
   formData,

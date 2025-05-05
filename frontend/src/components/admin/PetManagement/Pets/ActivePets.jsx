@@ -17,7 +17,7 @@ import { FilterSelect } from "../common/FilterSelect";
 import PetTable from "../common/PetTable";
 import EmptyState from "../common/EmptyState";
 
-const ActivePets = ({ showHeader = true }) => {
+const ActivePets = () => {
   const { user, pets, loading, error, triggerRefresh } = useApp();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -281,34 +281,6 @@ const ActivePets = ({ showHeader = true }) => {
 
   return (
     <div className="space-y-6">
-      {showHeader && (
-        <div className="overflow-hidden bg-white shadow-lg rounded-xl animate-fade-in">
-          <div
-            className="flex items-center px-4 py-5 border-l-4 sm:px-6 bg-gradient-to-r from-white to-gray-50"
-            style={{
-              borderImage: "linear-gradient(to bottom, #f59e0b, #ec4899) 1",
-            }}
-          >
-            <div className="flex items-center flex-1">
-              <div className="p-2 rounded-lg shadow-sm bg-pink-50">
-                <PawPrint className="w-6 h-6 text-pink-500" />
-              </div>
-              <div className="ml-4">
-                <h2 className="text-xl font-bold tracking-tight text-gray-900">
-                  Active Pets
-                </h2>
-                <p className="text-sm text-gray-500">
-                  Manage active pet listings
-                </p>
-              </div>
-            </div>
-            <span className="px-3 py-1 text-sm font-medium text-pink-800 bg-pink-100 rounded-full shadow-sm">
-              {filteredPets.length} Active
-            </span>
-          </div>
-        </div>
-      )}
-
       <div className="p-4 bg-white shadow-md rounded-xl animate-fade-in">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="relative flex-1">
@@ -493,7 +465,6 @@ const ActivePets = ({ showHeader = true }) => {
               );
             }}
             title="Active Pets"
-            showHeader={false}
             bulkAction={bulkAction}
             className="overflow-hidden shadow-xl rounded-xl animate-fade-in"
           />

@@ -794,3 +794,99 @@ export const updateVetAppointmentStatus = async (req, res) => {
     res.status(500).json({ message: "Failed to update appointment status", detail: error.message });
   }
 };
+
+export const getTrainerAppointments = async (req, res) => {
+  try {
+    console.log("Fetching trainer appointments for user ID:", req.user._id);
+    const trainer = await User.findById(req.user._id);
+    if (!trainer) {
+      console.log("User not found for ID:", req.user._id);
+      return res.status(403).json({ message: "Only trainers can access this endpoint" });
+    }
+    if (trainer.role !== "Trainer") {
+      console.log("User is not a trainer, role:", trainer.role);
+      return res.status(403).json({ message: "Only trainers can access this endpoint" });
+    }
+
+    console.log("Querying appointments for trainer ID:", req.user._id);
+    const appointments = await Appointment.find({
+      professionalId: req.user._id,
+      professionalType: "Trainer",
+    })
+      .populate("petOwnerId", "fullName email petOwnerDetails.phone petOwnerDetails.address")
+      .sort({ date: 1, time: 1 });
+
+    console.log("Found appointments:", appointments.length);
+    const formattedAppointments = await Promise.all(
+      appointments.map(async (appt) => {
+        console.log("Formatting appointment ID:", appt._id, "petId:", appt.petId?.toString());
+        let petData = {};
+        if (appt.petId) {
+          try {
+            const pet = await Pet.findById(appt.petId).select(
+              "name species breed age gender city isTrained fee image"
+            );
+            if (pet) {
+              petData = pet.toObject();
+              console.log("Pet found for petId:", appt.petId.toString(), "Pet data:", petData);
+            } else {
+              console.warn("No pet found for petId:", appt.petId.toString());
+            }
+          } catch (petErr) {
+            console.error(`Error fetching pet ${appt.petId.toString()}:`, petErr.message);
+          }
+        } else {
+          console.log("No petId for appointment, using Appointment fields:", {
+            petName: appt.petName,
+            petType: appt.petType,
+            petAge: appt.petAge,
+            breed: appt.breed,
+            gender: appt.gender,
+            city: appt.city,
+            isTrained: appt.isTrained,
+          });
+        }
+
+        return {
+          id: appt._id.toString(),
+          petId: appt.petId?.toString(),
+          petName: petData.name || appt.petName || "Unknown",
+          petType: petData.species || appt.petType || "Unknown",
+          petAge: petData.age || appt.petAge || "Unknown",
+          breed: petData.breed || appt.breed || "Unknown",
+          gender: petData.gender || appt.gender || "Unknown",
+          city: petData.city || appt.city || "Unknown",
+          isTrained: petData.isTrained ?? appt.isTrained ?? false,
+          fee: petData.fee || null,
+          image: petData.image || null,
+          ownerName: appt.petOwnerId?.fullName || "Unknown",
+          phone: appt.petOwnerId?.petOwnerDetails?.phone || "",
+          email: appt.petOwnerId?.email || "",
+          address: appt.petOwnerId?.petOwnerDetails?.address || "",
+          date: appt.date,
+          time: appt.time,
+          duration: `${appt.duration} minutes`,
+          reason: appt.reason,
+          provider: trainer.fullName,
+          status: appt.status || "pending",
+          notes: appt.notes || "",
+          createdAt: new Date(appt.createdAt).toLocaleDateString("en-US"),
+          updatedAt: new Date(appt.updatedAt).toLocaleDateString("en-US"),
+          isNew: appt.status === "pending",
+          vaccines: [],
+          medications: [],
+          isPlatformPet: !!appt.petId,
+        };
+      })
+    );
+
+    console.log("Returning formatted appointments:", formattedAppointments.length);
+    res.json({ success: true, appointments: formattedAppointments });
+  } catch (error) {
+    console.error("Get Trainer Appointments Error:", {
+      message: error.message,
+      stack: error.stack,
+    });
+    res.status(500).json({ message: "Failed to fetch appointments", detail: error.message });
+  }
+};

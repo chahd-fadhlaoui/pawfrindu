@@ -118,7 +118,7 @@ const PetsManagement = ({ hideHeader = false }) => {
         >
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center p-2 rounded-lg bg-yellow-50">
-              <Shield className="w-6 h-6 text-yellow-500" />
+              <PawPrint className="w-6 h-6 text-yellow-500" />
             </div>
             <div>
               <h1 className="text-xl font-bold text-gray-900">
@@ -162,10 +162,10 @@ const PetsManagement = ({ hideHeader = false }) => {
       </div>
 
       <div className="p-6">
-        {activeTab === "active" && <ActivePets showHeader={false} />}
-        {activeTab === "completed" && <CompletedPets showHeader={false} />}
-        {activeTab === "archived" && <ArchivedPets showHeader={false} />}
-        {activeTab === "myPets" && <MyPets showHeader={false} />}
+        {activeTab === "active" && <ActivePets/>}
+        {activeTab === "completed" && <CompletedPets/>}
+        {activeTab === "archived" && <ArchivedPets/>}
+        {activeTab === "myPets" && <MyPets/>}
       </div>
     </div>
   );

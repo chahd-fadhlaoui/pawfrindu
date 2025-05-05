@@ -1,13 +1,13 @@
 import { CalendarClock, CheckCircle, Clock, Copy, Info, Plus, Trash2 } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import { FaPaw } from "react-icons/fa";
+import { trainingCategories } from "../../../../assets/trainer";
 import { useApp } from "../../../../context/AppContext";
 import Input from "../../../common/Input";
 import Select from "../../../common/Select";
 import { Tooltip } from "../../../Tooltip";
+import { ErrorMessage } from "../../common/ErrorMessage";
 import { SectionHeader } from "../../common/SectionHeader";
-import { FaPaw } from "react-icons/fa";
-import { trainingCategories } from "../../../../assets/trainer"; 
-import { ErrorMessage } from "../../common/ErrorMessage"; 
 
 const Step4 = ({
   formData,

@@ -131,15 +131,13 @@ const createProfile = async (req, res) => {
       user.petOwnerDetails = petOwnerDetails;
     } else if (user.role === "Trainer") {
       if (
-        !trainerDetails?.governorate ||
-        !trainerDetails?.delegation ||
         !trainerDetails?.certificationImage ||
         !trainerDetails?.trainingFacilityType ||
         !trainerDetails?.phone
       ) {
         return res.status(400).json({
           message:
-            "Governorate, delegation, certification image, training facility type and phone are required for Trainer.",
+            "certification image, training facility type and phone are required for Trainer.",
         });
       }
       // Ensure geolocation is provided for fixed-location facility types
@@ -250,30 +248,28 @@ const login = async (req, res) => {
     );
 
     // Vet-specific logic
-    if (user.role === "Vet") {
+    if (user.role === "Vet" || user.role === "Trainer") {
       if (!user.isActive && !user.lastLogin) {
-        console.log("Case 1: Inactive, first login detected");
-        redirectTo = "/vet-pending-approval";
-        shouldUpdateLastLogin = false; // Don’t store lastLogin
+      console.log("Case 1: Inactive, first login detected");
+      redirectTo = user.role === "Vet" ? "/vet-pending-approval" : "/trainer-pending-approval";
+      shouldUpdateLastLogin = false; // Don’t store lastLogin
       } else if (user.isActive) {
-        console.log("Case 2/3: Active vet detected");
-        redirectTo = "/vet";
-        shouldUpdateLastLogin = true; // Store or update lastLogin
+      console.log("Case 2/3: Active user detected");
+      redirectTo = user.role === "Vet" ? "/vet" : "/trainer";
+      shouldUpdateLastLogin = true; // Store or update lastLogin
       } else if (!user.isActive && user.lastLogin) {
-        console.log("Case 4: Inactive, previously logged in (deactivated)");
-        redirectTo = "/vet";
-        shouldUpdateLastLogin = false; // Don’t update lastLogin
+      console.log("Case 4: Inactive, previously logged in (deactivated)");
+      redirectTo = user.role === "Vet" ? "/vet" : "/trainer";
+      shouldUpdateLastLogin = false; // Don’t update lastLogin
       }
     } else {
-      console.log("Non-vet user detected");
+      console.log("Non-vet/trainer user detected");
       redirectTo =
-        user.role === "PetOwner"
-          ? "/"
-          : user.role === "Trainer"
-          ? "/trainer"
-          : user.role === "Admin"
-          ? "/admin"
-          : "/login";
+      user.role === "PetOwner"
+        ? "/"
+        : user.role === "Admin"
+        ? "/admin"
+        : "/login";
       shouldUpdateLastLogin = true;
     }
 
@@ -1270,7 +1266,160 @@ const getTrainerReviews = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch reviews", detail: error.message });
   }
 };
+const updateTrainerProfile = async (req, res) => {
+  const { userId, fullName, image, gender, about, trainerDetails } = req.body;
 
+  try {
+    console.log("Received trainer update request:", req.body);
+
+    if (req.user._id.toString() !== userId) {
+      return res
+        .status(403)
+        .json({ message: "You can only update your own profile" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user || user.role !== "Trainer") {
+      return res.status(404).json({ message: "Trainer not found" });
+    }
+
+    // Update common fields
+    if (fullName) user.fullName = fullName;
+    if (image) user.image = image;
+    if (gender) user.gender = gender;
+    if (about) user.about = about;
+
+    if (trainerDetails) {
+      const existingDetails = user.trainerDetails || {};
+
+      // Fields that CAN be updated
+      if (trainerDetails.trainingFacilityType) {
+        const validTypes = ["Fixed Facility", "Mobile"];
+        if (!validTypes.includes(trainerDetails.trainingFacilityType)) {
+          return res.status(400).json({ message: "Invalid training facility type" });
+        }
+        existingDetails.trainingFacilityType = trainerDetails.trainingFacilityType;
+      }
+
+      if (trainerDetails.averageSessionDuration) {
+        const duration = parseInt(trainerDetails.averageSessionDuration);
+        if (isNaN(duration) || duration <= 0) {
+          return res.status(400).json({ message: "Invalid session duration" });
+        }
+        existingDetails.averageSessionDuration = duration;
+      }
+
+      if (trainerDetails.governorate) existingDetails.governorate = trainerDetails.governorate;
+      if (trainerDetails.delegation) existingDetails.delegation = trainerDetails.delegation;
+      if (trainerDetails.phone) {
+        if (!/^[234579]\d{7}$/.test(trainerDetails.phone)) {
+          return res.status(400).json({ message: "Invalid phone number format" });
+        }
+        existingDetails.phone = trainerDetails.phone;
+      } else {
+        return res.status(400).json({ message: "Phone is required for Trainer" });
+      }
+      if (trainerDetails.secondaryPhone !== undefined) {
+        if (trainerDetails.secondaryPhone && !/^[234579]\d{7}$/.test(trainerDetails.secondaryPhone)) {
+          return res.status(400).json({ message: "Invalid secondary phone number format" });
+        }
+        existingDetails.secondaryPhone = trainerDetails.secondaryPhone;
+      }
+
+      if (trainerDetails.services) {
+        existingDetails.services = trainerDetails.services.map((s) => ({
+          serviceName: s.serviceName || "",
+          fee: Math.max(0, parseFloat(s.fee) || 0),
+        }));
+      }
+
+      if (trainerDetails.languagesSpoken) {
+        if (!trainerDetails.languagesSpoken.length) {
+          return res.status(400).json({ message: "At least one language is required" });
+        }
+        existingDetails.languagesSpoken = trainerDetails.languagesSpoken;
+      }
+
+      if (trainerDetails.openingHours) {
+        const validSessions = ["Single Session", "Double Session", "Closed"];
+        for (const day of [
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday",
+          "saturday",
+          "sunday",
+        ]) {
+          if (trainerDetails.openingHours[day]) {
+            if (!validSessions.includes(trainerDetails.openingHours[day])) {
+              return res.status(400).json({ message: `Invalid session type for ${day}` });
+            }
+            existingDetails.openingHours = existingDetails.openingHours || {};
+            existingDetails.openingHours[day] = trainerDetails.openingHours[day];
+            ["Start", "End", "Start2", "End2"].forEach((suffix) => {
+              const key = `${day}${suffix}`;
+              if (trainerDetails.openingHours[key] !== undefined) {
+                existingDetails.openingHours[key] = trainerDetails.openingHours[key];
+              }
+            });
+          }
+        }
+      }
+
+      if (trainerDetails.geolocation) {
+        existingDetails.geolocation = {
+          latitude: parseFloat(trainerDetails.geolocation.latitude) || 36.81897,
+          longitude: parseFloat(trainerDetails.geolocation.longitude) || 10.16579,
+        };
+      }
+
+      if (trainerDetails.serviceAreas) existingDetails.serviceAreas = trainerDetails.serviceAreas;
+      if (trainerDetails.trainingPhotos) existingDetails.trainingPhotos = trainerDetails.trainingPhotos;
+      if (trainerDetails.breedsTrained) existingDetails.breedsTrained = trainerDetails.breedsTrained;
+      if (trainerDetails.businessCardImage) existingDetails.businessCardImage = trainerDetails.businessCardImage;
+      if (trainerDetails.socialLinks) existingDetails.socialLinks = trainerDetails.socialLinks;
+
+      // Fields that CANNOT be updated
+      existingDetails.certificationImage = existingDetails.certificationImage; // Preserve existing
+      existingDetails.reviews = existingDetails.reviews || []; // Preserve reviews
+      existingDetails.rating = existingDetails.rating || 0; // Preserve rating
+
+      user.trainerDetails = existingDetails;
+    }
+
+    await user.save();
+
+    io.emit("userProfileUpdated", {
+      userId: user._id,
+      fullName: user.fullName,
+      image: user.image,
+      gender: user.gender,
+      about: user.about,
+      trainerDetails: user.trainerDetails,
+      message: "Trainer profile updated",
+    });
+
+    res.json({
+      message: "Trainer profile updated successfully",
+      user: {
+        _id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+        image: user.image,
+        gender: user.gender,
+        about: user.about,
+        trainerDetails: user.trainerDetails,
+      },
+    });
+  } catch (error) {
+    console.error("Update Trainer Profile Error:", error);
+    res
+      .status(500)
+      .json({ message: "Failed to update trainer profile", detail: error.message });
+  }
+};
 export {
   createProfile,
   forgotPassword,
@@ -1293,4 +1442,5 @@ export {
   getTrainerById,
   submitTrainerReview,
   getTrainerReviews,
+  updateTrainerProfile,
 };
