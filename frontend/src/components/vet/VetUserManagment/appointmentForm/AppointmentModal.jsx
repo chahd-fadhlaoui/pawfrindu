@@ -11,7 +11,7 @@ import Step1SelectDate from "./Step1SelectDate";
 import Step2ChooseTime from "./Step2ChooseTime";
 import Step3ConfirmDetails from "./Step3ConfirmDetails";
 
-const AppointmentModal = ({ vet, onClose, onSuccess }) => {
+const AppointmentModal = ({ professional, professionalType, onClose, onSuccess }) => {
   const { user } = useApp();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
@@ -52,7 +52,9 @@ const AppointmentModal = ({ vet, onClose, onSuccess }) => {
     "Saturday",
   ];
   const consultationDuration =
-    vet?.veterinarianDetails?.averageConsultationDuration || 30;
+ professionalType === "Vet"
+   ? professional?.veterinarianDetails?.averageConsultationDuration || 30
+        : professional?.trainerDetails?.averageSessionDuration || 30;
 
   const allPets = adoptedPets
     .filter(
@@ -109,39 +111,42 @@ const AppointmentModal = ({ vet, onClose, onSuccess }) => {
   // Fetch reserved slots for the month
   useEffect(() => {
     const fetchReservedSlotsForMonth = async () => {
+      if (!professional?._id) {
+        console.warn("Professional ID is undefined, skipping fetchReservedSlotsForMonth");
+        setReservedSlotsByDate({});
+        return;
+      }
       try {
         const year = currentDate.getUTCFullYear();
         const month = currentDate.getUTCMonth() + 1;
-        const response = await axiosInstance.get(
-          `/api/appointments/reserved-month`,
-          {
-            params: {
-              professionalId: vet._id,
-              year,
-              month,
-              professionalType: "Vet",
-            },
-          }
-        );
+        const response = await axiosInstance.get(`/api/appointments/reserved-month`, {
+          params: {
+            professionalId: professional?._id,
+            year,
+            month,
+            professionalType: professionalType || "Vet",
+          },
+        });
         setReservedSlotsByDate(response.data.reservedSlotsByDate || {});
       } catch (error) {
+        console.error("Error fetching reserved slots:", error);
         setReservedSlotsByDate({});
       }
     };
     fetchReservedSlotsForMonth();
-  }, [currentDate, vet._id]);
+  }, [currentDate, professional?._id, professionalType]);
 
   // Fetch reserved slots for selected date
   const fetchReservedSlots = async (date) => {
-    if (!vet || !date) return;
+    if (!professional?._id || !date) return;    
     const formattedDate = formatDate(date);
     setLoading(true);
     try {
       setReservedSlots([]);
       const response = await axiosInstance.get(
-        `/api/appointments/reserved/${vet._id}`,
+        `/api/appointments/reserved/${professional._id}`,
         {
-          params: { date: formattedDate, professionalType: "Vet" },
+          params: { date: formattedDate, professionalType },
         }
       );
       setReservedSlots(response.data.reservedSlots || []);
@@ -153,14 +158,14 @@ const AppointmentModal = ({ vet, onClose, onSuccess }) => {
   };
 
   useEffect(() => {
-    if (vet?._id && selectedDate) {
+    if (professional?._id && selectedDate) {
       fetchReservedSlots(selectedDate);
     }
-  }, [vet?._id, selectedDate]);
+  }, [professional?._id, selectedDate, professionalType]);
 
   // Update available slots
   useEffect(() => {
-    if (selectedDate && vet?.veterinarianDetails?.openingHours) {
+    if (selectedDate &&  professional?.[professionalType === "Vet" ? "veterinarianDetails" : "trainerDetails"]?.openingHours) {
       const slots = getAvailableTimeSlots(selectedDate);
       setAvailableSlots(slots);
     }
@@ -168,7 +173,7 @@ const AppointmentModal = ({ vet, onClose, onSuccess }) => {
     selectedDate,
     reservedSlots,
     reservedSlotsByDate,
-    vet?.veterinarianDetails?.openingHours,
+    professional?.[professionalType === "Vet" ? "veterinarianDetails" : "trainerDetails"]?.openingHours,
   ]);
 
   const formatDate = (date) => {
@@ -187,7 +192,7 @@ const AppointmentModal = ({ vet, onClose, onSuccess }) => {
 
   const isDayOpen = (date) => {
     const dayOfWeek = weekdays[date.getDay()].toLowerCase();
-    const openingHours = vet?.veterinarianDetails?.openingHours;
+    const openingHours = professional?.[professionalType === "Vet" ? "veterinarianDetails" : "trainerDetails"]?.openingHours;
     return openingHours && openingHours[dayOfWeek] !== "Closed";
   };
 
@@ -223,9 +228,9 @@ const AppointmentModal = ({ vet, onClose, onSuccess }) => {
   };
 
   const getPotentialTimeSlots = (date) => {
-    if (!vet?.veterinarianDetails?.openingHours) return [];
+    if (!professional?.[professionalType === "Vet" ? "veterinarianDetails" : "trainerDetails"]?.openingHours) return [];
     const dayOfWeek = weekdays[date.getDay()].toLowerCase();
-    const openingHours = vet.veterinarianDetails.openingHours;
+    const openingHours = professional?.[professionalType === "Vet" ? "veterinarianDetails" : "trainerDetails"]?.openingHours;
     if (!openingHours || openingHours[dayOfWeek] === "Closed") return [];
 
     const slots = [];
@@ -402,8 +407,8 @@ const AppointmentModal = ({ vet, onClose, onSuccess }) => {
     try {
       const appointmentDate = formatDate(selectedDate);
       const appointmentData = {
-        professionalId: vet._id,
-        professionalType: "Vet",
+        professionalId: professional._id,
+        professionalType,
         date: appointmentDate,
         time: selectedTime,
         duration: consultationDuration,
@@ -466,15 +471,15 @@ const AppointmentModal = ({ vet, onClose, onSuccess }) => {
   const renderStepContent = () => {
     if (showSuccess) {
       return (
-        <div className="py-8 flex flex-col items-center justify-center space-y-4">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+        <div className="flex flex-col items-center justify-center py-8 space-y-4">
+          <div className="flex items-center justify-center w-16 h-16 bg-green-100 rounded-full">
             <Check size={32} className="text-green-500" />
           </div>
           <h3 className="text-xl font-bold text-gray-800">
             Appointment Booked!
           </h3>
-          <p className="text-center text-gray-600 text-sm">
-            Your appointment with Dr. {vet.fullName} for{" "}
+          <p className="text-sm text-center text-gray-600">
+          Your appointment with {professionalType === "Vet" ? "Dr." : ""} {professional.fullName} for{" "}
             {selectedPet?.name || customPetName} has been confirmed for{" "}
             {selectedDate?.toLocaleDateString("en-US", {
               weekday: "long",
@@ -483,7 +488,7 @@ const AppointmentModal = ({ vet, onClose, onSuccess }) => {
             })}{" "}
             at {formatTimeSlot(selectedTime)}.
           </p>
-          <p className="text-center text-gray-500 text-xs">
+          <p className="text-xs text-center text-gray-500">
             A confirmation has been sent to {email}.
           </p>
         </div>
@@ -494,7 +499,8 @@ const AppointmentModal = ({ vet, onClose, onSuccess }) => {
       case 1:
         return (
           <Step1SelectDate
-            vet={vet}
+          professional={professional}
+          professionalType={professionalType}
             currentDate={currentDate}
             selectedDate={selectedDate}
             handleDateSelect={handleDateSelect}
@@ -508,7 +514,8 @@ const AppointmentModal = ({ vet, onClose, onSuccess }) => {
       case 2:
         return (
           <Step2ChooseTime
-            vet={vet}
+          professional={professional}
+          professionalType={professionalType}
             selectedDate={selectedDate}
             selectedTime={selectedTime}
             availableSlots={availableSlots}
@@ -522,7 +529,8 @@ const AppointmentModal = ({ vet, onClose, onSuccess }) => {
       case 3:
         return (
           <Step3ConfirmDetails
-            vet={vet}
+          professional={professional}
+          professionalType={professionalType}
             selectedDate={selectedDate}
             selectedTime={selectedTime}
             selectedPet={selectedPet}
@@ -557,15 +565,15 @@ const AppointmentModal = ({ vet, onClose, onSuccess }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 overflow-hidden mt-20">
+    <div className="fixed inset-0 z-50 flex items-center justify-center mt-20 overflow-hidden bg-black/60">
       <div className="bg-white rounded-tl-lg rounded-tr-3xl rounded-br-xl rounded-bl-2xl w-full max-w-md shadow-xl border border-yellow-100 mx-4 my-8 max-h-[85vh] flex flex-col">
-        <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-yellow-50 to-pink-50 sticky top-0 z-10">
+        <div className="sticky top-0 z-10 flex items-center justify-between p-4 border-b border-gray-100 bg-gradient-to-r from-yellow-50 to-pink-50">
           <h2 className="text-lg font-bold text-gray-800">
             Book an Appointment
           </h2>
           <button
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-pink-100 transition-colors"
+            className="p-2 transition-colors rounded-full hover:bg-pink-100"
           >
             <X size={18} className="text-pink-500" />
           </button>
@@ -609,11 +617,11 @@ const AppointmentModal = ({ vet, onClose, onSuccess }) => {
         </div>
 
         {!showSuccess && (
-          <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-between items-center shrink-0">
+          <div className="flex items-center justify-between p-4 border-t border-gray-100 bg-gray-50 shrink-0">
             {step > 1 ? (
               <button
                 onClick={() => setStep(step - 1)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-pink-500 transition-colors"
+                className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:text-pink-500"
               >
                 Back
               </button>
@@ -656,7 +664,7 @@ const AppointmentModal = ({ vet, onClose, onSuccess }) => {
               >
                 {loading ? (
                   <span className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-4 h-4 border-2 border-white rounded-full border-t-transparent animate-spin"></div>
                     Booking...
                   </span>
                 ) : (

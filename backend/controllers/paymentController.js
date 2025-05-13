@@ -28,7 +28,7 @@ export const initiatePayment = async (req, res) => {
     if (pet.fee === 0) {
       return res.status(400).json({ success: false, message: 'Pet is free, use adoption form' });
     }
-    if (pet.status !== 'pending' && pet.status !== 'accepted') {
+    if (pet.status !== 'accepted') {
       return res.status(400).json({ success: false, message: 'Pet is not available for purchase' });
     }
 

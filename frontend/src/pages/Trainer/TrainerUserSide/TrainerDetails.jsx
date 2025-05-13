@@ -1,33 +1,39 @@
-import React, { useEffect, useState, useMemo, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import axiosInstance from "../../../utils/axiosInstance";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import {
+  Award,
   Calendar,
   Camera,
   ChevronLeft,
   ChevronRight,
   Clock,
-  Globe,
-  MapPin,
-  PawPrint,
-  Star,
-  User,
-  Zap,
   Facebook,
+  Globe,
   Instagram,
   Languages,
+  MapPin,
+  PawPrint,
   Phone,
-  Award,
+  Star,
+  User,
   X,
+  Zap,
 } from "lucide-react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import MapViewer from "../../../components/map/MapViewer";
-import AppointmentModal from "../../../components/Trainer/TrainerUserSide/AppointmentModal";
+import AppointmentModal from "../../../components/vet/VetUserManagment/appointmentForm/AppointmentModal";
+import axiosInstance from "../../../utils/axiosInstance";
+
 import { useApp } from "../../../context/AppContext";
 
 const PawIcon = ({ className, style }) => (
-  <svg viewBox="0 0 24 24" className={className} style={style} fill="currentColor">
+  <svg
+    viewBox="0 0 24 24"
+    className={className}
+    style={style}
+    fill="currentColor"
+  >
     <path d="M12,17.5c2.33,2.33,5.67,2.33,8,0s2.33-5.67,0-8s-5.67-2.33-8,0S9.67,15.17,12,17.5z M7.5,14.5 c-1.96,1.96-1.96,4.04,0,6s4.04,1.96,6,0s1.96-4.04,0-6S9.46,12.54,7.5,14.5z M18.5,3.5c-1.96-1.96-4.04-1.96-6,0s-1.96,4.04,0,6 s4.04,1.96,6,0S20.46,5.46,18.5,3.5z M3.5,9.5c-1.96,1.96-1.96,4.04,0,6s4.04,1.96,6,0s1.96-4.04,0-6S5.46,7.54,3.5,9.5z" />
   </svg>
 );
@@ -70,7 +76,9 @@ export default function TrainerDetails() {
         setReviews(reviewsResponse.data.reviews || []);
         setError("");
       } catch (err) {
-        setError(err.response?.data?.message || "Failed to fetch trainer details");
+        setError(
+          err.response?.data?.message || "Failed to fetch trainer details"
+        );
         console.error("Fetch Error:", err);
       } finally {
         setLoading(false);
@@ -101,7 +109,10 @@ export default function TrainerDetails() {
   );
 
   // Event handlers
-  const handlePhotoClick = useCallback((index) => setSelectedPhotoIndex(index), []);
+  const handlePhotoClick = useCallback(
+    (index) => setSelectedPhotoIndex(index),
+    []
+  );
   const closeModal = useCallback(() => setSelectedPhotoIndex(null), []);
   const nextPhoto = useCallback(() => {
     if (trainer?.trainerDetails?.trainingPhotos) {
@@ -147,14 +158,7 @@ export default function TrainerDetails() {
   }, [user, navigate, id]);
 
   const closeAppointmentModal = useCallback(() => setIsModalOpen(false), []);
-  const handleBookingSuccess = useCallback(() => {
-    closeAppointmentModal();
-    toast.success("Appointment booked successfully!", {
-      position: "top-right",
-      autoClose: 3000,
-      theme: "light",
-    });
-  }, [closeAppointmentModal]);
+
 
   const handleSubmitReview = useCallback(
     async (e) => {
@@ -164,7 +168,9 @@ export default function TrainerDetails() {
         return;
       }
       if (ratingInput < 1 || ratingInput > 5) {
-        setReviewError("Please select.....Please select a rating between 1 and 5 stars");
+        setReviewError(
+          "Please select.....Please select a rating between 1 and 5 stars"
+        );
         toast.error("Invalid rating", {
           position: "top-right",
           autoClose: 3000,
@@ -173,10 +179,13 @@ export default function TrainerDetails() {
         return;
       }
       try {
-        const response = await axiosInstance.post(`/api/user/trainer/${id}/reviews`, {
-          rating: ratingInput,
-          comment: commentInput,
-        });
+        const response = await axiosInstance.post(
+          `/api/user/trainer/${id}/reviews`,
+          {
+            rating: ratingInput,
+            comment: commentInput,
+          }
+        );
         const newReview = {
           ...response.data.review,
           userId: { _id: user._id, fullName: user.fullName, image: user.image },
@@ -198,10 +207,14 @@ export default function TrainerDetails() {
           theme: "light",
         });
         setTimeout(() => {
-          document.getElementById("reviews")?.scrollIntoView({ behavior: "smooth" });
+          document
+            .getElementById("reviews")
+            ?.scrollIntoView({ behavior: "smooth" });
         }, 500);
       } catch (err) {
-        setReviewError(err.response?.data?.message || "Failed to submit review");
+        setReviewError(
+          err.response?.data?.message || "Failed to submit review"
+        );
         toast.error("Failed to submit review", {
           position: "top-right",
           autoClose: 3000,
@@ -231,23 +244,40 @@ export default function TrainerDetails() {
   ];
 
   // Paw background animation
-  const PawBackground = () => (
+  const PawBackground = () =>
     Array(10)
       .fill(null)
       .map((_, index) => {
-        const colors = ["text-[#ffc929]", "text-pink-300", "text-yellow-200", "text-orange-200"];
+        const colors = [
+          "text-[#ffc929]",
+          "text-pink-300",
+          "text-yellow-200",
+          "text-orange-200",
+        ];
         const colorClass = colors[index % colors.length];
         return (
           <PawIcon
             key={index}
             className={`absolute w-10 h-10 opacity-10 animate-float ${colorClass} ${
-              index % 3 === 0 ? "top-1/4" : index % 3 === 1 ? "top-1/2" : "top-3/4"
-            } ${index % 4 === 0 ? "left-1/4" : index % 4 === 1 ? "left-1/2" : "left-3/4"}`}
-            style={{ animationDelay: `${index * 0.6}s`, transform: `rotate(${index * 45}deg)` }}
+              index % 3 === 0
+                ? "top-1/4"
+                : index % 3 === 1
+                ? "top-1/2"
+                : "top-3/4"
+            } ${
+              index % 4 === 0
+                ? "left-1/4"
+                : index % 4 === 1
+                ? "left-1/2"
+                : "left-3/4"
+            }`}
+            style={{
+              animationDelay: `${index * 0.6}s`,
+              transform: `rotate(${index * 45}deg)`,
+            }}
           />
         );
-      })
-  );
+      });
 
   if (loading) {
     return (
@@ -256,7 +286,9 @@ export default function TrainerDetails() {
           <div className="flex justify-center mb-4">
             <div className="animate-spin w-12 h-12 rounded-full border-4 border-[#ffc929] border-t-transparent"></div>
           </div>
-          <p className="text-lg font-medium text-gray-600">Loading Trainer Details...</p>
+          <p className="text-lg font-medium text-gray-600">
+            Loading Trainer Details...
+          </p>
         </div>
       </div>
     );
@@ -272,7 +304,9 @@ export default function TrainerDetails() {
             </div>
           </div>
           <h2 className="mb-4 text-2xl font-bold text-gray-800">Oops!</h2>
-          <p className="mb-6 text-lg font-medium text-pink-600">{error || "Trainer not found"}</p>
+          <p className="mb-6 text-lg font-medium text-pink-600">
+            {error || "Trainer not found"}
+          </p>
           <button
             onClick={() => navigate("/trainers")}
             className="flex items-center gap-2 px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-[#ffc929] to-[#ffa726] rounded-lg hover:from-[#ffa726] hover:to-[#ffc929] transition-all duration-300 mx-auto"
@@ -331,9 +365,13 @@ export default function TrainerDetails() {
                     src={profileImageUrl}
                     alt={trainer.fullName}
                     className="object-cover w-8 h-8 border-2 border-white rounded-full shadow-sm"
-                    onError={(e) => (e.target.src = "https://placehold.co/300x300")}
+                    onError={(e) =>
+                      (e.target.src = "https://placehold.co/300x300")
+                    }
                   />
-                  <span className="font-medium text-gray-800">{trainer.fullName}</span>
+                  <span className="font-medium text-gray-800">
+                    {trainer.fullName}
+                  </span>
                 </div>
               )}
               <button
@@ -359,7 +397,9 @@ export default function TrainerDetails() {
                   src={profileImageUrl}
                   alt={trainer.fullName}
                   className="object-cover w-32 h-32 border-2 border-white rounded-full shadow-md"
-                  onError={(e) => (e.target.src = "https://placehold.co/300x300")}
+                  onError={(e) =>
+                    (e.target.src = "https://placehold.co/300x300")
+                  }
                 />
                 <div className="absolute -bottom-2 -right-2 bg-[#ffc929] rounded-full p-1 shadow-sm">
                   <Star size={16} className="text-white" fill="currentColor" />
@@ -371,7 +411,9 @@ export default function TrainerDetails() {
                     src={businessCardImageUrl}
                     alt="Business Card"
                     className="object-contain w-48 h-32 border border-gray-100 rounded-lg shadow-sm"
-                    onError={(e) => (e.target.src = "https://placehold.co/300x200")}
+                    onError={(e) =>
+                      (e.target.src = "https://placehold.co/300x200")
+                    }
                   />
                 </div>
               )}
@@ -381,7 +423,9 @@ export default function TrainerDetails() {
             <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
               <div>
                 <div className="flex items-baseline gap-2">
-                  <h1 className="text-3xl font-bold text-gray-800">{trainer.fullName}</h1>
+                  <h1 className="text-3xl font-bold text-gray-800">
+                    {trainer.fullName}
+                  </h1>
                   {trainer.trainerDetails?.rating > 4.5 && (
                     <span className="bg-[#ffc929]/10 text-xs px-2 py-1 rounded-full text-[#ffc929] font-medium flex items-center gap-1">
                       <Award size={12} />
@@ -404,16 +448,20 @@ export default function TrainerDetails() {
                     ))}
                   </div>
                   <p className="ml-1 text-sm font-medium text-gray-600">
-                    {(trainer.trainerDetails?.rating || 0).toFixed(1)} ({reviews.length})
+                    {(trainer.trainerDetails?.rating || 0).toFixed(1)} (
+                    {reviews.length})
                   </p>
                 </div>
                 {trainer.trainerDetails?.trainingFacilityType && (
                   <div className="flex items-center gap-1 mt-2 text-sm text-gray-600">
                     <MapPin size={14} className="text-[#ffc929]" />
                     <span>
-                      {trainer.trainerDetails.trainingFacilityType === "Fixed Facility"
+                      {trainer.trainerDetails.trainingFacilityType ===
+                      "Fixed Facility"
                         ? `${trainer.trainerDetails.governorate || ""}${
-                            trainer.trainerDetails.delegation ? `, ${trainer.trainerDetails.delegation}` : ""
+                            trainer.trainerDetails.delegation
+                              ? `, ${trainer.trainerDetails.delegation}`
+                              : ""
                           }`
                         : "Mobile Trainer (Travels to you)"}
                     </span>
@@ -436,7 +484,10 @@ export default function TrainerDetails() {
         </section>
 
         {/* Navigation Tabs */}
-        <div className="sticky z-20 mb-6 bg-white rounded-lg shadow-sm top-16 animate-fadeIn" style={{ animationDelay: "0.2s" }}>
+        <div
+          className="sticky z-20 mb-6 bg-white rounded-lg shadow-sm top-16 animate-fadeIn"
+          style={{ animationDelay: "0.2s" }}
+        >
           <div className="flex overflow-x-auto scrollbar-hide">
             {tabs.map((tab) => (
               <button
@@ -475,7 +526,11 @@ export default function TrainerDetails() {
           {/* Main Content */}
           <div className="space-y-6 lg:col-span-2">
             {/* About Section */}
-            <section id="about" className="p-6 bg-white shadow-sm rounded-xl animate-fadeIn" style={{ animationDelay: "0.3s" }}>
+            <section
+              id="about"
+              className="p-6 bg-white shadow-sm rounded-xl animate-fadeIn"
+              style={{ animationDelay: "0.3s" }}
+            >
               <h2 className="flex items-center gap-2 mb-4 text-xl font-semibold text-gray-800">
                 <User size={20} className="text-[#ffc929]" />
                 About {trainer.fullName}
@@ -492,14 +547,24 @@ export default function TrainerDetails() {
               )}
               {trainer.trainerDetails?.breedsTrained?.length > 0 && (
                 <div className="mt-6">
-                  <h3 className="mb-3 text-lg font-medium text-gray-800">Specialized Breeds</h3>
+                  <h3 className="mb-3 text-lg font-medium text-gray-800">
+                    Specialized Breeds
+                  </h3>
                   <div className="flex flex-wrap gap-2">
-                    {trainer.trainerDetails.breedsTrained.map((breed, index) => (
-                      <span key={index} className="px-3 py-1 text-sm bg-[#ffc929]/10 text-gray-700 rounded-full">
-                        <span className="font-medium">{breed.breedName}</span>
-                        <span className="text-xs text-gray-500"> ({breed.species})</span>
-                      </span>
-                    ))}
+                    {trainer.trainerDetails.breedsTrained.map(
+                      (breed, index) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1 text-sm bg-[#ffc929]/10 text-gray-700 rounded-full"
+                        >
+                          <span className="font-medium">{breed.breedName}</span>
+                          <span className="text-xs text-gray-500">
+                            {" "}
+                            ({breed.species})
+                          </span>
+                        </span>
+                      )
+                    )}
                   </div>
                 </div>
               )}
@@ -510,18 +575,27 @@ export default function TrainerDetails() {
                     Languages
                   </h3>
                   <div className="flex flex-wrap gap-2">
-                    {trainer.trainerDetails.languagesSpoken.map((language, index) => (
-                      <span key={index} className="px-3 py-1 text-sm bg-[#ffc929]/10 text-[#ffc929] rounded-full font-medium">
-                        {language}
-                      </span>
-                    ))}
+                    {trainer.trainerDetails.languagesSpoken.map(
+                      (language, index) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1 text-sm bg-[#ffc929]/10 text-[#ffc929] rounded-full font-medium"
+                        >
+                          {language}
+                        </span>
+                      )
+                    )}
                   </div>
                 </div>
               )}
             </section>
 
             {/* Location Section */}
-            <section id="location" className="p-6 bg-white shadow-sm rounded-xl animate-fadeIn" style={{ animationDelay: "0.4s" }}>
+            <section
+              id="location"
+              className="p-6 bg-white shadow-sm rounded-xl animate-fadeIn"
+              style={{ animationDelay: "0.4s" }}
+            >
               <h2 className="flex items-center gap-2 mb-4 text-xl font-semibold text-gray-800">
                 <MapPin size={20} className="text-[#ffc929]" />
                 Location
@@ -533,26 +607,36 @@ export default function TrainerDetails() {
                 </div>
               ) : (
                 <div className="space-y-6">
-                  {trainer.trainerDetails?.trainingFacilityType === "Fixed Facility" && (
+                  {trainer.trainerDetails?.trainingFacilityType ===
+                    "Fixed Facility" && (
                     <>
-                      {(trainer.trainerDetails?.governorate || trainer.trainerDetails?.delegation) && (
+                      {(trainer.trainerDetails?.governorate ||
+                        trainer.trainerDetails?.delegation) && (
                         <div className="flex items-start gap-3">
                           <div className="w-10 h-10 mt-1 rounded-full bg-[#ffc929]/10 flex items-center justify-center">
                             <MapPin size={18} className="text-[#ffc929]" />
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-gray-500">Location</p>
+                            <p className="text-sm font-medium text-gray-500">
+                              Location
+                            </p>
                             <p className="text-lg text-gray-800">
                               {trainer.trainerDetails.governorate}
-                              {trainer.trainerDetails.delegation ? `, ${trainer.trainerDetails.delegation}` : ""}
+                              {trainer.trainerDetails.delegation
+                                ? `, ${trainer.trainerDetails.delegation}`
+                                : ""}
                             </p>
                           </div>
                         </div>
                       )}
                       {trainer.trainerDetails?.geolocation && (
                         <div className="mt-4">
-                          <p className="mb-2 text-sm font-medium text-gray-500">Training Center Map</p>
-                          <MapViewer position={trainer.trainerDetails.geolocation} />
+                          <p className="mb-2 text-sm font-medium text-gray-500">
+                            Training Center Map
+                          </p>
+                          <MapViewer
+                            position={trainer.trainerDetails.geolocation}
+                          />
                           <a
                             href={`https://www.google.com/maps?q=${trainer.trainerDetails.geolocation.latitude},${trainer.trainerDetails.geolocation.longitude}`}
                             target="_blank"
@@ -570,37 +654,61 @@ export default function TrainerDetails() {
                   {trainer.trainerDetails?.trainingFacilityType === "Mobile" &&
                     trainer.trainerDetails?.serviceAreas?.length > 0 && (
                       <div className="mt-4">
-                        <p className="mb-2 text-sm font-medium text-gray-500">Service Areas</p>
-                        <p className="mb-2 text-lg italic text-gray-700">This trainer travels to your location</p>
+                        <p className="mb-2 text-sm font-medium text-gray-500">
+                          Service Areas
+                        </p>
+                        <p className="mb-2 text-lg italic text-gray-700">
+                          This trainer travels to your location
+                        </p>
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                          {trainer.trainerDetails.serviceAreas.map((area, index) => (
-                            <div key={index} className="p-3 bg-[#ffc929]/5 rounded-xl">
-                              <p className="font-medium text-gray-800">{area.governorate}</p>
-                              {area.delegations?.length > 0 ? (
-                                <p className="text-sm text-gray-600">{area.delegations.join(", ")}</p>
-                              ) : (
-                                <p className="text-sm italic text-gray-500">All delegations</p>
-                              )}
-                            </div>
-                          ))}
+                          {trainer.trainerDetails.serviceAreas.map(
+                            (area, index) => (
+                              <div
+                                key={index}
+                                className="p-3 bg-[#ffc929]/5 rounded-xl"
+                              >
+                                <p className="font-medium text-gray-800">
+                                  {area.governorate}
+                                </p>
+                                {area.delegations?.length > 0 ? (
+                                  <p className="text-sm text-gray-600">
+                                    {area.delegations.join(", ")}
+                                  </p>
+                                ) : (
+                                  <p className="text-sm italic text-gray-500">
+                                    All delegations
+                                  </p>
+                                )}
+                              </div>
+                            )
+                          )}
                         </div>
                       </div>
                     )}
-                  {trainer.trainerDetails?.trainingFacilityType === "Fixed Facility" &&
+                  {trainer.trainerDetails?.trainingFacilityType ===
+                    "Fixed Facility" &&
                     !trainer.trainerDetails?.governorate &&
                     !trainer.trainerDetails?.geolocation && (
-                      <p className="italic text-gray-500">Location information not provided</p>
+                      <p className="italic text-gray-500">
+                        Location information not provided
+                      </p>
                     )}
                   {trainer.trainerDetails?.trainingFacilityType === "Mobile" &&
                     !trainer.trainerDetails?.serviceAreas?.length && (
-                      <p className="italic text-gray-500">Service areas not specified</p>
+                      <p className="italic text-gray-500">
+                        Service areas not specified
+                      </p>
                     )}
                 </div>
               )}
             </section>
 
             {/* Services Section */}
-            <section id="services" className="p-6 bg-white shadow-sm rounded-xl animate-fadeIn" style={{ animationDelay: "0.5s" }}>
+            <section
+              id="services"
+              className="p-6 bg-white shadow-sm rounded-xl animate-fadeIn"
+              style={{ animationDelay: "0.5s" }}
+            >
               <h2 className="flex items-center gap-2 mb-4 text-xl font-semibold text-gray-800">
                 <Zap size={20} className="text-[#ffc929]" />
                 Services Offered
@@ -608,7 +716,10 @@ export default function TrainerDetails() {
               {loading ? (
                 <div className="grid gap-4 sm:grid-cols-2">
                   {[...Array(4)].map((_, i) => (
-                    <div key={i} className="p-5 bg-gray-200 rounded-lg animate-pulse">
+                    <div
+                      key={i}
+                      className="p-5 bg-gray-200 rounded-lg animate-pulse"
+                    >
                       <div className="w-3/4 h-4 mb-2 bg-gray-300 rounded"></div>
                       <div className="w-1/2 h-4 bg-gray-300 rounded"></div>
                     </div>
@@ -626,9 +737,13 @@ export default function TrainerDetails() {
                           <PawPrint size={18} className="text-[#ffc929]" />
                         </div>
                         <div>
-                          <h3 className="font-semibold text-gray-800">{service.serviceName}</h3>
+                          <h3 className="font-semibold text-gray-800">
+                            {service.serviceName}
+                          </h3>
                           {service.fee && (
-                            <p className="mt-2 text-lg font-bold text-[#ffc929]">{service.fee} TND</p>
+                            <p className="mt-2 text-lg font-bold text-[#ffc929]">
+                              {service.fee} TND
+                            </p>
                           )}
                           {!availableServices.includes(service.serviceName) && (
                             <span className="inline-block px-2 py-1 mt-2 text-xs font-medium text-yellow-600 rounded-full bg-yellow-50">
@@ -649,7 +764,11 @@ export default function TrainerDetails() {
             </section>
 
             {/* Schedule Section */}
-            <section id="schedule" className="p-6 bg-white shadow-sm rounded-xl animate-fadeIn" style={{ animationDelay: "0.6s" }}>
+            <section
+              id="schedule"
+              className="p-6 bg-white shadow-sm rounded-xl animate-fadeIn"
+              style={{ animationDelay: "0.6s" }}
+            >
               <div className="flex items-center justify-between mb-4">
                 <h2 className="flex items-center gap-2 text-xl font-semibold text-gray-800">
                   <Clock size={20} className="text-[#ffc929]" />
@@ -659,7 +778,8 @@ export default function TrainerDetails() {
                   <div className="flex items-center gap-1 px-3 py-1 bg-[#ffc929]/10 rounded-full">
                     <Clock size={14} className="text-[#ffc929]" />
                     <span className="text-sm font-medium text-gray-700">
-                      {trainer.trainerDetails.averageSessionDuration} min sessions
+                      {trainer.trainerDetails.averageSessionDuration} min
+                      sessions
                     </span>
                   </div>
                 )}
@@ -667,7 +787,10 @@ export default function TrainerDetails() {
               {loading ? (
                 <div className="grid gap-3 sm:grid-cols-7">
                   {[...Array(7)].map((_, i) => (
-                    <div key={i} className="p-3 bg-gray-200 rounded-lg animate-pulse">
+                    <div
+                      key={i}
+                      className="p-3 bg-gray-200 rounded-lg animate-pulse"
+                    >
                       <div className="w-1/2 h-4 mx-auto mb-2 bg-gray-300 rounded"></div>
                       <div className="w-3/4 h-4 mx-auto bg-gray-300 rounded"></div>
                     </div>
@@ -675,10 +798,21 @@ export default function TrainerDetails() {
                 </div>
               ) : trainer.trainerDetails?.openingHours ? (
                 <div className="grid gap-3 sm:grid-cols-7">
-                  {["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"].map((day) => {
-                    const sessionType = trainer.trainerDetails.openingHours[day];
+                  {[
+                    "monday",
+                    "tuesday",
+                    "wednesday",
+                    "thursday",
+                    "friday",
+                    "saturday",
+                    "sunday",
+                  ].map((day) => {
+                    const sessionType =
+                      trainer.trainerDetails.openingHours[day];
                     const isToday =
-                      new Date().toLocaleDateString("en-US", { weekday: "long" }).toLowerCase() === day;
+                      new Date()
+                        .toLocaleDateString("en-US", { weekday: "long" })
+                        .toLowerCase() === day;
                     let content;
                     if (sessionType === "Closed") {
                       content = (
@@ -687,22 +821,32 @@ export default function TrainerDetails() {
                         </div>
                       );
                     } else {
-                      const start = trainer.trainerDetails.openingHours[`${day}Start`];
-                      const end = trainer.trainerDetails.openingHours[`${day}End`];
-                      const start2 = trainer.trainerDetails.openingHours[`${day}Start2`];
-                      const end2 = trainer.trainerDetails.openingHours[`${day}End2`];
+                      const start =
+                        trainer.trainerDetails.openingHours[`${day}Start`];
+                      const end =
+                        trainer.trainerDetails.openingHours[`${day}End`];
+                      const start2 =
+                        trainer.trainerDetails.openingHours[`${day}Start2`];
+                      const end2 =
+                        trainer.trainerDetails.openingHours[`${day}End2`];
                       content = (
                         <div className="py-2 space-y-1">
                           <div className="flex items-center justify-center gap-1">
                             <Clock size={12} className="text-[#ffc929]" />
-                            <p className="text-sm text-gray-600">{start} - {end}</p>
+                            <p className="text-sm text-gray-600">
+                              {start} - {end}
+                            </p>
                           </div>
-                          {sessionType === "Double Session" && start2 && end2 && (
-                            <div className="flex items-center justify-center gap-1">
-                              <Clock size={12} className="text-[#ffc929]" />
-                              <p className="text-sm text-gray-600">{start2} - {end2}</p>
-                            </div>
-                          )}
+                          {sessionType === "Double Session" &&
+                            start2 &&
+                            end2 && (
+                              <div className="flex items-center justify-center gap-1">
+                                <Clock size={12} className="text-[#ffc929]" />
+                                <p className="text-sm text-gray-600">
+                                  {start2} - {end2}
+                                </p>
+                              </div>
+                            )}
                         </div>
                       );
                     }
@@ -719,12 +863,16 @@ export default function TrainerDetails() {
                       >
                         <p
                           className={`font-medium pb-2 border-b ${
-                            isToday ? "text-[#ffc929] border-[#ffc929]/30" : "text-gray-800 border-gray-100"
+                            isToday
+                              ? "text-[#ffc929] border-[#ffc929]/30"
+                              : "text-gray-800 border-gray-100"
                           }`}
                         >
                           {day.charAt(0).toUpperCase() + day.slice(1)}
                           {isToday && (
-                            <span className="ml-1 text-xs bg-[#ffc929] text-white px-1 rounded-sm">Today</span>
+                            <span className="ml-1 text-xs bg-[#ffc929] text-white px-1 rounded-sm">
+                              Today
+                            </span>
                           )}
                         </p>
                         {content}
@@ -735,14 +883,19 @@ export default function TrainerDetails() {
               ) : (
                 <div className="py-8 text-center">
                   <Clock size={36} className="mx-auto mb-3 text-gray-300" />
-                  <p className="text-gray-500">No schedule information available</p>
+                  <p className="text-gray-500">
+                    No schedule information available
+                  </p>
                 </div>
               )}
-
             </section>
 
             {/* Gallery Section */}
-            <section id="gallery" className="p-6 bg-white shadow-sm rounded-xl animate-fadeIn" style={{ animationDelay: "0.7s" }}>
+            <section
+              id="gallery"
+              className="p-6 bg-white shadow-sm rounded-xl animate-fadeIn"
+              style={{ animationDelay: "0.7s" }}
+            >
               <h2 className="flex items-center gap-2 mb-4 text-xl font-semibold text-gray-800">
                 <Camera size={20} className="text-[#ffc929]" />
                 Training Gallery
@@ -750,19 +903,27 @@ export default function TrainerDetails() {
               {loading ? (
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                   {[...Array(6)].map((_, i) => (
-                    <div key={i} className="bg-gray-200 rounded-lg animate-pulse aspect-square"></div>
+                    <div
+                      key={i}
+                      className="bg-gray-200 rounded-lg animate-pulse aspect-square"
+                    ></div>
                   ))}
                 </div>
               ) : trainer.trainerDetails?.trainingPhotos?.length > 0 ? (
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                   {trainer.trainerDetails.trainingPhotos.map((photo, index) => (
-                    <div key={index} className="relative overflow-hidden rounded-lg shadow-sm aspect-square group">
+                    <div
+                      key={index}
+                      className="relative overflow-hidden rounded-lg shadow-sm aspect-square group"
+                    >
                       <img
                         src={photo}
                         alt={`Training Photo ${index + 1}`}
                         className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110"
                         onClick={() => handlePhotoClick(index)}
-                        onError={(e) => (e.target.src = "https://placehold.co/300x300")}
+                        onError={(e) =>
+                          (e.target.src = "https://placehold.co/300x300")
+                        }
                       />
                       <div
                         className="absolute inset-0 flex items-center justify-center transition-opacity duration-300 opacity-0 cursor-pointer bg-black/40 group-hover:opacity-100"
@@ -770,7 +931,8 @@ export default function TrainerDetails() {
                         role="button"
                         tabIndex={0}
                         onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") handlePhotoClick(index);
+                          if (e.key === "Enter" || e.key === " ")
+                            handlePhotoClick(index);
                         }}
                         aria-label={`View training photo ${index + 1}`}
                       >
@@ -790,7 +952,11 @@ export default function TrainerDetails() {
             </section>
 
             {/* Reviews Section */}
-            <section id="reviews" className="p-6 bg-white shadow-sm rounded-xl animate-fadeIn" style={{ animationDelay: "0.8s" }}>
+            <section
+              id="reviews"
+              className="p-6 bg-white shadow-sm rounded-xl animate-fadeIn"
+              style={{ animationDelay: "0.8s" }}
+            >
               <h2 className="flex items-center gap-2 mb-4 text-xl font-semibold text-gray-800">
                 <Star size={20} className="text-[#ffc929]" />
                 Reviews & Feedback
@@ -798,7 +964,10 @@ export default function TrainerDetails() {
               {loading ? (
                 <div className="space-y-4">
                   {[...Array(3)].map((_, i) => (
-                    <div key={i} className="p-4 bg-white rounded-lg shadow-sm animate-pulse">
+                    <div
+                      key={i}
+                      className="p-4 bg-white rounded-lg shadow-sm animate-pulse"
+                    >
                       <div className="flex items-start gap-3">
                         <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
                         <div className="flex-1">
@@ -812,7 +981,10 @@ export default function TrainerDetails() {
               ) : reviews.length > 0 ? (
                 <div className="mb-6 space-y-4">
                   {reviews.map((review) => (
-                    <div key={review._id} className="p-4 bg-white rounded-lg shadow-sm transition-transform duration-300 hover:scale-[1.02]">
+                    <div
+                      key={review._id}
+                      className="p-4 bg-white rounded-lg shadow-sm transition-transform duration-300 hover:scale-[1.02]"
+                    >
                       <div className="flex items-start gap-3">
                         <img
                           src={
@@ -824,17 +996,24 @@ export default function TrainerDetails() {
                           }
                           alt={review.userId.fullName}
                           className="w-12 h-12 rounded-full object-cover border-2 border-[#ffc929]"
-                          onError={(e) => (e.target.src = "https://placehold.co/300x300")}
+                          onError={(e) =>
+                            (e.target.src = "https://placehold.co/300x300")
+                          }
                         />
                         <div>
                           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                            <h3 className="font-semibold text-gray-800">{review.userId.fullName}</h3>
+                            <h3 className="font-semibold text-gray-800">
+                              {review.userId.fullName}
+                            </h3>
                             <p className="text-xs text-gray-500">
-                              {new Date(review.createdAt).toLocaleDateString(undefined, {
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                              })}
+                              {new Date(review.createdAt).toLocaleDateString(
+                                undefined,
+                                {
+                                  year: "numeric",
+                                  month: "long",
+                                  day: "numeric",
+                                }
+                              )}
                             </p>
                           </div>
                           <div className="flex items-center mt-1">
@@ -860,26 +1039,35 @@ export default function TrainerDetails() {
                 <div className="py-8 mb-6 text-center">
                   <Star size={36} className="mx-auto mb-3 text-gray-300" />
                   <p className="text-gray-500">No reviews yet</p>
-                  <p className="mt-2 text-sm text-gray-400">Be the first to review this trainer</p>
+                  <p className="mt-2 text-sm text-gray-400">
+                    Be the first to review this trainer
+                  </p>
                 </div>
               )}
               {user ? (
                 <form onSubmit={handleSubmitReview} className="space-y-4">
-                  <h3 className="text-lg font-medium text-gray-800">Submit Your Review</h3>
-                  {reviewError && <p className="text-sm text-red-500">{reviewError}</p>}
+                  <h3 className="text-lg font-medium text-gray-800">
+                    Submit Your Review
+                  </h3>
+                  {reviewError && (
+                    <p className="text-sm text-red-500">{reviewError}</p>
+                  )}
                   <div className="flex items-center gap-2">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <Star
                         key={star}
                         size={24}
                         className={`cursor-pointer ${
-                          star <= ratingInput ? "text-[#ffc929] fill-[#ffc929]" : "text-gray-300"
+                          star <= ratingInput
+                            ? "text-[#ffc929] fill-[#ffc929]"
+                            : "text-gray-300"
                         }`}
                         onClick={() => setRatingInput(star)}
                         role="button"
                         tabIndex={0}
                         onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") setRatingInput(star);
+                          if (e.key === "Enter" || e.key === " ")
+                            setRatingInput(star);
                         }}
                         aria-label={`Rate ${star} star${star === 1 ? "" : "s"}`}
                       />
@@ -904,7 +1092,11 @@ export default function TrainerDetails() {
                 </form>
               ) : (
                 <p className="text-sm text-gray-500">
-                  Please <a href="/login" className="text-[#ffc929] hover:underline">login</a> to submit a review
+                  Please{" "}
+                  <a href="/login" className="text-[#ffc929] hover:underline">
+                    login
+                  </a>{" "}
+                  to submit a review
                 </p>
               )}
             </section>
@@ -916,7 +1108,9 @@ export default function TrainerDetails() {
               <div className="p-6 space-y-6 bg-white shadow-sm rounded-xl">
                 {/* Trainer Info */}
                 <div>
-                  <h2 className="mb-2 text-xl font-semibold text-gray-800">Contact {trainer.fullName}</h2>
+                  <h2 className="mb-2 text-xl font-semibold text-gray-800">
+                    Contact {trainer.fullName}
+                  </h2>
                 </div>
 
                 {/* Contact Section */}
@@ -929,18 +1123,24 @@ export default function TrainerDetails() {
                   ) : (
                     <>
                       <p className="mb-4 text-gray-600">
-                        Book via our platform or call directly to reserve your session.
+                        Book via our platform or call directly to reserve your
+                        session.
                       </p>
-                      {(trainer.trainerDetails?.phone || trainer.trainerDetails?.secondaryPhone) && (
+                      {(trainer.trainerDetails?.phone ||
+                        trainer.trainerDetails?.secondaryPhone) && (
                         <div className="mb-4">
-                          <p className="mb-2 text-sm font-medium text-gray-500">Contact by Phone</p>
+                          <p className="mb-2 text-sm font-medium text-gray-500">
+                            Contact by Phone
+                          </p>
                           {trainer.trainerDetails?.phone && (
                             <div className="flex items-start gap-3">
                               <div className="w-8 h-8 mt-1 rounded-full bg-[#ffc929]/10 flex items-center justify-center">
                                 <Phone size={16} className="text-[#ffc929]" />
                               </div>
                               <div>
-                                <p className="text-sm font-medium text-gray-500">Phone</p>
+                                <p className="text-sm font-medium text-gray-500">
+                                  Phone
+                                </p>
                                 <a
                                   href={`tel:${trainer.trainerDetails.phone}`}
                                   className="text-base text-[#ffc929] hover:underline"
@@ -957,7 +1157,9 @@ export default function TrainerDetails() {
                                 <Phone size={16} className="text-[#ffc929]" />
                               </div>
                               <div>
-                                <p className="text-sm font-medium text-gray-500">Secondary Phone</p>
+                                <p className="text-sm font-medium text-gray-500">
+                                  Secondary Phone
+                                </p>
                                 <a
                                   href={`tel:${trainer.trainerDetails.secondaryPhone}`}
                                   className="text-base text-[#ffc929] hover:underline"
@@ -974,11 +1176,15 @@ export default function TrainerDetails() {
                         trainer.trainerDetails?.socialLinks?.instagram ||
                         trainer.trainerDetails?.socialLinks?.website) && (
                         <div className="mb-4">
-                          <p className="mb-2 text-sm font-medium text-gray-500">Connect Online</p>
+                          <p className="mb-2 text-sm font-medium text-gray-500">
+                            Connect Online
+                          </p>
                           <div className="flex flex-wrap gap-3">
                             {trainer.trainerDetails?.socialLinks?.facebook && (
                               <a
-                                href={trainer.trainerDetails.socialLinks.facebook}
+                                href={
+                                  trainer.trainerDetails.socialLinks.facebook
+                                }
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="w-9 h-9 flex items-center justify-center rounded-full bg-[#ffc929]/10 text-[#ffc929] hover:bg-[#ffc929] hover:text-white transition-colors"
@@ -989,7 +1195,9 @@ export default function TrainerDetails() {
                             )}
                             {trainer.trainerDetails?.socialLinks?.instagram && (
                               <a
-                                href={trainer.trainerDetails.socialLinks.instagram}
+                                href={
+                                  trainer.trainerDetails.socialLinks.instagram
+                                }
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="w-9 h-9 flex items-center justify-center rounded-full bg-[#ffc929]/10 text-[#ffc929] hover:bg-[#ffc929] hover:text-white transition-colors"
@@ -1000,7 +1208,9 @@ export default function TrainerDetails() {
                             )}
                             {trainer.trainerDetails?.socialLinks?.website && (
                               <a
-                                href={trainer.trainerDetails.socialLinks.website}
+                                href={
+                                  trainer.trainerDetails.socialLinks.website
+                                }
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="w-9 h-9 flex items-center justify-center rounded-full bg-[#ffc929]/10 text-[#ffc929] hover:bg-[#ffc929] hover:text-white transition-colors"
@@ -1015,19 +1225,21 @@ export default function TrainerDetails() {
                       {!trainer.trainerDetails?.phone &&
                         !trainer.trainerDetails?.secondaryPhone &&
                         !trainer.trainerDetails?.socialLinks && (
-                          <p className="italic text-gray-500">Contact information not provided</p>
+                          <p className="italic text-gray-500">
+                            Contact information not provided
+                          </p>
                         )}
-              <div className="flex justify-center mt-6">
-                <button
-                  onClick={openAppointmentModal}
-                  className="flex items-center gap-2 px-6 py-3 text-white font-medium bg-gradient-to-r from-[#ffc929] to-[#ffa726] rounded-lg hover:from-[#ffa726] hover:to-[#ffc929] transition-all duration-300 shadow-sm disabled:opacity-50"
-                  disabled={!user}
-                  aria-label="Book a session now"
-                >
-                  <Calendar size={18} />
-                  Book a Session Now
-                </button>
-              </div>
+                      <div className="flex justify-center mt-6">
+                        <button
+                          onClick={openAppointmentModal}
+                          className="flex items-center gap-2 px-6 py-3 text-white font-medium bg-gradient-to-r from-[#ffc929] to-[#ffa726] rounded-lg hover:from-[#ffa726] hover:to-[#ffc929] transition-all duration-300 shadow-sm disabled:opacity-50"
+                          disabled={!user}
+                          aria-label="Book a session now"
+                        >
+                          <Calendar size={18} />
+                          Book a Session Now
+                        </button>
+                      </div>
                     </>
                   )}
                 </div>
@@ -1085,7 +1297,8 @@ export default function TrainerDetails() {
               </div>
               <div className="absolute transform -translate-x-1/2 bottom-8 left-1/2">
                 <div className="px-4 py-2 text-sm text-white rounded-full bg-black/30 backdrop-blur-md">
-                  Photo {selectedPhotoIndex + 1} of {trainer.trainerDetails.trainingPhotos.length}
+                  Photo {selectedPhotoIndex + 1} of{" "}
+                  {trainer.trainerDetails.trainingPhotos.length}
                 </div>
               </div>
             </div>
@@ -1095,12 +1308,12 @@ export default function TrainerDetails() {
         {/* Appointment Modal */}
         {isModalOpen && (
           <AppointmentModal
+            professional={trainer}
+            professionalType="Trainer"
             onClose={closeAppointmentModal}
-            onSuccess={handleBookingSuccess}
-            trainerId={id}
-            trainerName={trainer.fullName}
-            trainerImage={profileImageUrl}
-            trainerBusinessCardImage={businessCardImageUrl}
+            onSuccess={() => {
+            closeAppointmentModal();
+            }}
           />
         )}
 

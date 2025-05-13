@@ -1266,6 +1266,7 @@ const getTrainerReviews = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch reviews", detail: error.message });
   }
 };
+
 const updateTrainerProfile = async (req, res) => {
   const { userId, fullName, image, gender, about, trainerDetails } = req.body;
 
@@ -1420,6 +1421,7 @@ const updateTrainerProfile = async (req, res) => {
       .json({ message: "Failed to update trainer profile", detail: error.message });
   }
 };
+
 export {
   createProfile,
   forgotPassword,

@@ -1,20 +1,15 @@
 import {
-  ChevronLeft, // Changed from ArrowLeft to match CandidatesPage
-  Calendar,
-  Coins,
+  ChevronLeft,
   Heart,
-  MapPin,
-  PawPrint,
-  Star,
-  Zap,
+  PawPrint
 } from "lucide-react";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { SPECIES_OPTIONS, ageRanges, breeds } from "../assets/Pet";
+import HelpSection from "../components/common/HelpSection";
 import ImageUpload from "../components/ImageUpload";
 import { useApp } from "../context/AppContext";
 import axiosInstance from "../utils/axiosInstance";
-import HelpSection from "../components/common/HelpSection";
-import { SPECIES_OPTIONS, breeds, ageRanges } from "../assets/Pet";
 
 const CreatePet = () => {
   const navigate = useNavigate();

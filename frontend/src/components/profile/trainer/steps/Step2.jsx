@@ -325,16 +325,13 @@ const Step2 = ({
                 Select Duration
               </option>
               <optgroup label="Common Durations">
-                <option value={15}>15 mins</option>
-                <option value={30}>30 mins</option>
-                <option value={45}>45 mins</option>
-                <option value={60}>60 mins</option>
+                <option value={60}>1 hour</option>
               </optgroup>
               <optgroup label="Other Options">
-                <option value={20}>20 mins</option>
-                <option value={25}>25 mins</option>
-                <option value={50}>50 mins</option>
-                <option value={55}>55 mins</option>
+                <option value={90}>1 hour 30 mins</option>
+                <option value={120}>2 hours</option>
+                <option value={150}>2 hours 30 mins</option>
+                <option value={180}>3 hours</option>
               </optgroup>
             </select>
             <ErrorMessage

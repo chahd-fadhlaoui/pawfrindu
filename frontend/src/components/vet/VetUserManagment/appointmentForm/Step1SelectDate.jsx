@@ -2,7 +2,8 @@ import React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const Step1SelectDate = ({
-  vet,
+  professional,
+  professionalType,
   currentDate,
   selectedDate,
   handleDateSelect,
@@ -60,17 +61,18 @@ const Step1SelectDate = ({
 
     return result;
   };
-
+  const openingHours = professional?.[professionalType === "Vet" ? "veterinarianDetails" : "trainerDetails"]?.openingHours;
+  
   return (
     <div className="space-y-4">
       <h3 className="text-xl font-bold text-gray-800">Select a Date</h3>
-      {!vet?.veterinarianDetails?.openingHours ? (
-        <p className="text-red-500">Vet opening hours not available.</p>
+      {!openingHours ? (
+        <p className="text-red-500">{professionalType === "Vet" ? "Veterinarian" : "Trainer"} opening hours not available.</p>
       ) : (
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div className="p-4 bg-white border border-gray-100 shadow-sm rounded-xl">
           <div className="flex items-center justify-between mb-4">
             <button
-              className="p-2 rounded-full hover:bg-yellow-50 transition-colors"
+              className="p-2 transition-colors rounded-full hover:bg-yellow-50"
               onClick={handlePrevMonth}
             >
               <ChevronLeft size={20} className="text-pink-500" />
@@ -82,13 +84,13 @@ const Step1SelectDate = ({
               })}
             </h4>
             <button
-              className="p-2 rounded-full hover:bg-yellow-50 transition-colors"
+              className="p-2 transition-colors rounded-full hover:bg-yellow-50"
               onClick={handleNextMonth}
             >
               <ChevronRight size={20} className="text-pink-500" />
             </button>
           </div>
-          <div className="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-gray-600 mb-2">
+          <div className="grid grid-cols-7 gap-1 mb-2 text-xs font-semibold text-center text-gray-600">
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
               <div key={day} className="py-1">
                 {day}
@@ -98,8 +100,7 @@ const Step1SelectDate = ({
           <div className="grid grid-cols-7 gap-1">
             {getDaysInMonthView().map((day, index) => {
               const today = normalizeDate(new Date());
-              const isToday =
-                day.date.toDateString() === today.toDateString();
+              const isToday = day.date.toDateString() === today.toDateString();
               const isPast = day.date < today;
               const isSelected =
                 selectedDate &&
@@ -146,9 +147,9 @@ const Step1SelectDate = ({
           </div>
         </div>
       )}
-      <div className="flex items-center gap-4 text-xs text-gray-600 justify-center flex-wrap">
+      <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-gray-600">
         <div className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded-full bg-gray-300"></div>
+          <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
           <span>Unavailable</span>
         </div>
         <div className="flex items-center gap-1">
@@ -156,7 +157,7 @@ const Step1SelectDate = ({
           <span>Today</span>
         </div>
         <div className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded-full bg-pink-500"></div>
+          <div className="w-3 h-3 bg-pink-500 rounded-full"></div>
           <span>Selected</span>
         </div>
         <div className="flex items-center gap-1">

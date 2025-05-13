@@ -2,8 +2,7 @@ import React from "react";
 import { ChevronLeft, Calendar, Info } from "lucide-react";
 
 const Step3ConfirmDetails = ({
-  vet,
-  selectedDate,
+  professional, professionalType,  selectedDate,
   selectedTime,
   selectedPet,
   customPetName,
@@ -37,21 +36,21 @@ const Step3ConfirmDetails = ({
       <div className="flex items-center justify-between">
         <h3 className="text-xl font-bold text-gray-800">Confirm Details</h3>
         <button
-          className="flex items-center gap-1 text-pink-500 hover:text-pink-600 text-sm font-medium"
+          className="flex items-center gap-1 text-sm font-medium text-pink-500 hover:text-pink-600"
           onClick={() => setStep(2)}
         >
           <ChevronLeft size={16} />
           Change Time
         </button>
       </div>
-      <div className="bg-gradient-to-r from-yellow-50 to-pink-50 rounded-xl p-4 border border-yellow-100">
+      <div className="p-4 border border-yellow-100 bg-gradient-to-r from-yellow-50 to-pink-50 rounded-xl">
         <div className="flex items-start gap-3">
-          <Calendar className="text-pink-500 mt-1" size={24} />
+          <Calendar className="mt-1 text-pink-500" size={24} />
           <div>
             <h4 className="text-sm font-semibold text-gray-800">
               Appointment Summary
             </h4>
-            <p className="text-sm text-gray-700 mt-2">
+            <p className="mt-2 text-sm text-gray-700">
               <span className="font-medium">Date:</span>{" "}
               {selectedDate?.toLocaleDateString("en-US", {
                 weekday: "long",
@@ -64,7 +63,7 @@ const Step3ConfirmDetails = ({
               {formatTimeSlot(selectedTime)}
             </p>
             <p className="text-sm text-gray-700">
-              <span className="font-medium">Vet:</span> Dr. {vet.fullName}
+              <span className="font-medium">{professionalType}:</span> {professionalType === "Vet" ? "Dr." : ""} {professional.fullName}
             </p>
             <p className="text-sm text-gray-700">
               <span className="font-medium">Duration:</span>{" "}
@@ -78,7 +77,7 @@ const Step3ConfirmDetails = ({
         <div>
           <label
             htmlFor="petSelect"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block mb-1 text-sm font-medium text-gray-700"
           >
             Select Pet*
           </label>
@@ -131,58 +130,58 @@ const Step3ConfirmDetails = ({
         {selectedPet ? (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block mb-1 text-sm font-medium text-gray-700">
                 Pet Name
               </label>
-              <div className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-gray-100 text-sm text-gray-700">
+              <div className="w-full px-3 py-2 text-sm text-gray-700 bg-gray-100 border border-gray-300 rounded-lg">
                 {selectedPet.name || "N/A"}
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block mb-1 text-sm font-medium text-gray-700">
                 Pet Type
               </label>
-              <div className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-gray-100 text-sm text-gray-700">
+              <div className="w-full px-3 py-2 text-sm text-gray-700 bg-gray-100 border border-gray-300 rounded-lg">
                 {selectedPet.species || "Unknown"}
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block mb-1 text-sm font-medium text-gray-700">
                 Pet Age
               </label>
-              <div className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-gray-100 text-sm text-gray-700">
+              <div className="w-full px-3 py-2 text-sm text-gray-700 bg-gray-100 border border-gray-300 rounded-lg">
                 {selectedPet.age || "Unknown"}
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block mb-1 text-sm font-medium text-gray-700">
                 Breed
               </label>
-              <div className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-gray-100 text-sm text-gray-700">
+              <div className="w-full px-3 py-2 text-sm text-gray-700 bg-gray-100 border border-gray-300 rounded-lg">
                 {selectedPet.breed || "Unknown"}
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block mb-1 text-sm font-medium text-gray-700">
                 Gender
               </label>
-              <div className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-gray-100 text-sm text-gray-700">
+              <div className="w-full px-3 py-2 text-sm text-gray-700 bg-gray-100 border border-gray-300 rounded-lg">
                 {selectedPet.gender || "Unknown"}
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block mb-1 text-sm font-medium text-gray-700">
                 Address
               </label>
-              <div className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-gray-100 text-sm text-gray-700">
+              <div className="w-full px-3 py-2 text-sm text-gray-700 bg-gray-100 border border-gray-300 rounded-lg">
                 {address || "N/A"}
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block mb-1 text-sm font-medium text-gray-700">
                 Trained
               </label>
-              <div className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-gray-100 text-sm text-gray-700">
+              <div className="w-full px-3 py-2 text-sm text-gray-700 bg-gray-100 border border-gray-300 rounded-lg">
                 {selectedPet.isTrained ? "Yes" : "No"}
               </div>
             </div>
@@ -192,7 +191,7 @@ const Step3ConfirmDetails = ({
             <div>
               <label
                 htmlFor="customPetName"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block mb-1 text-sm font-medium text-gray-700"
               >
                 Pet Name*
               </label>
@@ -216,7 +215,7 @@ const Step3ConfirmDetails = ({
             <div>
               <label
                 htmlFor="customPetType"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block mb-1 text-sm font-medium text-gray-700"
               >
                 Pet Type*
               </label>
@@ -247,7 +246,7 @@ const Step3ConfirmDetails = ({
             <div>
               <label
                 htmlFor="breed"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block mb-1 text-sm font-medium text-gray-700"
               >
                 Breed
               </label>
@@ -256,7 +255,7 @@ const Step3ConfirmDetails = ({
                 name="breed"
                 value={breed}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-pink-200 text-sm"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-200"
                 disabled={!customPetType || availableBreeds.length === 0}
               >
                 <option value="">Select Breed</option>
@@ -278,7 +277,7 @@ const Step3ConfirmDetails = ({
             <div>
               <label
                 htmlFor="customPetAge"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block mb-1 text-sm font-medium text-gray-700"
               >
                 Pet Age
               </label>
@@ -287,7 +286,7 @@ const Step3ConfirmDetails = ({
                 name="customPetAge"
                 value={customPetAge}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-pink-200 text-sm"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-200"
                 disabled={!customPetType || availableAges.length === 0}
               >
                 <option value="">Select Age Range</option>
@@ -309,7 +308,7 @@ const Step3ConfirmDetails = ({
             <div>
               <label
                 htmlFor="gender"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block mb-1 text-sm font-medium text-gray-700"
               >
                 Gender
               </label>
@@ -318,7 +317,7 @@ const Step3ConfirmDetails = ({
                 name="gender"
                 value={gender}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-pink-200 text-sm"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-200"
               >
                 <option value="">Select Gender</option>
                 <option value="Male">Male</option>
@@ -329,18 +328,18 @@ const Step3ConfirmDetails = ({
             <div>
               <label
                 htmlFor="address"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block mb-1 text-sm font-medium text-gray-700"
               >
                 Address
               </label>
-              <div className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-gray-100 text-sm text-gray-700">
+              <div className="w-full px-3 py-2 text-sm text-gray-700 bg-gray-100 border border-gray-300 rounded-lg">
                 {address || "N/A"}
               </div>
             </div>
             <div>
               <label
                 htmlFor="isTrained"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block mb-1 text-sm font-medium text-gray-700"
               >
                 Trained
               </label>
@@ -350,7 +349,7 @@ const Step3ConfirmDetails = ({
                 name="isTrained"
                 checked={isTrained}
                 onChange={(e) => setIsTrained(e.target.checked)}
-                className="h-4 w-4 text-pink-500 focus:ring-pink-200 border-gray-300 rounded"
+                className="w-4 h-4 text-pink-500 border-gray-300 rounded focus:ring-pink-200"
               />
             </div>
           </div>
@@ -366,12 +365,12 @@ const Step3ConfirmDetails = ({
         <div>
           <label
             htmlFor="phone"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block mb-1 text-sm font-medium text-gray-700"
           >
             Phone Number*
           </label>
           {isPetSelected ? (
-            <div className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-gray-100 text-sm text-gray-700">
+            <div className="w-full px-3 py-2 text-sm text-gray-700 bg-gray-100 border border-gray-300 rounded-lg">
               {phone || "N/A"}
             </div>
           ) : (
@@ -397,12 +396,12 @@ const Step3ConfirmDetails = ({
         <div>
           <label
             htmlFor="email"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block mb-1 text-sm font-medium text-gray-700"
           >
             Email*
           </label>
           {isPetSelected ? (
-            <div className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-gray-100 text-sm text-gray-700">
+            <div className="w-full px-3 py-2 text-sm text-gray-700 bg-gray-100 border border-gray-300 rounded-lg">
               {email || "N/A"}
             </div>
           ) : (
@@ -428,7 +427,7 @@ const Step3ConfirmDetails = ({
         <div>
           <label
             htmlFor="reason"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block mb-1 text-sm font-medium text-gray-700"
           >
             Reason for Visit*
           </label>
@@ -453,7 +452,7 @@ const Step3ConfirmDetails = ({
         <div>
           <label
             htmlFor="notes"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block mb-1 text-sm font-medium text-gray-700"
           >
             Additional Notes (Optional)
           </label>
@@ -463,12 +462,12 @@ const Step3ConfirmDetails = ({
             value={notes}
             onChange={handleInputChange}
             rows="3"
-            className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-pink-200 text-sm"
+            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-200"
             placeholder="Any additional information about your pet's condition"
           ></textarea>
         </div>
 
-        <div className="bg-blue-50 rounded-lg p-3 flex items-start gap-2">
+        <div className="flex items-start gap-2 p-3 rounded-lg bg-blue-50">
           <Info size={16} className="text-blue-500 mt-0.5 flex-shrink-0" />
           <p className="text-xs text-blue-700">
             By confirming this booking, you agree to our cancellation policy.

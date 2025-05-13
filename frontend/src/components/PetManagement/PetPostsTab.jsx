@@ -1,23 +1,22 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   ChevronLeft,
   ChevronRight,
   Edit,
+  Eye,
+  Filter,
+  Mail,
+  PawPrint,
   Plus,
   Trash2,
   Users,
-  Filter,
-  X,
-  PawPrint,
-  Loader2,
-  Eye,
-  Mail,
+  X
 } from "lucide-react";
-import { useApp } from "../../context/AppContext";
+import React, { useCallback, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import ConfirmationModal from "../../components/ConfirmationModal";
 import EditForm from "../../components/EditForm";
 import EmptyState from "../../components/EmptyState";
-import ConfirmationModal from "../../components/ConfirmationModal";
+import { useApp } from "../../context/AppContext";
 import { Tooltip } from "../Tooltip";
 
 // Constants

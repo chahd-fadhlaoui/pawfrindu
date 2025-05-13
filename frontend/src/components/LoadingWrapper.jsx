@@ -1,6 +1,5 @@
-// LoadingWrapper.jsx
-import React, { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
+import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 
 const LoadingWrapper = ({ loading, children }) => {

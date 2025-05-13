@@ -1,6 +1,6 @@
 import React from 'react'
 
-function Stats() {
+function Stats({isSidebarCollapsed}) {
   return (
     <div>Stats</div>
   )

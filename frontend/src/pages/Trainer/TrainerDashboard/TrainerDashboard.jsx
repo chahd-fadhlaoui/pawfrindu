@@ -1,36 +1,39 @@
 import React, { useState } from "react";
 import Appointments from "../../../components/Trainer/TrainerDashboard/Appointments";
 import Profile from "../../../components/Trainer/TrainerDashboard/Profile";
-import Stats from "./Stats";
+import Stats from "../../../components/Trainer/TrainerDashboard/Stats";
 import Sidebar from "../../../components/Trainer/TrainerDashboard/Sidebar";
+import Reviews from "../../../components/Trainer/TrainerDashboard/Reviews";
+import TrainerAppointments from "../../../components/Trainer/TrainerDashboard/Appointments";
 
 const TrainerDashboard = () => {
-  const [activeSection, setActiveSection] = useState("profile");
-    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  
+  const [activeSection, setActiveSection] = useState("stats");
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const renderSection = () => {
     switch (activeSection) {
-      case "profile":
-        return <Profile />;
-      case "appointments":
-        return <Appointments />;
       case "stats":
-        return <Stats />;
+        return <Stats isSidebarCollapsed={isSidebarCollapsed} />;
+      case "appointments":
+        return <TrainerAppointments isSidebarCollapsed={isSidebarCollapsed} />;
+      case "reviews":
+        return <Reviews isSidebarCollapsed={isSidebarCollapsed} />;
+      case "profile":
+        return <Profile isSidebarCollapsed={isSidebarCollapsed} />;
       default:
-        return <Profile />;
+        return <Stats isSidebarCollapsed={isSidebarCollapsed} />;
     }
   };
 
   return (
-    <div className="flex min-h-screen bg-[#FFF8E1]">
+    <div className="flex min-h-screen bg-gradient-to-br from-yellow-50 to-pink-50">
       <Sidebar
         setActiveSection={setActiveSection}
         activeSection={activeSection}
         isCollapsed={isSidebarCollapsed}
         setIsCollapsed={setIsSidebarCollapsed}
       />
-      <main className="flex-1 p-6">{renderSection()}</main>
+      {renderSection()}
     </div>
   );
 };

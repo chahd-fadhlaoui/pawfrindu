@@ -15,21 +15,21 @@ import CreatePet from './pages/CreatePet';
 import CreateProfile from './pages/CreateProfile';
 import Forbidden from './pages/Forbidden';
 import Home from './pages/Home';
+import PaymentFailed from "./pages/PaymentFailed";
+import PaymentSuccess from "./pages/PaymentSuccess";
 import PetDetails from './pages/PetDetails';
 import PetManagementDashboard from './pages/PetManagementDashboard';
 import Pets from './pages/Pets';
 import Profile from './pages/Profile';
 import TrainerDashboard from './pages/Trainer/TrainerDashboard/TrainerDashboard';
+import TrainerDetails from "./pages/Trainer/TrainerUserSide/TrainerDetails";
 import TrainerPendingApproval from './pages/Trainer/TrainerUserSide/TrainerPendingApproval';
+import Trainers from "./pages/Trainer/TrainerUserSide/Trainers";
 import VetDashboard from './pages/vet/VetDashboardManagment/VetDashboard';
 import VetPendingApproval from './pages/vet/VetDashboardManagment/VetPendingApproval';
 import MyVetappointments from './pages/vet/VetUserAppointment/MyVetappointments';
 import VetDetails from './pages/vet/VetUserAppointment/VetDetails';
 import Veterinarians from './pages/vet/VetUserAppointment/Veterinarians';
-import Trainers from "./pages/Trainer/TrainerUserSide/Trainers";
-import TrainerDetails from "./pages/Trainer/TrainerUserSide/TrainerDetails";
-import PaymentSuccess from "./pages/PaymentSuccess";
-import PaymentFailed from "./pages/PaymentFailed";
 
 const Layout = ({ children }) => {
   const location = useLocation();
@@ -93,6 +93,7 @@ const AppRoutes = () => {
       <Route path="/addPet" element={<ProtectedRoute allowedRoles={["PetOwner"]}><CreatePet /></ProtectedRoute>} />
       <Route path="/list/*" element={<ProtectedRoute allowedRoles={["PetOwner"]}><PetManagementDashboard /></ProtectedRoute>} />
       <Route path="/Vetappointments" element={<ProtectedRoute allowedRoles={["PetOwner"]}><MyVetappointments/></ProtectedRoute>} /> 
+
       <Route path="/profile" element={<ProtectedRoute allowedRoles={["PetOwner", "Trainer", "Vet"]}><Profile /></ProtectedRoute>} />
       <Route path="/myprofile" element={<ProtectedRoute allowedRoles={["PetOwner", "Trainer", "Vet"]}><CreateProfile /></ProtectedRoute>} />
       <Route path="/candidates/:petId" element={<ProtectedRoute allowedRoles={["PetOwner", "Trainer", "Vet"]}><CandidatesPage /></ProtectedRoute>} />
