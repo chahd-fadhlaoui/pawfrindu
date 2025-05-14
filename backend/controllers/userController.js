@@ -340,23 +340,23 @@ const getCurrentUser = async (req, res) => {
     let shouldUpdateLastLogin = false;
 
     // Vet-specific logic (mirrors login function)
-    if (user.role === "Vet") {
+    if (user.role === "Vet" || user.role === "Trainer") {
       if (!user.isActive && !user.lastLogin) {
         console.log(
-          "Case 1: Inactive vet, first fetch - skipping lastLogin update"
+          "Case 1: Inactive Professional, first fetch - skipping lastLogin update"
         );
         shouldUpdateLastLogin = false;
       } else if (user.isActive) {
-        console.log("Case 2/3: Active vet - updating lastLogin");
+        console.log("Case 2/3: Active Professional - updating lastLogin");
         shouldUpdateLastLogin = true;
       } else if (!user.isActive && user.lastLogin) {
         console.log(
-          "Case 4: Inactive vet, previously logged in - skipping lastLogin update"
+          "Case 4: Inactive Professional, previously logged in - skipping lastLogin update"
         );
         shouldUpdateLastLogin = false;
       }
     } else {
-      console.log("Non-vet user - updating lastLogin");
+      console.log("Non-Professional user - updating lastLogin");
       shouldUpdateLastLogin = true;
     }
 
@@ -1421,7 +1421,6 @@ const updateTrainerProfile = async (req, res) => {
       .json({ message: "Failed to update trainer profile", detail: error.message });
   }
 };
-
 export {
   createProfile,
   forgotPassword,

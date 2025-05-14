@@ -1,13 +1,29 @@
+import {
+  AlertTriangle,
+  Calendar,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  Clock,
+  Edit,
+  Eye,
+  Filter,
+  MapPin,
+  PawPrint,
+  SearchX,
+  Trash2,
+  User,
+  X,
+} from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Filter, Calendar, X, Trash2, Edit, Eye, ChevronUp, ChevronDown, Clock, User, AlertTriangle, SearchX, MapPin, PawPrint, CalendarX } from "lucide-react";
-import EmptyState from "../../../components/EmptyState";
 import { Tooltip } from "../../../components/Tooltip";
-import axiosInstance from "../../../utils/axiosInstance";
-import { useApp } from "../../../context/AppContext";
-import ViewAppointmentModal from "../../../components/vet/VetUserManagment/appointmentActions/ViewAppointmentModal";
 import DeleteCancelAppointmentModal from "../../../components/vet/VetUserManagment/appointmentActions/DeleteCancelAppointmentModal";
 import UpdateAppointmentModal from "../../../components/vet/VetUserManagment/appointmentActions/UpdateAppointmentModal.";
+import ViewAppointmentModal from "../../../components/vet/VetUserManagment/appointmentActions/ViewAppointmentModal";
+import { useApp } from "../../../context/AppContext";
+import axiosInstance from "../../../utils/axiosInstance";
 
 const STATUS_STYLES = {
   pending: "bg-yellow-100 text-yellow-700 border-yellow-200",
@@ -20,16 +36,6 @@ const ITEMS_PER_PAGE = 9;
 const STATUS_OPTIONS = ["pending", "confirmed", "cancelled", "notAvailable"];
 const PROFESSIONAL_TYPE_OPTIONS = ["Vet", "Trainer"];
 
-const StatusBadge = ({ status }) => (
-  <span
-    className={`inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-full border shadow-sm transition-all duration-300 ${
-      STATUS_STYLES[status] || "bg-gray-100 text-gray-600 border-gray-200"
-    } hover:opacity-80`}
-  >
-    {status === "notAvailable" ? "Not Available" : status.charAt(0).toUpperCase() + status.slice(1)}
-  </span>
-);
-
 const FilterSelect = ({ label, value, onChange, options, icon }) => (
   <div className="w-full sm:w-auto flex-1 min-w-[140px] relative">
     <select
@@ -40,18 +46,28 @@ const FilterSelect = ({ label, value, onChange, options, icon }) => (
       <option value="">{label}</option>
       {options.map((option) => (
         <option key={option} value={option}>
-          {option === "notAvailable" ? "Not Available" : option.charAt(0).toUpperCase() + option.slice(1)}
+          {option === "notAvailable"
+            ? "Not Available"
+            : option.charAt(0).toUpperCase() + option.slice(1)}
         </option>
       ))}
     </select>
-    <div className="absolute left-3 top-1/2 transform -translate-y-1/2">{icon}</div>
+    <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+      {icon}
+    </div>
   </div>
 );
 
 const FilterBadge = ({ label, value, onClear }) => (
   <span className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium text-pink-600 bg-pink-50 rounded-full border border-pink-200 shadow-sm">
-    {label}: {value === "notAvailable" ? "Not Available" : value.charAt(0).toUpperCase() + value.slice(1)}
-    <button onClick={onClear} className="ml-1 text-pink-600 hover:text-pink-800 transition-colors duration-300">
+    {label}:{" "}
+    {value === "notAvailable"
+      ? "Not Available"
+      : value.charAt(0).toUpperCase() + value.slice(1)}
+    <button
+      onClick={onClear}
+      className="ml-1 text-pink-600 hover:text-pink-800 transition-colors duration-300"
+    >
       <X size={14} />
     </button>
   </span>
@@ -81,13 +97,22 @@ const AppointmentCard = ({ appointment, onAction, disabled }) => {
                 appointment.status
               )}`}
             >
-              {appointment.status === "notAvailable" ? "Not Available" : appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+              {appointment.status === "notAvailable"
+                ? "Not Available"
+                : appointment.status.charAt(0).toUpperCase() +
+                  appointment.status.slice(1)}
             </span>
-            <h3 className="text-lg font-semibold text-gray-800 mt-2">{appointment.petName}</h3>
+            <h3 className="text-lg font-semibold text-gray-800 mt-2">
+              {appointment.petName}
+            </h3>
           </div>
           <div className="text-right">
-            <div className="text-sm text-gray-500">{formatDate(appointment.date)}</div>
-            <div className="font-medium text-pink-600">{formatTime(appointment.time)}</div>
+            <div className="text-sm text-gray-500">
+              {formatDate(appointment.date)}
+            </div>
+            <div className="font-medium text-pink-600">
+              {formatTime(appointment.time)}
+            </div>
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
@@ -97,7 +122,9 @@ const AppointmentCard = ({ appointment, onAction, disabled }) => {
             </div>
             <div>
               <div className="text-xs text-gray-500">Professional</div>
-              <div className="font-medium text-gray-800">{appointment.professionalId?.fullName || "Unknown"}</div>
+              <div className="font-medium text-gray-800">
+                {appointment.professionalId?.fullName || "Unknown"}
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -106,7 +133,9 @@ const AppointmentCard = ({ appointment, onAction, disabled }) => {
             </div>
             <div>
               <div className="text-xs text-gray-500">Location</div>
-              <div className="font-medium text-gray-800">{appointment.city || "Pet Care Center"}</div>
+              <div className="font-medium text-gray-800">
+                {appointment.city || "Pet Care Center"}
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -115,50 +144,64 @@ const AppointmentCard = ({ appointment, onAction, disabled }) => {
             </div>
             <div>
               <div className="text-xs text-gray-500">Pet</div>
-              <div className="font-medium text-gray-800">{appointment.petName}</div>
+              <div className="font-medium text-gray-800">
+                {appointment.petName}
+              </div>
             </div>
           </div>
         </div>
         <div className="flex flex-wrap gap-3 mt-4 border-t border-gray-100 pt-4">
-          {appointment.status !== "cancelled" && appointment.status !== "notAvailable" && (
-            <Tooltip text="Cancel Appointment">
+          {appointment.status === "completed" ? (
+            <div className="w-full text-center">
+              <span className="text-sm text-gray-500">
+                You have already visited this{" "}
+                {appointment.professionalType === "Vet"
+                  ? "Veterinarian"
+                  : "Trainer"}{" "}
+              </span>
+            </div>
+          ) : appointment.status === "cancelled" ? (
+            <div className="w-full text-center">
+              <span className="text-sm text-gray-500">
+                This appointment has been cancelled
+              </span>
+            </div>
+          ) : appointment.status === "notAvailable" ? (
+            <div className="w-full text-center">
+              <span className="text-sm text-gray-500">
+                This appointment has been marked as not available
+              </span>
+            </div>
+          ) : (
+            <Tooltip
+              text={`${
+                appointment.status === "pending" ? "delete" : "cancel"
+              } Appointment`}
+            >
               <button
                 onClick={() => onAction(appointment, "delete")}
                 className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors focus:outline-none focus:ring-2 focus:ring-red-300 flex items-center gap-1"
                 disabled={disabled}
               >
                 <Trash2 size={16} />
-                Delete
+                {appointment.status === "pending" ? "Delete" : "Cancel"}
               </button>
             </Tooltip>
           )}
-          {appointment.status === "cancelled" && (
-            <div className="w-full text-center">
-              <span className="text-sm text-gray-500">
-                This appointment has been cancelled
-              </span>
-            </div>
-          )}
-          {appointment.status === "notAvailable" && (
-            <div className="w-full text-center">
-              <span className="text-sm text-gray-500">
-                This appointment has been marked as not available
-              </span>
-            </div>
-          )}
           <div className="ml-auto flex gap-3">
-            {appointment.status !== "cancelled" && (
-              <Tooltip text="Update Appointment">
-                <button
-                  onClick={() => onAction(appointment, "update")}
-                  className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-300 flex items-center gap-1"
-                  disabled={disabled}
-                >
-                  <Edit size={16} />
-                  Update
-                </button>
-              </Tooltip>
-            )}
+            {appointment.status !== "cancelled" &&
+              appointment.status !== "completed" && (
+                <Tooltip text="Update Appointment">
+                  <button
+                    onClick={() => onAction(appointment, "update")}
+                    className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-300 flex items-center gap-1"
+                    disabled={disabled}
+                  >
+                    <Edit size={16} />
+                    Update
+                  </button>
+                </Tooltip>
+              )}
             <Tooltip text="View Details">
               <button
                 onClick={() => onAction(appointment, "view")}
@@ -194,7 +237,9 @@ const MyVetappointments = () => {
   const fetchAppointments = async () => {
     setLoading(true);
     try {
-      const response = await axiosInstance.get("/api/appointments/my-appointments");
+      const response = await axiosInstance.get(
+        "/api/appointments/my-appointments"
+      );
       setAppointments(response.data.appointments || []);
       setError(null);
     } catch (err) {
@@ -240,24 +285,32 @@ const MyVetappointments = () => {
     socket.on("appointmentBooked", async (data) => {
       if (data.petOwnerId === user?._id) {
         try {
-          const response = await axiosInstance.get("/api/appointments/my-appointments");
+          const response = await axiosInstance.get(
+            "/api/appointments/my-appointments"
+          );
           setAppointments(response.data.appointments || []);
         } catch (err) {
           console.error("Error fetching updated appointments:", err);
-          setAppointments((prev) => [
-            {
-              _id: data.appointmentId,
-              petOwnerId: data.petOwnerId,
-              professionalId: { _id: data.professionalId, fullName: data.professionalName || "Unknown" },
-              professionalType: data.professionalType,
-              date: data.date,
-              time: data.time,
-              petName: data.petName,
-              status: "pending",
-              city: data.location || "Pet Care Center",
-            },
-            ...prev,
-          ].sort((a, b) => new Date(b.date) - new Date(a.date)));
+          setAppointments((prev) =>
+            [
+              {
+                _id: data.appointmentId,
+                petOwnerId: data.petOwnerId,
+                professionalId: {
+                  _id: data.professionalId,
+                  fullName: data.professionalName || "Unknown",
+                  
+                },
+                professionalType: data.professionalType,
+                date: data.date,
+                time: data.time,
+                petName: data.petName,
+                status: "pending",
+                city: data.location || "Pet Care Center",
+              },
+              ...prev,
+            ].sort((a, b) => new Date(b.date) - new Date(a.date))
+          );
         }
       }
     });
@@ -267,7 +320,9 @@ const MyVetappointments = () => {
       if (data.petOwnerId === user._id.toString()) {
         setAppointments((prev) =>
           prev.map((appt) =>
-            appt._id === data.appointmentId ? { ...appt, status: "confirmed" } : appt
+            appt._id === data.appointmentId
+              ? { ...appt, status: "confirmed" }
+              : appt
           )
         );
       }
@@ -282,7 +337,8 @@ const MyVetappointments = () => {
               ? {
                   ...appt,
                   status: "notAvailable",
-                  cancellationReason: data.cancellationReason || appt.cancellationReason,
+                  cancellationReason:
+                    data.cancellationReason || appt.cancellationReason,
                 }
               : appt
           )
@@ -292,8 +348,18 @@ const MyVetappointments = () => {
 
     const handleCancellation = (data, eventName) => {
       console.log(`${eventName} event:`, data);
-      console.log("Checking IDs - petOwnerId:", data.petOwnerId, "user._id:", user._id.toString());
-      console.log("Checking appointmentId:", data.appointmentId, "appointments:", appointments.map((appt) => appt._id));
+      console.log(
+        "Checking IDs - petOwnerId:",
+        data.petOwnerId,
+        "user._id:",
+        user._id.toString()
+      );
+      console.log(
+        "Checking appointmentId:",
+        data.appointmentId,
+        "appointments:",
+        appointments.map((appt) => appt._id)
+      );
       if (data.petOwnerId === user._id.toString()) {
         setAppointments((prev) =>
           prev.map((appt) =>
@@ -301,7 +367,8 @@ const MyVetappointments = () => {
               ? {
                   ...appt,
                   status: "cancelled",
-                  cancellationReason: data.cancellationReason || appt.cancellationReason,
+                  cancellationReason:
+                    data.cancellationReason || appt.cancellationReason,
                 }
               : appt
           )
@@ -320,14 +387,18 @@ const MyVetappointments = () => {
     socket.on("appointmentDeleted", (data) => {
       console.log("Appointment deleted event:", data);
       if (data.petOwnerId === user?._id) {
-        setAppointments((prev) => prev.filter((appt) => appt._id !== data.appointmentId));
+        setAppointments((prev) =>
+          prev.filter((appt) => appt._id !== data.appointmentId)
+        );
       }
     });
 
     socket.on("appointmentUpdated", (data) => {
       console.log("Appointment updated event:", data);
       if (data.petOwnerId === user?._id) {
-        setAppointments((prev) => prev.map((appt) => (appt._id === data._id ? data : appt)));
+        setAppointments((prev) =>
+          prev.map((appt) => (appt._id === data._id ? data : appt))
+        );
       }
     });
 
@@ -371,19 +442,23 @@ const MyVetappointments = () => {
 
   const filteredAppointments = appointments.filter((appointment) => {
     const statusMatch = !filterStatus || appointment.status === filterStatus;
-    const typeMatch = !filterProfessionalType || appointment.professionalType === filterProfessionalType;
-    const dateMatch = !filterDateRange || (() => {
-      const now = new Date();
-      const appointmentDate = new Date(appointment.date);
-      switch (filterDateRange) {
-        case "upcoming":
-          return appointmentDate >= now;
-        case "past":
-          return appointmentDate < now;
-        default:
-          return true;
-      }
-    })();
+    const typeMatch =
+      !filterProfessionalType ||
+      appointment.professionalType === filterProfessionalType;
+    const dateMatch =
+      !filterDateRange ||
+      (() => {
+        const now = new Date();
+        const appointmentDate = new Date(appointment.date);
+        switch (filterDateRange) {
+          case "upcoming":
+            return appointmentDate >= now;
+          case "past":
+            return appointmentDate < now;
+          default:
+            return true;
+        }
+      })();
     return statusMatch && typeMatch && dateMatch;
   });
 
@@ -420,7 +495,11 @@ const MyVetappointments = () => {
           ? prev.filter((appt) => appt._id !== appointmentId)
           : prev.map((appt) =>
               appt._id === appointmentId
-                ? { ...appt, status: "cancelled", cancellationReason: appt.cancellationReason }
+                ? {
+                    ...appt,
+                    status: "cancelled",
+                    cancellationReason: appt.cancellationReason,
+                  }
                 : appt
             )
       );
@@ -430,7 +509,10 @@ const MyVetappointments = () => {
           appt._id === appointment._id
             ? {
                 ...appointment,
-                status: appt.status === "confirmed" || appt.status === "notAvailable" ? "pending" : appointment.status,
+                status:
+                  appt.status === "confirmed" || appt.status === "notAvailable"
+                    ? "pending"
+                    : appointment.status,
               }
             : appt
         )
@@ -452,14 +534,30 @@ const MyVetappointments = () => {
                 key={index}
                 className={`absolute w-8 h-8 opacity-5 animate-float ${
                   index % 2 === 0 ? "text-[#ffc929]" : "text-pink-300"
-                } ${index % 3 === 0 ? "top-1/4" : index % 3 === 1 ? "top-1/2" : "top-3/4"} ${
-                  index % 4 === 0 ? "left-1/4" : index % 4 === 1 ? "left-1/2" : "left-3/4"
+                } ${
+                  index % 3 === 0
+                    ? "top-1/4"
+                    : index % 3 === 1
+                    ? "top-1/2"
+                    : "top-3/4"
+                } ${
+                  index % 4 === 0
+                    ? "left-1/4"
+                    : index % 4 === 1
+                    ? "left-1/2"
+                    : "left-3/4"
                 }`}
-                style={{ animationDelay: `${index * 0.5}s`, transform: `rotate(${index * 45}deg)` }}
+                style={{
+                  animationDelay: `${index * 0.5}s`,
+                  transform: `rotate(${index * 45}deg)`,
+                }}
               />
             ))}
         </div>
-        <div className="relative mx-auto max-w-7xl text-center space-y-6 animate-fadeIn" style={{ animationDelay: "0.2s" }}>
+        <div
+          className="relative mx-auto max-w-7xl text-center space-y-6 animate-fadeIn"
+          style={{ animationDelay: "0.2s" }}
+        >
           <span className="inline-flex items-center px-4 py-2 text-sm font-semibold text-pink-500 bg-white border border-[#ffc929]/20 rounded-full shadow-sm">
             <Calendar className="w-4 h-4 mr-2 text-[#ffc929]" />
             Your Pet Care Schedule
@@ -476,24 +574,43 @@ const MyVetappointments = () => {
 
       <div className="container mx-auto px-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+          {/* Book Veterinarian Appointment Button (Left) */}
           <button
             onClick={() => navigate("/vets")}
-            className="order-2 sm:order-1 flex items-center justify-center gap-2 px-6 py-3 text-white bg-[#ffc929] rounded-xl shadow-md hover:shadow-lg hover:bg-pink-500 transition-all duration-300 transform hover:scale-102 focus:outline-none focus:ring-2 focus:ring-pink-300 w-full sm:w-auto"
+            className="flex items-center justify-center gap-2 px-6 py-3 text-white bg-[#ffc929] rounded-xl shadow-md hover:shadow-lg hover:bg-pink-500 transition-all duration-300 transform hover:scale-102 focus:outline-none focus:ring-2 focus:ring-pink-300 w-full sm:w-auto"
             disabled={loading}
           >
             <Calendar size={18} />
-            Book New Appointment
+            Book New Veterinarian Appointment
           </button>
+
+          {/* Appointments Span (Center) */}
           {filteredAppointments.length > 0 && (
-            <span className="order-1 sm:order-2 inline-flex items-center justify-center gap-2 px-5 py-2 text-sm font-medium text-pink-600 bg-white border border-pink-100 rounded-full shadow-sm w-full sm:w-auto">
+            <span className="flex items-center justify-center gap-2 px-5 py-2 text-sm font-medium text-pink-600 bg-white border border-pink-100 rounded-full shadow-sm w-full sm:w-auto">
               <Calendar size={16} className="text-pink-500" />
-              {filteredAppointments.length} {filteredAppointments.length === 1 ? "Appointment" : "Appointments"}
+              {filteredAppointments.length}{" "}
+              {filteredAppointments.length === 1
+                ? "Appointment"
+                : "Appointments"}
             </span>
           )}
+
+          {/* Book Trainer Appointment Button (Right) */}
+          <button
+            onClick={() => navigate("/trainers")}
+            className="flex items-center justify-center gap-2 px-6 py-3 text-white bg-[#ffc929] rounded-xl shadow-md hover:shadow-lg hover:bg-pink-500 transition-all duration-300 transform hover:scale-102 focus:outline-none focus:ring-2 focus:ring-pink-300 w-full sm:w-auto"
+            disabled={loading}
+          >
+            <Calendar size={18} />
+            Book New Trainer Appointment
+          </button>
         </div>
 
         <div className="bg-white border border-gray-100 shadow-lg rounded-2xl mb-8 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+          <div
+            className="px-6 py-4 border-b border-gray-100 flex justify-between items-center"
+            onClick={() => setIsFilterOpen(!isFilterOpen)}
+          >
             <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
               <Filter size={18} className="text-pink-500" />
               Filter Options
@@ -502,12 +619,18 @@ const MyVetappointments = () => {
               onClick={() => setIsFilterOpen(!isFilterOpen)}
               className="p-2 text-pink-500 hover:bg-pink-50 rounded-full transition-colors"
             >
-              {isFilterOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+              {isFilterOpen ? (
+                <ChevronUp size={20} />
+              ) : (
+                <ChevronDown size={20} />
+              )}
             </button>
           </div>
           <div
             className={`transition-all duration-300 ease-in-out ${
-              isFilterOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0 overflow-hidden"
+              isFilterOpen
+                ? "max-h-96 opacity-100"
+                : "max-h-0 opacity-0 overflow-hidden"
             }`}
           >
             <div className="p-6">
@@ -537,9 +660,15 @@ const MyVetappointments = () => {
               {(filterStatus || filterProfessionalType || filterDateRange) && (
                 <div className="mt-6 border-t border-gray-100 pt-4">
                   <div className="flex flex-wrap gap-2 items-center">
-                    <span className="text-sm font-medium text-gray-600">Active Filters:</span>
+                    <span className="text-sm font-medium text-gray-600">
+                      Active Filters:
+                    </span>
                     {filterStatus && (
-                      <FilterBadge label="Status" value={filterStatus} onClear={() => clearFilter("status")} />
+                      <FilterBadge
+                        label="Status"
+                        value={filterStatus}
+                        onClear={() => clearFilter("status")}
+                      />
                     )}
                     {filterProfessionalType && (
                       <FilterBadge
@@ -549,7 +678,11 @@ const MyVetappointments = () => {
                       />
                     )}
                     {filterDateRange && (
-                      <FilterBadge label="Date" value={filterDateRange} onClear={() => clearFilter("dateRange")} />
+                      <FilterBadge
+                        label="Date"
+                        value={filterDateRange}
+                        onClear={() => clearFilter("dateRange")}
+                      />
                     )}
                     <button
                       onClick={clearAllFilters}
@@ -570,7 +703,9 @@ const MyVetappointments = () => {
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-pink-400 to-yellow-300 flex items-center justify-center">
                 <Calendar size={32} className="text-white" />
               </div>
-              <p className="mt-4 text-lg font-medium text-gray-600">Loading your appointments...</p>
+              <p className="mt-4 text-lg font-medium text-gray-600">
+                Loading your appointments...
+              </p>
             </div>
           </div>
         ) : error ? (
@@ -578,7 +713,9 @@ const MyVetappointments = () => {
             <div className="w-16 h-16 mb-4 mx-auto rounded-full bg-pink-100 flex items-center justify-center">
               <AlertTriangle size={32} className="text-pink-500" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-800">Unable to Load Appointments</h3>
+            <h3 className="text-xl font-semibold text-gray-800">
+              Unable to Load Appointments
+            </h3>
             <p className="mt-2 text-gray-600 max-w-md mx-auto">{error}</p>
             <button
               onClick={fetchAppointments}
@@ -592,7 +729,9 @@ const MyVetappointments = () => {
             <div className="w-20 h-20 mb-6 mx-auto rounded-full bg-gradient-to-r from-pink-200 to-yellow-100 flex items-center justify-center">
               <Calendar size={40} className="text-pink-500" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-800">No Appointments Yet</h3>
+            <h3 className="text-xl font-semibold text-gray-800">
+              No Appointments Yet
+            </h3>
             <p className="mt-2 text-gray-600 max-w-md mx-auto">
               You haven't booked any appointments yet. Start by booking one now!
             </p>
@@ -609,8 +748,12 @@ const MyVetappointments = () => {
             <div className="w-16 h-16 mb-4 mx-auto rounded-full bg-pink-100 flex items-center justify-center">
               <SearchX size={32} className="text-pink-500" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-800">No Matching Appointments</h3>
-            <p className="mt-2 text-gray-600 max-w-md mx-auto">No appointments match your current filters.</p>
+            <h3 className="text-xl font-semibold text-gray-800">
+              No Matching Appointments
+            </h3>
+            <p className="mt-2 text-gray-600 max-w-md mx-auto">
+              No appointments match your current filters.
+            </p>
             <button
               onClick={clearAllFilters}
               className="mt-6 px-6 py-2 text-sm font-medium text-white bg-gradient-to-r from-pink-400 to-yellow-300 rounded-xl shadow-sm hover:from-pink-500 hover:to-yellow-400 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-pink-300"
@@ -620,7 +763,10 @@ const MyVetappointments = () => {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fadeIn" style={{ animationDelay: "0.2s" }}>
+            <div
+              className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fadeIn"
+              style={{ animationDelay: "0.2s" }}
+            >
               {paginatedAppointments.map((appointment, index) => (
                 <AppointmentCard
                   key={appointment._id}
@@ -637,25 +783,29 @@ const MyVetappointments = () => {
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1 || loading}
                   className={`p-2 rounded-lg ${
-                    currentPage === 1 || loading ? "text-gray-300 cursor-not-allowed" : "text-pink-500 hover:bg-pink-50"
+                    currentPage === 1 || loading
+                      ? "text-gray-300 cursor-not-allowed"
+                      : "text-pink-500 hover:bg-pink-50"
                   } transition-all duration-300 focus:outline-none`}
                 >
                   <ChevronLeft size={24} />
                 </button>
                 <div className="flex items-center gap-1 px-2">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                    <button
-                      key={page}
-                      onClick={() => handlePageChange(page)}
-                      className={`w-10 h-10 rounded-lg text-sm font-medium ${
-                        currentPage === page
-                          ? "bg-gradient-to-r from-pink-400 to-yellow-300 text-white shadow-md"
-                          : "text-gray-600 hover:bg-pink-50"
-                      } transition-all duration-300 focus:outline-none`}
-                    >
-                      {page}
-                    </button>
-                  ))}
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (page) => (
+                      <button
+                        key={page}
+                        onClick={() => handlePageChange(page)}
+                        className={`w-10 h-10 rounded-lg text-sm font-medium ${
+                          currentPage === page
+                            ? "bg-gradient-to-r from-pink-400 to-yellow-300 text-white shadow-md"
+                            : "text-gray-600 hover:bg-pink-50"
+                        } transition-all duration-300 focus:outline-none`}
+                      >
+                        {page}
+                      </button>
+                    )
+                  )}
                 </div>
                 <button
                   onClick={() => handlePageChange(currentPage + 1)}
@@ -704,11 +854,11 @@ function getStatusColor(status) {
       return "bg-yellow-300";
     case "confirmed":
       return "bg-green-400";
+    case "completed":
+      return "bg-blue-300";
     case "cancelled":
       return "bg-red-400";
     case "notAvailable":
-      return "bg-orange-400";
-    default:
       return "bg-gray-400";
   }
 }
@@ -716,14 +866,14 @@ function getStatusColor(status) {
 function getStatusBadgeColor(status) {
   switch (status) {
     case "pending":
-      return "bg-yellow-50 text-yellow-700";
+      return "bg-yellow-100 text-yellow-700";
     case "confirmed":
       return "bg-green-100 text-green-700";
+    case "completed":
+      return "bg-blue-100 text-blue-700";
     case "cancelled":
       return "bg-red-100 text-red-700";
     case "notAvailable":
-      return "bg-orange-100 text-orange-700";
-    default:
       return "bg-gray-100 text-gray-700";
   }
 }

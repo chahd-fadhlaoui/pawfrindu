@@ -1,10 +1,11 @@
-import { AlertCircle, AlertTriangle, Award, Loader2, Star, ThumbsUp, X } from "lucide-react";
+import { AlertCircle, AlertTriangle, Award, Loader2, Star, ThumbsUp } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
 import { FaRegCommentDots } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useApp } from "../../../context/AppContext";
 import axiosInstance from "../../../utils/axiosInstance";
+import SortButton from "./common/SortButton";
 
 const SectionCard = ({ icon: Icon, title, children }) => (
   <div className="p-6 bg-white border border-gray-100 rounded-lg shadow-sm">
@@ -16,19 +17,7 @@ const SectionCard = ({ icon: Icon, title, children }) => (
   </div>
 );
 
-const SortButton = ({ label, value, isActive, onClick }) => (
-  <button
-    onClick={() => onClick(value)}
-    className={`px-3 py-1.5 text-sm font-medium rounded-md ${
-      isActive
-        ? "bg-gradient-to-r from-yellow-500 to-pink-500 text-white"
-        : "text-gray-600 bg-gray-100 hover:bg-gradient-to-r hover:from-yellow-50 hover:to-pink-50"
-    }`}
-    aria-label={`Sort by ${label}`}
-  >
-    {label}
-  </button>
-);
+
 
 const FilterButton = ({ rating, isActive, onClick }) => (
   <button
@@ -106,15 +95,7 @@ const Reviews = ({ isSidebarCollapsed }) => {
 
   useEffect(() => {
     if (user?._id) {
-      if (user.isActive && !user.isArchieve) {
-        fetchReviews();
-      }
-      if (!user.isActive) {
-        setError("Your account is deactivated. Please contact support.");
-      }
-    } else {
-      setError("User not authenticated");
-      setLoading(false);
+      fetchReviews();
     }
   }, [user]);
 
@@ -179,7 +160,7 @@ const Reviews = ({ isSidebarCollapsed }) => {
 
   if (loading) {
     return (
-      <div className={`flex items-center justify-center h-screen bg-gradient-to-br from-yellow-50 to-pink-50 transition-all duration-300 ${
+      <div className={`flex-1 p-4 sm:p-6 space-y-6 ease-in-out items-center justify-center h-screen bg-gradient-to-br from-yellow-50 to-pink-50 transition-all duration-300 ${
         isSidebarCollapsed ? "ml-16" : "ml-0 md:ml-64"
       }`}>
         <Loader2 className="w-10 h-10 text-[#ffc929] animate-spin" />
@@ -188,43 +169,12 @@ const Reviews = ({ isSidebarCollapsed }) => {
     );
   }
 
-  if (error) {
-    return (
-      <div className={`flex items-center justify-center min-h-screen bg-gradient-to-br from-yellow-50 to-pink-50 transition-all duration-300 ${
-        isSidebarCollapsed ? "ml-16" : "ml-0 md:ml-64"
-      }`}>
-        <div className="max-w-md p-6 text-center bg-white rounded-lg shadow-sm">
-          <X className="w-8 h-8 mx-auto mb-3 text-[#ffc929]" />
-          <h2 className="mb-2 text-lg font-semibold text-gray-800">Reviews Error</h2>
-          <p className="text-sm text-gray-600">{error}</p>
-          {error.includes("contact support") && (
-            <button
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 mt-4 text-sm text-white bg-[#ffc929] rounded-md hover:bg-[#ffa726]"
-            >
-              Retry
-            </button>
-          )}
-        </div>
-      </div>
-    );
-  }
 
   return (
     <main className={`flex-1 p-4 sm:p-6 space-y-6 transition-all duration-300 ease-in-out ${
       isSidebarCollapsed ? "ml-16" : "ml-0 md:ml-64"
     }`}>
       <section className="overflow-hidden bg-white shadow-sm rounded-lg">
-        {(!user.isActive || user.isArchieve) && (
-          <div className="flex items-center gap-3 p-3 bg-red-50 border-b border-red-100">
-            <AlertTriangle className="w-5 h-5 text-red-600" />
-            <p className="text-sm text-red-700">
-              {user.isArchieve
-                ? "Your account is archived. Reviews are disabled until restored."
-                : "Your account is deactivated. Reviews are disabled until reactivated."}
-            </p>
-          </div>
-        )}
         <div
           className="px-6 py-4 border-l-4"
           style={{ borderImage: "linear-gradient(to bottom, #ffc929, #ffa726) 1" }}
@@ -239,6 +189,14 @@ const Reviews = ({ isSidebarCollapsed }) => {
             </div>
           </div>
         </div>
+        {!user.isActive && (
+          <div className="flex items-center gap-3 p-3 bg-red-50 border-b border-red-100">
+            <AlertTriangle className="w-5 h-5 text-red-600" />
+            <p className="text-sm font-medium text-red-700">
+              Your account is deactivated. Please contact support to reactivate it.
+            </p>
+          </div>
+        )}
         <div className="p-4 sm:p-0">
           <div className="p-6">
             <div className="max-w-6xl mx-auto space-y-6">

@@ -20,3 +20,8 @@ export const trainingCategories = [
       backgroundGradient: "bg-gradient-to-br from-yellow-50 via-white to-yellow-100",
     },
   ];
+  
+  export const ConsultationCategories = [
+    "Basic Training",
+    "Guard Dog Training",
+  ];

@@ -1,6 +1,6 @@
 import Appointment from "../models/appointmentModel.js";
+import Pet from "../models/petModel.js";
 import User from "../models/userModel.js";
-import Pet from "../models/petModel.js"; 
 import { io } from "../server.js";
 
 

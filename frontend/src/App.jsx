@@ -36,12 +36,14 @@ const Layout = ({ children }) => {
   const { user } = useApp(); 
 
   const isAdminPage = location.pathname.startsWith('/admin');
-  const isTrainerPage = location.pathname === '/trainer' || location.pathname.startsWith('/trainer-pending-approval');
+  const isTrainerPage = location.pathname === '/trainer' ;
   const isVetPage = location.pathname === '/vet';
     const isHomePage = location.pathname === '/';
   const isForbiddenPage = location.pathname === '/forbidden';
   const isAdminLoginPage = location.pathname === '/AdminLoginPage';
   const isVetPendingPage = location.pathname === '/vet-pending-approval'; 
+  const isTrainerPendingPage = location.pathname === '/trainer-pending-approval'; 
+
 
 
   const showHeaderFooter = 
@@ -51,7 +53,8 @@ const Layout = ({ children }) => {
     !isVetPage && 
     !isForbiddenPage && 
     !isAdminLoginPage &&
-    !isVetPendingPage;
+    !isVetPendingPage &&
+    !isTrainerPendingPage ;
 
 
  

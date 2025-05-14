@@ -1,8 +1,11 @@
+import { Calendar, ChevronLeft, Info } from "lucide-react";
 import React from "react";
-import { ChevronLeft, Calendar, Info } from "lucide-react";
+import { ConsultationCategories } from "../../../../assets/trainer";
 
 const Step3ConfirmDetails = ({
-  professional, professionalType,  selectedDate,
+  professional,
+  professionalType,
+  selectedDate,
   selectedTime,
   selectedPet,
   customPetName,
@@ -28,6 +31,7 @@ const Step3ConfirmDetails = ({
   consultationDuration,
   SPECIES_OPTIONS,
   user,
+  setStep,
 }) => {
   const isPetSelected = selectedPet || customPetName.trim();
 
@@ -431,19 +435,40 @@ const Step3ConfirmDetails = ({
           >
             Reason for Visit*
           </label>
-          <input
-            type="text"
-            id="reason"
-            name="reason"
-            value={reason}
-            onChange={handleInputChange}
-            className={`w-full px-3 py-2 rounded-lg border ${
-              formErrors.reason
-                ? "border-red-500 focus:ring-red-200"
-                : "border-gray-300 focus:ring-pink-200"
-            } focus:outline-none focus:ring-2 text-sm`}
-            placeholder="e.g., Vaccination, Check-up, Illness"
-          />
+          {professionalType === "Trainer" ? (
+            <select
+              id="reason"
+              name="reason"
+              value={reason}
+              onChange={handleInputChange}
+              className={`w-full px-3 py-2 rounded-lg border ${
+                formErrors.reason
+                  ? "border-red-500 focus:ring-red-200"
+                  : "border-gray-300 focus:ring-pink-200"
+              } focus:outline-none focus:ring-2 text-sm`}
+            >
+              <option value="">Select Reason</option>
+              {ConsultationCategories.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              type="text"
+              id="reason"
+              name="reason"
+              value={reason}
+              onChange={handleInputChange}
+              className={`w-full px-3 py-2 rounded-lg border ${
+                formErrors.reason
+                  ? "border-red-500 focus:ring-red-200"
+                  : "border-gray-300 focus:ring-pink-200"
+              } focus:outline-none focus:ring-2 text-sm`}
+              placeholder="e.g., Vaccination, Check-up, Illness"
+            />
+          )}
           {formErrors.reason && (
             <p className="mt-1 text-xs text-red-500">{formErrors.reason}</p>
           )}

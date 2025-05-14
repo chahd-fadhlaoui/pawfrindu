@@ -12,7 +12,7 @@ const UpdateAppointmentModal = ({ appointment, onClose, onSuccess }) => {
   const [currentDate, setCurrentDate] = useState(normalizeDate(new Date(appointment.date)));
   const [selectedDate, setSelectedDate] = useState(normalizeDate(new Date(appointment.date)));
   const [selectedTime, setSelectedTime] = useState(appointment.time);
-  const [vet, setVet] = useState(null);
+  const [professional, setProfessional] = useState(null);
   const [formData, setFormData] = useState({
     date: formatDate(normalizeDate(new Date(appointment.date))),
     time: appointment.time,
@@ -24,9 +24,10 @@ const UpdateAppointmentModal = ({ appointment, onClose, onSuccess }) => {
   const professionalId = appointment.professionalId?._id || appointment.professionalId;
   const professionalType = appointment.professionalType;
   const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  const consultationDuration = vet?.veterinarianDetails?.averageConsultationDuration || 30;
+  const consultationDuration = professional?.details?.averageConsultationDuration || 60;
+  const professionalName = appointment.professionalType.toLowerCase() === "vet" ? "Veterinarian" : "Trainer";
 
-  // Utility functions
+  // Utility functions (unchanged)
   function normalizeDate(date) {
     if (!(date instanceof Date) || isNaN(date)) {
       console.error("Invalid date input:", date);
@@ -55,59 +56,74 @@ const UpdateAppointmentModal = ({ appointment, onClose, onSuccess }) => {
   }
 
   function getGeneralHours() {
-    if (!vet?.veterinarianDetails?.openingHours) return "Availability not specified";
+    const openingHours = professional?.details?.openingHours;
+    if (!openingHours) return "Availability not specified";
     const openDays = weekdays
       .map((day) => day.toLowerCase())
-      .filter((day) => vet.veterinarianDetails.openingHours[day] !== "Closed");
+      .filter((day) => openingHours[day] !== "Closed");
     if (openDays.length === 0) return "No regular hours available";
     return `Open: ${openDays.map((d) => d.charAt(0).toUpperCase() + d.slice(1)).join(", ")}`;
   }
 
-  // Fetch initial vet data and reserved slots
+  // Fetch initial professional data and reserved slots (with improved error handling)
   useEffect(() => {
     const fetchInitialData = async () => {
-      console.log("fetchInitialData triggered for currentDate:", currentDate.toISOString());
+      console.log("fetchInitialData triggered for professionalId:", professionalId, "professionalType:", professionalType);
       setLoading(true);
-      setReservedSlotsByDate(null); // Reset to null to ensure fresh data
-      
+      setReservedSlotsByDate(null);
+
       try {
         const year = currentDate.getUTCFullYear();
-        const month = currentDate.getUTCMonth() + 1; // Month is 0-indexed
-        
-        const endpoint = professionalType === "Vet" 
-          ? `/api/user/vet/${professionalId}` 
-          : `/api/user/trainer/${professionalId}`;
-          
+        const month = currentDate.getUTCMonth() + 1;
+        const endpoint = professionalType === "Vet" ? `/api/user/vet/${professionalId}` : `/api/user/trainer/${professionalId}`;
+
         const [professionalResponse, reservedResponse] = await Promise.all([
           axiosInstance.get(endpoint),
           axiosInstance.get(`/api/appointments/reserved-month`, {
             params: { professionalId, year, month, professionalType },
           }),
         ]);
-        
-        const vetData = professionalResponse.data.vet;
-        if (!vetData) throw new Error(`No ${professionalType} data returned`);
-        setVet(vetData);
-        
+
+        console.log("Professional API response:", professionalResponse.data);
+        console.log("Reserved slots API response:", reservedResponse.data);
+
+        const proData = professionalType === "Vet" ? professionalResponse.data.vet : professionalResponse.data.trainer;
+        if (!proData) throw new Error(`No ${professionalType} data returned`);
+        setProfessional({
+          ...proData,
+          details: professionalType === "Vet" 
+            ? proData.veterinarianDetails 
+            : (proData.trainerDetails || { openingHours: {}, averageConsultationDuration: 30 }),
+        });
+
         const reservedData = reservedResponse.data.reservedSlotsByDate || {};
-        console.log("Fetched reserved slots for", `${year}-${month}:`, reservedData);
-        setReservedSlotsByDate(reservedData);
+        if (!reservedData || typeof reservedData !== "object") {
+          console.warn("Invalid reserved slots data, using empty object");
+          setReservedSlotsByDate({});
+        } else {
+          console.log("Fetched reserved slots for", `${year}-${month}:`, reservedData);
+          setReservedSlotsByDate(reservedData);
+        }
       } catch (err) {
         console.error("Fetch Initial Data Error:", err.message, err.response?.data);
-        setError(`Failed to load ${professionalType.toLowerCase()} data: ${err.message}`);
-        setReservedSlotsByDate({}); // Fallback to empty object
+        setError(
+          err.response?.status === 404
+            ? `${professionalType} not found. They may no longer be available.`
+            : `Failed to load ${professionalType.toLowerCase()} data: ${err.message}`
+        );
+        setReservedSlotsByDate({});
       } finally {
         setLoading(false);
       }
     };
-    
+
     fetchInitialData();
   }, [professionalId, currentDate, professionalType]);
 
-  // Fetch reserved slots for the selected date
+  // Rest of the useEffect hooks (unchanged)
   useEffect(() => {
     const fetchReservedSlots = async () => {
-      if (!selectedDate || !vet) return;
+      if (!selectedDate || !professional) return;
       setLoading(true);
       try {
         const formattedDate = formatDate(selectedDate);
@@ -123,31 +139,28 @@ const UpdateAppointmentModal = ({ appointment, onClose, onSuccess }) => {
       }
     };
     fetchReservedSlots();
-  }, [selectedDate, professionalId, vet, professionalType]);
+  }, [selectedDate, professionalId, professional, professionalType]);
 
-  // Calculate available slots
   useEffect(() => {
-    if (selectedDate && vet && reservedSlotsByDate !== null) {
+    if (selectedDate && professional && reservedSlotsByDate !== null) {
       const slots = getAvailableTimeSlots(selectedDate);
       setAvailableSlots(slots);
     } else {
       setAvailableSlots([]);
     }
-  }, [selectedDate, reservedSlots, reservedSlotsByDate, vet]);
+  }, [selectedDate, reservedSlots, reservedSlotsByDate, professional]);
 
+  // Rest of the functions (unchanged)
   function isDayOpen(date) {
     const dayOfWeek = weekdays[date.getDay()].toLowerCase();
-    const openingHours =
-      professionalType === "Vet" ? vet?.veterinarianDetails?.openingHours : vet?.trainerDetails?.openingHours;
+    const openingHours = professional?.details?.openingHours;
     return openingHours?.[dayOfWeek] !== "Closed";
   }
 
   function getPotentialTimeSlots(date) {
-    if (!vet) return [];
-    const details = professionalType === "Vet" ? vet.veterinarianDetails : vet.trainerDetails;
-    if (!details?.openingHours) return [];
+    if (!professional?.details?.openingHours) return [];
     const dayOfWeek = weekdays[date.getDay()].toLowerCase();
-    const openingHours = details.openingHours;
+    const openingHours = professional.details.openingHours;
     if (!openingHours || openingHours[dayOfWeek] === "Closed") return [];
 
     const slots = [];
@@ -191,117 +204,64 @@ const UpdateAppointmentModal = ({ appointment, onClose, onSuccess }) => {
   }
 
   function isDayFullyBooked(date) {
-    // Early return for missing data
-    if (!vet || !vet.veterinarianDetails?.openingHours || reservedSlotsByDate === null) return false;
-    
+    if (!professional?.details?.openingHours || reservedSlotsByDate === null) return false;
     const normalizedDate = normalizeDate(date);
     const dateStr = formatDate(normalizedDate);
-    const dayOfWeek = weekdays[normalizedDate.getDay()];
-    
-    // Get potential slots for this day
     const potentialSlots = getPotentialTimeSlots(normalizedDate);
-    
-    // If no potential slots, day isn't open so can't be fully booked
     if (potentialSlots.length === 0) return false;
-    
-    // Get reserved slots for this date - carefully checking structure
     const reservedSlotsForDate = reservedSlotsByDate[dateStr] || [];
-    
-    // IMPORTANT: Fix how we're getting reserved slots
-    // Use reservedSlots only if it's for the same date, otherwise just use reservedSlotsForDate
-    const allReservedSlots = dateStr === formatDate(selectedDate) 
-      ? [...new Set([...reservedSlotsForDate, ...reservedSlots])]
-      : reservedSlotsForDate;
-    
-    // Calculate available slots correctly
-    const availableSlots = potentialSlots.filter(slot => !allReservedSlots.includes(slot));
-    const isFullyBooked = availableSlots.length === 0;
-    
-    // Debug Fridays
-    if (dayOfWeek === "Friday") {
-      console.log(`Processing Friday ${dateStr}:`, {
-        potentialSlots,
-        reservedSlotsForDate, 
-        allReservedSlots,
-        availableSlots,
-        isFullyBooked: availableSlots.length === 0  // Be explicit here
-      });
-    }
-    
-    return availableSlots.length === 0;  // Return the actual calculation
+    const allReservedSlots =
+      dateStr === formatDate(selectedDate)
+        ? [...new Set([...reservedSlotsForDate, ...reservedSlots])]
+        : reservedSlotsForDate;
+    return potentialSlots.every((slot) => allReservedSlots.includes(slot));
   }
+
   const getDaysInMonthView = useMemo(() => {
-    if (!vet || !vet.veterinarianDetails?.openingHours || reservedSlotsByDate === null) {
+    if (!professional?.details?.openingHours || reservedSlotsByDate === null) {
       console.log("getDaysInMonthView: Data not ready, returning empty array");
       return [];
     }
-    
+
     const year = currentDate.getUTCFullYear();
     const month = currentDate.getUTCMonth();
-    
-    // Create proper UTC dates
     const firstDayOfMonth = new Date(Date.UTC(year, month, 1));
     firstDayOfMonth.setUTCHours(0, 0, 0, 0);
-    
     const lastDayOfMonth = new Date(Date.UTC(year, month + 1, 0));
     lastDayOfMonth.setUTCHours(0, 0, 0, 0);
-    
     const result = [];
-    
-    // Get the day of week for the first day (0 = Sunday, 6 = Saturday)
     const firstDayOfWeek = firstDayOfMonth.getDay();
-    
-    // Add days from previous month
+
     for (let i = 0; i < firstDayOfWeek; i++) {
       const date = new Date(Date.UTC(year, month, 1 - (firstDayOfWeek - i)));
       date.setUTCHours(0, 0, 0, 0);
       const isOpen = isDayOpen(date);
       const isFullyBooked = isOpen ? isDayFullyBooked(date) : false;
-      
-      result.push({
-        date,
-        isCurrentMonth: false,
-        isOpen,
-        isFullyBooked
-      });
+      result.push({ date, isCurrentMonth: false, isOpen, isFullyBooked });
     }
-    
-    // Add days from current month
+
     for (let i = 1; i <= lastDayOfMonth.getDate(); i++) {
       const date = new Date(Date.UTC(year, month, i));
       date.setUTCHours(0, 0, 0, 0);
       const isOpen = isDayOpen(date);
       const isFullyBooked = isOpen ? isDayFullyBooked(date) : false;
-      
-      result.push({
-        date,
-        isCurrentMonth: true,
-        isOpen,
-        isFullyBooked
-      });
+      result.push({ date, isCurrentMonth: true, isOpen, isFullyBooked });
     }
-    
-    // Add days from next month to complete the grid
+
     const lastDayOfWeek = lastDayOfMonth.getDay();
     const daysToAdd = 6 - lastDayOfWeek;
-    
     for (let i = 1; i <= daysToAdd; i++) {
       const date = new Date(Date.UTC(year, month + 1, i));
       date.setUTCHours(0, 0, 0, 0);
       const isOpen = isDayOpen(date);
       const isFullyBooked = isOpen ? isDayFullyBooked(date) : false;
-      
-      result.push({
-        date,
-        isCurrentMonth: false,
-        isOpen,
-        isFullyBooked
-      });
+      result.push({ date, isCurrentMonth: false, isOpen, isFullyBooked });
     }
-    
-    return result;
-  }, [currentDate, vet, reservedSlotsByDate]);
 
+    return result;
+  }, [currentDate, professional, reservedSlotsByDate]);
+
+  // Event handlers (unchanged)
   const handleDateSelect = (date) => {
     const normalizedDate = normalizeDate(date);
     if (isDayFullyBooked(normalizedDate)) {
@@ -321,21 +281,21 @@ const UpdateAppointmentModal = ({ appointment, onClose, onSuccess }) => {
   };
 
   const handlePrevMonth = () => {
-    const newDate = new Date(currentDate); // Create a new Date object
-    newDate.setUTCMonth(newDate.getUTCMonth() - 1, 1); // Set to first day of previous month
-    newDate.setUTCHours(0, 0, 0, 0); // Normalize time
+    const newDate = new Date(currentDate);
+    newDate.setUTCMonth(newDate.getUTCMonth() - 1, 1);
+    newDate.setUTCHours(0, 0, 0, 0);
     console.log("Moving to previous month:", newDate.toISOString());
     setCurrentDate(newDate);
   };
-  
 
   const handleNextMonth = () => {
-    const newDate = new Date(currentDate); // Create a new Date object
-    newDate.setUTCMonth(newDate.getUTCMonth() + 1, 1); // Set to first day of next month
-    newDate.setUTCHours(0, 0, 0, 0); // Normalize time
+    const newDate = new Date(currentDate);
+    newDate.setUTCMonth(newDate.getUTCMonth() + 1, 1);
+    newDate.setUTCHours(0, 0, 0, 0);
     console.log("Moving to next month:", newDate.toISOString());
     setCurrentDate(newDate);
   };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
@@ -401,13 +361,17 @@ const UpdateAppointmentModal = ({ appointment, onClose, onSuccess }) => {
         return (
           <div className="space-y-4 p-6">
             <h3 className="text-xl font-semibold text-gray-800">Select a Date</h3>
-            {loading || !vet || !vet.veterinarianDetails?.openingHours || reservedSlotsByDate === null ? (
+            {loading ? (
               <div className="text-center">
                 <div className="inline-block w-6 h-6 border-2 border-pink-400 border-t-transparent rounded-full animate-spin"></div>
                 <p className="mt-2 text-sm text-gray-600">Loading calendar...</p>
               </div>
             ) : error ? (
               <div className="text-center text-red-500">{error}</div>
+            ) : !professional?.details?.openingHours || reservedSlotsByDate === null ? (
+              <div className="text-center text-red-500">
+                Unable to load {professionalType.toLowerCase()} availability. Please try again later.
+              </div>
             ) : (
               <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
                 <div className="flex items-center justify-between mb-4">
@@ -423,9 +387,7 @@ const UpdateAppointmentModal = ({ appointment, onClose, onSuccess }) => {
                 </div>
                 <div className="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-gray-600 mb-2">
                   {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-                    <div key={day} className="py-1">
-                      {day}
-                    </div>
+                    <div key={day} className="py-1">{day}</div>
                   ))}
                 </div>
                 <div className="grid grid-cols-7 gap-1">
@@ -495,11 +457,7 @@ const UpdateAppointmentModal = ({ appointment, onClose, onSuccess }) => {
                 <Calendar className="text-pink-400 mt-1" size={20} />
                 <div>
                   <p className="text-sm font-medium text-gray-800">
-                    {selectedDate.toLocaleDateString("en-US", {
-                      weekday: "long",
-                      month: "long",
-                      day: "numeric",
-                    })}
+                    {selectedDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
                   </p>
                   <p className="text-xs text-gray-600 mt-1">Consultation duration: {consultationDuration} minutes</p>
                 </div>
@@ -574,18 +532,14 @@ const UpdateAppointmentModal = ({ appointment, onClose, onSuccess }) => {
                   <h4 className="text-sm font-semibold text-gray-800">Appointment Summary</h4>
                   <p className="text-sm text-gray-700 mt-2">
                     <span className="font-medium">Date:</span>{" "}
-                    {selectedDate.toLocaleDateString("en-US", {
-                      weekday: "long",
-                      month: "long",
-                      day: "numeric",
-                    })}
+                    {selectedDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
                   </p>
                   <p className="text-sm text-gray-700">
                     <span className="font-medium">Time:</span> {formatTimeSlot(formData.time)}
                   </p>
                   <p className="text-sm text-gray-700">
                     <span className="font-medium">{professionalType}:</span>{" "}
-                    {vet?.fullName || appointment.professionalId?.fullName || "Unknown"}
+                    {professional?.fullName || appointment.professionalId?.fullName || "Unknown"}
                   </p>
                   <p className="text-sm text-gray-700">
                     <span className="font-medium">Pet:</span> {appointment.petName}
@@ -631,19 +585,19 @@ const UpdateAppointmentModal = ({ appointment, onClose, onSuccess }) => {
         <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-pink-50 to-yellow-50 sticky top-0 z-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              {vet && (
+              {professional && (
                 <img
-                  src={vet.image || "/default-vet.jpg"}
-                  alt={vet.fullName || "Professional"}
+                  src={professional.image || `/default-${professionalType.toLowerCase()}.jpg`}
+                  alt={professional.fullName || "Professional"}
                   className="w-12 h-12 rounded-full object-cover border-2 border-pink-200"
-                  onError={(e) => (e.target.src = "/default-vet.jpg")}
+                  onError={(e) => (e.target.src = `/default-${professionalType.toLowerCase()}.jpg`)}
                 />
               )}
               <div>
                 <h2 className="text-lg font-semibold text-gray-800">
-                  {vet ? `${vet.fullName} (${professionalType})` : "Loading..."}
+                  {professional ? `${professional.fullName} (${professionalType})` : "Loading..."}
                 </h2>
-                {vet ? (
+                {professional ? (
                   <p className="text-xs text-gray-500">{getGeneralHours()}</p>
                 ) : (
                   <p className="text-sm text-gray-600">Loading details...</p>
@@ -666,9 +620,7 @@ const UpdateAppointmentModal = ({ appointment, onClose, onSuccess }) => {
               >
                 {step > index + 1 ? <Check size={16} /> : index + 1}
               </div>
-              <span
-                className={`text-xs mt-1 ${step >= index + 1 ? "text-gray-800 font-medium" : "text-gray-500"}`}
-              >
+              <span className={`text-xs mt-1 ${step >= index + 1 ? "text-gray-800 font-medium" : "text-gray-500"}`}>
                 {label}
               </span>
             </div>

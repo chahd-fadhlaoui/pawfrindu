@@ -5,7 +5,7 @@ import axiosInstance from "../../../../utils/axiosInstance";
 const DeleteCancelAppointmentModal = ({ appointment, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [vet, setVet] = useState(null);
+  const [professional, setProfessional] = useState(null);
   const [cancellationReason, setCancellationReason] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
   const [showReschedulePrompt, setShowReschedulePrompt] = useState(false);
@@ -13,24 +13,58 @@ const DeleteCancelAppointmentModal = ({ appointment, onClose, onSuccess }) => {
   const professionalId = appointment.professionalId?._id || appointment.professionalId;
   const professionalType = appointment.professionalType;
 
-  // Fetch vet data
+  // Check if the professional is unavailable (e.g., inactive)
+  if (appointment.professionalAvailable === false) {
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-hidden mt-20">
+        <div className="bg-white rounded-tl-2xl rounded-tr-3xl rounded-br-2xl rounded-bl-3xl w-full max-w-lg shadow-lg border border-gray-100 mx-4 my-8 p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold text-gray-800">Appointment Cancellation</h2>
+            <button onClick={onClose} className="p-2 rounded-full hover:bg-pink-100 transition-colors">
+              <X size={18} className="text-pink-500" />
+            </button>
+          </div>
+          <p className="text-red-500 text-center">
+            The {professionalType.toLowerCase()} for this appointment is no longer available. Please book a new appointment with another professional.
+          </p>
+          <div className="flex justify-end mt-4">
+            <button
+              onClick={() => {
+                window.location.href = professionalType === "Vet" ? "/vets" : "/trainers";
+              }}
+              className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-pink-400 to-yellow-300 rounded-xl hover:from-pink-500 hover:to-yellow-400 transition-all"
+            >
+              Book a New Appointment
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Fetch professional data
   useEffect(() => {
-    const fetchVetData = async () => {
+    const fetchProfessionalData = async () => {
       setLoading(true);
       try {
         const endpoint =
           professionalType === "Vet" ? `/api/user/vet/${professionalId}` : `/api/user/trainer/${professionalId}`;
         const response = await axiosInstance.get(endpoint);
-        const vetData = response.data.vet;
-        if (!vetData) throw new Error(`No ${professionalType} data returned`);
-        setVet(vetData);
+        const professionalData = professionalType === "Vet" ? response.data.vet : response.data.trainer;
+        if (!professionalData) throw new Error(`No ${professionalType} data returned`);
+        setProfessional(professionalData);
       } catch (err) {
-        console.error("Fetch Vet Data Error:", err.message, err.response?.data);
+        console.error("Fetch Professional Data Error:", err.message, err.response?.data);
+        setError(
+          err.response?.status === 404
+            ? `${professionalType} not found. They may no longer be available.`
+            : `Failed to load ${professionalType.toLowerCase()} data: ${err.message}`
+        );
       } finally {
         setLoading(false);
       }
     };
-    fetchVetData();
+    fetchProfessionalData();
   }, [professionalId, professionalType]);
 
   const handleDelete = async () => {
@@ -88,7 +122,7 @@ const DeleteCancelAppointmentModal = ({ appointment, onClose, onSuccess }) => {
           <h3 className="text-xl font-semibold text-gray-800">Reschedule Your Appointment</h3>
           <p className="text-sm text-gray-600">
             Your appointment for {appointment.petName} has been cancelled. Would you like to book a new one with{" "}
-            {vet?.fullName || "this professional"}?
+            {professional?.fullName || appointment.professionalId?.fullName || "this professional"}?
           </p>
           <div className="flex justify-end gap-4">
             <button
@@ -105,7 +139,7 @@ const DeleteCancelAppointmentModal = ({ appointment, onClose, onSuccess }) => {
             </button>
             <button
               onClick={() => {
-                window.location.href = "/vets";
+                window.location.href = professionalType === "Vet" ? "/vets" : "/trainers";
               }}
               className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-pink-400 to-yellow-300 rounded-xl hover:from-pink-500 hover:to-yellow-400 transition-all"
             >
@@ -124,9 +158,9 @@ const DeleteCancelAppointmentModal = ({ appointment, onClose, onSuccess }) => {
 
     return (
       <div className="space-y-4 p-6">
-        <p className="text-sm text-gray-600">
-          Are you sure you want to {appointment.status === "pending" ? "delete" : "cancel"} your appointment with{" "}
-          {vet?.fullName || appointment.professionalId?.fullName || "Unknown"} for {appointment.petName} on{" "}
+        <p className="text-sm text-gray-600">you want to 
+          Are you sure {appointment.status === "pending" ? "delete" : "cancel"} your appointment with{" "}
+          {professional?.fullName || appointment.professionalId?.fullName || "Unknown"} for {appointment.petName} on{" "}
           {new Date(appointment.date).toLocaleDateString()} at {appointment.time}?
         </p>
         {isLastMinute && (
@@ -175,19 +209,21 @@ const DeleteCancelAppointmentModal = ({ appointment, onClose, onSuccess }) => {
         <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-pink-50 to-yellow-50 sticky top-0 z-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              {vet && (
+              {professional && (
                 <img
-                  src={vet.image || "/default-vet.jpg"}
-                  alt={vet.fullName || "Professional"}
+                  src={professional.image || `/default-${professionalType.toLowerCase()}.jpg`}
+                  alt={professional.fullName || "Professional"}
                   className="w-12 h-12 rounded-full object-cover border-2 border-pink-200"
-                  onError={(e) => (e.target.src = "/default-vet.jpg")}
+                  onError={(e) => (e.target.src = `/default-${professionalType.toLowerCase()}.jpg`)}
                 />
               )}
               <div>
                 <h2 className="text-lg font-semibold text-gray-800">
-                  {vet ? `${vet.fullName} (${professionalType})` : "Loading..."}
+                  {professional ? `${professional.fullName} (${professionalType})` : "Loading..."}
                 </h2>
-                <p className="text-sm text-gray-600">{vet ? "Cancel Appointment" : "Loading details..."}</p>
+                <p className="text-sm text-gray-600">
+                  {professional ? "Cancel Appointment" : "Loading details..."}
+                </p>
               </div>
             </div>
             <button onClick={onClose} className="p-2 rounded-full hover:bg-pink-100 transition-colors">
