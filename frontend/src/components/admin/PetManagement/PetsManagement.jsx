@@ -1,19 +1,17 @@
 import { Archive, PawPrint, RefreshCw, Shield } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useApp } from "../../../context/AppContext";
 import ActivePets from "./Pets/ActivePets";
 import ArchivedPets from "./Pets/ArchivedPets";
 import CompletedPets from "./Pets/CompletedPets";
-import MyPets from "./Pets/MyPets";
 
-const PetsManagement = ({ hideHeader = false }) => {
+const PetsManagement = ({ hideHeader}) => {
   const { pets, userPets, triggerRefresh, user, socket } = useApp();
   const [activeTab, setActiveTab] = useState("active");
   const [counts, setCounts] = useState({
     active: 0,
     completed: 0,
     archived: 0,
-    myPets: 0,
   });
 
   // Calculate counts based on current pets and userPets
@@ -28,9 +26,6 @@ const PetsManagement = ({ hideHeader = false }) => {
         (p) => ["adopted", "sold"].includes(p.status) && !p.isArchived
       ).length,
       archived: pets.filter((p) => p.isArchived).length,
-      myPets: userPets.filter(
-        (p) => !p.isArchived && p.status !== "adopted" && p.status !== "sold"
-      ).length,
     });
   };
 
@@ -75,8 +70,6 @@ const PetsManagement = ({ hideHeader = false }) => {
         return <PawPrint className="w-5 h-5" />;
       case "archived":
         return <Archive className="w-5 h-5" />;
-      case "myPets":
-        return <PawPrint className="w-5 h-5" />;
       default:
         return <Shield className="w-5 h-5" />;
     }
@@ -90,18 +83,14 @@ const PetsManagement = ({ hideHeader = false }) => {
         return "text-teal-600 bg-teal-100";
       case "archived":
         return "text-gray-600 bg-gray-100";
-      case "myPets":
-        return "text-blue-600 bg-blue-100";
       default:
         return "text-green-600 bg-green-100";
     }
   };
 
   const getTabText = (tab) => {
-    const displayText =
-      tab === "myPets"
-        ? "My Pets"
-        : tab === "completed"
+    const displayText = 
+    tab === "completed"
         ? "Completed Pets"
         : `${tab.charAt(0).toUpperCase() + tab.slice(1)} Pets`;
     return `${displayText} (${counts[tab]})`;
@@ -134,7 +123,7 @@ const PetsManagement = ({ hideHeader = false }) => {
 
       <div className="flex justify-between px-6 py-4 border-b border-gray-200">
         <div className="flex space-x-2">
-          {["active", "completed", "archived", "myPets"].map((tab) => (
+          {["active", "completed", "archived"].map((tab) => (
             <button
               key={tab}
               className={`relative flex items-center space-x-2 px-4 py-2 text-sm font-medium rounded-lg transition-all ${
@@ -165,7 +154,6 @@ const PetsManagement = ({ hideHeader = false }) => {
         {activeTab === "active" && <ActivePets/>}
         {activeTab === "completed" && <CompletedPets/>}
         {activeTab === "archived" && <ArchivedPets/>}
-        {activeTab === "myPets" && <MyPets/>}
       </div>
     </div>
   );

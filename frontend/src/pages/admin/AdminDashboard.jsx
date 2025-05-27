@@ -5,11 +5,13 @@ import PetsManagement from "../../components/admin/PetManagement/PetsManagement"
 import Sidebar from "../../components/admin/Sidebar";
 import UsersManagement from "../../components/admin/UserManagement/UsersManagement";
 import { useApp } from "../../context/AppContext.jsx";
+import LostAndFoundManagement from "../../components/admin/LostAndFoundManagement/LostAndFoundManagement.jsx";
 
 const TABS = {
   DASHBOARD: "dashboard",
   PETS: "pets",
   USERS: "users",
+  LOST_AND_FOUND: "lost&found",
 };
 
 const AdminDashboard = () => {
@@ -51,6 +53,10 @@ const AdminDashboard = () => {
             <div style={{ display: activeTab === TABS.USERS ? "block" : "none" }}>
               <UsersManagement hideHeader={false} />
             </div>
+            <div style={{ display: activeTab === TABS.LOST_AND_FOUND ? "block" : "none" }}>
+              <LostAndFoundManagement hideHeader={false} />
+            </div>
+            
           </div>
         </section>
       </main>

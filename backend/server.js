@@ -8,6 +8,7 @@ import { Server } from 'socket.io';
 import connectCloudinary from './config/cloudinary.js';
 import connectDB from './config/mongodb.js';
 import appointmentRouter from './routes/appointmentRoute.js';
+import lostAndFoundRouter from './routes/lostAndFoundRoute.js';
 import PaymentRouter from './routes/paymentRoute.js';
 import petRouter from './routes/petRoute.js';
 import uploadRouter from './routes/uploadRoutes.js';
@@ -48,6 +49,7 @@ app.use('/api', uploadRouter);
 app.use('/api/pet', petRouter);
 app.use('/api/appointments', appointmentRouter);
 app.use('/api/payment', PaymentRouter);
+app.use('/api/lost-and-found',lostAndFoundRouter );
 
 // Create 'Uploads' directory
 const uploadDir = path.join(process.cwd(), 'Uploads');

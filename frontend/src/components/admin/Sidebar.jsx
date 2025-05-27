@@ -1,15 +1,15 @@
 import {
+  ArrowLeftRight,
   BarChart4,
   ChevronLeft,
   ChevronRight,
   LogOut,
   Menu,
   PawPrint,
-  Settings,
   User,
   Users
 } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useApp } from "../../context/AppContext";
 
 const Sidebar = ({ activeTab, setActiveTab, isCollapsed, setIsCollapsed }) => {
@@ -41,11 +41,9 @@ const Sidebar = ({ activeTab, setActiveTab, isCollapsed, setIsCollapsed }) => {
     { icon: BarChart4, label: "Dashboard", key: "dashboard" },
     { icon: PawPrint, label: "Pets", key: "pets" },
     { icon: Users, label: "Users", key: "users" },
+    { icon: ArrowLeftRight, label: "Lost And Found", key: "lost&found" },
   ];
 
-  const systemItems = [
-    { icon: Settings, label: "Settings", key: "settings" },
-  ];
 
   return (
     <>
@@ -164,25 +162,7 @@ const Sidebar = ({ activeTab, setActiveTab, isCollapsed, setIsCollapsed }) => {
               )}
             </button>
           ))}
-          {!isCollapsed && (
-            <div className="px-3 mt-6 mb-2">
-              <p className="text-xs font-semibold tracking-wider text-gray-400 uppercase">System</p>
-            </div>
-          )}
-          {systemItems.map((item) => (
-            <button
-              key={item.key}
-              className={`flex items-center w-full p-3 text-gray-700 transition-colors duration-300 rounded-lg hover:bg-gradient-to-r hover:from-yellow-50 hover:to-pink-50 hover:text-pink-600 focus:outline-none focus:ring-2 focus:ring-yellow-400 ${
-                isCollapsed ? "justify-center" : ""
-              }`}
-              title={isCollapsed ? item.label : ""}
-            >
-              <item.icon className={`w-5 h-5 text-gray-500 ${!isCollapsed && "mr-3"}`} />
-              {!isCollapsed && <span className="font-medium">{item.label}</span>}
-            </button>
-          ))}
         </nav>
-
         {/* Logout */}
         <div className="p-3 mt-auto border-t border-gray-100">
           <button

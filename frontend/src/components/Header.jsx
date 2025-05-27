@@ -19,7 +19,7 @@ function Header() {
 
   const navLinks = [
     { name: "Adopt a Pet", to: "/pets", ariaLabel: "Go to pet adoption section" },
-    { name: "Lost & Found", to: "/lost", ariaLabel: "Get help finding a lost pet" },
+    { name: "Lost & Found", to: "/lost-and-found", ariaLabel: "Get help finding a lost pet" },
     { name: "Pet Training", to: "/trainers", ariaLabel: "Access pet training resources" },
     { name: "Veterinary Care", to: "/vets", ariaLabel: "Find veterinary services" },
     {

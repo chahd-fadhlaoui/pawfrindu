@@ -62,7 +62,6 @@ const FORM_FIELDS = {
   },
 };
 
-// Reusable form components (unchanged)
 export const FormField = ({ label, error, icon, children }) => (
   <div>
     <label className="flex items-center block gap-1 mb-1 text-sm font-medium text-gray-700">

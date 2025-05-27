@@ -5,7 +5,7 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   plugins: [react()],
   server: {
-    allowedHosts: ['5063-41-62-77-218.ngrok-free.app'], // Allow ngrok host
+    allowedHosts: ['7090-102-157-91-243.ngrok-free.app'], // Allow ngrok host
     proxy: {
       '/api': {
         target: 'http://localhost:8500', // Backend server

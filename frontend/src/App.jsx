@@ -1,5 +1,4 @@
 import "leaflet/dist/leaflet.css";
-import React from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import ResetPasswordConfirmation from './components/auth/ResetPasswordConfirmation';
 import Footer from './components/Footer';
@@ -15,12 +14,15 @@ import CreatePet from './pages/CreatePet';
 import CreateProfile from './pages/CreateProfile';
 import Forbidden from './pages/Forbidden';
 import Home from './pages/Home';
+import LostAndFound from "./pages/LostAndFound";
+import LostPetForm from "./pages/LostPetForm";
 import PaymentFailed from "./pages/PaymentFailed";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PetDetails from './pages/PetDetails';
 import PetManagementDashboard from './pages/PetManagementDashboard';
 import Pets from './pages/Pets';
 import Profile from './pages/Profile';
+import PetFinderForm from "./pages/ReportFoundPet";
 import TrainerDashboard from './pages/Trainer/TrainerDashboard/TrainerDashboard';
 import TrainerDetails from "./pages/Trainer/TrainerUserSide/TrainerDetails";
 import TrainerPendingApproval from './pages/Trainer/TrainerUserSide/TrainerPendingApproval';
@@ -76,6 +78,9 @@ const AppRoutes = () => {
       <Route path="/pets" element={<Pets />} />
       <Route path="/vets" element={<Veterinarians/>} />
       <Route path="/trainers" element={<Trainers/>} />
+      <Route path="/lost-and-found" element={<PublicRoute><LostAndFound /></PublicRoute>} />
+      <Route path="/report-found-pet" element={<PublicRoute><PetFinderForm /></PublicRoute>} />
+      <Route path="/report-lost-pet" element={<PublicRoute><LostPetForm /></PublicRoute>} />
 
       <Route path="/vet/:id" element={<VetDetails />} />
       <Route path="/trainer/:id" element={<TrainerDetails />} />

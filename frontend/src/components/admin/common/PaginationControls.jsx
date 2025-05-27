@@ -1,5 +1,4 @@
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
-import React from "react";
 
 export const PaginationControls = ({ currentPage, totalPages, onPageChange, itemsPerPage = 5 }) => {
   // Calculate the range of items shown

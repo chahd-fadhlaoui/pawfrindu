@@ -398,19 +398,27 @@ const getCurrentUser = async (req, res) => {
 // Middleware to verify token
 const verifyToken = async (req, res, next) => {
   try {
-    const token = req.headers.authorization?.split(" ")[1];
+    const authHeader = req.headers.authorization;
+    console.log("Authorization Header:", authHeader); // Debug log
 
-    if (!token) {
-      return res.status(401).json({ message: "No token provided" });
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      console.log("No valid Bearer token provided");
+      req.user = null; // Proceed as unauthenticated
+      return next();
     }
 
+    const token = authHeader.split(" ")[1];
+    console.log("Token:", token); // Debug log
+
     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-    req.userId = decoded.userId;
-    req.userRole = decoded.role;
+    console.log("Decoded Token:", decoded); // Debug log
+
+    req.user = { _id: decoded.userId, role: decoded.role };
     next();
   } catch (error) {
-    console.error("Token Verification Error:", error);
-    return res.status(401).json({ message: "Invalid or expired token" });
+    console.error("Token Verification Error:", error.message);
+    req.user = null; // Proceed as unauthenticated
+    next();
   }
 };
 
