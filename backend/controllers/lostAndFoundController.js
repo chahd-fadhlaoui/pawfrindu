@@ -8,6 +8,7 @@ import { ssim } from 'ssim.js';
 import LostAndFound from "../models/lostAndFoundModel.js";
 import User from "../models/userModel.js";
 import { io } from "../server.js";
+import { sendEmail } from "../services/emailService.js";
 
 // Create a new found report 
 export const createFoundReport = async (req, res) => {
@@ -586,8 +587,8 @@ export const matchReports = async (req, res) => {
       });
     }
 
-    const report = await LostAndFound.findById(reportId);
-    const matchedReport = await LostAndFound.findById(matchedReportId);
+    const report = await LostAndFound.findById(reportId).populate("owner");
+    const matchedReport = await LostAndFound.findById(matchedReportId).populate("owner");
 
     if (!report || !matchedReport) {
       return res.status(404).json({
@@ -618,6 +619,61 @@ export const matchReports = async (req, res) => {
 
     await report.save();
     await matchedReport.save();
+
+    // Send email notifications
+    // For the first report
+    if (report.owner || report.email) {
+      try {
+        const emailData = {
+          fullName: report.owner?.fullName || "User",
+          reportType: report.type,
+          petName: report.name || null,
+          matchedUserFullName: matchedReport.owner?.fullName || "Anonymous User",
+          matchedUserEmail: matchedReport.owner?.email || matchedReport.email,
+          matchedUserPhone: matchedReport.owner
+            ? (matchedReport.owner.petOwnerDetails?.phone ||
+               matchedReport.owner.trainerDetails?.phone ||
+               matchedReport.owner.veterinarianDetails?.phone ||
+               matchedReport.phoneNumber ||
+               "Not provided")
+            : (matchedReport.phoneNumber || "Not provided"),
+        };
+        await sendEmail({
+          to: report.owner?.email || report.email,
+          template: "reportMatched",
+          data: emailData,
+        });
+      } catch (emailError) {
+        console.error("Failed to send report matched email for report:", reportId, emailError.message);
+      }
+    }
+
+    // For the matched report
+    if (matchedReport.owner || matchedReport.email) {
+      try {
+        const emailData = {
+          fullName: matchedReport.owner?.fullName || "User",
+          reportType: matchedReport.type,
+          petName: matchedReport.name || null,
+          matchedUserFullName: report.owner?.fullName || "Anonymous User",
+          matchedUserEmail: report.owner?.email || report.email,
+          matchedUserPhone: report.owner
+            ? (report.owner.petOwnerDetails?.phone ||
+               report.owner.trainerDetails?.phone ||
+               report.owner.veterinarianDetails?.phone ||
+               report.phoneNumber ||
+               "Not provided")
+            : (report.phoneNumber || "Not provided"),
+        };
+        await sendEmail({
+          to: matchedReport.owner?.email || matchedReport.email,
+          template: "reportMatched",
+          data: emailData,
+        });
+      } catch (emailError) {
+        console.error("Failed to send report matched email for matched report:", matchedReportId, emailError.message);
+      }
+    }
 
     io.emit("reportMatched", {
       reportId,
@@ -838,7 +894,7 @@ export const unmatchReport = async (req, res) => {
       });
     }
 
-    const report = await LostAndFound.findById(id);
+    const report = await LostAndFound.findById(id).populate("owner");
     if (!report) {
       return res.status(404).json({
         success: false,
@@ -854,7 +910,7 @@ export const unmatchReport = async (req, res) => {
     }
 
     const matchedReportId = report.matchedReport;
-    const matchedReport = await LostAndFound.findById(matchedReportId);
+    const matchedReport = await LostAndFound.findById(matchedReportId).populate("owner");
 
     // Update both reports
     report.status = "Pending";
@@ -865,6 +921,42 @@ export const unmatchReport = async (req, res) => {
       matchedReport.status = "Pending";
       matchedReport.matchedReport = null;
       await matchedReport.save();
+
+      // Send email to the matched report's reporter
+      if (matchedReport.owner || matchedReport.email) {
+        try {
+          const emailData = {
+            fullName: matchedReport.owner?.fullName || "User",
+            reportType: matchedReport.type,
+            petName: matchedReport.name || null,
+          };
+          await sendEmail({
+            to: matchedReport.owner?.email || matchedReport.email,
+            template: "reportUnmatched",
+            data: emailData,
+          });
+        } catch (emailError) {
+          console.error("Failed to send report unmatched email for matched report:", matchedReportId, emailError.message);
+        }
+      }
+    }
+
+    // Send email to the first report's reporter
+    if (report.owner || report.email) {
+      try {
+        const emailData = {
+          fullName: report.owner?.fullName || "User",
+          reportType: report.type,
+          petName: report.name || null,
+        };
+        await sendEmail({
+          to: report.owner?.email || report.email,
+          template: "reportUnmatched",
+          data: emailData,
+        });
+      } catch (emailError) {
+        console.error("Failed to send report unmatched email for report:", id, emailError.message);
+      }
     }
 
     io.emit("reportUnmatched", {

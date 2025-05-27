@@ -174,4 +174,48 @@ export const emailTemplates = {
         </div>
       `,
   }),
+reportMatched: (data) => ({
+    subject: "Your Lost and Found Report Has Been Matched!",
+    html: `
+        ${emailStyles}
+        <div class="email-container">
+          <h1>Your Report Has Been Matched! 🐾</h1>
+          <p>Hello ${data.fullName || "User"},</p>
+          <p>We are excited to inform you that your ${data.reportType} report${data.petName ? ` for <strong>${data.petName}</strong>` : ""} has been matched with a corresponding report!</p>
+          <p>Please contact the other party to coordinate further details:</p>
+          <ul>
+            <li><strong>Name:</strong> ${data.matchedUserFullName || "Anonymous User"}</li>
+            <li><strong>Email:</strong> ${data.matchedUserEmail}</li>
+            <li><strong>Phone:</strong> ${data.matchedUserPhone || "Not provided"}</li>
+          </ul>
+          <a href="mailto:${data.matchedUserEmail}" class="button" style="background-color: #4CAF50;">Contact Other Party</a>
+          <p>You can also view the matched report details in your PawFrindu account.</p>
+          <a href="${process.env.FRONTEND_URL}/reports" class="button" style="background-color: #2196F3;">View Report</a>
+          <div class="footer">
+            <p>If you have any questions, please contact our support team.</p>
+            <p>Best regards,<br>The PawFrindu Team</p>
+          </div>
+        </div>
+      `,
+  }),
+
+  reportUnmatched: (data) => ({
+    subject: "Your Lost and Found Report Has Been Unmatched",
+    html: `
+        ${emailStyles}
+        <div class="email-container">
+          <h1>Your Report Has Been Unmatched</h1>
+          <p>Hello ${data.fullName || "User"},</p>
+          <p>We regret to inform you that your ${data.reportType} report${data.petName ? ` for <strong>${data.petName}</strong>` : ""} has been unmatched by our team.</p>
+          <p>This could be due to new information or an error in the initial match. Your report is now back in Pending status.</p>
+          <p>You can view your report details in your PawFrindu account.</p>
+          <a href="${process.env.FRONTEND_URL}/reports" class="button" style="background-color: #2196F3;">View Report</a>
+          <div class="footer">
+            <p>If you have any questions, please contact our support team.</p>
+            <p>Best regards,<br>The PawFrindu Team</p>
+          </div>
+        </div>
+      `,
+  }),
+
 };
