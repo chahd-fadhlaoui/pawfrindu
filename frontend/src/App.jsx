@@ -93,7 +93,7 @@ const AppRoutes = () => {
 
       <Route path="/reset-password" element={<ResetPasswordConfirmation />} />
       <Route path="/forbidden" element={<Forbidden />} />
-      <Route path="/admin" element={<ProtectedRoute allowedRoles={["Admin"]}><AdminDashboard /></ProtectedRoute>} />
+      <Route path="/admin" element={<ProtectedRoute allowedRoles={["Admin","SuperAdmin"]}><AdminDashboard /></ProtectedRoute>} />
       <Route path="/trainer" element={<ProtectedRoute allowedRoles={["Trainer"]}><TrainerDashboard /></ProtectedRoute>} />
       <Route path="/trainer-pending-approval" element={<ProtectedRoute allowedRoles={["Trainer"]}><TrainerPendingApproval/></ProtectedRoute>} /> 
       <Route path="/vet" element={<ProtectedRoute allowedRoles={["Vet"]}><VetDashboard /></ProtectedRoute>} />

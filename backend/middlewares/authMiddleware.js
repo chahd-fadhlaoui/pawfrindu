@@ -34,10 +34,15 @@ export const authenticate = async (req, res, next) => {
 };
 
 export const authorize = (...allowedRoles) => (req, res, next) => {
-  if (!allowedRoles.includes(req.user.role)) {
+  // If Admin is allowed, also allow SuperAdmin
+  const effectiveRoles = allowedRoles.includes('Admin')
+    ? [...allowedRoles, 'SuperAdmin']
+    : allowedRoles;
+
+  if (!effectiveRoles.includes(req.user.role)) {
     return res.status(403).json({
       success: false,
-      message: `Unauthorized: Only ${allowedRoles.join(' or ')} can access this route`,
+      message: `Unauthorized: Only ${effectiveRoles.join(' or ')} can access this route`,
     });
   }
   next();

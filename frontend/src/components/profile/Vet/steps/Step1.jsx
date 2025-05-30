@@ -29,78 +29,78 @@ const Step1 = ({
       />
 
       {/* Profile Image Section */}
-      <section className="space-y-4" aria-labelledby="profile-image-section">
-        <div className="flex items-center gap-2">
-          <label id="profile-image-section" className="flex items-center gap-2 text-sm font-medium text-gray-700">
-            <span className="p-1.5 bg-[#ffc929]/10 rounded-full">
-              <User size={16} className="text-[#ffc929]" />
-            </span>
-            Profile Photo <span className="text-red-500">*</span>
-          </label>
-          <Tooltip
-            text="Upload a clear portrait photo for your profile. Maximum size is 5MB."
-            ariaLabel="Profile photo information"
-          >
-            <button
-              type="button"
-              className="text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ffc929] rounded-full"
-            >
-              <span className="sr-only">Profile photo information</span>
-              <Info size={16} className="text-gray-400" />
-            </button>
-          </Tooltip>
-        </div>
+    <section className="space-y-4" aria-labelledby="profile-image-section">
+  <div className="flex items-center gap-2">
+    <label id="profile-image-section" className="flex items-center gap-2 text-sm font-medium text-gray-700">
+      <span className="p-1.5 bg-[#ffc929]/10 rounded-full">
+        <User size={16} className="text-[#ffc929]" />
+      </span>
+      Profile Photo <span className="text-red-500"></span>
+    </label>
+    <Tooltip
+      text="Upload a clear portrait photo for your profile (required, max 5MB)."
+      ariaLabel="Profile photo information"
+    >
+      <button
+        type="button"
+        className="text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ffc929] rounded-full"
+      >
+        <span className="sr-only">Profile photo information</span>
+        <Info size={16} className="text-gray-400" />
+      </button>
+    </Tooltip>
+  </div>
 
-        <div className="flex flex-col items-center">
-          <div
-            className="relative group"
-            onMouseEnter={() => setImageHover(true)}
-            onMouseLeave={() => setImageHover(false)}
-          >
-            <div
-              className={`relative w-40 h-40 rounded-full overflow-hidden border-4 border-[#ffc929]/30 shadow-lg hover:shadow-xl group-hover:border-[#ffc929] group-hover:ring-2 group-hover:ring-[#ffc929]/50 ${animationClass}`}
-            >
-              <img
-                src={formData.image || defaultImageUrl}
-                alt="Profile preview"
-                className={`w-full h-full object-cover ${animationClass} ${imageHover ? "scale-110 blur-sm" : ""}`}
-              />
-              <label
-                htmlFor="profile-upload"
-                className={`absolute inset-0 flex flex-col items-center justify-center ${animationClass} cursor-pointer bg-black/60 ${imageHover ? "opacity-100" : "opacity-0"}`}
-                aria-label="Upload profile photo"
-              >
-                {isUploading.profile ? (
-                  <Loader2 size={32} className="text-white animate-spin" />
-                ) : (
-                  <>
-                    <Camera size={32} className="mb-2 text-white" />
-                    <span className="text-sm font-medium text-white">Upload Photo</span>
-                  </>
-                )}
-                <input
-                  id="profile-upload"
-                  type="file"
-                  className="hidden"
-                  accept="image/*"
-                  onChange={(e) => handleImageUpload(e, "profile")}
-                  disabled={isUploading.profile}
-                />
-              </label>
-            </div>
-            {formData.image && (
-              <div className="absolute -top-2 -right-2 bg-[#ffc929] text-white p-1.5 rounded-full shadow-md">
-                <CheckCircle size={18} />
-              </div>
-            )}
-          </div>
-          <p className="flex items-center gap-1.5 mt-4 text-sm text-gray-600">
-            <Info size={16} className="text-[#ffc929]" />
-            Upload a clear portrait photo (max 5MB)
-          </p>
-          <ErrorMessage id="image-error" error={formErrors.image} />
+  <div className="flex flex-col items-center">
+    <div
+      className="relative group"
+      onMouseEnter={() => setImageHover(true)}
+      onMouseLeave={() => setImageHover(false)}
+    >
+      <div
+        className={`relative w-40 h-40 rounded-full overflow-hidden border-4 border-[#ffc929]/30 shadow-lg hover:shadow-xl group-hover:border-[#ffc929] group-hover:ring-2 group-hover:ring-[#ffc929]/50 ${animationClass}`}
+      >
+        <img
+          src={formData.image || defaultImageUrl}
+          alt="Profile preview"
+          className={`w-full h-full object-cover ${animationClass} ${imageHover ? "scale-110 blur-sm" : ""}`}
+        />
+        <label
+          htmlFor="profile-upload"
+          className={`absolute inset-0 flex flex-col items-center justify-center ${animationClass} cursor-pointer bg-black/60 ${imageHover ? "opacity-100" : "opacity-0"}`}
+          aria-label="Upload profile photo"
+        >
+          {isUploading.profile ? (
+            <Loader2 size={32} className="text-white animate-spin" />
+          ) : (
+            <>
+              <Camera size={32} className="mb-2 text-white" />
+              <span className="text-sm font-medium text-white">Upload Photo</span>
+            </>
+          )}
+          <input
+            id="profile-upload"
+            type="file"
+            className="hidden"
+            accept="image/*"
+            onChange={(e) => handleImageUpload(e, "profile")}
+            disabled={isUploading.profile}
+          />
+          </label>
         </div>
-      </section>
+        {formData.image && (
+          <div className="absolute -top-2 -right-2 bg-[#ffc929] text-white p-1.5 rounded-full shadow-md">
+            <CheckCircle size={18} />
+          </div>
+        )}
+      </div>
+      <p className="flex items-center gap-1.5 mt-4 text-sm text-gray-600">
+        <Info size={16} className="text-[#ffc929]" />
+        Upload a clear portrait photo (required, max 5MB)
+      </p>
+      <ErrorMessage id="image-error" error={formErrors.image} />
+    </div>
+  </section>
 
       {/* Gender Section */}
       <section className="space-y-3" aria-labelledby="gender-section">

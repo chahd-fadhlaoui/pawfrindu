@@ -7,7 +7,6 @@ const PaymentRouter = express.Router();
 PaymentRouter.post('/initiate-payment', initiatePayment);
 
 // Webhook for payment confirmation
-PaymentRouter.post('/payment-webhook', handlePaymentWebhook);
 PaymentRouter.get('/payment-webhook', handlePaymentWebhook);
 
 export default PaymentRouter;

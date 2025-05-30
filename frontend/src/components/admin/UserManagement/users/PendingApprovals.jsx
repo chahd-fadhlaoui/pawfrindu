@@ -57,6 +57,11 @@ const PendingApprovals = () => {
     setSelectedUsers([]);
   }, [users, searchQuery, roleFilter]);
 
+  // Log pending Vet and Trainer users
+  useEffect(() => {
+    console.log("Pending Approvals - Vet and Trainer data:", filteredUsers);
+  }, [filteredUsers]);
+
   const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
   const currentUsers = filteredUsers.slice(
     (currentPage - 1) * usersPerPage,
@@ -129,6 +134,7 @@ const PendingApprovals = () => {
       setIsConfirmModalOpen(false);
     }
   };
+
   const handleBulkAccept = () => {
     if (selectedUsers.length === 0) return;
     setConfirmAction("bulkAccept");
@@ -274,37 +280,37 @@ const PendingApprovals = () => {
         />
       ) : (
         <>
-              <UserTable
-                users={currentUsers}
-                selectedUsers={selectedUsers}
-                currentUser={currentUser}
-                onToggleActive={handleAcceptUser}
-                onToggleSelection={toggleUserSelection}
-                onToggleSelectAll={toggleSelectAll}
-                customActions={(user) => (
-                  <div className="flex items-center justify-end gap-2">
-                    {user._id !== currentUser?._id && (
-                      <>
-                        <button
-                          onClick={() => handleAcceptUser(user._id)}
-                          className="flex items-center gap-1 px-3 py-1 text-xs font-medium text-white transition-all duration-300 rounded-lg shadow-sm bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 focus:outline-none focus:ring-2 focus:ring-green-400"
-                        >
-                          <Check className="w-3 h-3" />
-                          Accept
-                        </button>
-                        <button
-                          onClick={() => handleRejectUser(user._id)}
-                          className="flex items-center gap-1 px-3 py-1 text-xs font-medium text-white transition-all duration-300 rounded-lg shadow-sm bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 focus:outline-none focus:ring-2 focus:ring-red-400"
-                        >
-                          <X className="w-3 h-3" />
-                          Reject
-                        </button>
-                      </>
-                    )}
-                  </div>
+          <UserTable
+            users={currentUsers}
+            selectedUsers={selectedUsers}
+            currentUser={currentUser}
+            onToggleActive={handleAcceptUser}
+            onToggleSelection={toggleUserSelection}
+            onToggleSelectAll={toggleSelectAll}
+            customActions={(user) => (
+              <div className="flex items-center justify-end gap-2">
+                {user._id !== currentUser?._id && (
+                  <>
+                    <button
+                      onClick={() => handleAcceptUser(user._id)}
+                      className="flex items-center gap-1 px-3 py-1 text-xs font-medium text-white transition-all duration-300 rounded-lg shadow-sm bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 focus:outline-none focus:ring-2 focus:ring-green-400"
+                    >
+                      <Check className="w-3 h-3" />
+                      Accept
+                    </button>
+                    <button
+                      onClick={() => handleRejectUser(user._id)}
+                      className="flex items-center gap-1 px-3 py-1 text-xs font-medium text-white transition-all duration-300 rounded-lg shadow-sm bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 focus:outline-none focus:ring-2 focus:ring-red-400"
+                    >
+                      <X className="w-3 h-3" />
+                      Reject
+                    </button>
+                  </>
                 )}
-                title="Pending Approvals"
-              />
+              </div>
+            )}
+            title="Pending Approvals"
+          />
           {totalPages > 1 && (
             <div className="flex justify-center mt-6">
               <PaginationControls

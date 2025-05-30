@@ -134,7 +134,7 @@ const AppointmentCard = ({ appointment, onAction, disabled }) => {
             <div>
               <div className="text-xs text-gray-500">Location</div>
               <div className="font-medium text-gray-800">
-                {appointment.city || "Pet Care Center"}
+              {appointment.address || "Location Not Available"}
               </div>
             </div>
           </div>
@@ -240,6 +240,7 @@ const MyVetappointments = () => {
       const response = await axiosInstance.get(
         "/api/appointments/my-appointments"
       );
+      console.log("API Response:", response.data.appointments); // Debug the response
       setAppointments(response.data.appointments || []);
       setError(null);
     } catch (err) {
@@ -306,8 +307,8 @@ const MyVetappointments = () => {
                 time: data.time,
                 petName: data.petName,
                 status: "pending",
-                city: data.location || "Pet Care Center",
-              },
+                address: data.location || "Location Not Available", 
+                            },
               ...prev,
             ].sort((a, b) => new Date(b.date) - new Date(a.date))
           );

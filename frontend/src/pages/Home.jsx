@@ -3,6 +3,7 @@ import About from "../components/Home/About";
 import HeroSection from "../components/Home/HeroSection";
 import CategoriesCards from "../components/Home/CategoriesCards";
 import TrainingService from "../components/Home/TrainingService";
+import Chatbot from "../components/Home/Chatbot";
 
 export default function Home() {
   return (
@@ -24,6 +25,9 @@ export default function Home() {
       <div className="relative z-10">
         <TrainingService />
       </div>
+
+       {/* Chatbot - Fixed position in bottom right */}
+       <Chatbot />
     </main>
   );
 }

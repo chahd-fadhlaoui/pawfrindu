@@ -769,10 +769,11 @@ export const getPetCandidates = async (req, res) => {
         message: "Unauthorized: Only the owner can view candidates",
       });
     }
+
     const candidates = pet.candidates.map((candidate) => {
       const user = candidate.user || {}; // Fallback to empty object if user is null
       return {
-        id: candidate.user?._id || candidate._id.toString(), // Use candidate._id if user is missing
+        id: candidate.user?._id || candidate._id.toString(),
         name: user.fullName || "Unknown User",
         email: user.email || "N/A",
         image: user.image || "N/A",
@@ -789,10 +790,7 @@ export const getPetCandidates = async (req, res) => {
           },
           reasonForAdoption: user.petOwnerDetails?.reasonForAdoption || "N/A",
           readiness: user.petOwnerDetails?.readiness || "N/A",
-          phone:
-            candidate.status === "approved"
-              ? user.petOwnerDetails?.phone
-              : undefined,
+          phone: user.petOwnerDetails?.phone || "N/A", // Always include phone
         },
       };
     });

@@ -1,12 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { 
   Briefcase, 
   Home, 
   Calendar, 
   Clock, 
   Users, 
-  MapPin, 
-  Phone,
   PhoneCall,
   CheckCircle,
   XCircle
@@ -21,15 +19,22 @@ const formatEnum = (value) => {
     .join(' ');
 };
 
-export const CandidateDetails = ({ candidate, petStatus }) => {
+export const CandidateDetails = ({ candidate, petStatus, fetchData }) => {
   // Destructure nested details for easier access
   const { 
     occupation, 
     workSchedule, 
     housing,
     reasonForAdoption,
-    readiness 
+    readiness,
+    phone
   } = candidate.petOwnerDetails || {};
+
+  // Debug: Log candidate.petOwnerDetails to inspect data
+  useEffect(() => {
+    console.log('Candidate Details:', candidate);
+    console.log('Pet Owner Details:', candidate.petOwnerDetails);
+  }, [candidate]);
 
   // Define color and icon mappings for readiness
   const readinessConfig = {
@@ -48,6 +53,9 @@ export const CandidateDetails = ({ candidate, petStatus }) => {
   };
 
   const currentReadinessConfig = readinessConfig[readiness] || readinessConfig.later;
+
+  // Check if phone number is valid
+  const hasValidPhone = phone && typeof phone === 'string' && phone.trim() !== '' && phone !== 'N/A';
 
   return (
     <div className="p-6 mt-4 border-t border-gray-200 shadow-sm bg-white/95 backdrop-blur-sm rounded-b-2xl animate-fade-in">
@@ -134,22 +142,28 @@ export const CandidateDetails = ({ candidate, petStatus }) => {
         </div>
 
         {/* Contact Information */}
-        {petStatus === "adopted" && candidate.status === "approved" && (
+        {candidate.status === "approved" && (
           <div className="flex items-center gap-4 p-5 border shadow-sm md:col-span-2 bg-amber-50 border-amber-100 rounded-2xl">
             <div className="flex-1">
               <div className="flex items-center gap-3">
                 <PhoneCall className="w-6 h-6 text-amber-500" />
                 <p className="font-medium text-gray-800">
-                  {candidate.petOwnerDetails?.phone || "Contact information not available"}
+                  {hasValidPhone ? phone : "Contact information not available"}
                 </p>
               </div>
             </div>
-            <a 
-              href={`tel:${candidate.petOwnerDetails?.phone}`} 
-              className="px-5 py-2.5 text-white transition-all duration-300 bg-gradient-to-r from-amber-500 to-orange-500 rounded-lg hover:from-amber-600 hover:to-orange-600 shadow-md"
-            >
-              Contact
-            </a>
+            {hasValidPhone ? (
+              <a 
+                href={`tel:${phone}`} 
+                className="px-5 py-2.5 text-white transition-all duration-300 bg-gradient-to-r from-amber-500 to-orange-500 rounded-lg hover:from-amber-600 hover:to-orange-600 shadow-md"
+              >
+                Contact
+              </a>
+            ) : (
+              <span className="px-5 py-2.5 text-gray-600 bg-gray-200 rounded-lg shadow-md">
+                Contact Unavailable
+              </span>
+            )}
           </div>
         )}
       </div>

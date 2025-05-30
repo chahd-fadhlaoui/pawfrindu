@@ -1,58 +1,72 @@
-import React, { useState, useEffect } from "react";
-import { Users, UserCheck, UserX, Clock, RefreshCw } from "lucide-react";
-import ActiveUsers from "./users/ActiveUsers";
-import InactiveUsers from "./users/InactiveUsers";
-import ArchivedUsers from "./users/ArchivedUsers";
-import PendingApprovals from "./users/PendingApprovals";
+import React, { useEffect, useState } from "react";
+import { Loader2, RefreshCw, Users, UserCheck, UserX, Clock } from "lucide-react";
+import ActiveUsers from "../UserManagement/users/ActiveUsers";
+import InactiveUsers from "../UserManagement/users/InactiveUsers";
+import PendingApprovals from "../UserManagement/users/PendingApprovals";
 import { useApp } from "../../../context/AppContext";
-import axiosInstance from "../../../utils/axiosInstance";
 
 const UsersManagement = ({ hideHeader = false }) => {
   const { allUsers, triggerRefresh } = useApp();
   const [activeTab, setActiveTab] = useState("active");
   const [counts, setCounts] = useState({
     active: 0,
-    inactive: 0,
+    inactiveUsers: 0,
     archived: 0,
     pending: 0,
   });
   const [loadingStats, setLoadingStats] = useState(false);
 
-  // Fetch user stats from the backend
-  const fetchUserStats = async () => {
+  // Calculate user stats from allUsers
+  const fetchUserStats = () => {
     setLoadingStats(true);
+    console.log("allUsers in UsersManagement:", allUsers.map(u => ({ id: u._id, role: u.role, isActive: u.isActive, isArchieve: u.isArchieve })));
     try {
-      const response = await axiosInstance.get("/api/user/stats");
-      const { stats } = response.data;
+      const nonAdminUsers = allUsers.filter(
+        (user) => !["Admin", "SuperAdmin"].includes(user.role)
+      );
+      const activeNonAdmins = nonAdminUsers.filter(
+        (user) => user.isActive && !user.isArchieve
+      ).length;
+      const inactiveNonAdmins = nonAdminUsers.filter(
+        (user) => !user.isActive && !user.isArchieve
+      ).length;
+      const archivedNonAdmins = nonAdminUsers.filter(
+        (user) => user.isArchieve
+      ).length;
+      const pendingNonAdmins = nonAdminUsers.filter(
+        (user) => !user.isActive && user.role !== "PetOwner" // Assuming Vet/Trainer need approval
+      ).length;
+
+      console.log("UsersManagement counts:", {
+        activeNonAdmins,
+        inactiveNonAdmins,
+        archivedNonAdmins,
+        pendingNonAdmins,
+      });
+
       setCounts({
-        active: stats.activeUsers,
-        inactive: stats.inactiveUsers,
-        archived: stats.archivedUsers,
-        pending: stats.pendingUsers,
+        active: activeNonAdmins,
+        inactiveUsers: inactiveNonAdmins,
+        archived: archivedNonAdmins,
+        pending: pendingNonAdmins,
       });
     } catch (error) {
-      console.error("Failed to fetch user stats:", error);
+      console.error("Failed to calculate user stats:", error);
     } finally {
       setLoadingStats(false);
     }
   };
 
   useEffect(() => {
-    console.log("UsersManagement mounted");
-    return () => console.log("UsersManagement unmounted");
-  }, []);
-
-  // Initial fetch and refresh when triggered
-  useEffect(() => {
     fetchUserStats();
-  }, [allUsers]); // Re-fetch when allUsers changes (e.g., after refresh)
+  }, [allUsers]);
 
   const handleRefresh = async (e) => {
     e.preventDefault();
-    e.stopPropagation(); 
+    e.stopPropagation();
     try {
-      await triggerRefresh(); // Fetch context data
-      await fetchUserStats(); // Fetch stats for UI update
+      await triggerRefresh();
+      fetchUserStats();
     } catch (error) {
       console.error("Refresh failed:", error);
     }
@@ -89,9 +103,22 @@ const UsersManagement = ({ hideHeader = false }) => {
   };
 
   const getTabText = (tab) => {
-    const capitalized = tab.charAt(0).toUpperCase() + tab.slice(1);
-    return `${capitalized} Users (${loadingStats ? "..." : counts[tab]})`;
+    const tabLabels = {
+      active: "Active Users",
+      inactive: "Inactive Users",
+      archived: "Archived Users",
+      pending: "Pending Approvals",
+    };
+    const countKeys = {
+      active: "active",
+      inactive: "inactiveUsers",
+      archived: "archived",
+      pending: "pending",
+    };
+    return `${tabLabels[tab]} (${loadingStats ? "..." : counts[countKeys[tab]] || 0})`;
   };
+
+  console.log("UsersManagement rendering with activeTab:", activeTab);
 
   return (
     <div className="overflow-hidden bg-white shadow-lg rounded-xl">
@@ -107,50 +134,51 @@ const UsersManagement = ({ hideHeader = false }) => {
               <Users className="w-6 h-6 text-yellow-500" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">
-                User Management
-              </h1>
-              <p className="text-sm text-gray-500">
-                Manage platform users and permissions
-              </p>
+              <h1 className="text-xl font-bold text-gray-900">User Management</h1>
+              <p className="text-sm text-gray-500">Manage platform users and permissions</p>
             </div>
           </div>
         </div>
       )}
 
-      <div className="flex justify-between px-6 py-4 border-b border-gray-200">
-        <div className="flex space-x-2">
-          {["active", "inactive", "archived", "pending"].map((tab) => (
-            <button
-              key={tab}
-              className={`relative flex items-center space-x-2 px-4 py-2 text-sm font-medium rounded-lg transition-all ${
-                activeTab === tab
-                  ? `${getTabColor(tab)} shadow-sm`
-                  : "text-gray-600 bg-white hover:bg-gray-50"
-              }`}
-              onClick={() => setActiveTab(tab)}
-            >
-              <span className={activeTab === tab ? "" : "text-gray-400"}>
-                {getTabIcon(tab)}
-              </span>
-              <span>{getTabText(tab)}</span>
-            </button>
-          ))}
+      {/* Users Section */}
+      <div className="px-6 py-4 border-b border-gray-200">
+        <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-800 mb-4">
+          <Users className="w-5 h-5 text-yellow-500" />
+          Users
+        </h2>
+        <div className="flex justify-between">
+          <div className="flex space-x-2">
+            {["active", "inactive", "pending"].map((tab) => (
+              <button
+                key={tab}
+                className={`relative flex items-center space-x-2 px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                  activeTab === tab
+                    ? `${getTabColor(tab)} shadow-sm`
+                    : "text-gray-600 bg-white hover:bg-gray-50"
+                }`}
+                onClick={() => setActiveTab(tab)}
+              >
+                <span className={activeTab === tab ? "" : "text-gray-400"}>
+                  {getTabIcon(tab)}
+                </span>
+                <span>{getTabText(tab)}</span>
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={handleRefresh}
+            className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white rounded-lg shadow-sm hover:bg-gray-50"
+          >
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Refresh
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={handleRefresh} 
-          className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white rounded-lg shadow-sm hover:bg-gray-50"
-        >
-          <RefreshCw className="w-4 h-4 mr-2" />
-          Refresh
-        </button>
       </div>
-
       <div className="p-6">
-        {activeTab === "active" && <ActiveUsers />}
-        {activeTab === "inactive" && <InactiveUsers />}
-        {activeTab === "archived" && <ArchivedUsers />}
+        {activeTab === "active" && <ActiveUsers roleFilter="non-admin" />}
+        {activeTab === "inactive" && <InactiveUsers roleFilter="non-admin" />}
         {activeTab === "pending" && <PendingApprovals />}
       </div>
     </div>

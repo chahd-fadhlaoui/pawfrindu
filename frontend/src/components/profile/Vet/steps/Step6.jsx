@@ -155,6 +155,22 @@ const Step6 = ({
                   </div>
                 )}
               </div>
+              <div>
+                <p className="mb-1 text-sm font-medium text-gray-700">Professional Card:</p>
+                {formData.veterinarianDetails.professionalCardImage ? (
+                  <img
+                    src={formData.veterinarianDetails.professionalCardImage}
+                    alt="Professional card preview"
+                    className={`w-24 h-24 object-cover rounded-xl border-2 border-[#ffc929]/30 ${animationClass}`}
+                  />
+                ) : (
+                  <div
+                    className={`flex items-center justify-center w-24 h-24 bg-gray-100 rounded-xl border-2 border-[#ffc929]/30 ${animationClass}`}
+                  >
+                    <TiBusinessCard size={32} className="text-gray-400" />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

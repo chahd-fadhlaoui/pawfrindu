@@ -160,6 +160,7 @@ const createProfile = async (req, res) => {
       if (
         !veterinarianDetails?.governorate ||
         !veterinarianDetails?.diplomasAndTraining ||
+        !veterinarianDetails?.professionalCardImage ||
         !veterinarianDetails?.phone
       ) {
         return res.status(400).json({
@@ -267,7 +268,7 @@ const login = async (req, res) => {
       redirectTo =
       user.role === "PetOwner"
         ? "/"
-        : user.role === "Admin"
+        : user.role === "Admin" || user.role === "SuperAdmin"
         ? "/admin"
         : "/login";
       shouldUpdateLastLogin = true;

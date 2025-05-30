@@ -73,6 +73,7 @@ const appointmentSchema = new mongoose.Schema(
     confirmedAt: {
       type: Date, // Tracks when the appointment was confirmed
     },
+
   },
   { timestamps: true }
 );

@@ -3,14 +3,13 @@ import {
   MapPin, Phone, Award, Clock, Stethoscope,
   DollarSign, FileText, Mail, Globe, Languages,
   Upload, Trash2, Edit, Save, X, Loader2, AlertTriangle,
-  CreditCard
 } from "lucide-react";
 import { useApp } from "../../../context/AppContext";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../../utils/axiosInstance";
 import MapViewer from "../../map/MapViewer";
 import MapPicker from "../../map/MapPicker";
- 
+
 const DEFAULT_PROFILE_IMAGE = "/api/placeholder/250/250";
 const DEFAULT_BUSINESS_CARD_IMAGE = "/api/placeholder/150/100";
 
@@ -153,6 +152,7 @@ const MyProfile = () => {
   const [tempImage, setTempImage] = useState(null);
   const [clinicPhotos, setClinicPhotos] = useState([]);
   const [businessCardImage, setBusinessCardImage] = useState(null);
+  const [professionalCardImage, setProfessionalCardImage] = useState(null);
   const [diplomasImage, setDiplomasImage] = useState(null);
   const [uploadLoading, setUploadLoading] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -193,6 +193,7 @@ const MyProfile = () => {
         setTempImage(vet.image || DEFAULT_PROFILE_IMAGE);
         setClinicPhotos(vet.veterinarianDetails?.clinicPhotos || []);
         setBusinessCardImage(vet.veterinarianDetails?.businessCardImage || DEFAULT_BUSINESS_CARD_IMAGE);
+        setProfessionalCardImage(vet.veterinarianDetails?.professionalCardImage || DEFAULT_BUSINESS_CARD_IMAGE);
         setDiplomasImage(vet.veterinarianDetails?.diplomasAndTraining || null);
       } catch (err) {
         console.error("Error fetching vet profile:", err);
@@ -294,6 +295,8 @@ const MyProfile = () => {
       setTempImage(urls[0] || tempImage);
     } else if (type === "businessCard") {
       setBusinessCardImage(urls[0] || businessCardImage);
+    } else if (type === "professionalCard") {
+      setProfessionalCardImage(urls[0] || professionalCardImage);
     } else if (type === "clinicPhoto") {
       setClinicPhotos((prev) => [...prev, ...urls]);
     }
@@ -333,6 +336,7 @@ const MyProfile = () => {
           geolocation: editableData.geolocation,
           clinicPhotos,
           businessCardImage: businessCardImage !== DEFAULT_BUSINESS_CARD_IMAGE ? businessCardImage : null,
+          professionalCardImage: professionalCardImage !== DEFAULT_BUSINESS_CARD_IMAGE ? professionalCardImage : null,
         },
       };
 
@@ -343,6 +347,7 @@ const MyProfile = () => {
       setTempImage(updatedVet.image || DEFAULT_PROFILE_IMAGE);
       setClinicPhotos(updatedVet.veterinarianDetails?.clinicPhotos || []);
       setBusinessCardImage(updatedVet.veterinarianDetails?.businessCardImage || DEFAULT_BUSINESS_CARD_IMAGE);
+      setProfessionalCardImage(updatedVet.veterinarianDetails?.professionalCardImage || DEFAULT_BUSINESS_CARD_IMAGE);
       setDiplomasImage(updatedVet.veterinarianDetails?.diplomasAndTraining || null);
       setIsEditing(false);
     } catch (error) {
@@ -374,6 +379,7 @@ const MyProfile = () => {
       setTempImage(vetData.image || DEFAULT_PROFILE_IMAGE);
       setClinicPhotos(vetDetails.clinicPhotos || []);
       setBusinessCardImage(vetDetails.businessCardImage || DEFAULT_BUSINESS_CARD_IMAGE);
+      setProfessionalCardImage(vetDetails.professionalCardImage || DEFAULT_BUSINESS_CARD_IMAGE);
       setDiplomasImage(vetDetails.diplomasAndTraining || null);
     }
     setIsEditing(false);
@@ -402,7 +408,7 @@ const MyProfile = () => {
 
   const VetProfileHeader = () => {
     const { fullName } = editableData;
-  
+
     return (
       <div className="bg-white shadow-md border-b border-gray-100">
         {/* Alerte pour compte désactivé */}
@@ -414,7 +420,7 @@ const MyProfile = () => {
             </p>
           </div>
         )}
-        
+
         <div className="max-w-6xl mx-auto px-4 py-6">
           {/* Section principale */}
           <div className="flex items-start">
@@ -451,7 +457,7 @@ const MyProfile = () => {
                 />
               )}
             </div>
-  
+
             {/* Colonne centrale: Informations */}
             <div className="flex-1">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between">
@@ -473,10 +479,11 @@ const MyProfile = () => {
                     <span>{vetData.email || "N/A"}</span>
                   </p>
                 </div>
-                
-                {/* Carte de visite - format compact */}
-                <div className="mt-4 md:mt-0 flex items-center">
-                  <div className="mr-3">
+
+                {/* Cartes (Business Card et Professional Card) */}
+                <div className="mt-4 md:mt-0 flex items-start space-x-3">
+                  {/* Business Card */}
+                  <div>
                     <p className="text-xs text-gray-500 font-medium mb-1">Business Card</p>
                     {isEditing && vetData?.isActive ? (
                       <label className="relative inline-block cursor-pointer">
@@ -514,9 +521,49 @@ const MyProfile = () => {
                       )
                     )}
                   </div>
+
+                  {/* Professional Card */}
+                  <div>
+                    <p className="text-xs text-gray-500 font-medium mb-1">Professional Card</p>
+                    {isEditing && vetData?.isActive ? (
+                      <label className="relative inline-block cursor-pointer">
+                        {professionalCardImage !== DEFAULT_BUSINESS_CARD_IMAGE ? (
+                          <img
+                            src={professionalCardImage}
+                            alt="Professional Card"
+                            className="h-16 w-28 rounded object-cover shadow-sm border border-gray-200"
+                          />
+                        ) : (
+                          <div className="h-16 w-28 rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
+                            <Upload className="w-4 h-4 text-gray-400" />
+                          </div>
+                        )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleImageUpload(e, "professionalCard")}
+                          className="hidden"
+                          disabled={uploadLoading}
+                        />
+                        {uploadLoading && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-gray-200 bg-opacity-75 rounded">
+                            <Loader2 className="w-4 h-4 text-teal-500 animate-spin" />
+                          </div>
+                        )}
+                      </label>
+                    ) : (
+                      professionalCardImage !== DEFAULT_BUSINESS_CARD_IMAGE && (
+                        <img
+                          src={professionalCardImage}
+                          alt="Professional Card"
+                          className="h-16 w-28 rounded object-cover shadow-sm border border-gray-200"
+                        />
+                      )
+                    )}
+                  </div>
                 </div>
               </div>
-  
+
               {/* Navigation et boutons */}
               <div className="mt-5 flex flex-wrap items-center justify-between gap-2">
                 <div className="flex flex-wrap gap-2">
@@ -525,7 +572,7 @@ const MyProfile = () => {
                   <NavButton section="hours" label="Hours" icon={Clock} />
                   <NavButton section="languages" label="Languages" icon={Languages} />
                 </div>
-                
+
                 <div className="flex">
                   {isEditing ? (
                     <div className="flex gap-2">
@@ -568,6 +615,7 @@ const MyProfile = () => {
       </div>
     );
   };
+
   const renderProfileContent = () => {
     if (!vetData) return null;
 
@@ -757,7 +805,7 @@ const MyProfile = () => {
                         className="mt-2 text-lg font-semibold text-teal-600 hover:underline flex items-center space-x-2"
                       >
                         <Globe className="w-5 h-5" />
-                        <span>  </span>
+                        <span>View on Google Maps</span>
                       </a>
                     </div>
                   )}

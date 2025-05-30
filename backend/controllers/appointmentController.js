@@ -1,7 +1,10 @@
 import Appointment from "../models/appointmentModel.js";
 import Pet from "../models/petModel.js";
 import User from "../models/userModel.js";
+import ProfessionalAvailability from "../models/professionalAvailabilityModel.js";
 import { io } from "../server.js";
+import mongoose from "mongoose";
+
 
 
 // user part appointment
@@ -10,7 +13,7 @@ export const bookAppointment = async (req, res) => {
     professionalId,
     professionalType,
     date,
-    time,
+    time, 
     duration,
     petId,
     petName,
@@ -69,6 +72,22 @@ export const bookAppointment = async (req, res) => {
       return res.status(400).json({ message: "This time slot is already booked" });
     }
 
+    // Check if the date is marked unavailable
+    const unavailableDate = await Appointment.findOne({
+      professionalId,
+      professionalType,
+      status: "unavailable",
+      unavailableSlots: {
+        $elemMatch: {
+          date: dateStr,
+          professionalType,
+        },
+      },
+    });
+    if (unavailableDate) {
+      return res.status(400).json({ message: "This date is marked as unavailable" });
+    }
+
     let appointmentData = {
       petOwnerId: req.user._id,
       professionalId,
@@ -83,7 +102,6 @@ export const bookAppointment = async (req, res) => {
 
     // Handle platform vs. non-platform pets
     if (petId) {
-      // Platform pet: Validate petId and fetch pet details
       const pet = await Pet.findById(petId);
       if (!pet) {
         console.error("Pet not found for petId:", petId);
@@ -100,7 +118,6 @@ export const bookAppointment = async (req, res) => {
       appointmentData.address = address || "Unknown";
       appointmentData.isTrained = pet.isTrained ?? false;
     } else {
-      // Non-platform pet: Require petName, petType, petSource
       if (!petName || !petType || !petSource) {
         return res.status(400).json({ message: "petName, petType, and petSource are required for non-platform pets" });
       }
@@ -114,21 +131,18 @@ export const bookAppointment = async (req, res) => {
       appointmentData.isTrained = isTrained ?? false;
     }
 
-    // Create new appointment
     const appointment = new Appointment(appointmentData);
     const savedAppointment = await appointment.save();
 
-    // Populate professional and petOwner details for the Socket.IO event
     const populatedAppointment = await Appointment.findById(savedAppointment._id)
       .populate("petOwnerId", "fullName email petOwnerDetails.phone")
       .populate("professionalId", "fullName");
 
-    // Emit Socket.IO event with full appointment data
     io.emit("appointmentBooked", {
       ...populatedAppointment.toObject(),
       petId: savedAppointment.petId?.toString(),
       breed: savedAppointment.breed || "Unknown",
-      gender: savedAppointment.gender || "Unknown",
+      gender: savedAppointment.breed || "Unknown",
       address: savedAppointment.address || "Unknown",
       isTrained: savedAppointment.isTrained ?? false,
     });
@@ -143,7 +157,7 @@ export const bookAppointment = async (req, res) => {
         email: populatedAppointment.petOwnerId.email,
         petId: savedAppointment.petId?.toString(),
         breed: savedAppointment.breed || "Unknown",
-        gender: savedAppointment.gender || "Unknown",
+        gender: savedAppointment.breed || "Unknown",
         address: savedAppointment.address || "Unknown",
         isTrained: savedAppointment.isTrained ?? false,
       },
@@ -888,5 +902,173 @@ export const getTrainerAppointments = async (req, res) => {
       stack: error.stack,
     });
     res.status(500).json({ message: "Failed to fetch appointments", detail: error.message });
+  }
+};
+
+//vet or tariner period not available
+
+
+export const getUnavailablePeriods = async (req, res) => {
+  const { professionalId, year, month, professionalType } = req.query;
+
+  try {
+    // Validate inputs
+    if (!professionalId || !["Vet", "Trainer"].includes(professionalType)) {
+      return res.status(400).json({ message: "Invalid professionalId or professionalType" });
+    }
+    if (!year || !month || isNaN(year) || isNaN(month)) {
+      return res.status(400).json({ message: "Year and month are required" });
+    }
+
+    // Verify professional exists
+    const professional = await User.findById(professionalId);
+    if (!professional || professional.role !== professionalType) {
+      return res.status(404).json({ message: `${professionalType} not found` });
+    }
+
+    // Fetch unavailable dates for the month
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0);
+    const availability = await ProfessionalAvailability.findOne({
+      professionalId,
+      professionalType,
+      "unavailableSlots.date": {
+        $gte: startDate.toISOString().split("T")[0],
+        $lte: endDate.toISOString().split("T")[0],
+      },
+    });
+
+    // Generate unavailableSlotsByDate for modal compatibility
+    const unavailableSlotsByDate = {};
+    if (availability) {
+      for (let slot of availability.unavailableSlots) {
+        if (
+          slot.isAvailable === false &&
+          slot.date >= startDate.toISOString().split("T")[0] &&
+          slot.date <= endDate.toISOString().split("T")[0]
+        ) {
+          unavailableSlotsByDate[slot.date] = ["00:00"]; // Dummy time slot for modal
+        }
+      }
+    }
+
+    res.json({ success: true, unavailableSlotsByDate });
+  } catch (error) {
+    console.error("Get Unavailable Periods Error:", error.message, error.stack);
+    res.status(500).json({ message: "Failed to fetch unavailable periods", detail: error.message });
+  }
+};
+export const updateUnavailablePeriods = async (req, res) => {
+  const { professionalId } = req.params;
+  const { startDate, endDate, professionalType, markAvailable = false } = req.body;
+
+  try {
+    // Validate inputs
+    if (!professionalId || !mongoose.Types.ObjectId.isValid(professionalId)) {
+      return res.status(400).json({ message: "Invalid professionalId" });
+    }
+    if (!["Vet", "Trainer"].includes(professionalType)) {
+      return res.status(400).json({ message: "Invalid professionalType" });
+    }
+    if (!startDate || !endDate || !startDate.match(/^\d{4}-\d{2}-\d{2}$/) || !endDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      return res.status(400).json({ message: "Invalid startDate or endDate format. Use YYYY-MM-DD" });
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end) {
+      return res.status(400).json({ message: "Invalid date range" });
+    }
+
+    // Verify professional
+    const professional = await User.findById(professionalId);
+    if (!professional || professional.role !== professionalType || !professional.isActive) {
+      return res.status(404).json({ message: `${professionalType} not found or not active` });
+    }
+
+    // Check for reserved appointments
+    const reservedSlots = await Appointment.find({
+      professionalId,
+      professionalType,
+      date: { $gte: startDate, $lte: endDate },
+      status: { $ne: "cancelled" },
+    });
+    if (reservedSlots.length > 0 && !markAvailable) {
+      return res.status(400).json({ message: "Cannot mark dates with reserved appointments as unavailable" });
+    }
+
+    // Find or create ProfessionalAvailability document
+    let availability = await ProfessionalAvailability.findOne({
+      professionalId,
+      professionalType,
+    });
+    if (!availability) {
+      availability = new ProfessionalAvailability({
+        professionalId,
+        professionalType,
+        unavailableSlots: [],
+      });
+    }
+
+    // Update unavailableSlots
+    let currentDate = new Date(start);
+    while (currentDate <= end) {
+      const dateStr = currentDate.toISOString().split("T")[0];
+      const existingSlotIndex = availability.unavailableSlots.findIndex(
+        (slot) => slot.date === dateStr
+      );
+
+      if (markAvailable) {
+        // Remove or mark as available
+        if (existingSlotIndex !== -1) {
+          availability.unavailableSlots.splice(existingSlotIndex, 1);
+        }
+      } else {
+        // Mark as unavailable
+        if (existingSlotIndex === -1) {
+          availability.unavailableSlots.push({
+            date: dateStr,
+            isAvailable: false,
+          });
+        } else {
+          availability.unavailableSlots[existingSlotIndex].isAvailable = false;
+        }
+      }
+
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    // Save the document
+    await availability.save();
+
+    // Generate unavailableSlotsByDate for the affected month
+    const year = start.getFullYear();
+    const month = start.getMonth() + 1;
+    const startOfMonth = new Date(year, month - 1, 1);
+    const endOfMonth = new Date(year, month, 0);
+    const unavailableSlotsByDate = {};
+    for (let slot of availability.unavailableSlots) {
+      if (
+        slot.isAvailable === false &&
+        slot.date >= startOfMonth.toISOString().split("T")[0] &&
+        slot.date <= endOfMonth.toISOString().split("T")[0]
+      ) {
+        unavailableSlotsByDate[slot.date] = ["00:00"];
+      }
+    }
+
+    // Emit Socket.IO event
+    io.emit("unavailabilityUpdated", {
+      professionalId,
+      professionalType,
+      year,
+      month,
+      unavailableSlotsByDate,
+    });
+
+    res.json({ success: true, message: "Unavailable periods updated successfully" });
+  } catch (error) {
+    console.error("Update Unavailable Periods Error:", error.message, error.stack);
+    res.status(500).json({ message: "Failed to update unavailable periods", detail: error.message });
   }
 };

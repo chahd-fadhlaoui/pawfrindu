@@ -70,7 +70,7 @@ const PetCard = ({ pet, navigate, currencySymbol }) => {
 export default function Pet() {
   const navigate = useNavigate();
   const { species: urlSpecies } = useParams();
-  const { pets, currencySymbol, loading, error } = useContext(AppContext);
+  const { pets,fetchPets, currencySymbol, loading, error } = useContext(AppContext);
 
   const [filteredPets, setFilteredPets] = useState([]);
   const [speciesList] = useState(SPECIES_OPTIONS.map(opt => opt.value));
@@ -155,6 +155,12 @@ export default function Pet() {
     }
   }, [urlSpecies, speciesList]);
 
+  
+
+useEffect(() => {
+  console.log("Pet component mounted, fetching pets");
+  fetchPets();
+}, [fetchPets]);
   const indexOfLastPet = currentPage * petsPerPage;
   const indexOfFirstPet = indexOfLastPet - petsPerPage;
   const currentPets = filteredPets.slice(indexOfFirstPet, indexOfLastPet);

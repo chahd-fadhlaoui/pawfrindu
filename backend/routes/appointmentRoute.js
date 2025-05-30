@@ -1,5 +1,5 @@
 import express from "express";
-import { AppointmentNotAvailable, bookAppointment, cancelAppointment, completeAppointment, confirmAppointment, getMyAppointments, getReservedSlots, getReservedSlotsForMonth, getTrainerAppointments, getUserBookedDates, getVetAppointments , updateAppointment, updateVetAppointmentStatus, vetDeleteAppointment } from "../controllers/appointmentController.js";
+import { AppointmentNotAvailable, bookAppointment, cancelAppointment, completeAppointment, confirmAppointment, getMyAppointments, getReservedSlots, getReservedSlotsForMonth, getTrainerAppointments, getUnavailablePeriods, getUserBookedDates, getVetAppointments , updateAppointment, updateUnavailablePeriods, updateVetAppointmentStatus, vetDeleteAppointment } from "../controllers/appointmentController.js";
 import { authenticate } from "../middlewares/authMiddleware.js";
 
 const appointmentRouter = express.Router();
@@ -18,4 +18,7 @@ appointmentRouter.delete("/vet-delete/:appointmentId", authenticate, vetDeleteAp
 appointmentRouter.put("/complete/:appointmentId", authenticate, completeAppointment);
 appointmentRouter.get("/vet-appointments", authenticate, getVetAppointments);
 appointmentRouter.get('/trainer-appointments', authenticate, getTrainerAppointments);
+// appointmentRouter.js
+appointmentRouter.get("/professionals/unavailable-periods", authenticate, getUnavailablePeriods);
+appointmentRouter.post("/professionals/unavailable-periods/:professionalId", authenticate, updateUnavailablePeriods);
 export default appointmentRouter;   

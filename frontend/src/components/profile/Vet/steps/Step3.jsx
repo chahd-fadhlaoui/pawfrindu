@@ -5,6 +5,7 @@ import { TiBusinessCard } from "react-icons/ti";
 import { Tooltip } from "../../../Tooltip";
 import { ErrorMessage } from "../../common/ErrorMessage";
 import { SectionHeader } from "../../common/SectionHeader";
+import { specializations } from "../../../../assets/vet";
 
 const Step2 = ({
   formData,
@@ -19,14 +20,7 @@ const Step2 = ({
   businessCardPlaceholderUrl,
   isUploading,
 }) => {
-  const [imageHover, setImageHover] = useState({ diploma: false, businessCard: false });
-
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" && specializationInput.trim()) {
-      e.preventDefault();
-      addSpecialization();
-    }
-  };
+  const [imageHover, setImageHover] = useState({ diploma: false, businessCard: false, professionalCard: false });
 
   // Calculate remaining characters for about section
   const aboutCharCount = (formData.about || "").length;
@@ -56,7 +50,7 @@ const Step2 = ({
             Documentation <span className="text-red-500">*</span>
           </label>
           <Tooltip
-            text="Upload clear images of your diploma and business card (max 5MB each)."
+            text="Upload clear images of your diploma, business card, and professional card (max 5MB each)."
             ariaLabel="Documentation information"
           >
             <button
@@ -69,7 +63,7 @@ const Step2 = ({
           </Tooltip>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {/* Diploma Upload */}
           <div className="flex flex-col items-center">
             <div
@@ -183,6 +177,63 @@ const Step2 = ({
             </p>
             <ErrorMessage id="businessCardImage-error" error={formErrors.businessCardImage} />
           </div>
+
+          {/* Professional Card Upload */}
+          <div className="flex flex-col items-center">
+            <div
+              className="relative group"
+              onMouseEnter={() => setImageHover((prev) => ({ ...prev, professionalCard: true }))}
+              onMouseLeave={() => setImageHover((prev) => ({ ...prev, professionalCard: false }))}
+            >
+              <div
+                className={`relative w-40 h-40 rounded-xl overflow-hidden border-4 border-[#ffc929]/30 shadow-lg hover:shadow-xl group-hover:border-[#ffc929] group-hover:ring-2 group-hover:ring-[#ffc929]/50 ${animationClass}`}
+              >
+                {formData.veterinarianDetails.professionalCardImage ? (
+                  <img
+                    src={formData.veterinarianDetails.professionalCardImage}
+                    alt="Professional card preview"
+                    className={`w-full h-full object-cover ${animationClass} ${imageHover.professionalCard ? "scale-110 blur-sm" : ""}`}
+                  />
+                ) : (
+                  <div className={`flex items-center justify-center w-full h-full bg-gray-100 ${animationClass}`}>
+                    <TiBusinessCard size={40} className="text-gray-400" />
+                  </div>
+                )}
+                <label
+                  htmlFor="professionalCard-upload"
+                  className={`absolute inset-0 flex flex-col items-center justify-center ${animationClass} cursor-pointer bg-black/60 ${imageHover.professionalCard ? "opacity-100" : "opacity-0"}`}
+                  aria-label="Upload professional card image"
+                >
+                  {isUploading.professionalCard ? (
+                    <Loader2 size={32} className="text-white animate-spin" />
+                  ) : (
+                    <>
+                      <Camera size={32} className="mb-2 text-white" />
+                      <span className="text-sm font-medium text-white">Upload Professional Card</span>
+                    </>
+                  )}
+                  <input
+                    id="professionalCard-upload"
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={(e) => handleImageUpload(e, "professionalCardImage")}
+                    disabled={isUploading.professionalCard}
+                  />
+                </label>
+              </div>
+              {formData.veterinarianDetails.professionalCardImage && (
+                <div className="absolute -top-2 -right-2 bg-[#ffc929] text-white p-1.5 rounded-full shadow-md">
+                  <CheckCircle size={18} />
+                </div>
+              )}
+            </div>
+            <p className="flex items-center gap-1.5 mt-4  text-sm text-gray-600">
+              <Info size={16} className="text-[#ffc929]" />
+              Upload a clear professional card (max 5MB)
+            </p>
+            <ErrorMessage id="professionalCardImage-error" error={formErrors.professionalCardImage} />
+          </div>
         </div>
       </section>
 
@@ -279,7 +330,7 @@ const Step2 = ({
             Areas of Expertise <span className="text-red-500">*</span>
           </label>
           <Tooltip
-            text="Add your areas of expertise like Surgery, Dermatology, Cardiology, etc. Press Enter or click Add after typing each one."
+            text="Select your areas of expertise like Surgery, Dermatology, Cardiology, etc. Click Add to include each one."
             ariaLabel="Specializations information"
           >
             <button
@@ -294,19 +345,25 @@ const Step2 = ({
 
         <div className="space-y-3">
           <div className="flex items-center gap-3">
-            <input
+            <select
               id="specialization-input"
-              type="text"
               value={specializationInput}
               onChange={(e) => setSpecializationInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Enter specialization (e.g., Surgery)"
               className={`flex-1 px-4 py-3.5 text-sm border-2 rounded-xl shadow-sm focus:ring-2 focus:ring-[#ffc929]/50 focus:border-[#ffc929] ${animationClass} ${
                 formErrors.specializations ? "border-red-500 bg-red-50/30" : "border-[#ffc929]/20 hover:border-[#ffc929]/50"
               }`}
-              aria-label="Add specialization"
+              aria-label="Select specialization"
               aria-describedby={formErrors.specializations ? "specializations-error" : "specializations-hint"}
-            />
+            >
+              <option value="" disabled>
+                Select Activity
+              </option>
+              {specializations.map((spec, index) => (
+                <option key={index} value={spec}>
+                  {spec}
+                </option>
+              ))}
+            </select>
             <button
               type="button"
               onClick={addSpecialization}
@@ -319,7 +376,7 @@ const Step2 = ({
           </div>
           <p id="specializations-hint" className="flex items-center gap-1.5 text-sm text-gray-600">
             <Info size={16} className="text-[#ffc929]" />
-            Add multiple specializations to highlight your expertise areas
+            Select an activity from the list to add
           </p>
 
           {formData.veterinarianDetails.specializations?.length > 0 ? (
@@ -342,7 +399,7 @@ const Step2 = ({
               ))}
             </div>
           ) : (
-            <p className="text-sm italic text-gray-500">No specializations added yet</p>
+            <p className="text-sm italic text-gray-500">No activities added yet</p>
           )}
           <ErrorMessage id="specializations-error" error={formErrors.specializations} />
         </div>

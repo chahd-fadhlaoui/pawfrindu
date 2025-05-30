@@ -6,12 +6,18 @@ import Sidebar from "../../components/admin/Sidebar";
 import UsersManagement from "../../components/admin/UserManagement/UsersManagement";
 import { useApp } from "../../context/AppContext.jsx";
 import LostAndFoundManagement from "../../components/admin/LostAndFoundManagement/LostAndFoundManagement.jsx";
+import AdminsManagement from "../../components/admin/UserManagement/AdminsManagement.jsx";
 
 const TABS = {
   DASHBOARD: "dashboard",
   PETS: "pets",
   USERS: "users",
   LOST_AND_FOUND: "lost&found",
+  ACTIVE_USERS: "active",
+  INACTIVE_USERS: "inactive",
+  PENDING_APPROVALS: "pending",
+  ACTIVE_ADMINS: "activeAdmins",
+  INACTIVE_ADMINS: "inactiveAdmins",
 };
 
 const AdminDashboard = () => {
@@ -24,9 +30,31 @@ const AdminDashboard = () => {
     return () => console.log("AdminDashboard unmounted");
   }, []);
 
-  console.log("AdminDashboard rendered with activeTab:", activeTab);
+  useEffect(() => {
+    console.log("AdminDashboard rendered with activeTab:", activeTab);
+  }, [activeTab]);
 
-
+  const renderContent = () => {
+    console.log("Rendering content for activeTab:", activeTab);
+    switch (activeTab) {
+      case TABS.DASHBOARD:
+        return <DashboardStats onRefresh={triggerRefresh} />;
+      case TABS.PETS:
+        return <PetsManagement hideHeader={false} />;
+      case TABS.USERS:
+      case TABS.ACTIVE_USERS:
+      case TABS.INACTIVE_USERS:
+      case TABS.PENDING_APPROVALS:
+        return <UsersManagement hideHeader={false} />;
+      case TABS.LOST_AND_FOUND:
+        return <LostAndFoundManagement hideHeader={false} />;
+      case TABS.ACTIVE_ADMINS:
+      case TABS.INACTIVE_ADMINS:
+        return <AdminsManagement hideHeader={false} />;
+      default:
+        return <DashboardStats onRefresh={triggerRefresh} />;
+    }
+  };
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-yellow-50 to-pink-50">
@@ -41,23 +69,8 @@ const AdminDashboard = () => {
           isSidebarCollapsed ? "md:ml-16" : "md:ml-64"
         }`}
       >
-        {/* Tab Content */}
         <section className="overflow-hidden bg-white shadow-lg rounded-xl">
-          <div className="p-4 sm:p-0">
-            <div style={{ display: activeTab === TABS.DASHBOARD ? "block" : "none" }}>
-              <DashboardStats onRefresh={triggerRefresh} />
-            </div>
-            <div style={{ display: activeTab === TABS.PETS ? "block" : "none" }}>
-              <PetsManagement hideHeader={false} />
-            </div>
-            <div style={{ display: activeTab === TABS.USERS ? "block" : "none" }}>
-              <UsersManagement hideHeader={false} />
-            </div>
-            <div style={{ display: activeTab === TABS.LOST_AND_FOUND ? "block" : "none" }}>
-              <LostAndFoundManagement hideHeader={false} />
-            </div>
-            
-          </div>
+          <div className="p-4 sm:p-0">{renderContent()}</div>
         </section>
       </main>
     </div>

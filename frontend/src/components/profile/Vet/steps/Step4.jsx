@@ -6,6 +6,7 @@ import Select from "../../../common/Select";
 import { Tooltip } from "../../../Tooltip";
 import { ErrorMessage } from "../../common/ErrorMessage";
 import { SectionHeader } from "../../common/SectionHeader";
+import { serviceNames } from "../../../../assets/vet";
 
 const Step4 = ({
   formData,
@@ -66,140 +67,154 @@ const Step4 = ({
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <SectionHeader
-        title="Services & Schedule"
+        title="Main Fees & Schedule"
         icon={CalendarClock}
         description="Required fields are marked with *"
       />
 
       {/* Services Section */}
       <section className="space-y-4" aria-labelledby="services-section">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <label id="services-section" className="flex items-center gap-2 text-sm font-medium text-gray-700">
-              <span className="p-1.5 bg-[#ffc929]/10 rounded-full">
-                <Syringe size={16} className="text-[#ffc929]" />
+  <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="flex items-center gap-2">
+      <label id="services-section" className="flex items-center gap-2 text-sm font-medium text-gray-700">
+        <span className="p-1.5 bg-[#ffc929]/10 rounded-full">
+          <Syringe size={16} className="text-[#ffc929]" />
+        </span>
+        Main Fees <span className="text-red-500">*</span>
+      </label>
+      <Tooltip
+        text="Select veterinary services you provide with their corresponding fees."
+        ariaLabel="Services information"
+      >
+        <button
+          type="button"
+          className="text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ffc929] rounded-full"
+        >
+          <span className="sr-only">Fee Details</span>
+          <Info size={16} className="text-gray-400" />
+        </button>
+      </Tooltip>
+    </div>
+    <button
+      type="button"
+      onClick={addService}
+      className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#ffc929] to-[#ffa726] rounded-xl hover:from-[#ffa726] hover:to-[#ffc929] shadow-md hover:shadow-lg focus:ring-2 focus:ring-[#ffc929]/50 focus:outline-none"
+      aria-label="Add new service"
+    >
+      <Plus size={18} />
+      Add Fee Entry
+    </button>
+  </div>
+
+  <p className="text-sm text-gray-500">
+  Please select the veterinary procedures you offer (e.g., Vaccination, Surgery, Microchipping) and specify the corresponding fees {currencySymbol}.
+  </p>
+
+  <div className="space-y-3">
+    {formData.veterinarianDetails.services.length === 0 ? (
+      <div className="p-6 text-center border border-gray-300 border-dashed bg-gray-50 rounded-xl">
+        <p className="text-gray-500">No services added yet. Add your first service above.</p>
+      </div>
+    ) : (
+      formData.veterinarianDetails.services.map((service, index) => (
+        <div
+          key={index}
+          className={`p-4 bg-white border border-[#ffc929]/10 rounded-xl shadow-sm hover:shadow-md ${animationClass}`}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="flex items-center gap-2 text-sm font-semibold text-gray-800">
+              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#ffc929]/20 text-xs">
+                {index + 1}
               </span>
-              Services Offered <span className="text-red-500">*</span>
-            </label>
-            <Tooltip
-              text="List all veterinary services you provide with their corresponding fees."
-              ariaLabel="Services information"
+              {service.serviceName || "Choose a procedure"}
+            </h4>
+            <button
+              type="button"
+              onClick={() => removeService(index)}
+              className="text-gray-400 rounded-full hover:text-red-500 focus:outline-none focus:ring-2 focus:ring-red-500"
+              aria-label={`Remove service ${service.serviceName || index + 1}`}
             >
-              <button
-                type="button"
-                className="text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ffc929] rounded-full"
-              >
-                <span className="sr-only">Services information</span>
-                <Info size={16} className="text-gray-400" />
-              </button>
-            </Tooltip>
+              <Trash2 size={18} />
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={handleAddService}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#ffc929] to-[#ffa726] rounded-xl hover:from-[#ffa726] hover:to-[#ffc929] shadow-md hover:shadow-lg focus:ring-2 focus:ring-[#ffc929]/50 focus:outline-none"
-            aria-label="Add new service"
-          >
-            <Plus size={18} />
-            Add Service
-          </button>
-        </div>
-
-        <p className="text-sm text-gray-500">
-          Enter the services you offer (e.g., Vaccination, Surgery) and their fees in {currencySymbol}.
-        </p>
-
-        <div className="space-y-3">
-          {formData.veterinarianDetails.services.length === 0 ? (
-            <div className="p-6 text-center border border-gray-300 border-dashed bg-gray-50 rounded-xl">
-              <p className="text-gray-500">No services added yet. Add your first service above.</p>
-            </div>
-          ) : (
-            formData.veterinarianDetails.services.map((service, index) => (
-              <div
-                key={index}
-                className={`p-4 bg-white border border-[#ffc929]/10 rounded-xl shadow-sm hover:shadow-md ${animationClass}`}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div>
+              <label
+                htmlFor={`service-name-${index}`}
+                className="block mb-1 text-xs font-medium text-gray-700"
               >
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="flex items-center gap-2 text-sm font-semibold text-gray-800">
-                    <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#ffc929]/20 text-xs">
-                      {index + 1}
-                    </span>
-                    {service.serviceName || "New Service"}
-                  </h4>
-                  <button
-                    type="button"
-                    onClick={() => removeService(index)}
-                    className="text-gray-400 rounded-full hover:text-red-500 focus:outline-none focus:ring-2 focus:ring-red-500"
-                    aria-label={`Remove service ${service.serviceName || index + 1}`}
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </div>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <div>
-                    <label
-                      htmlFor={`service-name-${index}`}
-                      className="block mb-1 text-xs font-medium text-gray-700"
-                    >
-                      Service Name
-                    </label>
-                    <Input
-                      id={`service-name-${index}`}
-                      type="text"
-                      value={service.serviceName || ""}
-                      onChange={(e) => handleServiceChange(index, "serviceName", e.target.value)}
-                      placeholder="e.g., Vaccination"
-                      className="w-full px-4 py-3 text-sm border-2 border-[#ffc929]/20 rounded-xl shadow-sm focus:ring-2 focus:ring-[#ffc929]/50 focus:border-[#ffc929]"
-                      aria-describedby={`service-name-help-${index}`}
-                    />
-                    <p id={`service-name-help-${index}`} className="mt-1 text-xs text-gray-500">
-                      Enter the name of the service.
-                    </p>
-                  </div>
-                  <div className="relative">
-                    <label
-                      htmlFor={`service-fee-${index}`}
-                      className="block mb-1 text-xs font-medium text-gray-700"
-                    >
-                      Service Fee
-                    </label>
-                    <Input
-                      id={`service-fee-${index}`}
-                      type="number"
-                      value={service.fee || ""}
-                      onChange={(e) => handleServiceChange(index, "fee", validateFee(e.target.value).toString())}
-                      placeholder="e.g., 50.00"
-                      min="0"
-                      step="0.01"
-                      className="w-full px-4 py-3 text-sm border-2 border-[#ffc929]/20 rounded-xl shadow-sm focus:ring-2 focus:ring-[#ffc929]/50 focus:border-[#ffc929] pr-16"
-                      aria-describedby={`fee-help-${index}`}
-                    />
-                    <span className="absolute text-sm text-gray-500 -translate-y-1/2 right-4 top-1/2">
-                      {currencySymbol}
-                    </span>
-                    <p id={`fee-help-${index}`} className="mt-1 text-xs text-gray-500">
-                      Enter the fee in Dinar.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
+                Procedure Name
+              </label>
+              <Select
+                id={`service-name-${index}`}
+                value={service.serviceName || ""}
+                onChange={(e) => handleServiceChange(index, "serviceName", e.target.value)}
+                className="w-full px-4 py-3 text-sm border-2 border-[#ffc929]/20 rounded-xl shadow-sm focus:ring-2 focus:ring-[#ffc929]/50 focus:border-[#ffc929]"
+                aria-describedby={`service-name-help-${index}`}
+              >
+                <option value="" disabled>
+                  Select a service
+                </option>
+                {serviceNames
+                  .filter(
+                    (name) =>
+                      !formData.veterinarianDetails.services.some(
+                        (s, i) => s.serviceName === name && i !== index
+                      )
+                  )
+                  .map((name, idx) => (
+                    <option key={idx} value={name}>
+                      {name}
+                    </option>
+                  ))}
+              </Select>
+              <p id={`service-name-help-${index}`} className="mt-1 text-xs text-gray-500">
+              Choose a procedure from the list
+              </p>
+            </div>
+            <div className="relative">
+              <label
+                htmlFor={`service-fee-${index}`}
+                className="block mb-1 text-xs font-medium text-gray-700"
+              >
+                Fee
+              </label>
+              <Input
+                id={`service-fee-${index}`}
+                type="number"
+                value={service.fee || ""}
+                onChange={(e) => handleServiceChange(index, "fee", validateFee(e.target.value).toString())}
+                placeholder="e.g., 50.00"
+                min="0"
+                step="0.01"
+                className="w-full px-4 py-3 text-sm border-2 border-[#ffc929]/20 rounded-xl shadow-sm focus:ring-2 focus:ring-[#ffc929]/50 focus:border-[#ffc929] pr-16"
+                aria-describedby={`fee-help-${index}`}
+              />
+              <span className="absolute text-sm text-gray-500 -translate-y-1/2 right-4 top-1/2">
+                {currencySymbol}
+              </span>
+              <p id={`fee-help-${index}`} className="mt-1 text-xs text-gray-500">
+                Enter the fee in Dinar.
+              </p>
+            </div>
+          </div>
         </div>
+      ))
+    )}
+  </div>
 
-        {serviceSuccess && (
-          <p
-            className="flex items-center gap-1.5 text-sm font-medium text-green-600 animate-pulse"
-            aria-live="polite"
-          >
-            <CheckCircle size={14} className="text-green-500" />
-            {serviceSuccess}
-          </p>
-        )}
+  {serviceSuccess && (
+    <p
+      className="flex items-center gap-1.5 text-sm font-medium text-green-600 animate-pulse"
+      aria-live="polite"
+    >
+      <CheckCircle size={14} className="text-green-500" />
+      {serviceSuccess}
+    </p>
+  )}
 
-        <ErrorMessage id="services-error" error={formErrors.services} />
-      </section>
+  <ErrorMessage id="services-error" error={formErrors.services} />
+</section>
 
       {/* Schedule Section */}
       <section className="space-y-4" aria-labelledby="schedule-section">

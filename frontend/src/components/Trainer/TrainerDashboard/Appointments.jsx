@@ -5,6 +5,7 @@ import {
   CalendarClock,
   Filter,
   Loader2,
+  Plus,
   Search,
   X,
 } from "lucide-react";
@@ -17,6 +18,7 @@ import { AppointmentCard } from "./apointment/AppointmentCard";
 import { DeleteModal } from "./apointment/DeleteModal";
 import { StatusUpdateModal } from "./apointment/StatusUpdateModal";
 import SortButton from "./common/SortButton";
+import UnavailableModal from "../../vet/vetDashboardManagment/AppointmentsManagment/UnavailableModal";
 
 const FilterBadge = ({ label, value, onClear }) => (
   <div className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium text-[#ffc929] bg-[#ffc929]/10 border border-[#ffc929]/20 rounded-full shadow-sm">
@@ -44,7 +46,7 @@ export default function TrainerAppointmentDashboard({ isSidebarCollapsed }) {
   const [error, setError] = useState(null);
   const [deleteModal, setDeleteModal] = useState(null);
   const [statusUpdateModal, setStatusUpdateModal] = useState(null);
-
+  const [isUnavailableModalOpen, setIsUnavailableModalOpen] = useState(false);
   const fetchAppointments = async () => {
     try {
       setLoading(true);
@@ -600,6 +602,13 @@ export default function TrainerAppointmentDashboard({ isSidebarCollapsed }) {
                     onChange={(e) => debouncedSearch(e.target.value)}
                     aria-label="Search training sessions"
                   />
+                  <button
+  onClick={() => setIsUnavailableModalOpen(true)}
+  className="bg-gradient-to-r ml-10 from-yellow-500 to-pink-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:from-yellow-600 hover:to-pink-600 transition-all shadow-md flex items-center"
+>
+  <Plus className="w-4 h-4 mr-1.5" />
+  Set Unavailable
+</button>
                   {searchQuery && (
                     <button
                       onClick={() => clearFilter("search")}
@@ -734,6 +743,16 @@ export default function TrainerAppointmentDashboard({ isSidebarCollapsed }) {
         />
       )}
       <ToastContainer position="top-right" autoClose={3000} theme="light" />
+      {isUnavailableModalOpen && (
+  <UnavailableModal
+    professional={user}
+    onClose={() => setIsUnavailableModalOpen(false)}
+    onSuccess={() => {
+      toast.success("Availability updated", { position: "top-right", autoClose: 3000, theme: "light" });
+      setIsUnavailableModalOpen(false);
+    }}
+  />
+)}
     </main>
   );
 }

@@ -53,7 +53,6 @@ userRouter.put("/updateTrainerProfile", authenticate, updateTrainerProfile);
 userRouter.get('/getAllUsers', authenticate, authorize('Admin'), getAllUsers);
 userRouter.put("/users/:userId", authenticate, authorize("Admin"), updateUserByAdmin); // update the role / adminType / isActive / isArchieve
 userRouter.put("/users/:userId/approve", authenticate, authorize("Admin"), approveUser); // an endpoint for admins to activate accounts
-userRouter.delete("/users/:userId", authenticate, authorize("Admin"), deleteUserByAdmin); // an endpoint for admins to delete accounts
 userRouter.get("/stats", authenticate, authorize("Admin"), getUserStats);
 
-export default userRouter;
+export default userRouter; 

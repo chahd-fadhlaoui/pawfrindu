@@ -8,6 +8,7 @@ import {
 } from "react";
 import axiosInstance from "../utils/axiosInstance";
 import socket, { disconnectSocket, initializeSocket } from "../utils/socket";
+import { useLocation } from "react-router-dom";
 
 const DEFAULT_PROFILE_IMAGE =
   "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSIxMDAiIGZpbGw9IiNFNUU3RUIiLz4KICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSI4MCIgcj0iNDAiIGZpbGw9IiM5Q0EzQUYiLz4KICA8cGF0aCBkPSJNMTYwIDE4MEgzOUM0MSAxNDAgODAgMTIwIDEwMCAxMjBDMTIwIDEyMCAxNTggMTQwIDE2MCAxODBaIiBmaWxsPSIjOUNBM0FGIi8+Cjwvc3ZnPg==";
@@ -89,18 +90,53 @@ const AppContextProvider = ({ children }) => {
     });
   }, []);
 
-  const fetchAllUsers = useCallback(async () => {
-    return measureTime("fetchAllUsers", async () => {
+ const fetchAllUsers = useCallback(async (retryCount = 0) => {
+  const maxRetries = 2;
+  return measureTime("fetchAllUsers", async () => {
+    console.log("Fetching users from /api/user/getAllUsers with token:", localStorage.getItem("token")?.substring(0, 10) + "...");
+    try {
+      setLoading(true);
       const response = await axiosInstance.get("/api/user/getAllUsers");
+      console.log("fetchAllUsers response:", {
+        success: response.data.success,
+        count: response.data.count,
+        users: response.data.users?.map(u => ({ _id: u._id, role: u.role, isActive: u.isActive, isArchieve: u.isArchieve })) || []
+      });
+      if (!response.data.success || !response.data.users) {
+        throw new Error("Invalid response from server");
+      }
       const usersData = response.data.users || [];
       setAllUsers(usersData);
+      setError(null);
       return usersData;
-    }).catch((error) => {
-      console.error("Error fetching users:", error);
-      setError("Failed to fetch users");
-      return allUsers;
-    });
-  }, []);
+    } catch (error) {
+      console.error("fetchAllUsers error:", {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+      if (error.response?.status === 401 && retryCount < maxRetries) {
+        console.log(`Retrying fetchAllUsers, attempt ${retryCount + 1}`);
+        localStorage.removeItem("token");
+        return fetchAllUsers(retryCount + 1);
+      }
+      const errorMessage = error.response?.data?.message || `Failed to fetch users: ${error.message}`;
+      setError(errorMessage);
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  });
+}, []);
+useEffect(() => {
+  console.log("allUsers state updated:", allUsers.map(u => ({ id: u._id, role: u.role, isActive: u.isActive, isArchieve: u.isArchieve })));
+}, [allUsers]);
+
+useEffect(() => {
+  if (user?.role === "Admin" || user?.role === "SuperAdmin") {
+    fetchAllUsers();
+  }
+}, [user, fetchAllUsers]);
 
   const getMyPets = useCallback(async () => {
     return measureTime("getMyPets", async () => {
@@ -200,46 +236,30 @@ const AppContextProvider = ({ children }) => {
     setError("");
   }, []);
 
-  const triggerRefresh = useCallback(
-    async (type) => {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        console.log("Skipping refresh: No token available");
-        setLoading(false);
-        return;
-      }
-  
-      setLoading(true);
-      try {
-        if (!user) {
-          console.log("User not set, rechecking auth...");
-          const isAuthenticated = await checkAuth();
-          if (!isAuthenticated) {
-            console.log("Auth check failed during refresh");
-            setLoading(false);
-            return;
-          }
-        }
-  
-        if (type === "pets" || !type) {
-          await fetchPets();
-          console.log("User role:", user?.role);
-          if (user?.role === "PetOwner" || user?.role === "Admin") {
-            console.log("Calling getMyPets for user:", user?._id);
-            await getMyPets();
-          }
-          if (user?.role === "Admin") await fetchAllUsers();
-          await getMyAdoptionRequests();
-        }
-      } catch (err) {
-        setError("Failed to refresh data");
-        console.error("Refresh error:", err);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [fetchPets, getMyPets, fetchAllUsers, getMyAdoptionRequests, checkAuth, user] 
-  );
+ const triggerRefresh = useCallback(async () => {
+  console.log("Triggering refresh for role:", user?.role);
+  try {
+    if (user?.role === "PetOwner") {
+      const [petsResult, profile, userPets, applications] = await Promise.all([
+        fetchPets(),
+        fetchUserProfile(),
+        getMyPets(),
+        getMyAdoptionRequests(),
+      ]);
+      setPets(petsResult || []);
+      setUser(petsResult ? profile : user);
+      setUserPets(userPets.success ? userPets.data : []);
+      setApplications(applications.success ? applications.data : []);
+    }
+    if (user?.role === "Admin" || user?.role === "SuperAdmin") {
+      console.log("Calling fetchAllUsers for Admin/SuperAdmin");
+      await fetchAllUsers();
+    }
+  } catch (error) {
+    console.error("triggerRefresh error:", error);
+    setError(error.response?.data?.message || "Error refreshing data");
+  }
+}, [user, fetchAllUsers]);
 
   // Connect socket only if not already connected
   useEffect(() => {
@@ -465,25 +485,34 @@ const AppContextProvider = ({ children }) => {
     };
   }, [user, fetchPets]);
 
+
+  const location = useLocation();
+useEffect(() => {
+  if (location.pathname.startsWith("/pets")) {
+    console.log("Navigated to /pets, fetching pets");
+    fetchPets();
+  }
+}, [location, fetchPets]);
   // Initialize app
   useEffect(() => {
     const initializeApp = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-      if (!user) { // Only run checkAuth if user isn’t already set
-        const isAuthenticated = await checkAuth();
-        if (!isAuthenticated) {
-          setLoading(false);
+      setLoading(true);
+      try {
+        const token = localStorage.getItem("token");
+        if (token && !user) {
+          await checkAuth();
         }
-      } else {
-        setLoading(false); // User is already authenticated, no need to recheck
+        console.log("Initializing app, fetching pets");
+        await fetchPets(); // Always fetch pets
+      } catch (err) {
+        console.error("Initialize app error:", err);
+        setError("Failed to initialize app");
+      } finally {
+        setLoading(false);
       }
     };
     initializeApp();
-  }, [checkAuth, user]); 
+  }, [checkAuth, fetchPets]);
 
   // Auth functions
   const login = async (email, password) => {
@@ -510,7 +539,7 @@ const AppContextProvider = ({ children }) => {
           getMyAdoptionRequests().then((result) => ({ applications: result.success ? result.data : [] }))
         );
       }
-      if (userData.role === "Admin") {
+      if (userData.role === "Admin" || userData.role === "SuperAdmin" ) {
         fetchPromises.push(fetchAllUsers().then((users) => ({ allUsers: users })));
       }
   

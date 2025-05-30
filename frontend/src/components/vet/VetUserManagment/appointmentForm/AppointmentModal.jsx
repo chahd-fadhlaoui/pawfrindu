@@ -446,7 +446,12 @@ const AppointmentModal = ({ professional, professionalType, onClose, onSuccess }
         setTimeout(() => {
           onSuccess && onSuccess(response.data);
           onClose();
+          // For Vet users, stay on the current page or navigate to /vet
+        if (user?.role === "Vet") {
+          console.log("Vet user, closing modal without navigation");
+        } else {
           navigate("/Vetappointments");
+        }
         }, 2000);
       }
     } catch (error) {

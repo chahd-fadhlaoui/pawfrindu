@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Loader2, PawPrint, X, Check, Archive, Search, Users } from "lucide-react";
+import { Loader2, PawPrint, Check, Archive, Search } from "lucide-react";
 import axiosInstance from "../../../../utils/axiosInstance";
 import { PaginationControls } from "../../common/PaginationControls";
 import { FilterSelect } from "../common/FilterSelect";
@@ -7,13 +7,12 @@ import UserTable from "../common/UserTable";
 import { ErrorAlert } from "../../common/ErrorAlert";
 import ConfirmationModal from "../../../ConfirmationModal";
 import { useApp } from "../../../../context/AppContext";
-import EmptyState from "../common/EmptyState";
 
-const InactiveUsers = () => {
+const InactiveUsers = ({ roleFilter }) => {
   const { allUsers: users, loading, error, user: currentUser, updateUsers } = useApp();
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [roleFilter, setRoleFilter] = useState("");
+  const [roleFilterState, setRoleFilterState] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [actionError, setActionError] = useState("");
@@ -24,19 +23,35 @@ const InactiveUsers = () => {
 
   const roleOptions = [
     { value: "", label: "All Roles" },
-    { value: "Admin", label: "Admin" },
-    { value: "PetOwner", label: "Pet Owner" },
-    { value: "Vet", label: "Veterinarian" },
-    { value: "Trainer", label: "Trainer" },
+    ...(roleFilter === "Admin"
+      ? [
+          { value: "Admin", label: "Admin" },
+          { value: "SuperAdmin", label: "Super Admin" },
+        ]
+      : [
+          { value: "PetOwner", label: "Pet Owner" },
+          { value: "Vet", label: "Veterinarian" },
+          { value: "Trainer", label: "Trainer" },
+        ]),
   ];
 
+  // Reset roleFilterState when roleFilter changes
   useEffect(() => {
-    let filtered = users.filter(
-      (user) =>
-        !user.isActive &&
-        !user.isArchieve &&
-        (user.lastLogin !== null || user.lastLogin !== undefined)
-    );
+    setRoleFilterState("");
+  }, [roleFilter]);
+
+  useEffect(() => {
+    console.log("allUsers in InactiveUsers:", users.map(u => ({ id: u._id, role: u.role, isActive: u.isActive, isArchieve: u.isArchieve })));
+    let filtered = users.filter((user) => !user.isActive && !user.isArchieve);
+    console.log("After !isActive && !isArchieve:", filtered.map(u => ({ id: u._id, role: u.role })));
+
+    if (roleFilter === "Admin") {
+      filtered = filtered.filter((user) => ["Admin", "SuperAdmin"].includes(user.role));
+      console.log("After Admin roleFilter:", filtered.map(u => ({ id: u._id, role: u.role })));
+    } else if (roleFilter === "non-admin") {
+      filtered = filtered.filter((user) => !["Admin", "SuperAdmin"].includes(user.role));
+      console.log("After non-admin roleFilter:", filtered.map(u => ({ id: u._id, role: u.role })));
+    }
 
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
@@ -45,18 +60,17 @@ const InactiveUsers = () => {
           (user.fullName || "").toLowerCase().includes(query) ||
           (user.email || "").toLowerCase().includes(query)
       );
+      console.log("After searchQuery:", filtered.map(u => ({ id: u._id, role: u.role })));
     }
 
-    if (roleFilter) {
-      filtered = filtered.filter(
-        (user) => (user.role || "").toLowerCase() === roleFilter.toLowerCase()
-      );
+    if (roleFilterState && roleFilter !== "Admin") {
+      filtered = filtered.filter((user) => user.role === roleFilterState);
+      console.log("After roleFilterState:", filtered.map(u => ({ id: u._id, role: u.role })));
     }
 
+    console.log("Final filteredUsers in InactiveUsers:", filtered.map(u => ({ id: u._id, role: u.role })));
     setFilteredUsers(filtered);
-    setCurrentPage(1);
-    setSelectedUsers([]);
-  }, [users, searchQuery, roleFilter]);
+  }, [users, searchQuery, roleFilterState, roleFilter]);
 
   const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
   const currentUsers = filteredUsers.slice(
@@ -73,7 +87,7 @@ const InactiveUsers = () => {
 
   const resetFilters = () => {
     setSearchQuery("");
-    setRoleFilter("");
+    setRoleFilterState("");
     setCurrentPage(1);
     setSelectedUsers([]);
   };
@@ -185,7 +199,9 @@ const InactiveUsers = () => {
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-8 h-8 text-[#ffc929] animate-spin" />
           <PawPrint className="w-8 h-8 text-[#ffc929] animate-pulse" />
-          <p className="text-lg font-semibold text-gray-700">Loading inactive users...</p>
+          <p className="text-lg font-semibold text-gray-700">
+            Loading inactive {roleFilter === "Admin" ? "administrators" : "users"}...
+          </p>
         </div>
       </div>
     );
@@ -205,7 +221,6 @@ const InactiveUsers = () => {
 
   return (
     <div className="space-y-6">
-
       {/* Filters and Actions */}
       <div className="p-4 bg-white shadow-md rounded-xl">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -215,18 +230,20 @@ const InactiveUsers = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search inactive users by name or email..."
+              placeholder={`Search inactive ${roleFilter === "Admin" ? "administrators" : "users"} by name or email...`}
               className="w-full py-3 pl-10 pr-4 text-sm border border-gray-200 rounded-lg shadow-sm focus:ring-[#ffc929] focus:border-[#ffc929] transition-all duration-300"
             />
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <FilterSelect
-              label="Role"
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-              options={roleOptions}
-              className="bg-white border-gray-200 shadow-sm focus:ring-[#ffc929] focus:border-[#ffc929]"
-            />
+            {roleFilter !== "Admin" && (
+              <FilterSelect
+                label="Role"
+                value={roleFilterState}
+                onChange={(e) => setRoleFilterState(e.target.value)}
+                options={roleOptions}
+                className="bg-white border-gray-200 shadow-sm focus:ring-[#ffc929] focus:border-[#ffc929]"
+              />
+            )}
             {selectedUsers.length > 0 && (
               <div className="flex items-center gap-2">
                 <button
@@ -245,7 +262,7 @@ const InactiveUsers = () => {
                 </button>
               </div>
             )}
-            {(searchQuery || roleFilter) && (
+            {(searchQuery || roleFilterState) && (
               <button
                 onClick={resetFilters}
                 className="px-4 py-2 text-sm font-medium text-gray-700 transition-all duration-300 bg-white rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-yellow-400"
@@ -266,48 +283,64 @@ const InactiveUsers = () => {
 
       {/* Users Table or Empty State */}
       {filteredUsers.length === 0 ? (
-        <EmptyState
-          hasFilters={searchQuery || roleFilter}
-          onClearFilters={resetFilters}
-          customMessage={
-            searchQuery || roleFilter
-              ? "Try adjusting your search or filters"
-              : "No inactive users found. Check other tabs."
-          }
-        />
+        <div className="w-full p-8 text-center bg-white shadow-xl rounded-xl animate-fadeIn">
+          <div className="flex flex-col items-center gap-4">
+            <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-yellow-100 to-pink-100">
+              <PawPrint size={32} className="text-[#ffc929]" />
+            </div>
+            <p className="text-lg font-semibold text-gray-700">
+              No inactive {roleFilter === "Admin" ? "administrators" : "users"} found
+            </p>
+            <p className="text-sm text-gray-500">
+              {searchQuery || roleFilterState
+                ? "Try adjusting your search or filters to find inactive users."
+                : roleFilter === "Admin"
+                ? "No inactive administrators are currently available."
+                : "No inactive users are available at this time. Check other tabs."}
+            </p>
+            {(searchQuery || roleFilterState) && (
+              <button
+                onClick={resetFilters}
+                className="px-4 py-2 text-sm font-medium text-gray-700 transition-all duration-300 bg-white rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              >
+                Clear Filters
+              </button>
+            )}
+          </div>
+        </div>
       ) : (
         <>
-              <UserTable
-                users={currentUsers}
-                selectedUsers={selectedUsers}
-                currentUser={currentUser}
-                onToggleActive={handleToggleActive}
-                onToggleSelection={toggleUserSelection}
-                onToggleSelectAll={toggleSelectAll}
-                customActions={(user) => (
-                  <div className="flex items-center justify-end gap-2">
-                    {user._id !== currentUser?._id && (
-                      <>
-                        <button
-                          onClick={() => handleToggleActive(user._id)}
-                          className="flex items-center gap-1 px-3 py-1 text-xs font-medium text-white transition-all duration-300 rounded-lg shadow-sm bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 focus:outline-none focus:ring-2 focus:ring-green-400"
-                        >
-                          <Check className="w-3 h-3" />
-                          Reactivate
-                        </button>
-                        <button
-                          onClick={() => handleToggleArchive(user._id)}
-                          className="flex items-center gap-1 px-3 py-1 text-xs font-medium text-white transition-all duration-300 rounded-lg shadow-sm bg-gradient-to-r from-gray-500 to-gray-700 hover:from-gray-600 hover:to-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-400"
-                        >
-                          <Archive className="w-3 h-3" />
-                          Archive
-                        </button>
-                      </>
-                    )}
-                  </div>
+          <UserTable
+            users={currentUsers}
+            selectedUsers={selectedUsers}
+            currentUser={currentUser}
+            onToggleActive={handleToggleActive}
+            onToggleSelection={toggleUserSelection}
+            onToggleSelectAll={toggleSelectAll}
+            customActions={(user) => (
+              <div className="flex items-center justify-end gap-2">
+                {user._id !== currentUser?._id && (
+                  <>
+                    <button
+                      onClick={() => handleToggleActive(user._id)}
+                      className="flex items-center gap-1 px-3 py-1 text-xs font-medium text-white transition-all duration-300 rounded-lg shadow-sm bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 focus:outline-none focus:ring-2 focus:ring-green-400"
+                    >
+                      <Check className="w-3 h-3" />
+                      Reactivate
+                    </button>
+                    <button
+                      onClick={() => handleToggleArchive(user._id)}
+                      className="flex items-center gap-1 px-3 py-1 text-xs font-medium text-white transition-all duration-300 rounded-lg shadow-sm bg-gradient-to-r from-gray-500 to-gray-700 hover:from-gray-600 hover:to-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                    >
+                      <Archive className="w-3 h-3" />
+                      Archive
+                    </button>
+                  </>
                 )}
-                title="Inactive Users"
-              />
+              </div>
+            )}
+            title={roleFilter === "Admin" ? "Inactive Administrators" : "Inactive Users"}
+          />
           {totalPages > 1 && (
             <div className="flex justify-center mt-6">
               <PaginationControls
@@ -345,7 +378,7 @@ const InactiveUsers = () => {
         }
         itemName={
           confirmAction === "bulkReactivate" || confirmAction === "bulkArchive"
-            ? `${selectedUsers.length} user${selectedUsers.length > 1 ? "s" : ""}`
+            ? `${selectedUsers.length} ${roleFilter === "Admin" ? "administrator" : "user"}${selectedUsers.length > 1 ? "s" : ""}`
             : filteredUsers.find((u) => u._id === selectedUserId)?.fullName || "this user"
         }
       />

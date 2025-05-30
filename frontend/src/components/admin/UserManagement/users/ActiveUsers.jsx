@@ -9,10 +9,10 @@ import ConfirmationModal from "../../../ConfirmationModal";
 import { useApp } from "../../../../context/AppContext";
 import axiosInstance from "../../../../utils/axiosInstance";
 
-const ActiveUsers = ({ refreshTrigger}) => {
-  const { allUsers: users, loading, error, user: currentUser, updateUsers, triggerRefresh } = useApp();
+const ActiveUsers = ({ refreshTrigger, roleFilter }) => {
+  const { allUsers: users, loading, error, user: currentUser, updateUsers } = useApp();
   const [searchQuery, setSearchQuery] = useState("");
-  const [roleFilter, setRoleFilter] = useState("");
+  const [roleFilterState, setRoleFilterState] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState([]);
@@ -24,14 +24,35 @@ const ActiveUsers = ({ refreshTrigger}) => {
 
   const roleOptions = [
     { value: "", label: "All Roles" },
-    { value: "Admin", label: "Admin" },
-    { value: "PetOwner", label: "Pet Owner" },
-    { value: "Vet", label: "Veterinarian" },
-    { value: "Trainer", label: "Trainer" },
+    ...(roleFilter === "Admin"
+      ? [
+          { value: "Admin", label: "Admin" },
+          { value: "SuperAdmin", label: "Super Admin" },
+        ]
+      : [
+          { value: "PetOwner", label: "Pet Owner" },
+          { value: "Vet", label: "Veterinarian" },
+          { value: "Trainer", label: "Trainer" },
+        ]),
   ];
 
+  // Reset roleFilterState when roleFilter changes
+  useEffect(() => {
+    setRoleFilterState("");
+  }, [roleFilter]);
+
   const filteredUsers = useMemo(() => {
+    console.log("allUsers in ActiveUsers:", users.map(u => ({ id: u._id, role: u.role, isActive: u.isActive, isArchieve: u.isArchieve })));
     let filtered = users.filter((user) => user.isActive && !user.isArchieve);
+    console.log("After isActive && !isArchieve:", filtered.map(u => ({ id: u._id, role: u.role })));
+
+    if (roleFilter === "Admin") {
+      filtered = filtered.filter((user) => ["Admin", "SuperAdmin"].includes(user.role));
+      console.log("After Admin roleFilter:", filtered.map(u => ({ id: u._id, role: u.role })));
+    } else if (roleFilter === "non-admin") {
+      filtered = filtered.filter((user) => !["Admin", "SuperAdmin"].includes(user.role));
+      console.log("After non-admin roleFilter:", filtered.map(u => ({ id: u._id, role: u.role })));
+    }
 
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
@@ -40,19 +61,22 @@ const ActiveUsers = ({ refreshTrigger}) => {
           (user.fullName || "").toLowerCase().includes(query) ||
           (user.email || "").toLowerCase().includes(query)
       );
+      console.log("After searchQuery:", filtered.map(u => ({ id: u._id, role: u.role })));
     }
 
-    if (roleFilter) {
-      filtered = filtered.filter((user) => user.role.toLowerCase() === roleFilter.toLowerCase());
+    if (roleFilterState && roleFilter !== "Admin") {
+      filtered = filtered.filter((user) => user.role === roleFilterState);
+      console.log("After roleFilterState:", filtered.map(u => ({ id: u._id, role: u.role })));
     }
 
+    console.log("Final filteredUsers in ActiveUsers:", filtered.map(u => ({ id: u._id, role: u.role })));
     return filtered;
-  }, [users, searchQuery, roleFilter]);
+  }, [users, searchQuery, roleFilterState, roleFilter]);
 
   useEffect(() => {
     setCurrentPage(1);
     setSelectedUsers([]);
-  }, [searchQuery, roleFilter]);
+  }, [searchQuery, roleFilterState]);
 
   const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
   const currentUsers = filteredUsers.slice(
@@ -69,7 +93,7 @@ const ActiveUsers = ({ refreshTrigger}) => {
 
   const resetFilters = () => {
     setSearchQuery("");
-    setRoleFilter("");
+    setRoleFilterState("");
     setCurrentPage(1);
     setSelectedUsers([]);
   };
@@ -149,7 +173,9 @@ const ActiveUsers = ({ refreshTrigger}) => {
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-8 h-8 text-[#ffc929] animate-spin" />
           <PawPrint className="w-8 h-8 text-[#ffc929] animate-pulse" />
-          <p className="text-lg font-semibold text-gray-700">Loading active users...</p>
+          <p className="text-lg font-semibold text-gray-700">
+            Loading {roleFilter === "Admin" ? "administrators" : "active users"}...
+          </p>
         </div>
       </div>
     );
@@ -174,25 +200,29 @@ const ActiveUsers = ({ refreshTrigger}) => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search active users by name or email..."
+              placeholder={`Search ${roleFilter === "Admin" ? "administrators" : "active users"} by name or email...`}
               className="w-full py-3 pl-10 pr-4 text-sm border border-gray-200 rounded-lg shadow-sm focus:ring-[#ffc929] focus:border-[#ffc929] transition-all duration-300"
             />
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <FilterSelect
-              label="Role"
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-              options={roleOptions}
-              className="bg-white border-gray-200 shadow-sm focus:ring-[#ffc929] focus:border-[#ffc929]"
-            />
-            <button
-              onClick={() => setIsAddUserModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-all duration-300 rounded-lg shadow-md bg-gradient-to-r from-yellow-500 to-pink-500 hover:from-yellow-600 hover:to-pink-600 focus:outline-none focus:ring-2 focus:ring-yellow-400"
-            >
-              <Plus className="w-4 h-4" />
-              Add Admin
-            </button>
+            {roleFilter !== "Admin" && (
+              <FilterSelect
+                label="Role"
+                value={roleFilterState}
+                onChange={(e) => setRoleFilterState(e.target.value)}
+                options={roleOptions}
+                className="bg-white border-gray-200 shadow-sm focus:ring-[#ffc929] focus:border-[#ffc929]"
+              />
+            )}
+            {roleFilter === "Admin" && (
+              <button
+                onClick={() => setIsAddUserModalOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-all duration-300 rounded-lg shadow-md bg-gradient-to-r from-yellow-500 to-pink-500 hover:from-yellow-600 hover:to-pink-600 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              >
+                <Plus className="w-4 h-4" />
+                Add Admin
+              </button>
+            )}
             {selectedUsers.length > 0 && (
               <button
                 onClick={handleBulkDeactivate}
@@ -202,7 +232,7 @@ const ActiveUsers = ({ refreshTrigger}) => {
                 Deactivate ({selectedUsers.length})
               </button>
             )}
-            {(searchQuery || roleFilter) && (
+            {(searchQuery || roleFilterState) && (
               <button
                 onClick={resetFilters}
                 className="px-4 py-2 text-sm font-medium text-gray-700 transition-all duration-300 bg-white rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-yellow-400"
@@ -228,11 +258,17 @@ const ActiveUsers = ({ refreshTrigger}) => {
             <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-yellow-100 to-pink-100">
               <PawPrint size={32} className="text-[#ffc929]" />
             </div>
-            <p className="text-lg font-semibold text-gray-700">No active users found</p>
-            <p className="text-sm text-gray-500">
-              {searchQuery || roleFilter ? "Try adjusting your search or filters" : "Add an admin to get started"}
+            <p className="text-lg font-semibold text-gray-700">
+              No {roleFilter === "Admin" ? "administrators" : "active users"} found
             </p>
-            {(searchQuery || roleFilter) && (
+            <p className="text-sm text-gray-500">
+              {searchQuery || roleFilterState
+                ? "Try adjusting your search or filters to find active users."
+                : roleFilter === "Admin"
+                ? "No active administrators are currently available. Add one to get started."
+                : "No active users are available at this time."}
+            </p>
+            {(searchQuery || roleFilterState) && (
               <button
                 onClick={resetFilters}
                 className="px-4 py-2 text-sm font-medium text-gray-700 transition-all duration-300 bg-white rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-yellow-400"
@@ -244,28 +280,28 @@ const ActiveUsers = ({ refreshTrigger}) => {
         </div>
       ) : (
         <>
-              <UserTable
-                users={currentUsers}
-                selectedUsers={selectedUsers}
-                currentUser={currentUser}
-                onToggleActive={handleToggleActive}
-                onToggleSelection={toggleUserSelection}
-                onToggleSelectAll={toggleSelectAll}
-                customActions={(user) => (
-                  <div className="flex items-center justify-end gap-2">
-                    {user._id !== currentUser?._id && (
-                      <button
-                        onClick={() => handleToggleActive(user._id)}
-                        className="flex items-center gap-1 px-3 py-1 text-xs font-medium text-white transition-all duration-300 rounded-lg shadow-sm bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 focus:ring-2 focus:ring-red-400"
-                      >
-                        <X className="w-3 h-3" />
-                        Deactivate
-                      </button>
-                    )}
-                  </div>
+          <UserTable
+            users={currentUsers}
+            selectedUsers={selectedUsers}
+            currentUser={currentUser}
+            onToggleActive={handleToggleActive}
+            onToggleSelection={toggleUserSelection}
+            onToggleSelectAll={toggleSelectAll}
+            customActions={(user) => (
+              <div className="flex items-center justify-end gap-2">
+                {user._id !== currentUser?._id && (
+                  <button
+                    onClick={() => handleToggleActive(user._id)}
+                    className="flex items-center gap-1 px-3 py-1 text-xs font-medium text-white transition-all duration-300 rounded-lg shadow-sm bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 focus:ring-2 focus:ring-red-400"
+                  >
+                    <X className="w-3 h-3" />
+                    Deactivate
+                  </button>
                 )}
-                title="Active Users"
-              />
+              </div>
+            )}
+            title={roleFilter === "Admin" ? "Active Administrators" : "Active Users"}
+          />
           {totalPages > 1 && (
             <div className="flex justify-center mt-6">
               <PaginationControls
@@ -293,7 +329,7 @@ const ActiveUsers = ({ refreshTrigger}) => {
         itemName={
           confirmAction === "deactivate"
             ? filteredUsers.find((u) => u._id === selectedUserId)?.fullName || "this user"
-            : `${selectedUsers.length} user${selectedUsers.length > 1 ? "s" : ""}`
+            : `${selectedUsers.length} ${roleFilter === "Admin" ? "administrator" : "user"}${selectedUsers.length > 1 ? "s" : ""}`
         }
       />
     </div>

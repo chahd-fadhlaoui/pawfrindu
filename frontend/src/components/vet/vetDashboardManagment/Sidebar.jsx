@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Stethoscope, Calendar, LogOut, ChevronLeft, ChevronRight, Menu, UserIcon, Bell } from "lucide-react";
+import { Stethoscope, Calendar, LogOut, ChevronLeft, ChevronRight, Menu, UserIcon, Bell, BarChart2 } from "lucide-react";
 import { useApp } from "../../../context/AppContext";
 
 const Sidebar = ({ activeTab, setActiveTab, isCollapsed, setIsCollapsed }) => {
@@ -23,8 +23,9 @@ const Sidebar = ({ activeTab, setActiveTab, isCollapsed, setIsCollapsed }) => {
   const handleLogout = () => logout(() => (window.location.href = "/"));
 
   const menuItems = [
+     { icon: BarChart2, label: "Stats", key: "stats" },
     { icon: UserIcon, label: "My Profile", key: "profile", color: "text-purple-500" },
-    { icon: Calendar, label: "Appointments", key: "appointments", color: "text-teal-500" },
+    { icon: Calendar, label: "Appointments", key: "appointments", color: "text-teal-500" }
   ];
 
   return (

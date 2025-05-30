@@ -10,7 +10,7 @@ const userSchema = new mongoose.Schema(
     about: String,
     role: {
       type: String,
-      enum: ["PetOwner", "Trainer", "Vet", "Admin"],
+      enum: ["PetOwner", "Trainer", "Vet", "Admin","SuperAdmin"],
       required: true,
     },
  
@@ -227,6 +227,7 @@ const userSchema = new mongoose.Schema(
     veterinarianDetails: {
       type: {
         businessCardImage: { type: String },
+        professionalCardImage: { type: String }, 
         specializations: [{ specializationName: { type: String } }],
         title: {
           type: String,
