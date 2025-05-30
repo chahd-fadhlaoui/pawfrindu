@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
-import { Loader2, RefreshCw, Users, UserCheck, UserX, Clock } from "lucide-react";
+import { Clock, RefreshCw, UserCheck, Users, UserX } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useApp } from "../../../context/AppContext";
 import ActiveUsers from "../UserManagement/users/ActiveUsers";
 import InactiveUsers from "../UserManagement/users/InactiveUsers";
 import PendingApprovals from "../UserManagement/users/PendingApprovals";
-import { useApp } from "../../../context/AppContext";
 
 const UsersManagement = ({ hideHeader = false }) => {
   const { allUsers, triggerRefresh } = useApp();
@@ -143,10 +143,6 @@ const UsersManagement = ({ hideHeader = false }) => {
 
       {/* Users Section */}
       <div className="px-6 py-4 border-b border-gray-200">
-        <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-800 mb-4">
-          <Users className="w-5 h-5 text-yellow-500" />
-          Users
-        </h2>
         <div className="flex justify-between">
           <div className="flex space-x-2">
             {["active", "inactive", "pending"].map((tab) => (

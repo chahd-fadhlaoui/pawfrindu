@@ -253,13 +253,6 @@ const InactiveUsers = ({ roleFilter }) => {
                   <Check className="w-4 h-4" />
                   Reactivate ({selectedUsers.length})
                 </button>
-                <button
-                  onClick={handleBulkArchive}
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-all duration-300 rounded-lg shadow-md bg-gradient-to-r from-gray-500 to-gray-700 hover:from-gray-600 hover:to-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-400"
-                >
-                  <Archive className="w-4 h-4" />
-                  Archive ({selectedUsers.length})
-                </button>
               </div>
             )}
             {(searchQuery || roleFilterState) && (
@@ -327,13 +320,6 @@ const InactiveUsers = ({ roleFilter }) => {
                     >
                       <Check className="w-3 h-3" />
                       Reactivate
-                    </button>
-                    <button
-                      onClick={() => handleToggleArchive(user._id)}
-                      className="flex items-center gap-1 px-3 py-1 text-xs font-medium text-white transition-all duration-300 rounded-lg shadow-sm bg-gradient-to-r from-gray-500 to-gray-700 hover:from-gray-600 hover:to-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-400"
-                    >
-                      <Archive className="w-3 h-3" />
-                      Archive
                     </button>
                   </>
                 )}

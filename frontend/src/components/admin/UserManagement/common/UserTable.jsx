@@ -1222,22 +1222,6 @@ const UserTable = ({
                                       {user.lastLogin ? new Date(user.lastLogin).toLocaleString() : "Never"}
                                     </dd>
                                   </div>
-                                  <div>
-                                    <dt className="font-semibold text-gray-600">
-                                      Archived
-                                    </dt>
-                                    <dd className="mt-1 text-gray-900">
-                                      {user.isArchieve ? (
-                                        <span className="inline-flex items-center px-2 py-1 text-xs font-medium text-yellow-700 bg-yellow-100 rounded-full shadow-sm">
-                                          Yes
-                                        </span>
-                                      ) : (
-                                        <span className="inline-flex items-center px-2 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-full shadow-sm">
-                                          No
-                                        </span>
-                                      )}
-                                    </dd>
-                                  </div>
                                 </dl>
                               )}
                             </div>

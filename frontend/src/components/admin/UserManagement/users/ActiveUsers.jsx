@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { Loader2, PawPrint, X, Plus, Search } from "lucide-react";
-import { PaginationControls } from "../../common/PaginationControls";
-import { FilterSelect } from "../common/FilterSelect";
-import { AddUserModal } from "./AddUserModal";
-import UserTable from "../common/UserTable";
-import { ErrorAlert } from "../../common/ErrorAlert";
-import ConfirmationModal from "../../../ConfirmationModal";
+import { Loader2, PawPrint, Plus, Search, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { useApp } from "../../../../context/AppContext";
 import axiosInstance from "../../../../utils/axiosInstance";
+import ConfirmationModal from "../../../ConfirmationModal";
+import { ErrorAlert } from "../../common/ErrorAlert";
+import { PaginationControls } from "../../common/PaginationControls";
+import { FilterSelect } from "../common/FilterSelect";
+import UserTable from "../common/UserTable";
+import { AddUserModal } from "./AddUserModal";
 
 const ActiveUsers = ({ refreshTrigger, roleFilter }) => {
   const { allUsers: users, loading, error, user: currentUser, updateUsers } = useApp();

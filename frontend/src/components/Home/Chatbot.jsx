@@ -1,12 +1,12 @@
-import React, { useState, useRef, useEffect } from "react";
-import { MessageCircle, Send, X, Minus, Plus, HelpCircle } from "lucide-react";
+import { HelpCircle, MessageCircle, Minus, Plus, Send, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 const Chatbot = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [messages, setMessages] = useState([
     {
       id: 1,
-      text: "Hello! I'm Pawly, your friendly PawFrindu assistant. How can I help you today?",
+      text: "Hello! I'm Frindu, your friendly PawFrindu assistant. How can I help you today?",
       isBot: true,
       timestamp: new Date(),
     },
@@ -42,7 +42,7 @@ const Chatbot = () => {
       setMessages([
         {
           id: 1,
-          text: "Hello! I'm Pawly, your friendly PawFrindu assistant. How can I help you today?",
+          text: "Hello! I'm Frindu, your friendly PawFrindu assistant. How can I help you today?",
           isBot: true,
           timestamp: new Date(),
         },
@@ -107,7 +107,7 @@ const Chatbot = () => {
                 {
                   parts: [
                     {
-                      text: "You are Pawly, an assistant for the PawFrindu platform. Provide a short response (under 100 words) tailored to our services: pet adoption, vet search by location, and training services (Basic Training for obedience/socialization, Guard Dog Training for protection/alertness).",
+                      text: "You are Frindu, an assistant for the PawFrindu platform. Provide a short response (under 100 words) tailored to our services: pet adoption, vet search by location, and training services (Basic Training for obedience/socialization, Guard Dog Training for protection/alertness).",
                     },
                     { text: inputValue },
                   ],
@@ -148,28 +148,28 @@ const Chatbot = () => {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed z-50 bottom-6 right-6">
       {/* Chat toggle button */}
       {!isChatOpen && (
         <div className="relative">
           {/* Helpful tooltip */}
           {showTooltip && (
-            <div className="absolute right-0 bottom-16 w-64 p-3 bg-white rounded-lg shadow-lg border border-pink-100 mb-2 animate-fade-in">
+            <div className="absolute right-0 w-64 p-3 mb-2 bg-white border border-pink-100 rounded-lg shadow-lg bottom-16 animate-fade-in">
               <div className="flex items-start">
                 <HelpCircle className="w-5 h-5 text-pink-500 mt-0.5 mr-2 flex-shrink-0" />
                 <div>
                   <p className="text-sm text-gray-700">
-                    Need help with pet adoption or care? Ask Pawly for assistance!
+                    Need help with pet adoption or care? Ask Frindu for assistance!
                   </p>
                   <button
                     onClick={() => setShowTooltip(false)}
-                    className="text-xs text-pink-500 mt-1 hover:text-pink-600"
+                    className="mt-1 text-xs text-pink-500 hover:text-pink-600"
                   >
                     Got it
                   </button>
                 </div>
               </div>
-              <div className="absolute -bottom-2 right-10 w-4 h-4 bg-white border-r border-b border-pink-100 transform rotate-45"></div>
+              <div className="absolute w-4 h-4 transform rotate-45 bg-white border-b border-r border-pink-100 -bottom-2 right-10"></div>
             </div>
           )}
 
@@ -179,7 +179,7 @@ const Chatbot = () => {
             aria-label="Open chat assistant"
           >
             <MessageCircle className="w-6 h-6 transition-transform duration-300 group-hover:scale-110" />
-            <span className="font-medium">Ask Pawly</span>
+            <span className="font-medium">Ask Frindu</span>
           </button>
         </div>
       )}
@@ -195,7 +195,7 @@ const Chatbot = () => {
         >
           {/* Chat header */}
           <div
-            className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-pink-500 to-pink-400 cursor-pointer"
+            className="flex items-center justify-between px-4 py-3 cursor-pointer bg-gradient-to-r from-pink-500 to-pink-400"
             onClick={isMinimized ? toggleChat : null}
           >
             <div className="flex items-center">
@@ -204,7 +204,7 @@ const Chatbot = () => {
                   🐾
                 </div>
               </div>
-              <h3 className="font-semibold text-white">Pawly - Pawfrindu Assistant</h3>
+              <h3 className="font-semibold text-white">Frindu - Pawfrindu Assistant</h3>
             </div>
             <div className="flex space-x-1">
               <button
@@ -263,7 +263,7 @@ const Chatbot = () => {
                 {/* Show suggested questions after first bot message if there's only one message */}
                 {messages.length === 1 && (
                   <div className="mt-2 mb-4">
-                    <p className="text-xs text-gray-500 mb-2">Try asking:</p>
+                    <p className="mb-2 text-xs text-gray-500">Try asking:</p>
                     <div className="flex flex-wrap gap-2">
                       {[
                         "How do I adopt a pet?",
@@ -318,7 +318,7 @@ const Chatbot = () => {
                 />
                 <button
                   onClick={handleSubmit}
-                  className="flex items-center justify-center w-10 h-10 ml-2 text-white bg-pink-500 rounded-full hover:bg-pink-600 transition-colors"
+                  className="flex items-center justify-center w-10 h-10 ml-2 text-white transition-colors bg-pink-500 rounded-full hover:bg-pink-600"
                   disabled={!inputValue.trim()}
                   aria-label="Send message"
                 >

@@ -1,5 +1,5 @@
 import {
-  ArrowLeftRight, // For Lost And Found
+  ArrowLeftRight,
   BarChart4,
   ChevronLeft,
   ChevronRight,
@@ -7,11 +7,11 @@ import {
   Menu,
   PawPrint,
   Settings,
+  Shield,
   User,
   Users,
-  Shield, // For Admins tab
 } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useApp } from "../../context/AppContext";
 
 const Sidebar = ({ activeTab, setActiveTab, isCollapsed, setIsCollapsed }) => {
@@ -42,10 +42,11 @@ const Sidebar = ({ activeTab, setActiveTab, isCollapsed, setIsCollapsed }) => {
   // Define all menu items
   const allMenuItems = [
     { icon: BarChart4, label: "Dashboard", key: "dashboard" },
-    { icon: PawPrint, label: "Pets", key: "pets" },
     { icon: Users, label: "Users", key: "users" },
-    { icon: ArrowLeftRight, label: "Lost And Found", key: "lost&found" },
     { icon: Shield, label: "Admins", key: "adminsManagement" },
+    { icon: PawPrint, label: "Pets", key: "pets" },
+    { icon: ArrowLeftRight, label: "Lost And Found", key: "lost&found" },
+   
   ];
 
   // Filter menu items based on user role
