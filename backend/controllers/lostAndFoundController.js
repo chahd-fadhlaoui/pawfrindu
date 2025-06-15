@@ -1,10 +1,4 @@
 
-import axios from "axios";
-import crypto from "crypto";
-import fs from "fs/promises";
-import path from "path";
-import sharp from "sharp";
-import { ssim } from 'ssim.js';
 import LostAndFound from "../models/lostAndFoundModel.js";
 import User from "../models/userModel.js";
 import { io } from "../server.js";
@@ -980,139 +974,6 @@ export const unmatchReport = async (req, res) => {
   }
 };
 
-
-const tempDir = "./temp_images";
-const imageCache = new Map();
-const ssimCache = new Map();
-
-await fs.mkdir(tempDir, { recursive: true }).catch((err) => console.error("Temp dir creation failed:", err));
-
-const downloadImage = async (url) => {
-  try {
-    if (imageCache.has(url)) return imageCache.get(url);
-
-    const fileName = `temp-${Date.now()}-${crypto.randomBytes(8).toString("hex")}.jpg`;
-    const filePath = path.join(tempDir, fileName);
-
-    const response = await axios.get(url, {
-      responseType: "arraybuffer",
-      timeout: 10000,
-      headers: { "User-Agent": "PetMatcher/1.0" },
-    });
-
-    await fs.writeFile(filePath, response.data);
-    imageCache.set(url, filePath);
-    return filePath;
-  } catch (error) {
-    console.error(`Image download failed for ${url}:`, error.message);
-    return null;
-  }
-};
-
-const cleanupTempFiles = async (maxAgeHours = 24) => {
-  try {
-    const files = await fs.readdir(tempDir);
-    const now = Date.now();
-    const maxAge = maxAgeHours * 60 * 60 * 1000;
-
-    for (file of files) {
-      const filePath = path.join(tempDir, file);
-      const stats = await fs.stat(filePath);
-      if (now - stats.mtime.getTime() > maxAge) {
-        await fs.unlink(filePath);
-        console.log(`Cleaned up: ${file}`);
-      }
-    }
-
-    if (imageCache.size > 1000) imageCache.clear();
-    if (ssimCache.size > 5000) ssimCache.clear();
-  } catch (error) {
-    console.error("Cleanup failed:", error.message);
-  }
-};
-
-setInterval(cleanupTempFiles, 24 * 60 * 60 * 1000);
-
-const compareImages = async (photo1, photo2) => {
-  try {
-    const cacheKey = `${photo1}|${photo2}`;
-    if (ssimCache.has(cacheKey)) return ssimCache.get(cacheKey);
-
-    const photo1Path = await downloadImage(photo1);
-    const photo2Path = await downloadImage(photo2);
-    if (!photo1Path || !photo2Path) {
-      console.log(`Skipping comparison: Invalid paths (${photo1Path}, ${photo2Path})`);
-      return 0;
-    }
-
-    const processImage = async (imagePath) => {
-      return await sharp(imagePath)
-        .resize(256, 256, { 
-          fit: "cover",
-          background: { r: 255, g: 255, b: 255, alpha: 1 }
-        })
-        .greyscale()
-        .raw()
-        .toBuffer({ resolveWithObject: true });
-    };
-
-    const image1 = await processImage(photo1Path);
-    const image2 = await processImage(photo2Path);
-
-    const img1Data = {
-      data: new Uint8ClampedArray(image1.data),
-      width: image1.info.width,
-      height: image1.info.height,
-    };
-    const img2Data = {
-      data: new Uint8ClampedArray(image2.data),
-      width: image2.info.width,
-      height: image2.info.height,
-    };
-
-    let similarityScore = 0;
-    try {
-      const result = ssim(img1Data, img2Data);
-      similarityScore = result.mssim || result.ssim || result;
-    } catch (ssimError) {
-      console.error(`SSIM computation failed for ${photo1} vs ${photo2}:`, ssimError.message);
-      similarityScore = calculateBasicSimilarity(img1Data, img2Data);
-    }
-
-    await Promise.all([
-      fs.unlink(photo1Path).catch(() => {}),
-      fs.unlink(photo2Path).catch(() => {})
-    ]);
-
-    similarityScore = Math.max(0, Math.min(1, similarityScore));
-    console.log(`Compared ${photo1} and ${photo2}: SSIM = ${similarityScore}`);
-    ssimCache.set(cacheKey, similarityScore);
-    return similarityScore;
-  } catch (error) {
-    console.error(`Image comparison error for ${photo1} vs ${photo2}:`, error.message);
-    return 0;
-  }
-};
-
-const calculateBasicSimilarity = (img1, img2) => {
-  if (img1.width !== img2.width || img1.height !== img2.height) {
-    console.log('Images have different dimensions for basic similarity');
-    return 0;
-  }
-
-  const data1 = img1.data;
-  const data2 = img2.data;
-  let totalDiff = 0;
-  const totalPixels = data1.length;
-
-  for (let i = 0; i < totalPixels; i++) {
-    totalDiff += Math.abs(data1[i] - data2[i]);
-  }
-
-  const maxPossibleDiff = totalPixels * 255;
-  return Math.max(0, Math.min(1, 1 - (totalDiff / maxPossibleDiff)));
-};
-
 // Calculate Haversine distance between two coordinates (explain : someone in nasa told that if the distance is more then 20km we have to use haversine because otherwise we will get wrong results, i found it in this discussion: https://stackoverflow.com/questions/27928/calculate-distance-between-two-latitude-longitude-points-haversine-formula and here if u really want to read what the nasa guy said: https://cs.nyu.edu/~visual/home/proj/tiger/gisfaq.html)
 const haversineDistance = (coords1, coords2) => {
   const toRad = (x) => x * Math.PI / 180;
@@ -1307,30 +1168,6 @@ export const getPotentialMatches = async (req, res) => {
       ...potentialMatches,
       ...attributeMatches.filter((m) => !matchIds.has(m._id.toString())),
     ];
-
-    if (potentialMatches.length > 0 && report.photos?.length > 0) {
-      const photoMatches = await Promise.all(
-        potentialMatches.map(async (match) => {
-          if (!match.photos?.length || !match.photos[0]) {
-            console.log(`Match ${match._id} has no valid photos`);
-            return { ...match, photoScore: 0 };
-          }
-          try {
-            const similarityScore = await compareImages(report.photos[0], match.photos[0]);
-            return { ...match, photoScore: similarityScore };
-          } catch (error) {
-            console.error(
-              `Photo comparison failed for match ${match._id}: ${report.photos[0]} vs ${match.photos[0]}`,
-              error.message
-            );
-            return { ...match, photoScore: 0 };
-          }
-        })
-      );
-      potentialMatches = photoMatches;
-    } else {
-      potentialMatches = potentialMatches.map((match) => ({ ...match, photoScore: 0 }));
-    }
 
     const scoredMatches = potentialMatches
       .map((match) => {

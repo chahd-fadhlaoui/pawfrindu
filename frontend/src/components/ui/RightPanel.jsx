@@ -1,5 +1,5 @@
 import { ChevronRight, Heart, PawPrint, Sparkles, Star } from "lucide-react";
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 
 const RightPanel = ({ mode, handleModeSwitch, isTransitioning }) => {
 
@@ -9,7 +9,7 @@ const RightPanel = ({ mode, handleModeSwitch, isTransitioning }) => {
         return {
           icon: (
             <div className="relative inline-block">
-              <PawPrint className="w-12 sm:w-14 lg:w-16 h-12 sm:h-14 lg:h-16 text-white animate-bounce" />
+              <PawPrint className="w-12 h-12 text-white sm:w-14 lg:w-16 sm:h-14 lg:h-16 animate-bounce" />
               <Sparkles className="absolute w-4 sm:w-5 lg:w-6 h-4 sm:h-5 lg:h-6 text-yellow-300 -top-1 sm:-top-1.5 lg:-top-2 -right-1 sm:-right-1.5 lg:-right-2 animate-pulse" />
             </div>
           ),
@@ -22,7 +22,7 @@ const RightPanel = ({ mode, handleModeSwitch, isTransitioning }) => {
         return {
           icon: (
             <div className="relative inline-block">
-              <Heart className="w-12 sm:w-14 lg:w-16 h-12 sm:h-14 lg:h-16 text-white animate-pulse" />
+              <Heart className="w-12 h-12 text-white sm:w-14 lg:w-16 sm:h-14 lg:h-16 animate-pulse" />
               <Star className="absolute w-4 sm:w-5 lg:w-6 h-4 sm:h-5 lg:h-6 text-yellow-300 -top-1 sm:-top-1.5 lg:-top-2 -right-1 sm:-right-1.5 lg:-right-2 animate-spin-slow" />
             </div>
           ),
@@ -34,7 +34,7 @@ const RightPanel = ({ mode, handleModeSwitch, isTransitioning }) => {
       default:
         return {
           icon: (
-            <Star className="w-12 sm:w-14 lg:w-16 h-12 sm:h-14 lg:h-16 text-white animate-spin-slow" />
+            <Star className="w-12 h-12 text-white sm:w-14 lg:w-16 sm:h-14 lg:h-16 animate-spin-slow" />
           ),
           title: "Welcome Back!",
           description: "Sign in to continue your journey.",
@@ -62,9 +62,9 @@ const RightPanel = ({ mode, handleModeSwitch, isTransitioning }) => {
           <div className="absolute inset-0 bg-black/10 backdrop-blur-sm" />
         </div>
 
-        <div className="relative flex flex-col items-center justify-center h-full p-6 sm:p-8 lg:p-10 text-center">
+        <div className="relative flex flex-col items-center justify-center h-full p-6 text-center sm:p-8 lg:p-10">
           <div className={`transition-all duration-500 ease-in-out transform ${getTransformClass()}`}>
-            <div className="mb-6 sm:mb-8 lg:mb-10 transition-all duration-500 ease-out hover:scale-105 hover:rotate-2">
+            <div className="mb-6 transition-all duration-500 ease-out sm:mb-8 lg:mb-10 hover:scale-105 hover:rotate-2">
               {getPanelContent.icon}
             </div>
 
@@ -110,7 +110,7 @@ const RightPanel = ({ mode, handleModeSwitch, isTransitioning }) => {
               isTransitioning ? "scale-105 rotate-4" : "scale-100 rotate-0"
             }`}
           >
-            <div className="absolute border-2 rounded-full w-64 sm:w-80 lg:w-96 h-64 sm:h-80 lg:h-96 border-white/20 -top-32 sm:-top-40 lg:-top-48 -right-32 sm:-right-40 lg:-right-48 animate-spin-slower" />
+            <div className="absolute w-64 h-64 border-2 rounded-full sm:w-80 lg:w-96 sm:h-80 lg:h-96 border-white/20 -top-32 sm:-top-40 lg:-top-48 -right-32 sm:-right-40 lg:-right-48 animate-spin-slower" />
             <div className="absolute w-80 sm:w-96 lg:w-[32rem] h-80 sm:h-96 lg:h-[32rem] border-2 rounded-full border-white/20 -bottom-40 sm:-bottom-48 lg:-bottom-64 -left-40 sm:-left-48 lg:-left-64 animate-spin-slow" />
           </div>
         </div>

@@ -1,28 +1,25 @@
-import React, { useEffect, useState } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
-import axiosInstance from "../../../utils/axiosInstance";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import {
-  Stethoscope,
-  MapPin,
-  Clock,
-  Award,
-  ChevronLeft,
-  User,
-  Calendar,
-  Phone,
-  Check,
-  Languages,
-  ChevronRight,
-  Info,
   Activity,
+  Calendar,
   Camera,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
   Globe,
+  Info,
+  Languages,
+  MapPin,
+  Phone,
+  Stethoscope,
+  User
 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import "react-toastify/dist/ReactToastify.css";
 import MapViewer from "../../../components/map/MapViewer";
-import AppointmentModal from "../../../components/vet/VetUserManagment/appointmentForm/AppointmentModal";
 import { useApp } from "../../../context/AppContext";
+import axiosInstance from "../../../utils/axiosInstance";
 
 const PawIcon = ({ className, style }) => (
   <svg

@@ -531,7 +531,7 @@ export default function TrainerAppointmentDashboard({ isSidebarCollapsed }) {
           isSidebarCollapsed ? "ml-16" : "ml-0 md:ml-64"
         }`}
       >
-        <div className="max-w-md p-6 text-center bg-white rounded-lg shadow-sm border border-gray-100">
+        <div className="max-w-md p-6 text-center bg-white border border-gray-100 rounded-lg shadow-sm">
           <X className="w-8 h-8 mx-auto mb-3 text-[#ffc929]" />
           <h2 className="mb-2 text-lg font-semibold text-gray-800">Error</h2>
           <p className="text-sm text-gray-600">{error}</p>
@@ -552,7 +552,7 @@ export default function TrainerAppointmentDashboard({ isSidebarCollapsed }) {
         isSidebarCollapsed ? "ml-16" : "ml-0 md:ml-64"
       }`}
     >
-      <section className="overflow-hidden bg-white shadow-sm rounded-lg border border-gray-100">
+      <section className="overflow-hidden bg-white border border-gray-100 rounded-lg shadow-sm">
         <div
           className="px-6 py-4 border-l-4"
           style={{
@@ -572,7 +572,7 @@ export default function TrainerAppointmentDashboard({ isSidebarCollapsed }) {
           </div>
         </div>
         {!user.isActive && (
-          <div className="flex items-center gap-3 p-3 bg-red-50 border-b border-red-100">
+          <div className="flex items-center gap-3 p-3 border-b border-red-100 bg-red-50">
             <AlertTriangle className="w-5 h-5 text-red-600" />
             <p className="text-sm font-medium text-red-700">
               Your account is deactivated. Appointments are disabled until
@@ -603,12 +603,12 @@ export default function TrainerAppointmentDashboard({ isSidebarCollapsed }) {
                     aria-label="Search training sessions"
                   />
                   <button
-  onClick={() => setIsUnavailableModalOpen(true)}
-  className="bg-gradient-to-r ml-10 from-yellow-500 to-pink-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:from-yellow-600 hover:to-pink-600 transition-all shadow-md flex items-center"
->
-  <Plus className="w-4 h-4 mr-1.5" />
-  Set Unavailable
-</button>
+                    onClick={() => setIsUnavailableModalOpen(true)}
+                    className="flex items-center px-4 py-2 ml-10 text-sm font-medium text-white transition-all rounded-md shadow-md bg-gradient-to-r from-yellow-500 to-pink-500 hover:from-yellow-600 hover:to-pink-600"
+                  >
+                    <Plus className="w-4 h-4 mr-1.5" />
+                    Manage My Schedule
+                  </button>
                   {searchQuery && (
                     <button
                       onClick={() => clearFilter("search")}
@@ -700,7 +700,7 @@ export default function TrainerAppointmentDashboard({ isSidebarCollapsed }) {
                 )}
               </div>
             ) : (
-              <div className="text-center py-6">
+              <div className="py-6 text-center">
                 <AlertCircle className="w-10 h-10 mx-auto mb-3 text-[#ffc929]" />
                 <h3 className="text-lg font-semibold text-gray-800">
                   No Training Sessions Found
@@ -744,14 +744,14 @@ export default function TrainerAppointmentDashboard({ isSidebarCollapsed }) {
       )}
       <ToastContainer position="top-right" autoClose={3000} theme="light" />
       {isUnavailableModalOpen && (
-  <UnavailableModal
-    professional={user}
-    onClose={() => setIsUnavailableModalOpen(false)}
-    onSuccess={() => {
-      toast.success("Availability updated", { position: "top-right", autoClose: 3000, theme: "light" });
-      setIsUnavailableModalOpen(false);
-    }}
-  />
+      <UnavailableModal
+        professional={user}
+        onClose={() => setIsUnavailableModalOpen(false)}
+        onSuccess={() => {
+          toast.success("Availability updated", { position: "top-right", autoClose: 3000, theme: "light" });
+          setIsUnavailableModalOpen(false);
+        }}
+      />
 )}
     </main>
   );

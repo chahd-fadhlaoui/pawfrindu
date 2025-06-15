@@ -1,23 +1,22 @@
-import { useState, useEffect, useCallback } from "react";
 import {
   Calendar,
-  Search,
-  Stethoscope,
-  Plus,
-  LayoutGrid,
-  Clock,
   Check,
   CheckCircle,
-  X,
-  CalendarX,
+  Clock,
+  LayoutGrid,
+  Plus,
+  Search,
+  Stethoscope,
+  X
 } from "lucide-react";
-import axiosInstance from "../../../../utils/axiosInstance";
+import { useCallback, useEffect, useState } from "react";
 import { useApp } from "../../../../context/AppContext";
+import axiosInstance from "../../../../utils/axiosInstance";
 import AppointmentCard from "./AppointmentCard";
-import ToastContainer from "./ToastContainer";
-import NotificationCenter from "./NotificationCenter";
 import DeleteModal from "./DeleteModal";
+import NotificationCenter from "./NotificationCenter";
 import StatusUpdateModal from "./StatusUpdateModal";
+import ToastContainer from "./ToastContainer";
 import UnavailableModal from "./UnavailableModal";
 
 export default function VetAppointmentDashboard() {
@@ -449,19 +448,19 @@ export default function VetAppointmentDashboard() {
 
   if (loading) {
     return (
-      <div className="bg-gradient-to-br from-teal-50 to-blue-50 min-h-screen p-6 flex items-center justify-center">
-        <div className="max-w-4xl w-full space-y-4">
+      <div className="flex items-center justify-center min-h-screen p-6 bg-gradient-to-br from-teal-50 to-blue-50">
+        <div className="w-full max-w-4xl space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white rounded-xl shadow p-6 animate-pulse">
+            <div key={i} className="p-6 bg-white shadow rounded-xl animate-pulse">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
                   <div className="space-y-2">
-                    <div className="h-4 w-32 bg-gray-200 rounded"></div>
-                    <div className="h-3 w-20 bg-gray-200 rounded"></div>
+                    <div className="w-32 h-4 bg-gray-200 rounded"></div>
+                    <div className="w-20 h-3 bg-gray-200 rounded"></div>
                   </div>
                 </div>
-                <div className="h-4 w-24 bg-gray-200 rounded"></div>
+                <div className="w-24 h-4 bg-gray-200 rounded"></div>
               </div>
             </div>
           ))}
@@ -472,8 +471,8 @@ export default function VetAppointmentDashboard() {
 
   if (error) {
     return (
-      <div className="bg-gradient-to-br from-teal-50 to-blue-50 min-h-screen p-6 flex items-center justify-center">
-        <div className="bg-red-100 text-red-700 p-4 rounded-lg flex items-center shadow">
+      <div className="flex items-center justify-center min-h-screen p-6 bg-gradient-to-br from-teal-50 to-blue-50">
+        <div className="flex items-center p-4 text-red-700 bg-red-100 rounded-lg shadow">
           <AlertCircle className="w-5 h-5 mr-2" />
           {error}
         </div>
@@ -482,14 +481,14 @@ export default function VetAppointmentDashboard() {
   }
 
   return (
-    <div className="bg-gradient-to-br from-teal-50 to-blue-50 min-h-screen p-6">
+    <div className="min-h-screen p-6 bg-gradient-to-br from-teal-50 to-blue-50">
       <div className="max-w-4xl mx-auto">
-        <header className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <header className="flex flex-col gap-4 mb-8 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center">
-            <div className="bg-gradient-to-r from-teal-500 to-blue-500 rounded-full w-12 h-12 flex items-center justify-center mr-3 shadow-lg">
+            <div className="flex items-center justify-center w-12 h-12 mr-3 rounded-full shadow-lg bg-gradient-to-r from-teal-500 to-blue-500">
               <Stethoscope className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-teal-700 to-blue-700 bg-clip-text text-transparent">Appointment Management</h1>
+            <h1 className="text-3xl font-bold text-transparent bg-gradient-to-r from-teal-700 to-blue-700 bg-clip-text">Appointment Management</h1>
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center bg-white px-3 py-1.5 rounded-full shadow-sm text-sm text-teal-800 font-medium">
@@ -499,37 +498,37 @@ export default function VetAppointmentDashboard() {
             <NotificationCenter notifications={notifications} />
             <button 
               onClick={() => setIsUnavailableModalOpen(true)}
-              className="bg-gradient-to-r from-blue-600 to-teal-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:from-blue-700 hover:to-teal-700 transition-all shadow-md flex items-center"
+              className="flex items-center px-4 py-2 text-sm font-medium text-white transition-all rounded-lg shadow-md bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700"
             >
-              <Plus className="w-4 h-4 mr-1.5" /> Set Unavailable
+              <Plus className="w-4 h-4 mr-1.5" /> Manage My Schedule
             </button>
           </div>
         </header>
 
         {socketError && (
-          <div className="mb-6 p-4 bg-red-100 text-red-700 rounded-lg text-sm flex items-center shadow">
+          <div className="flex items-center p-4 mb-6 text-sm text-red-700 bg-red-100 rounded-lg shadow">
             <AlertCircle className="w-5 h-5 mr-2" />
             {socketError}. Real-time updates may be unavailable.
           </div>
         )}
 
-        <div className="bg-white rounded-xl shadow-lg mb-6 overflow-hidden">
-          <div className="bg-gradient-to-r from-teal-500 to-blue-500 p-4 md:p-6">
-            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
-              <div className="relative flex-grow max-w-md w-full">
-                <div className="absolute left-3 top-3 text-blue-300 w-3 h-5">
+        <div className="mb-6 overflow-hidden bg-white shadow-lg rounded-xl">
+          <div className="p-4 bg-gradient-to-r from-teal-500 to-blue-500 md:p-6">
+            <div className="flex flex-col items-stretch justify-between gap-4 md:flex-row md:items-center">
+              <div className="relative flex-grow w-full max-w-md">
+                <div className="absolute w-3 h-5 text-blue-300 left-3 top-3">
                   <Search className="w-5 h-5" />
                 </div>
                 <input
                   type="text"
                   placeholder="Search pets or owners..."
-                  className="w-80 pl-10 pr-4 py-3 rounded-lg bg-white/90 focus:bg-white focus:ring-2 focus:ring-blue-300 focus:outline-none transition-all shadow-sm"
+                  className="py-3 pl-10 pr-4 transition-all rounded-lg shadow-sm w-80 bg-white/90 focus:bg-white focus:ring-2 focus:ring-blue-300 focus:outline-none"
                   value={searchTerm}
                   onChange={(e) => handleSearch(e.target.value)}
                   aria-label="Search appointments"
                 />
               </div>
-              <div className="flex flex-wrap md:flex-nowrap bg-white/20 w-full rounded-lg p-1 shadow-inner">
+              <div className="flex flex-wrap w-full p-1 rounded-lg shadow-inner md:flex-nowrap bg-white/20">
                 {["all", "pending", "confirmed", "completed", "cancelled"].map((filter) => (
                   <button
                     key={filter}
@@ -566,11 +565,11 @@ export default function VetAppointmentDashboard() {
               />
             ))
           ) : (
-            <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+            <div className="p-8 text-center bg-white shadow-lg rounded-xl">
               <div className="flex flex-col items-center justify-center text-gray-400">
                 <Search className="w-12 h-12 mb-4" />
                 <p className="text-lg font-medium">No appointments found</p>
-                <p className="text-sm mt-1">Try adjusting your search or filters</p>
+                <p className="mt-1 text-sm">Try adjusting your search or filters</p>
               </div>
             </div>
           )}

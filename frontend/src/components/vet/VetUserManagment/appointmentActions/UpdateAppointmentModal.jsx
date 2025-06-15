@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { X, Check, ChevronLeft, ChevronRight, Calendar, Clock } from "lucide-react";
+import { Calendar, Check, ChevronLeft, ChevronRight, Clock, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import axiosInstance from "../../../../utils/axiosInstance";
 
 const UpdateAppointmentModal = ({ appointment, onClose, onSuccess }) => {
@@ -343,12 +343,12 @@ const UpdateAppointmentModal = ({ appointment, onClose, onSuccess }) => {
   const renderStepContent = () => {
     if (showSuccess) {
       return (
-        <div className="py-8 flex flex-col items-center justify-center space-y-4">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+        <div className="flex flex-col items-center justify-center py-8 space-y-4">
+          <div className="flex items-center justify-center w-16 h-16 bg-green-100 rounded-full">
             <Check size={32} className="text-green-500" />
           </div>
           <h3 className="text-xl font-bold text-gray-800">Appointment Updated!</h3>
-          <p className="text-center text-gray-600 text-sm">
+          <p className="text-sm text-center text-gray-600">
             Your appointment for {appointment.petName} has been updated to {selectedDate.toLocaleDateString()} at{" "}
             {formatTimeSlot(formData.time)}.
           </p>
@@ -359,11 +359,11 @@ const UpdateAppointmentModal = ({ appointment, onClose, onSuccess }) => {
     switch (step) {
       case 1: // Select Date
         return (
-          <div className="space-y-4 p-6">
+          <div className="p-6 space-y-4">
             <h3 className="text-xl font-semibold text-gray-800">Select a Date</h3>
             {loading ? (
               <div className="text-center">
-                <div className="inline-block w-6 h-6 border-2 border-pink-400 border-t-transparent rounded-full animate-spin"></div>
+                <div className="inline-block w-6 h-6 border-2 border-pink-400 rounded-full border-t-transparent animate-spin"></div>
                 <p className="mt-2 text-sm text-gray-600">Loading calendar...</p>
               </div>
             ) : error ? (
@@ -373,19 +373,19 @@ const UpdateAppointmentModal = ({ appointment, onClose, onSuccess }) => {
                 Unable to load {professionalType.toLowerCase()} availability. Please try again later.
               </div>
             ) : (
-              <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+              <div className="p-4 bg-white border border-gray-100 shadow-sm rounded-xl">
                 <div className="flex items-center justify-between mb-4">
-                  <button onClick={handlePrevMonth} className="p-2 rounded-full hover:bg-pink-50 transition-colors">
+                  <button onClick={handlePrevMonth} className="p-2 transition-colors rounded-full hover:bg-pink-50">
                     <ChevronLeft size={20} className="text-pink-400" />
                   </button>
                   <h4 className="text-lg font-semibold text-gray-800">
                     {currentDate.toLocaleString("default", { month: "long", year: "numeric" })}
                   </h4>
-                  <button onClick={handleNextMonth} className="p-2 rounded-full hover:bg-pink-50 transition-colors">
+                  <button onClick={handleNextMonth} className="p-2 transition-colors rounded-full hover:bg-pink-50">
                     <ChevronRight size={20} className="text-pink-400" />
                   </button>
                 </div>
-                <div className="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-gray-600 mb-2">
+                <div className="grid grid-cols-7 gap-1 mb-2 text-xs font-semibold text-center text-gray-600">
                   {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
                     <div key={day} className="py-1">{day}</div>
                   ))}
@@ -419,9 +419,9 @@ const UpdateAppointmentModal = ({ appointment, onClose, onSuccess }) => {
                 </div>
               </div>
             )}
-            <div className="flex items-center gap-4 text-xs text-gray-600 justify-center">
+            <div className="flex items-center justify-center gap-4 text-xs text-gray-600">
               <div className="flex items-center gap-1">
-                <div className="w-3 h-3 rounded-full bg-gray-300"></div>
+                <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
                 <span>Unavailable</span>
               </div>
               <div className="flex items-center gap-1">
@@ -429,11 +429,11 @@ const UpdateAppointmentModal = ({ appointment, onClose, onSuccess }) => {
                 <span>Today</span>
               </div>
               <div className="flex items-center gap-1">
-                <div className="w-3 h-3 rounded-full bg-pink-400"></div>
+                <div className="w-3 h-3 bg-pink-400 rounded-full"></div>
                 <span>Selected</span>
               </div>
               <div className="flex items-center gap-1">
-                <div className="w-3 h-3 rounded-full ring-2 ring-red-500 bg-red-100"></div>
+                <div className="w-3 h-3 bg-red-100 rounded-full ring-2 ring-red-500"></div>
                 <span>Fully Booked</span>
               </div>
             </div>
@@ -441,41 +441,41 @@ const UpdateAppointmentModal = ({ appointment, onClose, onSuccess }) => {
         );
       case 2: // Choose Time
         return (
-          <div className="space-y-4 p-6">
+          <div className="p-6 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-xl font-semibold text-gray-800">Choose a Time</h3>
               <button
                 onClick={() => setStep(1)}
-                className="flex items-center gap-1 text-pink-500 hover:text-pink-600 text-sm font-medium"
+                className="flex items-center gap-1 text-sm font-medium text-pink-500 hover:text-pink-600"
               >
                 <ChevronLeft size={16} />
                 Change Date
               </button>
             </div>
-            <div className="bg-pink-50 rounded-xl p-4 mb-4 border border-pink-100">
+            <div className="p-4 mb-4 border border-pink-100 bg-pink-50 rounded-xl">
               <div className="flex items-start gap-3">
-                <Calendar className="text-pink-400 mt-1" size={20} />
+                <Calendar className="mt-1 text-pink-400" size={20} />
                 <div>
                   <p className="text-sm font-medium text-gray-800">
                     {selectedDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
                   </p>
-                  <p className="text-xs text-gray-600 mt-1">Consultation duration: {consultationDuration} minutes</p>
+                  <p className="mt-1 text-xs text-gray-600">Consultation duration: {consultationDuration} minutes</p>
                 </div>
               </div>
             </div>
             {loading ? (
               <div className="py-12 text-center">
-                <div className="inline-block w-6 h-6 border-2 border-pink-400 border-t-transparent rounded-full animate-spin"></div>
+                <div className="inline-block w-6 h-6 border-2 border-pink-400 rounded-full border-t-transparent animate-spin"></div>
                 <p className="mt-3 text-sm text-gray-600">Loading available times...</p>
               </div>
             ) : availableSlots.length > 0 ? (
               <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Available Time Slots:</h4>
+                <h4 className="mb-2 text-sm font-medium text-gray-700">Available Time Slots:</h4>
                 {selectedTime && (
                   <div className="mb-4">
                     <p className="text-sm text-gray-700">
                       <span className="font-medium">Selected Time:</span>{" "}
-                      <span className="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-lg">
+                      <span className="inline-block px-3 py-1 text-green-800 bg-green-100 rounded-lg">
                         {formatTimeSlot(selectedTime)}
                       </span>
                     </p>
@@ -499,11 +499,11 @@ const UpdateAppointmentModal = ({ appointment, onClose, onSuccess }) => {
               </div>
             ) : (
               <div className="py-12 text-center">
-                <Clock size={28} className="mx-auto text-gray-400 mb-3" />
+                <Clock size={28} className="mx-auto mb-3 text-gray-400" />
                 <p className="text-sm text-gray-700">{error || "No available times for this date."}</p>
                 <button
                   onClick={() => setStep(1)}
-                  className="mt-3 text-pink-500 hover:text-pink-600 text-sm font-medium"
+                  className="mt-3 text-sm font-medium text-pink-500 hover:text-pink-600"
                 >
                   Pick Another Date
                 </button>
@@ -514,23 +514,23 @@ const UpdateAppointmentModal = ({ appointment, onClose, onSuccess }) => {
         );
       case 3: // Confirm Details
         return (
-          <div className="space-y-5 p-6">
+          <div className="p-6 space-y-5">
             <div className="flex items-center justify-between">
               <h3 className="text-xl font-semibold text-gray-800">Confirm Details</h3>
               <button
                 onClick={() => setStep(2)}
-                className="flex items-center gap-1 text-pink-500 hover:text-pink-600 text-sm font-medium"
+                className="flex items-center gap-1 text-sm font-medium text-pink-500 hover:text-pink-600"
               >
                 <ChevronLeft size={16} />
                 Change Time
               </button>
             </div>
-            <div className="bg-gradient-to-r from-pink-50 to-yellow-50 rounded-xl p-4 border border-pink-100">
+            <div className="p-4 border border-pink-100 bg-gradient-to-r from-pink-50 to-yellow-50 rounded-xl">
               <div className="flex items-start gap-3">
-                <Calendar className="text-pink-400 mt-1" size={24} />
+                <Calendar className="mt-1 text-pink-400" size={24} />
                 <div>
                   <h4 className="text-sm font-semibold text-gray-800">Appointment Summary</h4>
-                  <p className="text-sm text-gray-700 mt-2">
+                  <p className="mt-2 text-sm text-gray-700">
                     <span className="font-medium">Date:</span>{" "}
                     {selectedDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
                   </p>
@@ -549,23 +549,23 @@ const UpdateAppointmentModal = ({ appointment, onClose, onSuccess }) => {
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Reason</label>
+                <label className="block mb-1 text-sm font-medium text-gray-700">Reason</label>
                 <input
                   type="text"
                   name="reason"
                   value={formData.reason}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-pink-300 text-sm bg-white"
+                  className="w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-300"
                   disabled={loading}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                <label className="block mb-1 text-sm font-medium text-gray-700">Notes</label>
                 <textarea
                   name="notes"
                   value={formData.notes}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-pink-300 text-sm bg-white"
+                  className="w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-300"
                   rows="3"
                   disabled={loading}
                 />
@@ -580,16 +580,16 @@ const UpdateAppointmentModal = ({ appointment, onClose, onSuccess }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-hidden mt-20">
+    <div className="fixed inset-0 z-50 flex items-center justify-center mt-20 overflow-hidden bg-black/50">
       <div className="bg-white rounded-tl-2xl rounded-tr-3xl rounded-br-2xl rounded-bl-3xl w-full max-w-lg shadow-lg border border-gray-100 mx-4 my-8 max-h-[85vh] flex flex-col">
-        <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-pink-50 to-yellow-50 sticky top-0 z-10">
+        <div className="sticky top-0 z-10 p-4 border-b border-gray-100 bg-gradient-to-r from-pink-50 to-yellow-50">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               {professional && (
                 <img
                   src={professional.image || `/default-${professionalType.toLowerCase()}.jpg`}
                   alt={professional.fullName || "Professional"}
-                  className="w-12 h-12 rounded-full object-cover border-2 border-pink-200"
+                  className="object-cover w-12 h-12 border-2 border-pink-200 rounded-full"
                   onError={(e) => (e.target.src = `/default-${professionalType.toLowerCase()}.jpg`)}
                 />
               )}
@@ -604,7 +604,7 @@ const UpdateAppointmentModal = ({ appointment, onClose, onSuccess }) => {
                 )}
               </div>
             </div>
-            <button onClick={onClose} className="p-2 rounded-full hover:bg-pink-100 transition-colors">
+            <button onClick={onClose} className="p-2 transition-colors rounded-full hover:bg-pink-100">
               <X size={18} className="text-pink-500" />
             </button>
           </div>
@@ -630,11 +630,11 @@ const UpdateAppointmentModal = ({ appointment, onClose, onSuccess }) => {
         <div className="max-h-[50vh] overflow-y-auto p-0 flex-1">{renderStepContent()}</div>
 
         {!showSuccess && (
-          <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-between items-center shrink-0">
+          <div className="flex items-center justify-between p-4 border-t border-gray-100 bg-gray-50 shrink-0">
             {step > 1 ? (
               <button
                 onClick={() => setStep(step - 1)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-pink-500 transition-colors"
+                className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:text-pink-500"
                 disabled={loading}
               >
                 Back
@@ -668,12 +668,12 @@ const UpdateAppointmentModal = ({ appointment, onClose, onSuccess }) => {
             ) : (
               <button
                 onClick={handleUpdate}
-                className="px-6 py-2 text-sm font-medium text-white bg-gradient-to-r from-pink-400 to-yellow-300 rounded-xl hover:from-pink-500 hover:to-yellow-400 transition-all disabled:opacity-50"
+                className="px-6 py-2 text-sm font-medium text-white transition-all bg-gradient-to-r from-pink-400 to-yellow-300 rounded-xl hover:from-pink-500 hover:to-yellow-400 disabled:opacity-50"
                 disabled={loading || !formData.date || !formData.time}
               >
                 {loading ? (
                   <span className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-4 h-4 border-2 border-white rounded-full border-t-transparent animate-spin"></div>
                     Updating...
                   </span>
                 ) : (

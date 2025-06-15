@@ -1,5 +1,4 @@
 import { ArrowRight } from "lucide-react";
-import React from "react";
 
 const NavigationButtons = ({ formStep, setFormStep, onSubmit, isValid = false }) => (
   <div className="flex gap-3">

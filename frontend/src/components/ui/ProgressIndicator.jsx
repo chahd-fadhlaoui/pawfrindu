@@ -1,4 +1,3 @@
-import React from "react";
 import config from "../../assets/config";
 
 const ProgressIndicator = ({ formStep }) => (

@@ -1,9 +1,9 @@
-import React, { useState } from "react";
-import { Stethoscope, Calendar } from "lucide-react";
-import { useApp } from "../../../context/AppContext";
-import MyProfile from "../../../components/vet/vetDashboardManagment/MyProfile";
+import { Calendar, Stethoscope } from "lucide-react";
+import { useState } from "react";
 import Appointments from "../../../components/vet/vetDashboardManagment/AppointmentsManagment/Appointments";
+import MyProfile from "../../../components/vet/vetDashboardManagment/MyProfile";
 import Sidebar from "../../../components/vet/vetDashboardManagment/Sidebar";
+import { useApp } from "../../../context/AppContext";
 
 const TABS = {
   PROFILE: "profile",

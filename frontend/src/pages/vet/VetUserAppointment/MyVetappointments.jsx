@@ -16,11 +16,11 @@ import {
   User,
   X,
 } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tooltip } from "../../../components/Tooltip";
 import DeleteCancelAppointmentModal from "../../../components/vet/VetUserManagment/appointmentActions/DeleteCancelAppointmentModal";
-import UpdateAppointmentModal from "../../../components/vet/VetUserManagment/appointmentActions/UpdateAppointmentModal.";
+import UpdateAppointmentModal from "../../../components/vet/VetUserManagment/appointmentActions/UpdateAppointmentModal";
 import ViewAppointmentModal from "../../../components/vet/VetUserManagment/appointmentActions/ViewAppointmentModal";
 import { useApp } from "../../../context/AppContext";
 import axiosInstance from "../../../utils/axiosInstance";
@@ -52,21 +52,21 @@ const FilterSelect = ({ label, value, onChange, options, icon }) => (
         </option>
       ))}
     </select>
-    <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+    <div className="absolute transform -translate-y-1/2 left-3 top-1/2">
       {icon}
     </div>
   </div>
 );
 
 const FilterBadge = ({ label, value, onClear }) => (
-  <span className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium text-pink-600 bg-pink-50 rounded-full border border-pink-200 shadow-sm">
+  <span className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium text-pink-600 border border-pink-200 rounded-full shadow-sm bg-pink-50">
     {label}:{" "}
     {value === "notAvailable"
       ? "Not Available"
       : value.charAt(0).toUpperCase() + value.slice(1)}
     <button
       onClick={onClear}
-      className="ml-1 text-pink-600 hover:text-pink-800 transition-colors duration-300"
+      className="ml-1 text-pink-600 transition-colors duration-300 hover:text-pink-800"
     >
       <X size={14} />
     </button>
@@ -85,12 +85,12 @@ const AppointmentCard = ({ appointment, onAction, disabled }) => {
 
   return (
     <div
-      className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-shadow duration-300"
+      className="overflow-hidden transition-shadow duration-300 bg-white border border-gray-100 shadow-lg rounded-2xl hover:shadow-xl"
       style={{ opacity: disabled ? 0.5 : 1 }}
     >
       <div className={`h-2 ${getStatusColor(appointment.status)}`}></div>
       <div className="p-6">
-        <div className="flex justify-between items-start mb-4">
+        <div className="flex items-start justify-between mb-4">
           <div>
             <span
               className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(
@@ -102,7 +102,7 @@ const AppointmentCard = ({ appointment, onAction, disabled }) => {
                 : appointment.status.charAt(0).toUpperCase() +
                   appointment.status.slice(1)}
             </span>
-            <h3 className="text-lg font-semibold text-gray-800 mt-2">
+            <h3 className="mt-2 text-lg font-semibold text-gray-800">
               {appointment.petName}
             </h3>
           </div>
@@ -115,9 +115,9 @@ const AppointmentCard = ({ appointment, onAction, disabled }) => {
             </div>
           </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 gap-4 mb-6 sm:grid-cols-2">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center flex-shrink-0">
+            <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 bg-pink-100 rounded-full">
               <User size={18} className="text-pink-500" />
             </div>
             <div>
@@ -128,7 +128,7 @@ const AppointmentCard = ({ appointment, onAction, disabled }) => {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center flex-shrink-0">
+            <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 bg-pink-100 rounded-full">
               <MapPin size={18} className="text-pink-500" />
             </div>
             <div>
@@ -139,7 +139,7 @@ const AppointmentCard = ({ appointment, onAction, disabled }) => {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center flex-shrink-0">
+            <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 bg-pink-100 rounded-full">
               <PawPrint size={18} className="text-pink-500" />
             </div>
             <div>
@@ -150,7 +150,7 @@ const AppointmentCard = ({ appointment, onAction, disabled }) => {
             </div>
           </div>
         </div>
-        <div className="flex flex-wrap gap-3 mt-4 border-t border-gray-100 pt-4">
+        <div className="flex flex-wrap gap-3 pt-4 mt-4 border-t border-gray-100">
           {appointment.status === "completed" ? (
             <div className="w-full text-center">
               <span className="text-sm text-gray-500">
@@ -180,7 +180,7 @@ const AppointmentCard = ({ appointment, onAction, disabled }) => {
             >
               <button
                 onClick={() => onAction(appointment, "delete")}
-                className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors focus:outline-none focus:ring-2 focus:ring-red-300 flex items-center gap-1"
+                className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-red-600 transition-colors rounded-lg bg-red-50 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-300"
                 disabled={disabled}
               >
                 <Trash2 size={16} />
@@ -188,13 +188,13 @@ const AppointmentCard = ({ appointment, onAction, disabled }) => {
               </button>
             </Tooltip>
           )}
-          <div className="ml-auto flex gap-3">
+          <div className="flex gap-3 ml-auto">
             {appointment.status !== "cancelled" &&
               appointment.status !== "completed" && (
                 <Tooltip text="Update Appointment">
                   <button
                     onClick={() => onAction(appointment, "update")}
-                    className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-300 flex items-center gap-1"
+                    className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-blue-600 transition-colors rounded-lg bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-300"
                     disabled={disabled}
                   >
                     <Edit size={16} />
@@ -205,7 +205,7 @@ const AppointmentCard = ({ appointment, onAction, disabled }) => {
             <Tooltip text="View Details">
               <button
                 onClick={() => onAction(appointment, "view")}
-                className="px-4 py-2 text-sm font-medium text-pink-600 bg-pink-50 rounded-lg hover:bg-pink-100 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-300 flex items-center gap-1"
+                className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-pink-600 transition-colors rounded-lg bg-pink-50 hover:bg-pink-100 focus:outline-none focus:ring-2 focus:ring-pink-300"
                 disabled={disabled}
               >
                 <Eye size={16} />
@@ -525,8 +525,8 @@ const MyVetappointments = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white to-pink-50 pb-16">
-      <div className="relative pt-16 pb-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-white to-pink-50">
+    <div className="min-h-screen pb-16 bg-gradient-to-br from-white to-pink-50">
+      <div className="relative px-4 pt-16 pb-12 sm:px-6 lg:px-8 bg-gradient-to-br from-white to-pink-50">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {Array(8)
             .fill(null)
@@ -556,7 +556,7 @@ const MyVetappointments = () => {
             ))}
         </div>
         <div
-          className="relative mx-auto max-w-7xl text-center space-y-6 animate-fadeIn"
+          className="relative mx-auto space-y-6 text-center max-w-7xl animate-fadeIn"
           style={{ animationDelay: "0.2s" }}
         >
           <span className="inline-flex items-center px-4 py-2 text-sm font-semibold text-pink-500 bg-white border border-[#ffc929]/20 rounded-full shadow-sm">
@@ -573,8 +573,8 @@ const MyVetappointments = () => {
         </div>
       </div>
 
-      <div className="container mx-auto px-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+      <div className="container px-4 mx-auto">
+        <div className="flex flex-col gap-4 mb-8 sm:flex-row sm:items-center sm:justify-between">
           {/* Book Veterinarian Appointment Button (Left) */}
           <button
             onClick={() => navigate("/vets")}
@@ -587,7 +587,7 @@ const MyVetappointments = () => {
 
           {/* Appointments Span (Center) */}
           {filteredAppointments.length > 0 && (
-            <span className="flex items-center justify-center gap-2 px-5 py-2 text-sm font-medium text-pink-600 bg-white border border-pink-100 rounded-full shadow-sm w-full sm:w-auto">
+            <span className="flex items-center justify-center w-full gap-2 px-5 py-2 text-sm font-medium text-pink-600 bg-white border border-pink-100 rounded-full shadow-sm sm:w-auto">
               <Calendar size={16} className="text-pink-500" />
               {filteredAppointments.length}{" "}
               {filteredAppointments.length === 1
@@ -607,18 +607,18 @@ const MyVetappointments = () => {
           </button>
         </div>
 
-        <div className="bg-white border border-gray-100 shadow-lg rounded-2xl mb-8 overflow-hidden">
+        <div className="mb-8 overflow-hidden bg-white border border-gray-100 shadow-lg rounded-2xl">
           <div
-            className="px-6 py-4 border-b border-gray-100 flex justify-between items-center"
+            className="flex items-center justify-between px-6 py-4 border-b border-gray-100"
             onClick={() => setIsFilterOpen(!isFilterOpen)}
           >
-            <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-800">
               <Filter size={18} className="text-pink-500" />
               Filter Options
             </h2>
             <button
               onClick={() => setIsFilterOpen(!isFilterOpen)}
-              className="p-2 text-pink-500 hover:bg-pink-50 rounded-full transition-colors"
+              className="p-2 text-pink-500 transition-colors rounded-full hover:bg-pink-50"
             >
               {isFilterOpen ? (
                 <ChevronUp size={20} />
@@ -659,8 +659,8 @@ const MyVetappointments = () => {
                 />
               </div>
               {(filterStatus || filterProfessionalType || filterDateRange) && (
-                <div className="mt-6 border-t border-gray-100 pt-4">
-                  <div className="flex flex-wrap gap-2 items-center">
+                <div className="pt-4 mt-6 border-t border-gray-100">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span className="text-sm font-medium text-gray-600">
                       Active Filters:
                     </span>
@@ -687,7 +687,7 @@ const MyVetappointments = () => {
                     )}
                     <button
                       onClick={clearAllFilters}
-                      className="ml-auto px-4 py-1 text-sm font-medium text-pink-600 bg-pink-50 hover:bg-pink-100 transition-all duration-300 rounded-full focus:outline-none focus:ring-2 focus:ring-pink-300 flex items-center gap-1"
+                      className="flex items-center gap-1 px-4 py-1 ml-auto text-sm font-medium text-pink-600 transition-all duration-300 rounded-full bg-pink-50 hover:bg-pink-100 focus:outline-none focus:ring-2 focus:ring-pink-300"
                     >
                       <X size={14} /> Clear All
                     </button>
@@ -701,7 +701,7 @@ const MyVetappointments = () => {
         {loading ? (
           <div className="flex items-center justify-center min-h-[400px] bg-white rounded-2xl shadow-lg border border-gray-100">
             <div className="text-center animate-pulse">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-pink-400 to-yellow-300 flex items-center justify-center">
+              <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-pink-400 to-yellow-300">
                 <Calendar size={32} className="text-white" />
               </div>
               <p className="mt-4 text-lg font-medium text-gray-600">
@@ -710,54 +710,54 @@ const MyVetappointments = () => {
             </div>
           </div>
         ) : error ? (
-          <div className="py-16 text-center bg-white rounded-2xl shadow-lg border border-gray-100">
-            <div className="w-16 h-16 mb-4 mx-auto rounded-full bg-pink-100 flex items-center justify-center">
+          <div className="py-16 text-center bg-white border border-gray-100 shadow-lg rounded-2xl">
+            <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-pink-100 rounded-full">
               <AlertTriangle size={32} className="text-pink-500" />
             </div>
             <h3 className="text-xl font-semibold text-gray-800">
               Unable to Load Appointments
             </h3>
-            <p className="mt-2 text-gray-600 max-w-md mx-auto">{error}</p>
+            <p className="max-w-md mx-auto mt-2 text-gray-600">{error}</p>
             <button
               onClick={fetchAppointments}
-              className="mt-6 px-6 py-2 text-sm font-medium text-white bg-gradient-to-r from-pink-400 to-yellow-300 rounded-xl shadow-sm hover:from-pink-500 hover:to-yellow-400 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-pink-300"
+              className="px-6 py-2 mt-6 text-sm font-medium text-white transition-all duration-300 shadow-sm bg-gradient-to-r from-pink-400 to-yellow-300 rounded-xl hover:from-pink-500 hover:to-yellow-400 focus:outline-none focus:ring-2 focus:ring-pink-300"
             >
               Try Again
             </button>
           </div>
         ) : appointments.length === 0 ? (
-          <div className="py-16 text-center bg-white rounded-2xl shadow-lg border border-gray-100">
-            <div className="w-20 h-20 mb-6 mx-auto rounded-full bg-gradient-to-r from-pink-200 to-yellow-100 flex items-center justify-center">
+          <div className="py-16 text-center bg-white border border-gray-100 shadow-lg rounded-2xl">
+            <div className="flex items-center justify-center w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-r from-pink-200 to-yellow-100">
               <Calendar size={40} className="text-pink-500" />
             </div>
             <h3 className="text-xl font-semibold text-gray-800">
               No Appointments Yet
             </h3>
-            <p className="mt-2 text-gray-600 max-w-md mx-auto">
+            <p className="max-w-md mx-auto mt-2 text-gray-600">
               You haven't booked any appointments yet. Start by booking one now!
             </p>
             <button
               onClick={() => navigate("/vets")}
-              className="mt-6 px-8 py-3 text-sm font-medium text-white bg-gradient-to-r from-pink-400 to-yellow-300 rounded-xl shadow-md hover:shadow-lg hover:from-pink-500 hover:to-yellow-400 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-pink-300"
+              className="px-8 py-3 mt-6 text-sm font-medium text-white transition-all duration-300 shadow-md bg-gradient-to-r from-pink-400 to-yellow-300 rounded-xl hover:shadow-lg hover:from-pink-500 hover:to-yellow-400 focus:outline-none focus:ring-2 focus:ring-pink-300"
               disabled={loading}
             >
               Book Your First Appointment
             </button>
           </div>
         ) : filteredAppointments.length === 0 ? (
-          <div className="py-16 text-center bg-white rounded-2xl shadow-lg border border-gray-100">
-            <div className="w-16 h-16 mb-4 mx-auto rounded-full bg-pink-100 flex items-center justify-center">
+          <div className="py-16 text-center bg-white border border-gray-100 shadow-lg rounded-2xl">
+            <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-pink-100 rounded-full">
               <SearchX size={32} className="text-pink-500" />
             </div>
             <h3 className="text-xl font-semibold text-gray-800">
               No Matching Appointments
             </h3>
-            <p className="mt-2 text-gray-600 max-w-md mx-auto">
+            <p className="max-w-md mx-auto mt-2 text-gray-600">
               No appointments match your current filters.
             </p>
             <button
               onClick={clearAllFilters}
-              className="mt-6 px-6 py-2 text-sm font-medium text-white bg-gradient-to-r from-pink-400 to-yellow-300 rounded-xl shadow-sm hover:from-pink-500 hover:to-yellow-400 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-pink-300"
+              className="px-6 py-2 mt-6 text-sm font-medium text-white transition-all duration-300 shadow-sm bg-gradient-to-r from-pink-400 to-yellow-300 rounded-xl hover:from-pink-500 hover:to-yellow-400 focus:outline-none focus:ring-2 focus:ring-pink-300"
             >
               Clear All Filters
             </button>
@@ -765,7 +765,7 @@ const MyVetappointments = () => {
         ) : (
           <>
             <div
-              className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fadeIn"
+              className="grid grid-cols-1 gap-6 md:grid-cols-2 animate-fadeIn"
               style={{ animationDelay: "0.2s" }}
             >
               {paginatedAppointments.map((appointment, index) => (
@@ -779,7 +779,7 @@ const MyVetappointments = () => {
               ))}
             </div>
             {totalPages > 1 && (
-              <div className="flex items-center justify-center mt-12 bg-white rounded-xl shadow-md p-2 max-w-md mx-auto">
+              <div className="flex items-center justify-center max-w-md p-2 mx-auto mt-12 bg-white shadow-md rounded-xl">
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1 || loading}

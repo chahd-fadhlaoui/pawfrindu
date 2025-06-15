@@ -1,4 +1,3 @@
-import React from "react";
 
 const FormHeader = ({ mode }) => (
   <div className="mb-8 space-y-4">
