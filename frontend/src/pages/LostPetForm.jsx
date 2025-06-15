@@ -640,7 +640,7 @@ const handleSubmit = async (e) => {
         "",
     });
     setActiveTab(0);
-    navigate("/lost-and-found");
+    navigate("/reports");
   } catch (error) {
     console.error("Submission error:", error.response?.data);
     setFormErrors({

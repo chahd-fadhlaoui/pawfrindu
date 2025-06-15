@@ -360,7 +360,7 @@ const UnavailableModal = ({ professional, onClose, onSuccess }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center mt-20 overflow-hidden bg-black/60">
       <div className="bg-white rounded-tl-lg rounded-tr-3xl rounded-br-xl rounded-bl-2xl w-full max-w-md shadow-xl border border-yellow-100 mx-4 my-8 max-h-[85vh] flex flex-col">
         <div className={`sticky top-0 z-10 flex items-center justify-between p-4 border-b border-gray-100 bg-gradient-to-r ${colorPalette.headerFrom} ${colorPalette.headerTo}`}>
-          <h2 className="text-lg font-bold text-gray-800">Set Availability</h2>
+          <h2 className="text-lg font-bold text-gray-800">Manage Work Schedule Availability</h2>
           <button
             onClick={handleClose}
             className="p-2 transition-colors rounded-full hover:bg-pink-100"

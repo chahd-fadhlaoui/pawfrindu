@@ -32,6 +32,7 @@ import VetPendingApproval from './pages/vet/VetDashboardManagment/VetPendingAppr
 import MyVetappointments from './pages/vet/VetUserAppointment/MyVetappointments';
 import VetDetails from './pages/vet/VetUserAppointment/VetDetails';
 import Veterinarians from './pages/vet/VetUserAppointment/Veterinarians';
+import MyReports from "./pages/MyReports";
 
 const Layout = ({ children }) => {
   const location = useLocation();
@@ -100,8 +101,8 @@ const AppRoutes = () => {
       <Route path="/vet-pending-approval" element={<ProtectedRoute allowedRoles={["Vet"]}><VetPendingApproval/></ProtectedRoute>} /> 
       <Route path="/addPet" element={<ProtectedRoute allowedRoles={["PetOwner"]}><CreatePet /></ProtectedRoute>} />
       <Route path="/list/*" element={<ProtectedRoute allowedRoles={["PetOwner"]}><PetManagementDashboard /></ProtectedRoute>} />
-      <Route path="/Vetappointments" element={<ProtectedRoute allowedRoles={["PetOwner"]}><MyVetappointments/></ProtectedRoute>} /> 
-
+      <Route path="/appointments" element={<ProtectedRoute allowedRoles={["PetOwner"]}><MyVetappointments/></ProtectedRoute>} /> 
+      <Route path="/reports" element={<ProtectedRoute allowedRoles={["PetOwner"]}><MyReports/></ProtectedRoute>} /> 
       <Route path="/profile" element={<ProtectedRoute allowedRoles={["PetOwner", "Trainer", "Vet"]}><Profile /></ProtectedRoute>} />
       <Route path="/myprofile" element={<ProtectedRoute allowedRoles={["PetOwner", "Trainer", "Vet"]}><CreateProfile /></ProtectedRoute>} />
       <Route path="/candidates/:petId" element={<ProtectedRoute allowedRoles={["PetOwner", "Trainer", "Vet"]}><CandidatesPage /></ProtectedRoute>} />

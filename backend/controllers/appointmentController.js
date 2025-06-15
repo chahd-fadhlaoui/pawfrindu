@@ -166,7 +166,7 @@ export const bookAppointment = async (req, res) => {
     console.error("Book Appointment Error:", error);
     res.status(500).json({ message: "Failed to book appointment", detail: error.message });
   }
-};
+}; 
 export const getUserBookedDates = async (req, res) => {
     try {
       const appointments = await Appointment.find({

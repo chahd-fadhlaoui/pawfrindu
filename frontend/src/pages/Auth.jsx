@@ -38,6 +38,7 @@ const Auth = () => {
     if (result.success) {
       const redirectTo = location.state?.from || result.redirectTo || "/pets";
       toast.success("Login successful!", { autoClose: 2000 });
+      console.log("Navigating to:", result.redirectTo);
       navigate(redirectTo, { replace: true });
     } else {
       toast.error(result.error || "Login failed", { autoClose: 3000 });

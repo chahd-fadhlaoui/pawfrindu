@@ -1,34 +1,57 @@
-// components/ProtectedRoute.jsx
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import LoadingWrapper from './LoadingWrapper';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useApp();
+  const location = useLocation();
 
-  // If still loading and no user yet, show loading state without unmounting children
   if (loading && !user) {
     return <LoadingWrapper loading={loading}><div /></LoadingWrapper>;
   }
 
-  // Once loading is done, check user and role
   if (!user) {
-    console.log("ProtectedRoute: No user, redirecting to /login");
-    return <Navigate to="/login" replace state={{ from: window.location.pathname }} />;
+    console.log("ProtectedRoute: No user, redirecting to /login from", location.pathname);
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
-    console.log("ProtectedRoute: Role not allowed, redirecting to /forbidden");
-    return <Navigate to="/forbidden" replace state={{ denied: true }} />;
+  // Normalize role to match backend schema
+  const normalizedRole =
+    user.role === "Pet Owner" ? "PetOwner" :
+    user.role === "Veterinarian" ? "Vet" :
+    user.role === "Pet Trainer" ? "Trainer" :
+    user.role;
+
+  console.log("ProtectedRoute: Checking access", {
+    userRole: user.role,
+    normalizedRole,
+    allowedRoles,
+    currentPath: location.pathname,
+  });
+
+  if (allowedRoles && !allowedRoles.includes(normalizedRole)) {
+    console.log(`ProtectedRoute: Role ${normalizedRole} not allowed for ${location.pathname}`);
+    // Redirect to pending approval if Vet or Trainer and not active
+    if (normalizedRole === "Vet" && !user.isActive) {
+      return <Navigate to="/vet-pending-approval" replace />;
+    }
+    if (normalizedRole === "Trainer" && !user.isActive) {
+      return <Navigate to="/trainer-pending-approval" replace />;
+    }
+    // Redirect to appropriate dashboard or forbidden
+    const redirectTo = {
+      Admin: "/admin",
+      SuperAdmin: "/admin",
+      Trainer: "/trainer",
+      Vet: "/vet",
+      PetOwner: "/",
+    }[normalizedRole] || "/forbidden";
+    console.log(`ProtectedRoute: Redirecting ${normalizedRole} to ${redirectTo}`);
+    return <Navigate to={redirectTo} replace state={{ denied: true }} />;
   }
 
-  // Render children with loading overlay if still fetching data
-  return (
-    <LoadingWrapper loading={loading}>
-      {children}
-    </LoadingWrapper>
-  );
+  return <LoadingWrapper loading={loading}>{children}</LoadingWrapper>;
 };
 
 export default ProtectedRoute;

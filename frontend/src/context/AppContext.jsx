@@ -155,18 +155,23 @@ useEffect(() => {
     });
   }, []);
 
-  const fetchUserProfile = useCallback(async () => {
-    return measureTime("fetchUserProfile", async () => {
+ const fetchUserProfile = useCallback(async () => {
+  return measureTime("fetchUserProfile", async () => {
+    try {
       const response = await axiosInstance.get("/api/user/me");
       const userData = response.data.user;
+      if (!userData || !userData.role) {
+        throw new Error("Invalid user data from /api/user/me");
+      }
       const formattedUser = {
         _id: userData._id,
         fullName: userData.fullName,
         image: userData.image || DEFAULT_PROFILE_IMAGE,
         email: userData.email,
-        role: userData.role,
+        role: userData.role, // Keep raw role (e.g., "Vet", "Trainer")
         adminType: userData.adminType,
         about: userData.about || "",
+        isActive: userData.isActive,
         displayRole:
           userData.role === "PetOwner"
             ? "Pet Owner"
@@ -185,14 +190,23 @@ useEffect(() => {
         veterinarianDetails: userData.veterinarianDetails || undefined,
         createdAt: userData.createdAt,
       };
+      console.log("fetchUserProfile response:", {
+        role: userData.role,
+        isActive: userData.isActive,
+        userId: userData._id,
+      });
       setUser(formattedUser);
       return formattedUser;
-    }).catch((error) => {
-      console.error("Failed to fetch profile:", error);
-      setError(error.response?.data?.message || "Failed to fetch user profile");
+    } catch (error) {
+      console.error("fetchUserProfile error:", error.message);
       throw error;
-    });
-  }, []);
+    }
+  }).catch((error) => {
+    console.error("Failed to fetch profile:", error);
+    setError(error.response?.data?.message || "Failed to fetch user profile");
+    throw error;
+  });
+}, []);
 
   const getMyAdoptionRequests = useCallback(async () => {
     try {
@@ -515,57 +529,83 @@ useEffect(() => {
   }, [checkAuth, fetchPets]);
 
   // Auth functions
-  const login = async (email, password) => {
-    if (loading) return;
-    setLoading(true);
-    setError("");
-    try {
-      const response = await axiosInstance.post("/api/user/login", {
-        email,
-        password,
-      });
-      const { accessToken, user: userData, redirectTo } = response.data;
-      localStorage.setItem("token", accessToken);
-      axiosInstance.setAuthToken(accessToken);
-      socket.auth = { token: accessToken };
-      socket.connect();
-  
-      const fetchPromises = [];
-      fetchPromises.push(fetchPets().then((petsData) => ({ pets: petsData })));
-      fetchPromises.push(fetchUserProfile().then((profile) => ({ user: profile })));
-      if (userData.role === "PetOwner") {
-        fetchPromises.push(getMyPets().then((result) => ({ userPets: result.data })));
-        fetchPromises.push(
-          getMyAdoptionRequests().then((result) => ({ applications: result.success ? result.data : [] }))
-        );
-      }
-      if (userData.role === "Admin" || userData.role === "SuperAdmin" ) {
-        fetchPromises.push(fetchAllUsers().then((users) => ({ allUsers: users })));
-      }
-  
-      const results = await Promise.all(fetchPromises);
-      const fetchedData = results.reduce((acc, result) => ({ ...acc, ...result }), {});
-  
-      const finalUser = fetchedData.user || ensureUserHasImage({ ...userData, adminType: userData.adminType });
-      setUser(finalUser);
-      setPets(fetchedData.pets || []);
-      setUserPets(fetchedData.userPets || []);
-      setApplications(fetchedData.applications || []);
-      setAllUsers(fetchedData.allUsers || []);
-  
-      console.log("User set after login:", finalUser); 
-      console.log("Token after login:", localStorage.getItem("token").substring(0, 10) + "...");
-  
-      return { success: true, redirectTo };
-    } catch (error) {
-      const errorMessage = error.response?.data?.message || "Error logging in";
-      setError(errorMessage);
-      return { success: false, error: errorMessage };
-    } finally {
-      setLoading(false);
-    }
-  };
+const login = async (email, password) => {
+  if (loading) return { success: false, error: "Login in progress" };
+  setLoading(true);
+  setError("");
+  try {
+    console.log("Initiating login for email:", email);
+    const response = await axiosInstance.post("/api/user/login", {
+      email,
+      password,
+    });
+    const { accessToken, user: userData, redirectTo: backendRedirect } = response.data;
 
+    // Save token immediately
+    localStorage.setItem("token", accessToken);
+    axiosInstance.setAuthToken(accessToken);
+    socket.auth = { token: accessToken };
+    socket.connect();
+    console.log("Token saved:", accessToken.substring(0, 10) + "...");
+
+    // Fetch profile to ensure complete user data
+    let profile;
+    try {
+      profile = await fetchUserProfile();
+      console.log("Profile fetched:", { role: profile.role, isActive: profile.isActive });
+    } catch (error) {
+      console.error("fetchUserProfile failed during login:", error.message);
+      profile = null;
+    }
+
+    // Prepare fetch promises based on role
+    const fetchPromises = [
+      fetchPets().then((petsData) => ({ pets: petsData })),
+    ];
+    if (userData.role === "PetOwner") {
+      fetchPromises.push(getMyPets().then((result) => ({ userPets: result.data })));
+      fetchPromises.push(
+        getMyAdoptionRequests().then((result) => ({ applications: result.success ? result.data : [] }))
+      );
+    }
+    if (userData.role === "Admin" || userData.role === "SuperAdmin") {
+      fetchPromises.push(fetchAllUsers().then((users) => ({ allUsers: users })));
+    }
+
+    const results = await Promise.all(fetchPromises);
+    const fetchedData = results.reduce((acc, result) => ({ ...acc, ...result }), {});
+
+    // Set final user, ensuring role is from profile or backend
+    const finalUser = profile || ensureUserHasImage({
+      ...userData,
+      role: userData.role,
+      adminType: userData.adminType,
+      isActive: userData.isActive,
+    });
+    setUser(finalUser);
+    setPets(fetchedData.pets || []);
+    setUserPets(fetchedData.userPets || []);
+    setApplications(fetchedData.applications || []);
+    setAllUsers(fetchedData.allUsers || []);
+
+    // Use backend-provided redirectTo
+    const redirectTo = backendRedirect || "/login";
+    console.log("Login successful:", {
+      role: finalUser.role,
+      isActive: finalUser.isActive,
+      redirectTo,
+    });
+
+    return { success: true, redirectTo };
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || "Error logging in";
+    setError(errorMessage);
+    console.error("Login error:", errorMessage, error.response?.data);
+    return { success: false, error: errorMessage };
+  } finally {
+    setLoading(false);
+  }
+};
   const register = async (userData) => {
     setLoading(true);
     setError("");

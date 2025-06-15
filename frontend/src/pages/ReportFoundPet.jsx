@@ -23,9 +23,11 @@ import { ErrorMessage } from "../components/profile/common/ErrorMessage";
 import { Tooltip } from "../components/Tooltip";
 import { useApp } from "../context/AppContext";
 import axiosInstance from "../utils/axiosInstance";
+import { useNavigate } from "react-router-dom";
 
 export default function PetFinderForm() {
   const { socket, user } = useApp();
+  const navigate = useNavigate(); 
   const [formData, setFormData] = useState({
     species: "",
     breed: "",
@@ -560,6 +562,11 @@ export default function PetFinderForm() {
         phoneNumber: "",
       });
       setActiveTab(0);
+      if (isAuthenticated) {
+    navigate("/reports");
+  } else {
+    navigate("/lost-and-found");
+  }
     } catch (error) {
       console.error("Submission error:", error.response?.data);
       setFormErrors({

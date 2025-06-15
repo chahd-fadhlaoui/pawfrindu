@@ -88,7 +88,7 @@ const register = async (req, res) => {
       .status(500)
       .json({ message: "Failed to create account", detail: error.message });
   }
-};
+};  
 
 // 🚀 Étape 2: Complétion du profil et génération du token
 const createProfile = async (req, res) => {
@@ -158,7 +158,7 @@ const createProfile = async (req, res) => {
       };
     } else if (user.role === "Vet") {
       if (
-        !veterinarianDetails?.governorate ||
+        !veterinarianDetails?.governorate ||  
         !veterinarianDetails?.diplomasAndTraining ||
         !veterinarianDetails?.professionalCardImage ||
         !veterinarianDetails?.phone
@@ -205,7 +205,7 @@ const createProfile = async (req, res) => {
     res.status(500).json({ message: "Failed to complete profile." });
   }
 };
-
+ 
 // 🚀 Étape 3: Connexion après enregistrement et complétion du profil
 const login = async (req, res) => {
   const { email, password } = req.body;

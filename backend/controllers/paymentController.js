@@ -50,15 +50,15 @@ export const initiatePayment = async (req, res) => {
         phoneNumber: pet.owner?.petOwnerDetails?.phone || '22777777',
         email: pet.owner?.email || 'test.user@gmail.com',
         orderId: petId,
-        webhook: 'https://7090-102-157-91-243.ngrok-free.app/api/payment/payment-webhook',
+        webhook: 'https://7d63-102-157-8-100.ngrok-free.app/api/payment/payment-webhook',
         theme: 'light',
         successUrl: 'http://localhost:5173/payment-success',
-        failUrl: 'http://localhost:5173/payment-failed',
-      },
+        failUrl: 'http://localhost:5173/payment-failed',  
+      }, 
       {
         headers: {
           'x-api-key': process.env.KONNECT_API_KEY,
-        },
+        }, 
         maxRedirects: 0,
       }
     );

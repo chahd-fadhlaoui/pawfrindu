@@ -450,7 +450,7 @@ const AppointmentModal = ({ professional, professionalType, onClose, onSuccess }
         if (user?.role === "Vet") {
           console.log("Vet user, closing modal without navigation");
         } else {
-          navigate("/Vetappointments");
+          navigate("/appointments");
         }
         }, 2000);
       }
