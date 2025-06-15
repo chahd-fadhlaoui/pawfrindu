@@ -312,6 +312,398 @@ export const updateReport = async (req, res) => {
     });
   }
 };
+export const updateFoundReport = async (req, res) => {
+  const { id } = req.params; // Declare id at function scope
+  try {
+    // Log incoming request
+    console.log(`Received request to update Found report ${id} with payload:`, JSON.stringify(req.body, null, 2));
+
+    // Check if the report exists
+    const report = await LostAndFound.findById(id);
+    if (!report) {
+      console.error(`Report with ID ${id} not found`);
+      return res.status(404).json({
+        success: false,
+        message: "Report not found",
+      });
+    }
+
+    // Check if the report is a Found report
+    if (report.type !== "Found") {
+      console.error(`Report ${id} is not a Found report, type: ${report.type}`);
+      return res.status(400).json({
+        success: false,
+        message: "This endpoint is for updating Found reports only",
+      });
+    }
+
+    // Authorization check
+    if (
+      report.owner &&
+      report.owner.toString() !== req.user?._id.toString() &&
+      req.user?.role !== "Admin"
+    ) {
+      console.error(`Unauthorized update attempt for report ${id} by user ${req.user?._id}`);
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized: You can only update your own reports",
+      });
+    }
+
+    // Handle photo removal
+    const photosToRemove = Array.isArray(req.body.photosToRemove)
+      ? req.body.photosToRemove.filter((url) => typeof url === "string")
+      : [];
+    if (photosToRemove.length > 0) {
+      for (const photoUrl of photosToRemove) {
+        try {
+          const key = extractS3KeyFromUrl(photoUrl);
+          await deleteFromS3(key);
+          console.log(`Deleted photo from S3: ${photoUrl}`);
+        } catch (s3Error) {
+          console.error(`Failed to delete photo from S3: ${photoUrl}`, s3Error.message);
+        }
+      }
+      report.photos = report.photos.filter((photo) => !photosToRemove.includes(photo));
+    }
+
+    // Prepare update data
+    const updateData = {
+      type: "Found", // Hardcode to prevent type change
+      name: req.body.name || report.name,
+      species: req.body.species || report.species,
+      breed: req.body.breed || report.breed,
+      size: req.body.size || report.size,
+      gender: req.body.gender || report.gender,
+      age: req.body.age || report.age,
+      description: req.body.description || report.description,
+      email: req.body.email || report.email,
+      phoneNumber: req.body.phoneNumber || report.phoneNumber,
+      color: req.body.color
+        ? Array.isArray(req.body.color)
+          ? req.body.color
+          : [req.body.color]
+        : report.color,
+      date: req.body.date ? new Date(req.body.date) : report.date,
+      location: {
+        governorate: req.body["location[governorate]"] || report.location.governorate,
+        delegation: req.body["location[delegation]"] || report.location.delegation,
+        coordinates: req.body["location[coordinates]"]
+          ? JSON.parse(req.body["location[coordinates]"])
+          : report.location.coordinates || { type: "Point", coordinates: [0, 0] },
+      },
+      microchipNumber: req.body.microchipNumber || report.microchipNumber,
+      isPregnant:
+        req.body.isPregnant !== undefined
+          ? req.body.isPregnant === "true" || req.body.isPregnant === true
+            ? true
+            : req.body.isPregnant === "false" || req.body.isPregnant === false
+            ? false
+            : null
+          : report.isPregnant,
+      photos: report.photos || [],
+    };
+
+    // Handle new photo URLs from request body
+    if (req.body.photos) {
+      const newPhotos = Array.isArray(req.body.photos) ? req.body.photos : [req.body.photos];
+      updateData.photos = [
+        ...updateData.photos,
+        ...newPhotos.filter((url) => typeof url === "string"),
+      ];
+    }
+
+    // Validate required fields
+    const requiredFields = ["name", "species", "color", "date", "location.governorate", "location.delegation", "gender"];
+    for (const field of requiredFields) {
+      const fieldValue = field.includes("location.") ? updateData.location[field.split(".")[1]] : updateData[field];
+      if (!fieldValue || (typeof fieldValue === "string" && fieldValue.trim() === "")) {
+        console.error(`Missing or invalid required field ${field} for report ${id}`);
+        return res.status(400).json({
+          success: false,
+          message: `Missing or invalid required field: ${field}`,
+        });
+      }
+    }
+
+    // Log update data
+    console.log(`Updating Found report ${id} with data:`, JSON.stringify(updateData, null, 2));
+
+    // Update the report
+    const updatedReport = await LostAndFound.findByIdAndUpdate(
+      id,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    ).populate("owner", "fullName email");
+
+    if (!updatedReport) {
+      console.error(`Failed to update report ${id}: Update returned null`);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to update report",
+      });
+    }
+
+    // Verify database state
+    const dbReport = await LostAndFound.findById(id).lean();
+    console.log(`Post-update database check for ${id}:`, { type: dbReport.type });
+
+    // Emit socket event
+    if (global.io) {
+      global.io.emit("reportUpdated", {
+        reportId: id,
+        updatedReport,
+        message: "Found report updated successfully",
+      });
+      console.log(`Socket event emitted for updated Found report ${id}`);
+    } else {
+      console.warn("Socket.io instance not available");
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Found report updated successfully",
+      data: updatedReport,
+    });
+  } catch (error) {
+    console.error(`Error updating Found report ${id}:`, {
+      params: req.params,
+      error: error.message,
+      stack: error.stack,
+    });
+    return res.status(500).json({
+      success: false,
+      message: "Error updating Found report",
+      error: error.message,
+      details: error.errors || {},
+    });
+  }
+};
+
+// Update Lost Report
+export const updateLostReport = async (req, res) => {
+  const { id } = req.params; // Declare id at function scope
+  try {
+    // Log incoming request
+    console.log(`Received request to update Lost report ${id} with payload:`, JSON.stringify(req.body, null, 2));
+
+    // Check if the report exists and is a Lost report
+    const report = await LostAndFound.findById(id);
+    if (!report) {
+      console.error(`Report with ID ${id} not found`);
+      return res.status(404).json({
+        success: false,
+        message: "Report not found",
+      });
+    }
+    if (report.type !== "Lost") {
+      console.error(`Report ${id} is not a Lost report, type: ${report.type}`);
+      return res.status(400).json({
+        success: false,
+        message: "This endpoint is for updating Lost reports only",
+      });
+    }
+
+    // Log initial report state
+    console.log(`Found Lost report ${id}:`, {
+      type: report.type,
+      isArchived: report.isArchived,
+      status: report.status,
+    });
+
+    // Authorization check
+    if (
+      report.owner &&
+      report.owner.toString() !== req.user?._id.toString() &&
+      req.user?.role !== "Admin"
+    ) {
+      console.error(`Unauthorized update attempt for report ${id} by user ${req.user?._id}`);
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized: You can only update your own reports",
+      });
+    }
+
+    // Handle photo removal
+    const photosToRemove = Array.isArray(req.body.photosToRemove)
+      ? req.body.photosToRemove.filter((url) => typeof url === "string")
+      : [];
+    if (photosToRemove.length > 0) {
+      for (const photoUrl of photosToRemove) {
+        try {
+          const key = extractS3KeyFromUrl(photoUrl);
+          await deleteFromS3(key);
+          console.log(`Deleted photo from S3: ${photoUrl}`);
+        } catch (s3Error) {
+          console.error(`Failed to delete photo from S3: ${photoUrl}`, s3Error.message);
+        }
+      }
+      report.photos = report.photos.filter((photo) => !photosToRemove.includes(photo));
+    }
+
+    // Prepare update data
+    const updateData = {
+      type: "Lost", // Hardcode type to Lost
+      name: req.body.name !== undefined ? req.body.name : report.name,
+      species: req.body.species || report.species,
+      breed: req.body.breed !== undefined ? req.body.breed : report.breed,
+      size: req.body.size !== undefined ? req.body.size : report.size,
+      gender: req.body.gender !== undefined ? req.body.gender : report.gender,
+      age: req.body.age !== undefined ? req.body.age : report.age,
+      description: req.body.description !== undefined ? req.body.description : report.description,
+      email: req.body.email || report.email || undefined,
+      phoneNumber: req.body.phoneNumber || report.phoneNumber || undefined,
+      color: req.body.color
+        ? Array.isArray(req.body.color)
+          ? req.body.color
+          : [req.body.color]
+        : report.color || [],
+      date: req.body.date ? new Date(req.body.date) : report.date,
+      location: {
+        governorate: req.body["location[governorate]"] || report.location.governorate,
+        delegation: req.body["location[delegation]"] || report.location.delegation,
+        coordinates: report.location.coordinates || { type: "Point", coordinates: [0, 0] },
+      },
+      microchipNumber: req.body.microchipNumber !== undefined ? req.body.microchipNumber : report.microchipNumber,
+      isPregnant:
+        req.body.isPregnant !== undefined
+          ? req.body.isPregnant === "true" || req.body.isPregnant === true
+            ? true
+            : req.body.isPregnant === "false" || req.body.isPregnant === false
+            ? false
+            : null
+          : report.isPregnant,
+      photos: report.photos || [],
+      status: report.status,
+      isArchived: report.isArchived,
+    };
+
+    // Ignore req.body.type if sent
+    if (req.body.type && req.body.type !== "Lost") {
+      console.warn(`Attempt to set invalid type ${req.body.type} for Lost report ${id}, ignoring`);
+    }
+
+    // Handle coordinates parsing
+    if (req.body["location[coordinates]"]) {
+      try {
+        const parsedCoordinates = JSON.parse(req.body["location[coordinates]"]);
+        if (
+          parsedCoordinates &&
+          parsedCoordinates.type === "Point" &&
+          Array.isArray(parsedCoordinates.coordinates) &&
+          parsedCoordinates.coordinates.length === 2
+        ) {
+          updateData.location.coordinates = parsedCoordinates;
+        } else {
+          console.warn(`Invalid coordinates format for report ${id}, using existing coordinates`);
+        }
+      } catch (parseError) {
+        console.error(`Error parsing coordinates for report ${id}:`, parseError.message);
+      }
+    }
+
+    // Validate required fields
+    const requiredFields = ["name", "species", "color", "date", "location.governorate", "location.delegation", "gender"];
+    for (const field of requiredFields) {
+      const fieldValue = field.includes("location.") ? updateData.location[field.split(".")[1]] : updateData[field];
+      if (!fieldValue || (typeof fieldValue === "string" && fieldValue.trim() === "")) {
+        console.error(`Missing or invalid required field ${field} for report ${id}`);
+        return res.status(400).json({
+          success: false,
+          message: `Missing or invalid required field: ${field}`,
+        });
+      }
+    }
+
+    // Ensure color is an array and not empty
+    if (!Array.isArray(updateData.color) || updateData.color.length === 0) {
+      console.error(`Color field is empty or invalid for report ${id}`);
+      return res.status(400).json({
+        success: false,
+        message: "At least one color is required",
+      });
+    }
+
+    // Validate date
+    if (isNaN(new Date(updateData.date).getTime())) {
+      console.error(`Invalid date for report ${id}: ${updateData.date}`);
+      return res.status(400).json({
+        success: false,
+        message: "Invalid date format",
+      });
+    }
+
+    // Log update data
+    console.log(`Updating Lost report ${id} with data:`, JSON.stringify(updateData, null, 2));
+
+    // Update the report
+    const updatedReport = await LostAndFound.findByIdAndUpdate(
+      id,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    ).populate("owner", "fullName email");
+
+    if (!updatedReport) {
+      console.error(`Failed to update report ${id}: Update returned null`);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to update report",
+      });
+    }
+
+    // Log updated report
+    console.log(`Successfully updated Lost report ${id} with fields:`, JSON.stringify(updatedReport, null, 2));
+
+    // Verify database state
+    const dbReport = await LostAndFound.findById(id).lean();
+    console.log(`Post-update database check for ${id}:`, { type: dbReport.type });
+
+    if (dbReport.type !== "Lost") {
+      console.error(`Type mismatch after update for ${id}: expected Lost, got ${dbReport.type}`);
+      return res.status(500).json({
+        success: false,
+        message: "Type mismatch after update",
+      });
+    }
+
+    // Log updated report state
+    console.log(`Updated Lost report ${id}:`, {
+      type: updatedReport.type,
+      isArchived: updatedReport.isArchived,
+      status: updatedReport.status,
+    });
+
+    // Emit socket event
+    if (global.io) {
+      global.io.emit("reportUpdated", {
+        reportId: id,
+        updatedReport,
+        message: "Lost report updated successfully",
+      });
+      console.log(`Socket event emitted for updated Lost report ${id}`);
+    } else {
+      console.warn("Socket.io instance not available");
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Lost report updated successfully",
+      data: updatedReport,
+    });
+  } catch (error) {
+    console.error(`Error updating Lost report ${id}:`, {
+      params: req.params,
+      error: error.message,
+      stack: error.stack,
+    });
+    return res.status(500).json({
+      success: false,
+      message: "Error updating Lost report",
+      error: error.message,
+      details: error.errors || {},
+    });
+  }
+};
 
 // Delete a report
 export const deleteReport = async (req, res) => {
