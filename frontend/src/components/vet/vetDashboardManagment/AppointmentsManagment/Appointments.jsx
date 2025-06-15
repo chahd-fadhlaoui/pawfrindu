@@ -14,7 +14,6 @@ import { useApp } from "../../../../context/AppContext";
 import axiosInstance from "../../../../utils/axiosInstance";
 import AppointmentCard from "./AppointmentCard";
 import DeleteModal from "./DeleteModal";
-import NotificationCenter from "./NotificationCenter";
 import StatusUpdateModal from "./StatusUpdateModal";
 import ToastContainer from "./ToastContainer";
 import UnavailableModal from "./UnavailableModal";
@@ -33,7 +32,6 @@ export default function VetAppointmentDashboard() {
   const [editPetModal, setEditPetModal] = useState(null);
   const [statusUpdateModal, setStatusUpdateModal] = useState(null);
   const [toasts, setToasts] = useState([]);
-  const [notifications, setNotifications] = useState([]);
   const [isUnavailableModalOpen, setIsUnavailableModalOpen] = useState(false);
 
   const addToast = (message, type = "success") => {
@@ -44,12 +42,7 @@ export default function VetAppointmentDashboard() {
     }, 5000);
   };
 
-  const addNotification = (message, type = "info") => {
-    setNotifications((prev) => [
-      { id: Date.now(), message, type, timestamp: new Date().toLocaleString() },
-      ...prev,
-    ].slice(0, 10));
-  };
+
 
   const fetchAppointments = async () => {
     try {
@@ -212,7 +205,6 @@ export default function VetAppointmentDashboard() {
           const updated = [newAppointment, ...prev].sort((a, b) => new Date(a.date) - new Date(b.date) || a.time.localeCompare(b.time));
           return activeFilter === "all" || activeFilter === "pending" ? updated : prev;
         });
-        addNotification(`New appointment for ${data.petName} booked`, "info");
       }
     });
 
@@ -250,7 +242,6 @@ export default function VetAppointmentDashboard() {
             ? updated
             : prev.filter((appt) => appt.status === activeFilter);
         });
-        addNotification(`Appointment ${appointmentId} confirmed`, "success");
       }
     });
 
@@ -288,7 +279,6 @@ export default function VetAppointmentDashboard() {
             ? updated
             : prev.filter((appt) => appt.status === activeFilter);
         });
-        addNotification(`Appointment ${appointmentId} cancelled by vet`, "warning");
       }
     });
 
@@ -326,7 +316,6 @@ export default function VetAppointmentDashboard() {
             ? updated
             : prev.filter((appt) => appt.status === activeFilter);
         });
-        addNotification(`Appointment ${appointmentId} completed`, "success");
       }
     });
 
@@ -364,7 +353,6 @@ export default function VetAppointmentDashboard() {
             ? updated
             : prev.filter((appt) => appt.status === activeFilter);
         });
-        addNotification(`Appointment ${appointmentId} updated`, "info");
       }
     });
 
@@ -495,7 +483,6 @@ export default function VetAppointmentDashboard() {
               <Calendar className="w-4 h-4 mr-2 text-teal-600" />
               {new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
             </div>
-            <NotificationCenter notifications={notifications} />
             <button 
               onClick={() => setIsUnavailableModalOpen(true)}
               className="flex items-center px-4 py-2 text-sm font-medium text-white transition-all rounded-lg shadow-md bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700"
