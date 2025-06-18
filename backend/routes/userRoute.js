@@ -2,7 +2,6 @@ import express from "express";
 import {
   approveUser,
   createProfile,
-  deleteUserByAdmin,
   forgotPassword,
   getAllUsers,
   getCurrentUser,
@@ -20,7 +19,7 @@ import {
   updateTrainerProfile,
   updateUserByAdmin,
   updateVetProfile,
-  validateResetToken,
+  validateResetToken
 } from "../controllers/userController.js";
 import { authenticate, authorize } from "../middlewares/authMiddleware.js";
 

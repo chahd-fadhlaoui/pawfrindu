@@ -1,26 +1,25 @@
-import { useState, useEffect } from "react";
 import {
+  Cat,
+  Dog,
+  Edit,
+  Heart,
+  Loader2,
   Mail,
   MapPin,
-  Phone,
-  Heart,
-  Dog,
-  Cat,
-  Edit,
-  Save,
-  X,
-  Loader2,
-  User,
-  Calendar,
   PawPrint,
+  Phone,
+  Save,
+  User,
+  X
 } from "lucide-react";
-import { useApp } from "../context/AppContext";
-import axiosInstance from "../utils/axiosInstance";
+import { useEffect, useState } from "react";
 import ImageUpload from "../components/ImageUpload";
 import PetDetailsModal from "../components/PetDetailsModal";
+import { useApp } from "../context/AppContext";
+import axiosInstance from "../utils/axiosInstance";
 
-const DEFAULT_PROFILE_IMAGE = "/api/placeholder/150/150";
-const DEFAULT_PET_IMAGE = "/api/placeholder/100/100";
+const DEFAULT_PROFILE_IMAGE = 'https://placehold.co/150x150';
+const DEFAULT_PET_IMAGE = 'https://placehold.co/100x100';
 
 const Profile = () => {
   const { user, fetchUserProfile, updateUser, loading, error } = useApp();
@@ -659,36 +658,6 @@ const Profile = () => {
         />
       )}
 
-      {/* Add animations */}
-      <style jsx>{`
-        @keyframes float {
-          0% {
-            transform: translateY(0) rotate(0deg);
-          }
-          50% {
-            transform: translateY(-10px) rotate(5deg);
-          }
-          100% {
-            transform: translateY(0) rotate(0deg);
-          }
-        }
-        .animate-float {
-          animation: float 3s ease-in-out infinite;
-        }
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.5s ease-in-out forwards;
-        }
-      `}</style>
     </div>
   );
 };

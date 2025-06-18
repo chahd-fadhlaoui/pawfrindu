@@ -11,9 +11,9 @@ import {
   X,
   Zap,
 } from 'lucide-react';
-import { toast } from 'react-toastify';
-import React, { Suspense, lazy, useCallback, useEffect, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { useApp } from '../context/AppContext';
 import axiosInstance from '../utils/axiosInstance';
 
@@ -120,7 +120,8 @@ const PetDetails = () => {
         setPaymentStatus(data.status);
         if (data.status === 'completed') {
           toast.success('Payment successful! Pet purchased.');
-          fetchPetDetails(); // Refresh pet status (should be 'sold')
+          fetchPetDetails(); // Refresh pet status after payment
+          getMyAdoptionRequests(); // Refresh adoption requests
         } else if (data.status === 'failed') {
           toast.error('Payment failed. Please try again.');
         }

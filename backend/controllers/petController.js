@@ -1,7 +1,8 @@
+import mongoose from "mongoose";
 import Pet from "../models/petModel.js";
 import User from "../models/userModel.js";
-import { sendEmail } from "../services/emailService.js";
 import { io } from "../server.js";
+import { sendEmail } from "../services/emailService.js";
 // Create a new pet
 export const createPet = async (req, res) => {
   try {
@@ -1132,22 +1133,18 @@ export const getPetStats = async (req, res) => {
 export const getMyAdoptedPets = async (req, res) => {
   try {
     const userId = req.user._id;
-
-    // Find the user to get their currentPets
     const user = await User.findById(userId);
     if (!user) {
+      console.log('User not found:', { userId });
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    // Get pet IDs from currentPets, filter out invalid entries
     const currentPetIds = (user.petOwnerDetails?.currentPets || [])
-      .filter(pet => pet && pet.petId) // Ensure pet and petId exist
-      .map(pet => pet.petId);
+      .filter(pet => pet && pet.petId && mongoose.Types.ObjectId.isValid(pet.petId))
+      .map(pet => new mongoose.Types.ObjectId(pet.petId));
+    console.log('Current Pet IDs:', currentPetIds.map(id => id.toString()));
 
-    // Find pets where:
-    // 1. User is an approved candidate (adopted pets)
-    // 2. Pet is in user's currentPets (sold pets)
-    const pets = await Pet.find({
+    const query = {
       $or: [
         {
           candidates: {
@@ -1160,17 +1157,33 @@ export const getMyAdoptedPets = async (req, res) => {
         },
         {
           _id: { $in: currentPetIds },
-          status: 'sold',
+          status: { $regex: '^sold$', $options: 'i' }, // Case-insensitive match
         },
       ],
-      isArchived: false,
-    })
-      .select(
-        'name species city image status candidates breed age gender fee isTrained description owner updatedAt'
-      )
+    };
+    console.log('Executing query:', JSON.stringify(query, null, 2));
+
+    const pets = await Pet.find(query)
+      .select('name species city image status candidates breed age gender fee isTrained description owner updatedAt')
       .populate('owner', 'fullName');
 
-    console.log('Adopted/Sold pets fetched:', JSON.stringify(pets, null, 2));
+    console.log('Adopted/Sold pets fetched:', {
+      count: pets.length,
+      petIds: pets.map(p => p._id.toString()),
+      statuses: pets.map(p => p.status),
+      isArchived: pets.map(p => p.isArchived),
+    });
+
+    const soldPets = await Pet.find({
+      _id: { $in: currentPetIds },
+      status: { $regex: '^sold$', $options: 'i' },
+      isArchived: false,
+    }).select('_id status isArchived');
+    console.log('Sold pets debug:', {
+      count: soldPets.length,
+      petIds: soldPets.map(p => p._id.toString()),
+      details: soldPets.map(p => ({ id: p._id.toString(), status: p.status, isArchived: p.isArchived })),
+    });
 
     const adoptedPets = pets.map((pet) => {
       const candidate = pet.candidates.find(
@@ -1201,7 +1214,10 @@ export const getMyAdoptedPets = async (req, res) => {
       data: adoptedPets,
     });
   } catch (error) {
-    console.error('Get My Adopted Pets Error:', error);
+    console.error('Get My Adopted Pets Error:', {
+      message: error.message,
+      stack: error.stack,
+    });
     return res.status(500).json({
       success: false,
       message: 'Error fetching adopted pets',
