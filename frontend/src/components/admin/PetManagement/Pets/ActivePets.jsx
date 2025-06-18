@@ -75,20 +75,19 @@ const ActivePets = () => {
     currentPage * petsPerPage
   );
 
-  const canPerformAction = (pet, action) => {
-    if (user?.role !== "Admin") return false;
-    switch (action) {
-      case "accept":
-        return pet.status === "pending";
-      case "reject":
-        return pet.status === "pending";
-      case "archive":
-        return pet.status === "accepted" || pet.status === "adoptionPending";
-      default:
-        return false;
-    }
-  };
-
+ const canPerformAction = (pet, action) => {
+  if (!["Admin", "SuperAdmin"].includes(user?.role)) return false;
+  switch (action) {
+    case "accept":
+      return pet.status === "pending";
+    case "reject":
+      return pet.status === "pending";
+    case "archive":
+      return pet.status === "accepted" || pet.status === "adoptionPending";
+    default:
+      return false;
+  }
+};
   const handlePageChange = (page) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
@@ -301,7 +300,7 @@ const ActivePets = () => {
               options={statusOptions}
               className="bg-white border-gray-200 shadow-sm focus:ring-[#ffc929] focus:border-[#ffc929] rounded-lg py-2 px-3 text-sm transition-all duration-300"
             />
-            {user?.role === "Admin" && (
+            {user?.role === "Admin"  || user?.role === "SuperAdmin" && (
               <select
                 value={bulkAction}
                 onChange={(e) => setBulkAction(e.target.value)}
@@ -312,7 +311,7 @@ const ActivePets = () => {
                 <option value="archive">Bulk Archive</option>
               </select>
             )}
-            {selectedPets.length > 0 && user?.role === "Admin" && (
+            {selectedPets.length > 0 && user?.role === "Admin" || user?.role === "SuperAdmin" && (
               <button
                 onClick={handleBulkAction}
                 disabled={isActionLoading}
@@ -365,109 +364,102 @@ const ActivePets = () => {
         />
       ) : (
         <>
-          <PetTable
-            pets={currentPets}
-            selectedPets={selectedPets}
-            currentUser={user}
-            onToggleSelection={togglePetSelection}
-            onToggleSelectAll={toggleSelectAll}
-            customActions={(pet) => {
-              const canAccept =
-                pet.status === "pending" && user?.role === "Admin";
-              const canReject =
-                pet.status === "pending" && user?.role === "Admin";
-              const canArchive =
-                (pet.status === "accepted" ||
-                  pet.status === "adoptionPending") &&
-                user?.role === "Admin";
+        <PetTable
+  pets={currentPets}
+  selectedPets={selectedPets}
+  currentUser={user}
+  onToggleSelection={togglePetSelection}
+  onToggleSelectAll={toggleSelectAll}
+  customActions={(pet) => {
+    const canAccept = canPerformAction(pet, "accept");
+    const canReject = canPerformAction(pet, "reject");
+    const canArchive = canPerformAction(pet, "archive");
 
-              return (
-                <div className="relative flex items-center justify-end gap-2">
-                  {canAccept && (
-                    <div
-                      className="relative"
-                      onMouseEnter={() => setHoveredAction(`accept-${pet._id}`)}
-                      onMouseLeave={() => setHoveredAction(null)}
-                    >
-                      <button
-                        onClick={() => handleSingleAction("accept", pet._id)}
-                        disabled={isActionLoading}
-                        className="flex items-center gap-1 px-3 py-1 text-xs font-semibold text-white transition-all duration-300 rounded-lg shadow-sm bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 focus:ring-2 focus:ring-green-400"
-                      >
-                        {isActionLoading ? (
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                        ) : (
-                          <Check className="w-3 h-3" />
-                        )}
-                        Accept
-                      </button>
-                      {hoveredAction === `accept-${pet._id}` && (
-                        <div className="absolute right-0 z-10 px-3 py-2 mt-2 text-xs text-white bg-gray-800 rounded-md shadow-lg top-full animate-fade-in-up">
-                          <div className="flex items-center gap-1">
-                            <Info size={12} />
-                            <span>Approve this pet listing</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  {canReject && (
-                    <div
-                      className="relative"
-                      onMouseEnter={() => setHoveredAction(`reject-${pet._id}`)}
-                      onMouseLeave={() => setHoveredAction(null)}
-                    >
-                      <button
-                        onClick={() => handleSingleAction("reject", pet._id)}
-                        disabled={isActionLoading}
-                        className="flex items-center gap-1 px-3 py-1 text-xs font-semibold text-white transition-all duration-300 rounded-lg shadow-sm bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 focus:ring-2 focus:ring-red-400"
-                      >
-                        <X className="w-3 h-3" />
-                        Reject
-                      </button>
-                      {hoveredAction === `reject-${pet._id}` && (
-                        <div className="absolute right-0 z-10 px-3 py-2 mt-2 text-xs text-white bg-gray-800 rounded-md shadow-lg top-full animate-fade-in-up">
-                          <div className="flex items-center gap-1">
-                            <Info size={12} />
-                            <span>Delete and notify owner</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  {canArchive && (
-                    <div
-                      className="relative"
-                      onMouseEnter={() =>
-                        setHoveredAction(`archive-${pet._id}`)
-                      }
-                      onMouseLeave={() => setHoveredAction(null)}
-                    >
-                      <button
-                        onClick={() => handleSingleAction("archive", pet._id)}
-                        disabled={isActionLoading}
-                        className="flex items-center gap-1 px-3 py-1 text-xs font-semibold text-white transition-all duration-300 rounded-lg shadow-sm bg-gradient-to-r from-gray-500 to-gray-700 hover:from-gray-600 hover:to-gray-800 focus:ring-2 focus:ring-gray-400"
-                      >
-                        <Archive className="w-3 h-3" />
-                        Archive
-                      </button>
-                      {hoveredAction === `archive-${pet._id}` && (
-                        <div className="absolute right-0 z-10 px-3 py-2 mt-2 text-xs text-white bg-gray-800 rounded-md shadow-lg top-full animate-fade-in-up">
-                          <div className="flex items-center gap-1">
-                            <Info size={12} />
-                            <span>Move to archived list</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
+    return (
+      <div className="relative flex items-center justify-end gap-2">
+        {canAccept && (
+          <div
+            className="relative"
+            onMouseEnter={() => setHoveredAction(`accept-${pet._id}`)}
+            onMouseLeave={() => setHoveredAction(null)}
+          >
+            <button
+              onClick={() => handleSingleAction("accept", pet._id)}
+              disabled={isActionLoading}
+              className="flex items-center gap-1 px-3 py-1 text-xs font-semibold text-white transition-all duration-300 rounded-lg shadow-sm bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 focus:ring-2 focus:ring-green-400"
+            >
+              {isActionLoading ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : (
+                <Check className="w-3 h-3" />
+              )}
+              Accept
+            </button>
+            {hoveredAction === `accept-${pet._id}` && (
+              <div className="absolute right-0 z-10 px-3 py-2 mt-2 text-xs text-white bg-gray-800 rounded-md shadow-lg top-full animate-fade-in-up">
+                <div className="flex items-center gap-1">
+                  <Info size={12} />
+                  <span>Approve this pet listing</span>
                 </div>
-              );
-            }}
-            title="Active Pets"
-            bulkAction={bulkAction}
-            className="overflow-hidden shadow-xl rounded-xl animate-fade-in"
-          />
+              </div>
+            )}
+          </div>
+        )}
+        {canReject && (
+          <div
+            className="relative"
+            onMouseEnter={() => setHoveredAction(`reject-${pet._id}`)}
+            onMouseLeave={() => setHoveredAction(null)}
+          >
+            <button
+              onClick={() => handleSingleAction("reject", pet._id)}
+              disabled={isActionLoading}
+              className="flex items-center gap-1 px-3 py-1 text-xs font-semibold text-white transition-all duration-300 rounded-lg shadow-sm bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 focus:ring-2 focus:ring-red-400"
+            >
+              <X className="w-3 h-3" />
+              Reject
+            </button>
+            {hoveredAction === `reject-${pet._id}` && (
+              <div className="absolute right-0 z-10 px-3 py-2 mt-2 text-xs text-white bg-gray-800 rounded-md shadow-lg top-full animate-fade-in-up">
+                <div className="flex items-center gap-1">
+                  <Info size={12} />
+                  <span>Delete and notify owner</span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        {canArchive && (
+          <div
+            className="relative"
+            onMouseEnter={() => setHoveredAction(`archive-${pet._id}`)}
+            onMouseLeave={() => setHoveredAction(null)}
+          >
+            <button
+              onClick={() => handleSingleAction("archive", pet._id)}
+              disabled={isActionLoading}
+              className="flex items-center gap-1 px-3 py-1 text-xs font-semibold text-white transition-all duration-300 rounded-lg shadow-sm bg-gradient-to-r from-gray-500 to-gray-700 hover:from-gray-600 hover:to-gray-800 focus:ring-2 focus:ring-gray-400"
+            >
+              <Archive className="w-3 h-3" />
+              Archive
+            </button>
+            {hoveredAction === `archive-${pet._id}` && (
+              <div className="absolute right-0 z-10 px-3 py-2 mt-2 text-xs text-white bg-gray-800 rounded-md shadow-lg top-full animate-fade-in-up">
+                <div className="flex items-center gap-1">
+                  <Info size={12} />
+                  <span>Move to archived list</span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }}
+  title="Active Pets"
+  bulkAction={bulkAction}
+  className="overflow-hidden shadow-xl rounded-xl animate-fade-in"
+/>
           {totalPages > 1 && (
             <div className="flex justify-center mt-6 animate-fade-in">
               <PaginationControls

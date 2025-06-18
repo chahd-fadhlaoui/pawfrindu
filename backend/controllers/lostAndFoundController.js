@@ -940,19 +940,25 @@ export const getReportsByStatus = async (req, res) => {
 export const getMyReports = async (req, res) => {
   try {
     const ownerId = req.user._id;
-
+    if (!ownerId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: User ID not found",
+      });
+    }
     const reports = await LostAndFound.find({ owner: ownerId }).populate(
       "pet",
-      "name species breed"
+      "name species breed", 
+      null,
+      { strictPopulate: false }
     );
-
     return res.status(200).json({
       success: true,
       count: reports.length,
-      data: reports,
+      reports, // Changed from data to reports
     });
   } catch (error) {
-    console.error("Error fetching my reports:", error.message);
+    console.error("Error fetching my reports:", error.stack); // Log full stack
     return res.status(500).json({
       success: false,
       message: "Error fetching your reports",

@@ -50,7 +50,7 @@ export const initiatePayment = async (req, res) => {
         phoneNumber: pet.owner?.petOwnerDetails?.phone || '22777777',
         email: pet.owner?.email || 'test.user@gmail.com',
         orderId: petId,
-        webhook: 'https://7d63-102-157-8-100.ngrok-free.app/api/payment/payment-webhook',
+        webhook: 'https://de7d-196-176-202-16.ngrok-free.app/api/payment/payment-webhook',
         theme: 'light',
         successUrl: 'http://localhost:5173/payment-success',
         failUrl: 'http://localhost:5173/payment-failed',  
@@ -64,10 +64,13 @@ export const initiatePayment = async (req, res) => {
     );
 
     // Validate payUrl
-    if (!response.data.payUrl || !response.data.payUrl.startsWith('https://test.clictopay.com')) {
-      console.error('Invalid payUrl:', response.data.payUrl);
-      throw new Error('Invalid payment URL returned by Konnect');
-    }
+  if (!response.data.payUrl || !(
+    response.data.payUrl.startsWith('https://test.clictopay.com') ||
+    response.data.payUrl.startsWith('https://gateway.sandbox.konnect.network')
+  )) {
+    console.error('Invalid payUrl:', response.data.payUrl);
+    throw new Error('Invalid payment URL returned by Konnect');
+  }
 
     // Create new payment record
     const payment = new Payment({

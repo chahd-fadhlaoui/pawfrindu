@@ -28,7 +28,8 @@ petRouter.get('/allpets', getAllPets);  // Récupérer tous les pets
 petRouter.get('/pets/:id', getPetById);  // Récupérer un pet par ID
 petRouter.put('/modifyStatus/:id', modifyPetStatus);  // Récupérer un pet par ID
 petRouter.delete('/deleteAdminPet/:id', deleteAdminPet);  // Supprimer un pet
-petRouter.put('/unarchivePet/:id',unarchivePet); // Ajoutez cette route
+petRouter.put('/unarchivePet/:id',unarchivePet); 
+
 
 
 // Routes protégées (authentification requise)
@@ -49,9 +50,9 @@ petRouter.post('/:petId/apply', applyToAdopt);  // Postuler pour adopter un pet
 petRouter.post('/:petId/approve-adoption/:adopterId', approveAdoption);  // Approuver une adoption
 
 petRouter.get("/my-adoption-requests", getMyAdoptionRequests); // Adoption requests for Adopters 
-petRouter.get("/my-adopted-pets", getMyAdoptedPets); // Add this new route here
+petRouter.get("/my-adopted-pets", getMyAdoptedPets); 
 // Routes pour l'admin
-petRouter.use(authorize('Admin'));  // Appliquer le middleware d'autorisation pour les routes suivantes
+petRouter.use(authorize(['Admin', 'SuperAdmin']));  // Appliquer le middleware d'autorisation pour les routes suivantes
 petRouter.put('/modifyStatus/:id', modifyPetStatus);  // Récupérer un pet par ID
 petRouter.delete('/deleteAdminPet/:id', deleteAdminPet);  // Supprimer un pet
 

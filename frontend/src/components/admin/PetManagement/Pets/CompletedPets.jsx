@@ -59,11 +59,10 @@ const CompletedPets = () => {
     currentPage * petsPerPage
   );
 
-  const canPerformAction = (pet, action) => {
-    if (user?.role !== "Admin") return false;
-    return action === "archive" && ["adopted", "sold"].includes(pet.status);
-  };
-
+ const canPerformAction = (pet, action) => {
+  if (!["Admin", "SuperAdmin"].includes(user?.role)) return false;
+  return action === "archive" && ["adopted", "sold"].includes(pet.status);
+};
   const handlePageChange = (page) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
@@ -204,7 +203,7 @@ const CompletedPets = () => {
               options={statusOptions}
               className="bg-white border-gray-200 shadow-sm focus:ring-[#ffc929] focus:border-[#ffc929] rounded-lg py-2 px-3 text-sm transition-all duration-300"
             />
-            {user?.role === "Admin" && (
+            {user?.role === "Admin" || user?.role === "SuperAdmin" && (
               <button
                 onClick={handleBulkAction}
                 disabled={selectedPets.length === 0}
@@ -262,7 +261,7 @@ const CompletedPets = () => {
             customActions={(pet) => {
               const canArchive =
                 ["adopted", "sold"].includes(pet.status) &&
-                user?.role === "Admin";
+                user?.role === "Admin" || user?.role === "SuperAdmin";
 
               return (
                 <div className="flex items-center justify-end gap-2">

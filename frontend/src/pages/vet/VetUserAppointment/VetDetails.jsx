@@ -68,10 +68,10 @@ export default function VetDetails() {
       .fill(null)
       .map((_, index) => {
         const colors = [
-          "text-green-300",
-          "text-teal-200",
-          "text-cyan-200",
-          "text-blue-300",
+          "text-yellow-200",
+          "text-orange-200",
+          "text-pink-200",
+          "text-amber-200",
         ];
         const colorClass = colors[index % colors.length];
         return (
@@ -127,9 +127,9 @@ export default function VetDetails() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-teal-100">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-white to-pink-100">
         <div className="text-center animate-pulse">
-          <Stethoscope size={64} className="mx-auto text-[#4ade80]" />
+          <Stethoscope size={64} className="mx-auto text-[#ffc929]" />
           <p className="mt-4 text-xl font-medium text-gray-600">
             Loading Veterinarian Details...
           </p>
@@ -140,15 +140,15 @@ export default function VetDetails() {
 
   if (error || !vet) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-teal-100">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-white to-pink-100">
         <div className="text-center">
-          <Stethoscope size={64} className="mx-auto mb-4 text-blue-500" />
-          <p className="text-xl font-medium text-blue-600">
+          <Stethoscope size={64} className="mx-auto mb-4 text-pink-500" />
+          <p className="text-xl font-medium text-pink-600">
             {error || "Veterinarian not found"}
           </p>
           <button
             onClick={() => navigate("/veterinarians")}
-            className="mt-6 flex items-center gap-2 mx-auto px-6 py-3 text-base font-medium text-white bg-gradient-to-br  from-[#10b981] to-[#34d399] rounded-xl shadow-lg hover:shadow-blue-200/50 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="mt-6 flex items-center gap-2 mx-auto px-6 py-3 text-base font-medium text-white bg-gradient-to-br from-[#ffc929] to-[#ffa726] rounded-xl shadow-lg hover:shadow-pink-200/50 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/50"
           >
             <ChevronLeft size={20} />
             Back to Veterinarians
@@ -165,12 +165,12 @@ export default function VetDetails() {
     : "https://placehold.co/120x120";
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-teal-100">
+    <div className="relative min-h-screen bg-gradient-to-br from-white to-pink-100">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-0 w-full h-full">
-          <div className="absolute w-64 h-64 bg-green-200 rounded-full top-10 left-10 mix-blend-multiply filter blur-3xl opacity-10 animate-blob"></div>
-          <div className="absolute bg-blue-200 rounded-full top-40 right-20 w-72 h-72 mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000"></div>
-          <div className="absolute bg-teal-100 rounded-full bottom-40 left-40 w-80 h-80 mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-4000"></div>
+          <div className="absolute w-64 h-64 bg-yellow-200 rounded-full top-10 left-10 mix-blend-multiply filter blur-3xl opacity-10 animate-blob"></div>
+          <div className="absolute bg-pink-200 rounded-full top-40 right-20 w-72 h-72 mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000"></div>
+          <div className="absolute bg-amber-100 rounded-full bottom-40 left-40 w-80 h-80 mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-4000"></div>
         </div>
         <div className="absolute inset-0 bg-white/30 backdrop-blur-[100px]"></div>
         <div className="absolute inset-0 opacity-10">
@@ -181,7 +181,7 @@ export default function VetDetails() {
       <div className="relative z-10 max-w-6xl px-4 py-16 mx-auto sm:px-6 lg:px-8">
         <button
           onClick={() => navigate("/vets")}
-          className="group flex items-center gap-2 mb-10 px-5 py-3 text-base font-medium text-white bg-gradient-to-br  from-[#10b981] to-[#34d399] rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="group flex items-center gap-2 mb-10 px-5 py-3 text-base font-medium text-white bg-gradient-to-br from-[#ffc929] to-[#ffa726] rounded-full focus:outline-none focus:ring-2 focus:ring-[#ffc929]/50"
         >
           <ChevronLeft
             size={18}
@@ -190,16 +190,16 @@ export default function VetDetails() {
           Back to Veterinarians
         </button>
 
-        <div className="relative overflow-hidden border border-green-100 shadow-xl bg-white/80 backdrop-blur-lg rounded-3xl">
-          <div className="relative h-48 overflow-hidden bg-gradient-to-r from-green-100 to-blue-100">
+        <div className="relative overflow-hidden border border-yellow-100 shadow-xl bg-white/80 backdrop-blur-lg rounded-3xl">
+          <div className="relative h-48 overflow-hidden bg-gradient-to-r from-yellow-100 to-pink-100">
             <div className="absolute inset-0">
-              <div className="absolute inset-0 bg-gradient-to-br from-green-100 to-blue-100 mix-blend-multiply opacity-20"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-yellow-100 to-pink-100 mix-blend-multiply opacity-20"></div>
               <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white/80 to-transparent"></div>
             </div>
 
             <div className="absolute transform -translate-x-1/2 -bottom-20 left-1/2 md:left-16 md:translate-x-0">
               <div className="relative">
-                <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-[#4ade80] to-[#3b82f6] blur-lg opacity-30"></div>
+                <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-[#ffc929] to-[#ffa726] blur-lg opacity-30"></div>
                 <div className="relative p-1 mb-20 bg-white rounded-full shadow-lg">
                   <img
                     src={imageUrl}
@@ -221,12 +221,12 @@ export default function VetDetails() {
                   {vet.fullName.trim()}
                 </h1>
                 <p className="flex items-center gap-2 mt-2 text-lg text-gray-600">
-                  <Stethoscope size={18} className="text-blue-500" />
+                  <Stethoscope size={18} className="text-pink-500" />
                   {vet.veterinarianDetails?.degree || "Degree not specified"}
                 </p>
               </div>
               <button
-                className="flex items-center justify-center gap-2 px-6 py-3 text-base font-medium text-white bg-gradient-to-br  from-[#10b981] to-[#34d399] rounded-full shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="flex items-center justify-center gap-2 px-6 py-3 text-base font-medium text-white bg-gradient-to-br from-[#ffc929] to-[#ffa726] rounded-full shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/"
                 onClick={openAppointmentModal}
               >
                 <Calendar size={18} className="text-white" />
@@ -234,28 +234,28 @@ export default function VetDetails() {
               </button>
             </div>
 
-            {vet.veterinarianDetails?.specialization && (
+            {vet.veterinarianDetails?.specialization} && (
               <div className="mt-6">
                 <p className="mb-2 text-sm font-medium text-gray-500">
                   Specialized in
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  <span className="px-4 py-1.5 text-sm font-medium text-[#4ade80] bg-green-50 border border-green-100 rounded-full">
+                  <span className="px-4 py-1.5 text-sm font-medium text-[#ffc929] bg-[#ffc929]/10 rounded-full border border-yellow-100">
                     {vet.veterinarianDetails.specialization}
                   </span>
-                  <span className="px-4 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-100 rounded-full">
+                  <span className="px-4 py-1.5 text-sm font-medium text-pink-600 bg-pink-50 border border-pink-100 rounded-full">
                     Animal Healthcare
                   </span>
                 </div>
               </div>
-            )}
+            )
           </div>
 
           <div className="px-6 pb-10 space-y-8 md:px-8 lg:px-12">
             {vet.about ? (
-              <div className="p-8 shadow-sm bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl">
+              <div className="p-8 shadow-sm bg-gradient-to-r from-yellow-50 to-pink-50 rounded-2xl">
                 <h2 className="flex items-center gap-3 mb-4 text-2xl font-bold text-gray-800">
-                  <User size={22} className="text-blue-500" />
+                  <User size={22} className="text-pink-500" />
                   About Dr. {vet.fullName.split(" ")[1] || vet.fullName}
                 </h2>
                 <p className="text-lg leading-relaxed text-gray-700">
@@ -263,9 +263,9 @@ export default function VetDetails() {
                 </p>
               </div>
             ) : (
-              <div className="p-8 shadow-sm bg-green-50 rounded-2xl">
+              <div className="p-8 shadow-sm bg-yellow-50 rounded-2xl">
                 <h2 className="flex items-center gap-3 mb-4 text-2xl font-bold text-gray-800">
-                  <User size={22} className="text-blue-500" />
+                  <User size={22} className="text-pink-500" />
                   About
                 </h2>
                 <p className="text-lg italic text-gray-500">
@@ -276,10 +276,10 @@ export default function VetDetails() {
             )}
 
             <div className="grid gap-6 md:grid-cols-2">
-              <div className="p-6 transition-all duration-300 bg-white border border-green-100 shadow-sm rounded-2xl hover:border-blue-200 hover:shadow-md">
+              <div className="p-6 transition-all duration-300 bg-white border border-yellow-100 shadow-sm rounded-2xl hover:border-pink-200 hover:shadow-md">
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="flex items-center justify-center w-10 h-10 bg-green-100 rounded-full">
-                    <MapPin size={20} className="text-blue-600" />
+                  <div className="flex items-center justify-center w-10 h-10 bg-yellow-100 rounded-full">
+                    <MapPin size={20} className="text-pink-600" />
                   </div>
                   <h3 className="text-xl font-semibold text-gray-800">
                     Location & Contact
@@ -288,7 +288,7 @@ export default function VetDetails() {
 
                 <div className="space-y-5">
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 mt-1 rounded-full bg-gradient-to-br from-[#4ade80] to-[#3b82f6] flex items-center justify-center">
+                    <div className="w-10 h-10 mt-1 rounded-full bg-gradient-to-br from-[#ffc929] to-[#ffa726] flex items-center justify-center">
                       <MapPin size={18} className="text-white" />
                     </div>
                     <div>
@@ -303,8 +303,8 @@ export default function VetDetails() {
                   </div>
 
                   <div className="flex items-start gap-3">
-                    <div className="flex items-center justify-center w-10 h-10 mt-1 rounded-full bg-green-50">
-                      <Phone size={18} className="text-blue-500" />
+                    <div className="flex items-center justify-center w-10 h-10 mt-1 rounded-full bg-yellow-50">
+                      <Phone size={18} className="text-pink-500" />
                     </div>
                     <div>
                       <p className="text-sm font-medium text-gray-500">
@@ -329,7 +329,7 @@ export default function VetDetails() {
                         href={`https://www.google.com/maps?q=${vet.veterinarianDetails.geolocation.latitude},${vet.veterinarianDetails.geolocation.longitude}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center mt-2 space-x-2 text-lg font-semibold text-teal-600 hover:underline"
+                        className="flex items-center mt-2 space-x-2 text-lg font-semibold text-pink-600 hover:underline"
                       >
                         <Globe className="w-5 h-5" />
                         <span>View on Google Maps</span>
@@ -339,10 +339,10 @@ export default function VetDetails() {
                 </div>
               </div>
 
-              <div className="p-6 transition-all duration-300 bg-white border border-green-100 shadow-sm rounded-2xl hover:border-blue-200 hover:shadow-md">
+              <div className="p-6 transition-all duration-300 bg-white border border-yellow-100 shadow-sm rounded-2xl hover:border-pink-200 hover:shadow-md">
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-full">
-                    <Info size={20} className="text-blue-600" />
+                  <div className="flex items-center justify-center w-10 h-10 bg-pink-100 rounded-full">
+                    <Info size={20} className="text-pink-600" />
                   </div>
                   <h3 className="text-xl font-semibold text-gray-800">
                     Practice Details
@@ -352,8 +352,8 @@ export default function VetDetails() {
                 <div className="space-y-5">
                   {vet.veterinarianDetails?.averageConsultationDuration && (
                     <div className="flex items-start gap-3">
-                      <div className="flex items-center justify-center w-10 h-10 mt-1 rounded-full bg-blue-50">
-                        <Clock size={18} className="text-blue-500" />
+                      <div className="flex items-center justify-center w-10 h-10 mt-1 rounded-full bg-pink-50">
+                        <Clock size={18} className="text-pink-500" />
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-500">
@@ -369,8 +369,8 @@ export default function VetDetails() {
 
                   {vet.veterinarianDetails?.languagesSpoken?.length > 0 && (
                     <div className="flex items-start gap-3">
-                      <div className="flex items-center justify-center w-10 h-10 mt-1 rounded-full bg-blue-50">
-                        <Languages size={18} className="text-blue-500" />
+                      <div className="flex items-center justify-center w-10 h-10 mt-1 rounded-full bg-pink-50">
+                        <Languages size={18} className="text-pink-500" />
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-500">
@@ -381,7 +381,7 @@ export default function VetDetails() {
                             (language, index) => (
                               <span
                                 key={index}
-                                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700"
+                                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-pink-50 text-pink-700"
                               >
                                 {language}
                               </span>
@@ -396,10 +396,10 @@ export default function VetDetails() {
             </div>
 
             {vet.veterinarianDetails?.services?.length > 0 && (
-              <div className="p-6 transition-all duration-300 bg-white border border-green-100 shadow-sm rounded-2xl hover:border-blue-200 hover:shadow-md">
+              <div className="p-6 transition-all duration-300 bg-white border border-yellow-100 shadow-sm rounded-2xl hover:border-pink-200 hover:shadow-md">
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="flex items-center justify-center w-10 h-10 bg-green-100 rounded-full">
-                    <Activity size={20} className="text-blue-600" />
+                  <div className="flex items-center justify-center w-10 h-10 bg-yellow-100 rounded-full">
+                    <Activity size={20} className="text-pink-600" />
                   </div>
                   <h3 className="text-xl font-semibold text-gray-800">
                     Services Offered
@@ -410,17 +410,17 @@ export default function VetDetails() {
                   {vet.veterinarianDetails.services.map((service, index) => (
                     <div
                       key={index}
-                      className="flex items-center p-3 transition-colors duration-300 bg-green-50/50 rounded-xl hover:bg-green-50"
+                      className="flex items-center p-3 transition-colors duration-300 bg-yellow-50/50 rounded-xl hover:bg-yellow-50"
                     >
                       <div className="flex items-center justify-center w-8 h-8 mr-3 bg-white rounded-full shadow-sm">
-                        <Check size={16} className="text-blue-500" />
+                        <Check size={16} className="text-pink-500" />
                       </div>
                       <div>
                         <p className="font-medium text-gray-800">
                           {service.serviceName}
                         </p>
                         {service.fee && (
-                          <p className="text-sm text-blue-600">
+                          <p className="text-sm text-pink-600">
                             {service.fee} TND
                           </p>
                         )}
@@ -432,10 +432,10 @@ export default function VetDetails() {
             )}
 
             {vet.veterinarianDetails?.openingHours && (
-              <div className="p-6 transition-all duration-300 bg-white border border-green-100 shadow-sm rounded-2xl hover:border-blue-200 hover:shadow-md">
+              <div className="p-6 transition-all duration-300 bg-white border border-yellow-100 shadow-sm rounded-2xl hover:border-pink-200 hover:shadow-md">
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-full">
-                    <Clock size={20} className="text-blue-600" />
+                  <div className="flex items-center justify-center w-10 h-10 bg-pink-100 rounded-full">
+                    <Clock size={20} className="text-pink-600" />
                   </div>
                   <h3 className="text-xl font-semibold text-gray-800">
                     Opening Hours
@@ -477,12 +477,12 @@ export default function VetDetails() {
                     return (
                       <div
                         key={day}
-                        className="p-3 transition-colors duration-300 rounded-xl bg-green-50/50 hover:bg-green-50"
+                        className="p-3 transition-colors duration-300 rounded-xl bg-yellow-50/50 hover:bg-yellow-50"
                       >
                         <p className="font-medium text-gray-700">
                           {day.charAt(0).toUpperCase() + day.slice(1)}
                         </p>
-                        <div className="flex flex-col mt-1 text-sm text-green-700">
+                        <div className="flex flex-col mt-1 text-sm text-[#ffc929]">
                           <p>
                             {start} - {end}
                           </p>
@@ -506,7 +506,7 @@ export default function VetDetails() {
         {vet.veterinarianDetails?.clinicPhotos?.length > 0 && (
           <div className="mt-12">
             <h3 className="flex items-center justify-center gap-3 mb-6 text-2xl font-bold text-center text-gray-800">
-              <Camera size={24} className="text-blue-500" />
+              <Camera size={24} className="text-pink-500" />
               Clinic Photos
             </h3>
 
@@ -514,7 +514,7 @@ export default function VetDetails() {
               {vet.veterinarianDetails.clinicPhotos.map((photo, index) => (
                 <div
                   key={index}
-                  className="overflow-hidden transition-all duration-300 bg-white border border-green-100 shadow-sm cursor-pointer group rounded-2xl hover:shadow-md hover:border-blue-200"
+                  className="overflow-hidden transition-all duration-300 bg-white border border-yellow-100 shadow-sm cursor-pointer group rounded-2xl hover:shadow-md hover:border-pink-200"
                   onClick={() => handlePhotoClick(index)}
                 >
                   <div className="relative overflow-hidden">
@@ -543,7 +543,7 @@ export default function VetDetails() {
             <div className="relative w-full max-w-5xl p-4">
               <button
                 onClick={closeModal}
-                className="absolute p-2 text-white transition-all duration-300 bg-blue-500 rounded-full top-4 right-4 hover:bg-blue-600"
+                className="absolute p-2 text-white transition-all duration-300 bg-pink-500 rounded-full top-4 right-4 hover:bg-pink-600"
               >
                 <svg
                   className="w-6 h-6"
@@ -564,7 +564,7 @@ export default function VetDetails() {
               <div className="absolute left-0 transform -translate-x-1/2 -translate-y-1/2 top-1/2 md:translate-x-0">
                 <button
                   onClick={prevPhoto}
-                  className="p-3 text-white transition-all duration-300 bg-blue-500 rounded-full shadow-lg hover:bg-blue-600"
+                  className="p-3 text-white transition-all duration-300 bg-pink-500 rounded-full shadow-lg hover:bg-pink-600"
                 >
                   <ChevronLeft size={28} />
                 </button>
@@ -580,7 +580,7 @@ export default function VetDetails() {
               <div className="absolute right-0 transform translate-x-1/2 -translate-y-1/2 top-1/2 md:translate-x-0">
                 <button
                   onClick={nextPhoto}
-                  className="p-3 text-white transition-all duration-300 bg-blue-500 rounded-full shadow-lg hover:bg-blue-600"
+                  className="p-3 text-white transition-all duration-300 bg-pink-500 rounded-full shadow-lg hover:bg-pink-600"
                 >
                   <ChevronRight size={28} />
                 </button>

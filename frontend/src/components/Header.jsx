@@ -18,20 +18,20 @@ function Header() {
     "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSIxMDAiIGZpbGw9IiNFNUU3RUIiLz4KICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSI4MCIgcj0iNDAiIGZpbGw9IiM5Q0EzQUYiLz4KICA8cGF0aCBkPSJNMTYwIDE4MEgzOUM0MSAxNDAgODAgMTIwIDEwMCAxMjBDMTIwIDEyMCAxNTggMTQwIDE2MCAxODBaIiBmaWxsPSIjOUNBM0FGIi8+Cjwvc3ZnPg==";
 
   const navLinks = [
-    { name: "Adopt a Pet", to: "/pets", ariaLabel: "Go to pet adoption section" },
-    { name: "Lost & Found", to: "/lost-and-found", ariaLabel: "Get help finding a lost pet" },
-    { name: "Pet Training", to: "/trainers", ariaLabel: "Access pet training resources" },
-    { name: "Veterinary Care", to: "/vets", ariaLabel: "Find veterinary services" },
+    { name: "Adopt Pets", to: "/pets", ariaLabel: "Browse pets available for adoption" },
+    { name: "Lost & Found", to: "/lost-and-found", ariaLabel: "Search for or report lost pets" },
+    { name: "Train Pets", to: "/trainers", ariaLabel: "Explore pet training resources" },
+    { name: "Find Vet Care", to: "/vets", ariaLabel: "Locate veterinary services" },
     {
-      name: "Pet Management",
-      ariaLabel: "Manage my pets and adoption requests",
+      name: "Manage Pets",
+      ariaLabel: "Manage your pets and related activities",
       protected: true,
       dropdownItems: [
-        { name: "Create Pet", to: "/addPet" },
-        { name: "My Pet Posts", to: "/list/posts" },
+        { name: "Add New Pet", to: "/addPet" },
+        { name: "My Pet Listings", to: "/list/posts" },
         { name: "My Adoption Requests", to: "/list/requests" },
-        { name: "My Appointments", to: "/appointments" }, 
-        { name: "My Reports", to: "/reports" }, 
+        { name: "My Appointments", to: "/appointments" },
+        { name: "My Pet Reports", to: "/reports" },
       ],
     },
   ];

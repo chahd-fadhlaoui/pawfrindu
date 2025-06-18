@@ -309,69 +309,68 @@ const ArchivedPets = ({onPetChange }) => {
         />
       ) : (
         <>
-          <PetTable
-            pets={currentPets}
-            selectedPets={selectedPets}
-            currentUser={currentUser}
-            onToggleSelection={togglePetSelection}
-            onToggleSelectAll={toggleSelectAll}
-            customActions={(pet) => (
-              <div className="relative flex items-center justify-end gap-2">
-                {(pet.owner?._id === currentUser?._id ||
-                  currentUser?.role === "Admin") && (
-                  <>
-                    <div
-                      className="relative"
-                      onMouseEnter={() =>
-                        setHoveredAction(`unarchive-${pet._id}`)
-                      }
-                      onMouseLeave={() => setHoveredAction(null)}
-                    >
-                      <button
-                        onClick={() => handleToggleUnarchive(pet._id)}
-                        className="flex items-center gap-1 px-3 py-1 text-xs font-semibold text-white transition-all duration-300 rounded-lg shadow-sm bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 focus:ring-2 focus:ring-blue-400"
-                      >
-                        <Archive className="w-3 h-3" />
-                        Unarchive
-                      </button>
-                      {hoveredAction === `unarchive-${pet._id}` && (
-                        <div className="absolute right-0 z-10 px-3 py-2 mt-2 text-xs text-white bg-gray-800 rounded-md shadow-lg top-full animate-fade-in-up">
-                          <div className="flex items-center gap-1">
-                            <Info size={12} />
-                            <span>Restore to active listings</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <div
-                      className="relative"
-                      onMouseEnter={() => setHoveredAction(`delete-${pet._id}`)}
-                      onMouseLeave={() => setHoveredAction(null)}
-                    >
-                      <button
-                        onClick={() => handleDeletePet(pet._id)}
-                        className="flex items-center gap-1 px-3 py-1 text-xs font-semibold text-white transition-all duration-300 rounded-lg shadow-sm bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 focus:ring-2 focus:ring-red-400"
-                      >
-                        <X className="w-3 h-3" />
-                        Delete
-                      </button>
-                      {hoveredAction === `delete-${pet._id}` && (
-                        <div className="absolute right-0 z-10 px-3 py-2 mt-2 text-xs text-white bg-gray-800 rounded-md shadow-lg top-full animate-fade-in-up">
-                          <div className="flex items-center gap-1">
-                            <Info size={12} />
-                            <span>Permanently remove this pet</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </>
-                )}
+        <PetTable
+  pets={currentPets}
+  selectedPets={selectedPets}
+  currentUser={currentUser}
+  onToggleSelection={togglePetSelection}
+  onToggleSelectAll={toggleSelectAll}
+  customActions={(pet) => (
+    <div className="relative flex items-center justify-end gap-2">
+      {(pet.owner?._id === currentUser?._id ||
+        currentUser?.role === "Admin" ||
+        currentUser?.role === "SuperAdmin") && (
+        <>
+          <div
+            className="relative"
+            onMouseEnter={() => setHoveredAction(`unarchive-${pet._id}`)}
+            onMouseLeave={() => setHoveredAction(null)}
+          >
+            <button
+              onClick={() => handleToggleUnarchive(pet._id)}
+              className="flex items-center gap-1 px-3 py-1 text-xs font-semibold text-white transition-all duration-300 rounded-lg shadow-sm bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 focus:ring-2 focus:ring-blue-400"
+            >
+              <Archive className="w-3 h-3" />
+              Unarchive
+            </button>
+            {hoveredAction === `unarchive-${pet._id}` && (
+              <div className="absolute right-0 z-10 px-3 py-2 mt-2 text-xs text-white bg-gray-800 rounded-md shadow-lg top-full animate-fade-in-up">
+                <div className="flex items-center gap-1">
+                  <Info size={12} />
+                  <span>Restore to active listings</span>
+                </div>
               </div>
             )}
-            title="Archived Pets"
-            bulkAction="archive"
-            className="overflow-hidden shadow-xl rounded-xl animate-fade-in"
-          />
+          </div>
+          <div
+            className="relative"
+            onMouseEnter={() => setHoveredAction(`delete-${pet._id}`)}
+            onMouseLeave={() => setHoveredAction(null)}
+          >
+            <button
+              onClick={() => handleDeletePet(pet._id)}
+              className="flex items-center gap-1 px-3 py-1 text-xs font-semibold text-white transition-all duration-300 rounded-lg shadow-sm bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 focus:ring-2 focus:ring-red-400"
+            >
+              <X className="w-3 h-3" />
+              Delete
+            </button>
+            {hoveredAction === `delete-${pet._id}` && (
+              <div className="absolute right-0 z-10 px-3 py-2 mt-2 text-xs text-white bg-gray-800 rounded-md shadow-lg top-full animate-fade-in-up">
+                <div className="flex items-center gap-1">
+                  <Info size={12} />
+                  <span>Permanently remove this pet</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  )}
+  title="Archived Pets"
+  bulkAction="archive"
+  className="overflow-hidden shadow-xl rounded-xl animate-fade-in"
+/>
           {totalPages > 1 && (
             <div className="flex justify-center mt-6 animate-fade-in">
               <PaginationControls
