@@ -90,53 +90,73 @@ const AppContextProvider = ({ children }) => {
     });
   }, []);
 
- const fetchAllUsers = useCallback(async (retryCount = 0) => {
-  const maxRetries = 2;
-  return measureTime("fetchAllUsers", async () => {
-    console.log("Fetching users from /api/user/getAllUsers with token:", localStorage.getItem("token")?.substring(0, 10) + "...");
-    try {
-      setLoading(true);
-      const response = await axiosInstance.get("/api/user/getAllUsers");
-      console.log("fetchAllUsers response:", {
-        success: response.data.success,
-        count: response.data.count,
-        users: response.data.users?.map(u => ({ _id: u._id, role: u.role, isActive: u.isActive, isArchieve: u.isArchieve })) || []
-      });
-      if (!response.data.success || !response.data.users) {
-        throw new Error("Invalid response from server");
+  const fetchAllUsers = useCallback(async (retryCount = 0) => {
+    const maxRetries = 2;
+    return measureTime("fetchAllUsers", async () => {
+      console.log(
+        "Fetching users from /api/user/getAllUsers with token:",
+        localStorage.getItem("token")?.substring(0, 10) + "..."
+      );
+      try {
+        setLoading(true);
+        const response = await axiosInstance.get("/api/user/getAllUsers");
+        console.log("fetchAllUsers response:", {
+          success: response.data.success,
+          count: response.data.count,
+          users:
+            response.data.users?.map((u) => ({
+              _id: u._id,
+              role: u.role,
+              isActive: u.isActive,
+              isArchieve: u.isArchieve,
+            })) || [],
+        });
+        if (!response.data.success || !response.data.users) {
+          throw new Error("Invalid response from server");
+        }
+        const usersData = response.data.users || [];
+        setAllUsers(usersData);
+        setError(null);
+        return usersData;
+      } catch (error) {
+        console.error("fetchAllUsers error:", {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data,
+        });
+        if (error.response?.status === 401 && retryCount < maxRetries) {
+          console.log(`Retrying fetchAllUsers, attempt ${retryCount + 1}`);
+          localStorage.removeItem("token");
+          return fetchAllUsers(retryCount + 1);
+        }
+        const errorMessage =
+          error.response?.data?.message ||
+          `Failed to fetch users: ${error.message}`;
+        setError(errorMessage);
+        return [];
+      } finally {
+        setLoading(false);
       }
-      const usersData = response.data.users || [];
-      setAllUsers(usersData);
-      setError(null);
-      return usersData;
-    } catch (error) {
-      console.error("fetchAllUsers error:", {
-        message: error.message,
-        status: error.response?.status,
-        data: error.response?.data,
-      });
-      if (error.response?.status === 401 && retryCount < maxRetries) {
-        console.log(`Retrying fetchAllUsers, attempt ${retryCount + 1}`);
-        localStorage.removeItem("token");
-        return fetchAllUsers(retryCount + 1);
-      }
-      const errorMessage = error.response?.data?.message || `Failed to fetch users: ${error.message}`;
-      setError(errorMessage);
-      return [];
-    } finally {
-      setLoading(false);
-    }
-  });
-}, []);
-useEffect(() => {
-  console.log("allUsers state updated:", allUsers.map(u => ({ id: u._id, role: u.role, isActive: u.isActive, isArchieve: u.isArchieve })));
-}, [allUsers]);
+    });
+  }, []);
 
-useEffect(() => {
-  if (user?.role === "Admin" || user?.role === "SuperAdmin") {
-    fetchAllUsers();
-  }
-}, [user, fetchAllUsers]);
+  useEffect(() => {
+    console.log(
+      "allUsers state updated:",
+      allUsers.map((u) => ({
+        id: u._id,
+        role: u.role,
+        isActive: u.isActive,
+        isArchieve: u.isArchieve,
+      }))
+    );
+  }, [allUsers]);
+
+  useEffect(() => {
+    if (user?.role === "Admin" || user?.role === "SuperAdmin") {
+      fetchAllUsers();
+    }
+  }, [user, fetchAllUsers]);
 
   const getMyPets = useCallback(async () => {
     return measureTime("getMyPets", async () => {
@@ -155,58 +175,58 @@ useEffect(() => {
     });
   }, []);
 
- const fetchUserProfile = useCallback(async () => {
-  return measureTime("fetchUserProfile", async () => {
-    try {
-      const response = await axiosInstance.get("/api/user/me");
-      const userData = response.data.user;
-      if (!userData || !userData.role) {
-        throw new Error("Invalid user data from /api/user/me");
+  const fetchUserProfile = useCallback(async () => {
+    return measureTime("fetchUserProfile", async () => {
+      try {
+        const response = await axiosInstance.get("/api/user/me");
+        const userData = response.data.user;
+        if (!userData || !userData.role) {
+          throw new Error("Invalid user data from /api/user/me");
+        }
+        const formattedUser = {
+          _id: userData._id,
+          fullName: userData.fullName,
+          image: userData.image || DEFAULT_PROFILE_IMAGE,
+          email: userData.email,
+          role: userData.role, // Keep raw role (e.g., "Vet", "Trainer")
+          adminType: userData.adminType,
+          about: userData.about || "",
+          isActive: userData.isActive,
+          displayRole:
+            userData.role === "PetOwner"
+              ? "Pet Owner"
+              : userData.role === "Vet"
+              ? "Veterinarian"
+              : userData.role === "Trainer"
+              ? "Pet Trainer"
+              : userData.role === "Admin" && userData.adminType
+              ? userData.adminType
+              : userData.role,
+          petOwnerDetails: userData.petOwnerDetails || {
+            address: "Not provided",
+            phone: "Not provided",
+          },
+          trainerDetails: userData.trainerDetails || undefined,
+          veterinarianDetails: userData.veterinarianDetails || undefined,
+          createdAt: userData.createdAt,
+        };
+        console.log("fetchUserProfile response:", {
+          role: userData.role,
+          isActive: userData.isActive,
+          userId: userData._id,
+        });
+        setUser(formattedUser);
+        return formattedUser;
+      } catch (error) {
+        console.error("fetchUserProfile error:", error.message);
+        throw error;
       }
-      const formattedUser = {
-        _id: userData._id,
-        fullName: userData.fullName,
-        image: userData.image || DEFAULT_PROFILE_IMAGE,
-        email: userData.email,
-        role: userData.role, // Keep raw role (e.g., "Vet", "Trainer")
-        adminType: userData.adminType,
-        about: userData.about || "",
-        isActive: userData.isActive,
-        displayRole:
-          userData.role === "PetOwner"
-            ? "Pet Owner"
-            : userData.role === "Vet"
-            ? "Veterinarian"
-            : userData.role === "Trainer"
-            ? "Pet Trainer"
-            : userData.role === "Admin" && userData.adminType
-            ? userData.adminType
-            : userData.role,
-        petOwnerDetails: userData.petOwnerDetails || {
-          address: "Not provided",
-          phone: "Not provided",
-        },
-        trainerDetails: userData.trainerDetails || undefined,
-        veterinarianDetails: userData.veterinarianDetails || undefined,
-        createdAt: userData.createdAt,
-      };
-      console.log("fetchUserProfile response:", {
-        role: userData.role,
-        isActive: userData.isActive,
-        userId: userData._id,
-      });
-      setUser(formattedUser);
-      return formattedUser;
-    } catch (error) {
-      console.error("fetchUserProfile error:", error.message);
+    }).catch((error) => {
+      console.error("Failed to fetch profile:", error);
+      setError(error.response?.data?.message || "Failed to fetch user profile");
       throw error;
-    }
-  }).catch((error) => {
-    console.error("Failed to fetch profile:", error);
-    setError(error.response?.data?.message || "Failed to fetch user profile");
-    throw error;
-  });
-}, []);
+    });
+  }, []);
 
   const getMyAdoptionRequests = useCallback(async () => {
     try {
@@ -250,38 +270,111 @@ useEffect(() => {
     setError("");
   }, []);
 
- const triggerRefresh = useCallback(async () => {
-  console.log("Triggering refresh for role:", user?.role);
-  try {
-    if (user?.role === "PetOwner") {
-      const [petsResult, profile, userPets, applications] = await Promise.all([
-        fetchPets(),
-        fetchUserProfile(),
-        getMyPets(),
-        getMyAdoptionRequests(),
-      ]);
-      setPets(petsResult || []);
-      setUser(petsResult ? profile : user);
-      setUserPets(userPets.success ? userPets.data : []);
-      setApplications(applications.success ? applications.data : []);
+  const triggerRefresh = useCallback(async () => {
+    console.log("Triggering refresh for role:", user?.role);
+    try {
+      if (user?.role === "PetOwner") {
+        const [petsResult, profile, userPets, applications] = await Promise.all(
+          [
+            fetchPets(),
+            fetchUserProfile(),
+            getMyPets(),
+            getMyAdoptionRequests(),
+          ]
+        );
+        setPets(petsResult || []);
+        setUser(petsResult ? profile : user);
+        setUserPets(userPets.success ? userPets.data : []);
+        setApplications(applications.success ? applications.data : []);
+      }
+      if (user?.role === "Admin" || user?.role === "SuperAdmin") {
+        console.log("Calling fetchAllUsers for Admin/SuperAdmin");
+        await fetchAllUsers();
+      }
+    } catch (error) {
+      console.error("triggerRefresh error:", error);
+      setError(error.response?.data?.message || "Error refreshing data");
     }
-    if (user?.role === "Admin" || user?.role === "SuperAdmin") {
-      console.log("Calling fetchAllUsers for Admin/SuperAdmin");
-      await fetchAllUsers();
-    }
-  } catch (error) {
-    console.error("triggerRefresh error:", error);
-    setError(error.response?.data?.message || "Error refreshing data");
-  }
-}, [user, fetchAllUsers]);
+  }, [user, fetchAllUsers]);
 
   // Connect socket only if not already connected
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token && !socket.connected) {
-      initializeSocket(token);
-    }
-  }, []);
+    const initializeApp = async () => {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem("token");
+        let initializedUser = null;
+
+        if (token && !user) {
+          const isAuthenticated = await checkAuth();
+          if (isAuthenticated) {
+            initializedUser = await fetchUserProfile(); // Ensure full user data
+          }
+        }
+
+        console.log(
+          "Initializing app, fetching data for user:",
+          initializedUser?._id || "no user"
+        );
+
+        // Fetch promises based on role
+        const fetchPromises = [
+          fetchPets().then((petsData) => ({ pets: petsData || [] })),
+        ];
+
+        if (initializedUser?.role === "PetOwner") {
+          fetchPromises.push(
+            getMyPets().then((result) => ({
+              userPets: result.success ? result.data : [],
+            })),
+            getMyAdoptionRequests().then((result) => ({
+              applications: result.success ? result.data : [],
+            }))
+          );
+        }
+        if (
+          initializedUser?.role === "Admin" ||
+          initializedUser?.role === "SuperAdmin"
+        ) {
+          fetchPromises.push(
+            fetchAllUsers().then((users) => ({ allUsers: users || [] }))
+          );
+        }
+
+        const results = await Promise.all(fetchPromises);
+        const fetchedData = results.reduce(
+          (acc, result) => ({ ...acc, ...result }),
+          {}
+        );
+
+        // Update state
+        setPets(fetchedData.pets);
+        setUserPets(fetchedData.userPets || []);
+        setApplications(fetchedData.applications || []);
+        setAllUsers(fetchedData.allUsers || []);
+
+        console.log("App initialized with data:", {
+          petsCount: fetchedData.pets.length,
+          userPetsCount: fetchedData.userPets?.length || 0,
+          applicationsCount: fetchedData.applications?.length || 0,
+          allUsersCount: fetchedData.allUsers?.length || 0,
+        });
+      } catch (err) {
+        console.error("Initialize app error:", err);
+        setError("Failed to initialize app");
+      } finally {
+        setLoading(false);
+      }
+    };
+    initializeApp();
+  }, [
+    checkAuth,
+    fetchPets,
+    fetchUserProfile,
+    getMyPets,
+    getMyAdoptionRequests,
+    fetchAllUsers,
+  ]);
 
   // Socket.IO event listeners
   useEffect(() => {
@@ -499,14 +592,13 @@ useEffect(() => {
     };
   }, [user, fetchPets]);
 
-
   const location = useLocation();
-useEffect(() => {
-  if (location.pathname.startsWith("/pets")) {
-    console.log("Navigated to /pets, fetching pets");
-    fetchPets();
-  }
-}, [location, fetchPets]);
+  useEffect(() => {
+    if (location.pathname.startsWith("/pets")) {
+      console.log("Navigated to /pets, fetching pets");
+      fetchPets();
+    }
+  }, [location, fetchPets]);
   // Initialize app
   useEffect(() => {
     const initializeApp = async () => {
@@ -529,83 +621,101 @@ useEffect(() => {
   }, [checkAuth, fetchPets]);
 
   // Auth functions
-const login = async (email, password) => {
-  if (loading) return { success: false, error: "Login in progress" };
-  setLoading(true);
-  setError("");
-  try {
-    console.log("Initiating login for email:", email);
-    const response = await axiosInstance.post("/api/user/login", {
-      email,
-      password,
-    });
-    const { accessToken, user: userData, redirectTo: backendRedirect } = response.data;
-
-    // Save token immediately
-    localStorage.setItem("token", accessToken);
-    axiosInstance.setAuthToken(accessToken);
-    socket.auth = { token: accessToken };
-    socket.connect();
-    console.log("Token saved:", accessToken.substring(0, 10) + "...");
-
-    // Fetch profile to ensure complete user data
-    let profile;
+  const login = async (email, password) => {
+    if (loading) return { success: false, error: "Login in progress" };
+    setLoading(true);
+    setError("");
     try {
-      profile = await fetchUserProfile();
-      console.log("Profile fetched:", { role: profile.role, isActive: profile.isActive });
-    } catch (error) {
-      console.error("fetchUserProfile failed during login:", error.message);
-      profile = null;
-    }
+      console.log("Initiating login for email:", email);
+      const response = await axiosInstance.post("/api/user/login", {
+        email,
+        password,
+      });
+      const {
+        accessToken,
+        user: userData,
+        redirectTo: backendRedirect,
+      } = response.data;
 
-    // Prepare fetch promises based on role
-    const fetchPromises = [
-      fetchPets().then((petsData) => ({ pets: petsData })),
-    ];
-    if (userData.role === "PetOwner") {
-      fetchPromises.push(getMyPets().then((result) => ({ userPets: result.data })));
-      fetchPromises.push(
-        getMyAdoptionRequests().then((result) => ({ applications: result.success ? result.data : [] }))
+      // Save token immediately
+      localStorage.setItem("token", accessToken);
+      axiosInstance.setAuthToken(accessToken);
+      socket.auth = { token: accessToken };
+      socket.connect();
+      console.log("Token saved:", accessToken.substring(0, 10) + "...");
+
+      // Fetch profile to ensure complete user data
+      let profile;
+      try {
+        profile = await fetchUserProfile();
+        console.log("Profile fetched:", {
+          role: profile.role,
+          isActive: profile.isActive,
+        });
+      } catch (error) {
+        console.error("fetchUserProfile failed during login:", error.message);
+        profile = null;
+      }
+
+      // Prepare fetch promises based on role
+      const fetchPromises = [
+        fetchPets().then((petsData) => ({ pets: petsData })),
+      ];
+      if (userData.role === "PetOwner") {
+        fetchPromises.push(
+          getMyPets().then((result) => ({ userPets: result.data }))
+        );
+        fetchPromises.push(
+          getMyAdoptionRequests().then((result) => ({
+            applications: result.success ? result.data : [],
+          }))
+        );
+      }
+      if (userData.role === "Admin" || userData.role === "SuperAdmin") {
+        fetchPromises.push(
+          fetchAllUsers().then((users) => ({ allUsers: users }))
+        );
+      }
+
+      const results = await Promise.all(fetchPromises);
+      const fetchedData = results.reduce(
+        (acc, result) => ({ ...acc, ...result }),
+        {}
       );
+
+      // Set final user, ensuring role is from profile or backend
+      const finalUser =
+        profile ||
+        ensureUserHasImage({
+          ...userData,
+          role: userData.role,
+          adminType: userData.adminType,
+          isActive: userData.isActive,
+        });
+      setUser(finalUser);
+      setPets(fetchedData.pets || []);
+      setUserPets(fetchedData.userPets || []);
+      setApplications(fetchedData.applications || []);
+      setAllUsers(fetchedData.allUsers || []);
+
+      // Use backend-provided redirectTo
+      const redirectTo = backendRedirect || "/login";
+      console.log("Login successful:", {
+        role: finalUser.role,
+        isActive: finalUser.isActive,
+        redirectTo,
+      });
+
+      return { success: true, redirectTo };
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || "Error logging in";
+      setError(errorMessage);
+      console.error("Login error:", errorMessage, error.response?.data);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
     }
-    if (userData.role === "Admin" || userData.role === "SuperAdmin") {
-      fetchPromises.push(fetchAllUsers().then((users) => ({ allUsers: users })));
-    }
-
-    const results = await Promise.all(fetchPromises);
-    const fetchedData = results.reduce((acc, result) => ({ ...acc, ...result }), {});
-
-    // Set final user, ensuring role is from profile or backend
-    const finalUser = profile || ensureUserHasImage({
-      ...userData,
-      role: userData.role,
-      adminType: userData.adminType,
-      isActive: userData.isActive,
-    });
-    setUser(finalUser);
-    setPets(fetchedData.pets || []);
-    setUserPets(fetchedData.userPets || []);
-    setApplications(fetchedData.applications || []);
-    setAllUsers(fetchedData.allUsers || []);
-
-    // Use backend-provided redirectTo
-    const redirectTo = backendRedirect || "/login";
-    console.log("Login successful:", {
-      role: finalUser.role,
-      isActive: finalUser.isActive,
-      redirectTo,
-    });
-
-    return { success: true, redirectTo };
-  } catch (error) {
-    const errorMessage = error.response?.data?.message || "Error logging in";
-    setError(errorMessage);
-    console.error("Login error:", errorMessage, error.response?.data);
-    return { success: false, error: errorMessage };
-  } finally {
-    setLoading(false);
-  }
-};
+  };
   const register = async (userData) => {
     setLoading(true);
     setError("");
@@ -783,7 +893,7 @@ const login = async (email, password) => {
 
   const deletePet = async (petId) => {
     try {
-      await axiosInstance.put(`/api/pet/deletePet/${petId}`);
+      await axiosInstance.delete(`/api/pet/deletePet/${petId}`);
       return { success: true };
     } catch (error) {
       const errorMessage =

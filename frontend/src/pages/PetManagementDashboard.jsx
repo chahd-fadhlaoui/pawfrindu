@@ -1,5 +1,5 @@
 import { Heart, PawPrint } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Alert } from "../components/Alert";
 import HelpSection from "../components/common/HelpSection";
@@ -8,7 +8,6 @@ import AdoptionRequestsTab from "../components/PetManagement/AdoptionRequestsTab
 import PetPostsTab from "../components/PetManagement/PetPostsTab";
 import { useApp } from "../context/AppContext";
 
-// PawIcon matching Pet component
 const PawIcon = ({ className, style }) => (
   <svg viewBox="0 0 24 24" className={className} style={style} fill="currentColor">
     <path d="M12,17.5c2.33,2.33,5.67,2.33,8,0s2.33-5.67,0-8s-5.67-2.33-8,0S9.67,15.17,12,17.5z M7.5,14.5 c-1.96,1.96-1.96,4.04,0,6s4.04,1.96,6,0s1.96-4.04,0-6S9.46,12.54,7.5,14.5z M18.5,3.5c-1.96-1.96-4.04-1.96-6,0s-1.96,4.04,0,6 s4.04,1.96,6,0S20.46,5.46,18.5,3.5z M3.5,9.5c-1.96,1.96-1.96,4.04,0,6s4.04,1.96,6,0s1.96-4.04,0-6S5.46,7.54,3.5,9.5z" />

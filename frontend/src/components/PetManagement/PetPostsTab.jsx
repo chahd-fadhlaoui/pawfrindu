@@ -11,7 +11,7 @@ import {
   Users,
   X
 } from "lucide-react";
-import React, { useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import EditForm from "../../components/EditForm";
