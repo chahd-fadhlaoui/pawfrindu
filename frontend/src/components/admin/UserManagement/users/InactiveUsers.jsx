@@ -41,9 +41,20 @@ const InactiveUsers = ({ roleFilter }) => {
   }, [roleFilter]);
 
   useEffect(() => {
-    console.log("allUsers in InactiveUsers:", users.map(u => ({ id: u._id, role: u.role, isActive: u.isActive, isArchieve: u.isArchieve })));
-    let filtered = users.filter((user) => !user.isActive && !user.isArchieve);
-    console.log("After !isActive && !isArchieve:", filtered.map(u => ({ id: u._id, role: u.role })));
+    console.log("allUsers in InactiveUsers:", users.map(u => ({ id: u._id, role: u.role, isActive: u.isActive, isArchieve: u.isArchieve, lastLogin: u.lastLogin })));
+    let filtered = users.filter((user) => {
+      if (!user.isActive && !user.isArchieve) {
+        // For Vet or Trainer, require a lastLogin to exclude pending users
+        if (["Vet", "Trainer"].includes(user.role)) {
+          return user.lastLogin !== null && user.lastLogin !== undefined;
+        }
+        // For other roles, include all inactive, non-archived users
+        return true;
+      }
+      return false;
+    });
+
+    console.log("After isActive, isArchieve, and lastLogin filter:", filtered.map(u => ({ id: u._id, role: u.role, lastLogin: u.lastLogin })));
 
     if (roleFilter === "Admin") {
       filtered = filtered.filter((user) => ["Admin", "SuperAdmin"].includes(user.role));
@@ -63,12 +74,12 @@ const InactiveUsers = ({ roleFilter }) => {
       console.log("After searchQuery:", filtered.map(u => ({ id: u._id, role: u.role })));
     }
 
-    if (roleFilterState && roleFilter !== "Admin") {
+    if (roleFilterState) {
       filtered = filtered.filter((user) => user.role === roleFilterState);
       console.log("After roleFilterState:", filtered.map(u => ({ id: u._id, role: u.role })));
     }
 
-    console.log("Final filteredUsers in InactiveUsers:", filtered.map(u => ({ id: u._id, role: u.role })));
+    console.log("Final filteredUsers in InactiveUsers:", filtered.map(u => ({ id: u._id, role: u.role, lastLogin: u.lastLogin })));
     setFilteredUsers(filtered);
   }, [users, searchQuery, roleFilterState, roleFilter]);
 
@@ -105,13 +116,13 @@ const InactiveUsers = ({ roleFilter }) => {
     );
   };
 
-  const handleToggleActive = (userId) => {
+  const handleReactivateUser = (userId) => {
     setSelectedUserId(userId);
     setConfirmAction("reactivate");
     setIsConfirmModalOpen(true);
   };
 
-  const confirmToggleActive = async () => {
+  const confirmReactivateUser = async () => {
     try {
       await axiosInstance.put(`/api/user/users/${selectedUserId}`, { isActive: true });
       updateUsers([{ _id: selectedUserId, isActive: true }]);
@@ -125,13 +136,33 @@ const InactiveUsers = ({ roleFilter }) => {
     }
   };
 
-  const handleBulkActivate = () => {
+  const handleArchiveUser = (userId) => {
+    setSelectedUserId(userId);
+    setConfirmAction("archive");
+    setIsConfirmModalOpen(true);
+  };
+
+  const confirmArchiveUser = async () => {
+    try {
+      await axiosInstance.put(`/api/user/users/${selectedUserId}`, { isArchieve: true });
+      updateUsers([{ _id: selectedUserId, isArchieve: true }]);
+      setFilteredUsers((prev) => prev.filter((user) => user._id !== selectedUserId));
+      setSelectedUsers((prev) => prev.filter((id) => id !== selectedUserId));
+      setIsConfirmModalOpen(false);
+    } catch (err) {
+      setActionError(err.response?.data?.message || "Failed to archive user");
+      console.error("Archive Error:", err);
+      setIsConfirmModalOpen(false);
+    }
+  };
+
+  const handleBulkReactivate = () => {
     if (selectedUsers.length === 0) return;
     setConfirmAction("bulkReactivate");
     setIsConfirmModalOpen(true);
   };
 
-  const confirmBulkActivate = async () => {
+  const confirmBulkReactivate = async () => {
     try {
       await Promise.all(
         selectedUsers.map((userId) =>
@@ -145,26 +176,6 @@ const InactiveUsers = ({ roleFilter }) => {
     } catch (err) {
       setActionError(err.response?.data?.message || "Failed to bulk reactivate users");
       console.error("Bulk Reactivate Error:", err);
-      setIsConfirmModalOpen(false);
-    }
-  };
-
-  const handleToggleArchive = (userId) => {
-    setSelectedUserId(userId);
-    setConfirmAction("archive");
-    setIsConfirmModalOpen(true);
-  };
-
-  const confirmToggleArchive = async () => {
-    try {
-      await axiosInstance.put(`/api/user/users/${selectedUserId}`, { isArchieve: true });
-      updateUsers([{ _id: selectedUserId, isArchieve: true }]);
-      setFilteredUsers((prev) => prev.filter((user) => user._id !== selectedUserId));
-      setSelectedUsers((prev) => prev.filter((id) => id !== selectedUserId));
-      setIsConfirmModalOpen(false);
-    } catch (err) {
-      setActionError(err.response?.data?.message || "Failed to archive user");
-      console.error("Archive Error:", err);
       setIsConfirmModalOpen(false);
     }
   };
@@ -247,11 +258,18 @@ const InactiveUsers = ({ roleFilter }) => {
             {selectedUsers.length > 0 && (
               <div className="flex items-center gap-2">
                 <button
-                  onClick={handleBulkActivate}
+                  onClick={handleBulkReactivate}
                   className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-all duration-300 rounded-lg shadow-md bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 focus:outline-none focus:ring-2 focus:ring-green-400"
                 >
                   <Check className="w-4 h-4" />
                   Reactivate ({selectedUsers.length})
+                </button>
+                <button
+                  onClick={handleBulkArchive}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-all duration-300 rounded-lg shadow-md bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 focus:outline-none focus:ring-2 focus:ring-red-400"
+                >
+                  <Archive className="w-4 h-4" />
+                  Archive ({selectedUsers.length})
                 </button>
               </div>
             )}
@@ -289,7 +307,7 @@ const InactiveUsers = ({ roleFilter }) => {
                 ? "Try adjusting your search or filters to find inactive users."
                 : roleFilter === "Admin"
                 ? "No inactive administrators are currently available."
-                : "No inactive users are available at this time. Check other tabs."}
+                : "No inactive users are available at this time. Check pending approvals for users awaiting verification."}
             </p>
             {(searchQuery || roleFilterState) && (
               <button
@@ -307,7 +325,7 @@ const InactiveUsers = ({ roleFilter }) => {
             users={currentUsers}
             selectedUsers={selectedUsers}
             currentUser={currentUser}
-            onToggleActive={handleToggleActive}
+            onToggleActive={handleReactivateUser}
             onToggleSelection={toggleUserSelection}
             onToggleSelectAll={toggleSelectAll}
             customActions={(user) => (
@@ -315,11 +333,18 @@ const InactiveUsers = ({ roleFilter }) => {
                 {user._id !== currentUser?._id && (
                   <>
                     <button
-                      onClick={() => handleToggleActive(user._id)}
+                      onClick={() => handleReactivateUser(user._id)}
                       className="flex items-center gap-1 px-3 py-1 text-xs font-medium text-white transition-all duration-300 rounded-lg shadow-sm bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 focus:outline-none focus:ring-2 focus:ring-green-400"
                     >
                       <Check className="w-3 h-3" />
                       Reactivate
+                    </button>
+                    <button
+                      onClick={() => handleArchiveUser(user._id)}
+                      className="flex items-center gap-1 px-3 py-1 text-xs font-medium text-white transition-all duration-300 rounded-lg shadow-sm bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 focus:outline-none focus:ring-2 focus:ring-red-400"
+                    >
+                      <Archive className="w-3 h-3" />
+                      Archive
                     </button>
                   </>
                 )}
@@ -346,19 +371,15 @@ const InactiveUsers = ({ roleFilter }) => {
         onClose={() => setIsConfirmModalOpen(false)}
         onConfirm={
           confirmAction === "reactivate"
-            ? confirmToggleActive
+            ? confirmReactivateUser
             : confirmAction === "archive"
-            ? confirmToggleArchive
+            ? confirmArchiveUser
             : confirmAction === "bulkReactivate"
-            ? confirmBulkActivate
+            ? confirmBulkReactivate
             : confirmBulkArchive
         }
         action={
-          confirmAction === "reactivate"
-            ? "reactivate"
-            : confirmAction === "archive"
-            ? "archive"
-            : confirmAction === "bulkReactivate"
+          confirmAction === "reactivate" || confirmAction === "bulkReactivate"
             ? "reactivate"
             : "archive"
         }

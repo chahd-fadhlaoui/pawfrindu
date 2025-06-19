@@ -1,12 +1,12 @@
 import { ArrowRight, Bird, Cat, Dog, HandHeartIcon, Stethoscope } from 'lucide-react';
-import React, { useContext, useEffect, useState } from 'react'; // Ajout de useContext
+import { useContext, useEffect, useState } from 'react'; 
 import { Link } from 'react-router-dom';
-import { AppContext } from '../../context/AppContext'; // Importer AppContext
+import { AppContext } from '../../context/AppContext';
 
 const CategoryCard = ({ category, isHovered, onHover }) => {
   return (
     <Link
-      to={`/pets/${category.slug}`} // Le slug est utilisé dans l’URL
+      to={`/pets/${category.slug}`}
       className={`
         group relative overflow-hidden
         bg-white rounded-3xl p-8
@@ -92,7 +92,7 @@ const CategoriesSection = () => {
         const catsCount = pets.filter(pet => pet.species.toLowerCase() === "cat" && pet.status === "accepted").length;
         const othersCount = pets.filter(pet => pet.species.toLowerCase() === "other" && pet.status === "accepted").length;
         // Pour Veterinary Care, on utilise une valeur statique ou une logique séparée si disponible
-        const vetsCount = 0; // Remplace par une logique réelle si tu as des données pour les vétérinaires
+        const vetsCount = 0; 
 
         const data = [
           {

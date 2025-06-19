@@ -1665,3 +1665,82 @@ export const getPotentialMatches = async (req, res) => {
     });
   }
 };
+
+export const getLostAndFoundStats = async (req, res) => {
+  try {
+    console.log('Fetching lost and found stats:', {
+      userId: req.user?._id,
+      role: req.user?.role,
+      query: req.query,
+      headers: req.headers.authorization?.substring(0, 20) + '...',
+    });
+
+    const { startDate, endDate } = req.query;
+    let dateFilter = {};
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (isNaN(start) || isNaN(end)) {
+        console.error('Invalid date format:', { startDate, endDate });
+        return res.status(400).json({ success: false, message: 'Invalid date format' });
+      }
+      dateFilter = { createdAt: { $gte: start, $lte: end } };
+    }
+
+    const totalReports = await LostAndFound.countDocuments({ ...dateFilter });
+    const lostReports = await LostAndFound.countDocuments({
+      ...dateFilter,
+      type: 'Lost',
+    });
+    const foundReports = await LostAndFound.countDocuments({
+      ...dateFilter,
+      type: 'Found',
+    });
+    const pendingReports = await LostAndFound.countDocuments({
+      ...dateFilter,
+      status: 'Pending',
+      isArchived: false,
+    });
+    const matchedReports = await LostAndFound.countDocuments({
+      ...dateFilter,
+      status: 'Matched',
+      isArchived: false,
+    });
+    const reunitedReports = await LostAndFound.countDocuments({
+      ...dateFilter,
+      status: 'Reunited',
+      isArchived: false,
+    });
+
+
+    console.log('Lost and Found stats results:', {
+      totalReports,
+      lostReports,
+      foundReports,
+      pendingReports,
+      matchedReports,
+      reunitedReports,
+    });
+
+    res.json({
+      success: true,
+      stats: {
+        totalReports,
+        lostReports,
+        foundReports,
+        pendingReports,
+        matchedReports,
+        reunitedReports,
+      },
+    });
+  } catch (error) {
+    console.error('Get Lost and Found Stats Error:', {
+      message: error.message,
+      stack: error.stack,
+      userId: req.user?._id,
+      role: req.user?.role,
+      query: req.query,
+    });
+    res.status(500).json({ success: false, message: 'Failed to fetch lost and found stats', error: error.message });
+  }
+};

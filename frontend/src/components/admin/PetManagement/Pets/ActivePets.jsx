@@ -1,21 +1,21 @@
 import {
   Archive,
   Check,
+  Info,
   Loader2,
   PawPrint,
   Search,
   X,
-  Info,
 } from "lucide-react";
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useApp } from "../../../../context/AppContext";
 import axiosInstance from "../../../../utils/axiosInstance";
 import ConfirmationModal from "../../../ConfirmationModal";
 import { ErrorAlert } from "../../common/ErrorAlert";
 import { PaginationControls } from "../../common/PaginationControls";
+import EmptyState from "../common/EmptyState";
 import { FilterSelect } from "../common/FilterSelect";
 import PetTable from "../common/PetTable";
-import EmptyState from "../common/EmptyState";
 
 const ActivePets = () => {
   const { user, pets, loading, error, triggerRefresh } = useApp();

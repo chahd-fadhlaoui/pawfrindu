@@ -20,6 +20,7 @@ import "react-toastify/dist/ReactToastify.css";
 import MapViewer from "../../../components/map/MapViewer";
 import { useApp } from "../../../context/AppContext";
 import axiosInstance from "../../../utils/axiosInstance";
+import AppointmentModal from "../../../components/vet/VetUserManagment/appointmentForm/AppointmentModal";
 
 const PawIcon = ({ className, style }) => (
   <svg
@@ -47,7 +48,6 @@ export default function VetDetails() {
       setLoading(true);
       try {
         const response = await axiosInstance.get(`/api/user/vet/${id}`);
-        console.log("Fetched vet details:", response.data);
         setVet(response.data.vet);
         setError("");
       } catch (err) {
@@ -170,7 +170,7 @@ export default function VetDetails() {
         <div className="absolute top-0 left-0 w-full h-full">
           <div className="absolute w-64 h-64 bg-yellow-200 rounded-full top-10 left-10 mix-blend-multiply filter blur-3xl opacity-10 animate-blob"></div>
           <div className="absolute bg-pink-200 rounded-full top-40 right-20 w-72 h-72 mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000"></div>
-          <div className="absolute bg-amber-100 rounded-full bottom-40 left-40 w-80 h-80 mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-4000"></div>
+          <div className="absolute rounded-full bg-amber-100 bottom-40 left-40 w-80 h-80 mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-4000"></div>
         </div>
         <div className="absolute inset-0 bg-white/30 backdrop-blur-[100px]"></div>
         <div className="absolute inset-0 opacity-10">
@@ -220,10 +220,6 @@ export default function VetDetails() {
                 <h1 className="text-3xl font-bold text-gray-800 md:text-4xl">
                   {vet.fullName.trim()}
                 </h1>
-                <p className="flex items-center gap-2 mt-2 text-lg text-gray-600">
-                  <Stethoscope size={18} className="text-pink-500" />
-                  {vet.veterinarianDetails?.degree || "Degree not specified"}
-                </p>
               </div>
               <button
                 className="flex items-center justify-center gap-2 px-6 py-3 text-base font-medium text-white bg-gradient-to-br from-[#ffc929] to-[#ffa726] rounded-full shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#ffc929]/"
@@ -234,21 +230,23 @@ export default function VetDetails() {
               </button>
             </div>
 
-            {vet.veterinarianDetails?.specialization} && (
+            {vet.veterinarianDetails?.specializations?.length > 0 && (
               <div className="mt-6">
                 <p className="mb-2 text-sm font-medium text-gray-500">
                   Specialized in
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  <span className="px-4 py-1.5 text-sm font-medium text-[#ffc929] bg-[#ffc929]/10 rounded-full border border-yellow-100">
-                    {vet.veterinarianDetails.specialization}
-                  </span>
-                  <span className="px-4 py-1.5 text-sm font-medium text-pink-600 bg-pink-50 border border-pink-100 rounded-full">
-                    Animal Healthcare
-                  </span>
+                  {vet.veterinarianDetails.specializations.map((spec, index) => (
+                    <span
+                      key={index}
+                      className="px-4 py-1.5 text-sm font-medium text-[#ffc929] bg-[#ffc929]/10 rounded-full border border-yellow-100"
+                    >
+                      {spec.specializationName}
+                    </span>
+                  ))}
                 </div>
               </div>
-            )
+            )}
           </div>
 
           <div className="px-6 pb-10 space-y-8 md:px-8 lg:px-12">
@@ -296,7 +294,7 @@ export default function VetDetails() {
                         Location
                       </p>
                       <p className="text-lg text-gray-800">
-                        {vet.veterinarianDetails?.location || "Not specified"},{" "}
+                        {vet.veterinarianDetails?.delegation || "Not specified"},{" "}
                         {vet.veterinarianDetails?.governorate || ""}
                       </p>
                     </div>
@@ -308,11 +306,10 @@ export default function VetDetails() {
                     </div>
                     <div>
                       <p className="text-sm font-medium text-gray-500">
-                        Landline Phone
+                        Phone
                       </p>
                       <p className="text-lg text-gray-800">
-                        {vet.veterinarianDetails?.landlinePhone ||
-                          "Not specified"}
+                        {vet.veterinarianDetails?.phone || "Not specified"}
                       </p>
                     </div>
                   </div>
@@ -595,7 +592,6 @@ export default function VetDetails() {
             </div>
           </div>
         )}
-
         {isModalOpen && (
           <AppointmentModal
             professional={vet}

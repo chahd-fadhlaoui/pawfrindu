@@ -1,10 +1,10 @@
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
-import User from "../models/userModel.js";
-import { sendEmail } from "../services/emailService.js";
-import { io } from "../server.js"; // Import io from the server file
 import mongoose from "mongoose";
+import User from "../models/userModel.js";
+import { io } from "../server.js"; 
+import { sendEmail } from "../services/emailService.js";
 
 // 🚀 Étape 1: Enregistrement de l'utilisateur sans détails spécifiques
 const register = async (req, res) => {
@@ -766,6 +766,10 @@ const getUserStats = async (req, res) => {
     const inactiveUsers = await User.countDocuments({
       isActive: false,
       isArchieve: false,
+      $or: [
+        { role: { $nin: ["Vet", "Trainer"] } }, // Non-Vet/Trainer roles (e.g., PetOwner, Admin, SuperAdmin)
+        { role: { $in: ["Vet", "Trainer"] }, lastLogin: { $exists: true } } // Vets/Trainers who have logged in
+      ],
     });
     const archivedUsers = await User.countDocuments({ isArchieve: true });
     const pendingUsers = await User.countDocuments({
@@ -773,6 +777,47 @@ const getUserStats = async (req, res) => {
       isActive: false,
       isArchieve: false,
       lastLogin: { $exists: false },
+    });
+
+    // Aggregate role distribution
+    const roleDistribution = await User.aggregate([
+      {
+        $group: {
+          _id: "$role",
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          role: "$_id",
+          count: 1,
+          _id: 0,
+        },
+      },
+    ]);
+
+    const roleDistributionMap = {
+      PetOwner: 0,
+      Trainer: 0,
+      Vet: 0,
+      Admin: 0,
+      SuperAdmin: 0,
+    };
+
+    roleDistribution.forEach(({ role, count }) => {
+      if (roleDistributionMap.hasOwnProperty(role)) {
+        roleDistributionMap[role] = count;
+      }
+    });
+
+    // Log stats for debugging
+    console.log("User Stats:", {
+      totalUsers,
+      activeUsers,
+      inactiveUsers,
+      archivedUsers,
+      pendingUsers,
+      roleDistribution: roleDistributionMap,
     });
 
     res.json({
@@ -783,13 +828,12 @@ const getUserStats = async (req, res) => {
         inactiveUsers,
         archivedUsers,
         pendingUsers,
+        roleDistribution: roleDistributionMap,
       },
     });
   } catch (error) {
     console.error("Get User Stats Error:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Failed to fetch user stats" });
+    res.status(500).json({ success: false, message: "Failed to fetch user stats" });
   }
 };
 
@@ -1431,26 +1475,8 @@ const updateTrainerProfile = async (req, res) => {
   }
 };
 export {
-  createProfile,
-  forgotPassword,
-  getCurrentUser,
-  login,
+  approveUser, createProfile, deleteUserByAdmin, forgotPassword, getAllUsers, getCurrentUser, getTrainerById, getTrainerReviews, getTrainers, getUserStats, getVeterinarianById, getVeterinarians, login,
   register,
-  resetPassword,
-  getAllUsers,
-  verifyToken,
-  validateResetToken,
-  updateProfile,
-  updateUserByAdmin,
-  approveUser,
-  deleteUserByAdmin,
-  getUserStats,
-  getVeterinarians,
-  getVeterinarianById,
-  updateVetProfile,
-  getTrainers,
-  getTrainerById,
-  submitTrainerReview,
-  getTrainerReviews,
-  updateTrainerProfile,
+  resetPassword, submitTrainerReview, updateProfile, updateTrainerProfile, updateUserByAdmin, updateVetProfile, validateResetToken, verifyToken
 };
+

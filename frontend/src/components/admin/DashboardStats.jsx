@@ -8,7 +8,7 @@ import {
   Title,
   Tooltip,
 } from "chart.js";
-import { AlertCircle, BarChart3, PieChart, RefreshCw, Shield, Users, X } from "lucide-react";
+import { AlertCircle, Calendar, Dog, FileText, Heart, RefreshCw, Users, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Bar, Pie } from "react-chartjs-2";
 import axiosInstance from "../../utils/axiosInstance";
@@ -21,8 +21,8 @@ const DashboardStats = ({ onRefresh }) => {
     totalUsers: 0,
     activeUsers: 0,
     inactiveUsers: 0,
-    archivedUsers: 0,
     pendingUsers: 0,
+    roleDistribution: { PetOwner: 0, Trainer: 0, Vet: 0, Admin: 0, SuperAdmin: 0 },
     totalPets: 0,
     pendingPets: 0,
     acceptedPets: 0,
@@ -31,69 +31,117 @@ const DashboardStats = ({ onRefresh }) => {
     soldPets: 0,
     archivedPets: 0,
     approvedPets: 0,
+    totalLostAndFound: 0,
+    lostReports: 0,
+    foundReports: 0,
+    pendingReports: 0,
+    matchedReports: 0,
+    reunitedReports: 0,
+    totalAppointments: 0,
+    pendingAppointments: 0,
+    confirmedAppointments: 0,
+    completedAppointments: 0,
+    cancelledAppointments: 0,
+    notAvailableAppointments: 0,
+    vetAppointments: 0,
+    trainerAppointments: 0,
     lastRefreshed: new Date().toLocaleTimeString(),
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-const fetchStats = async () => {
-  setLoading(true);
-  setError(null);
-  try {
-    console.log('Fetching stats with token:', localStorage.getItem('token')?.substring(0, 10) + '...');
-    const [userStatsRes, petStatsRes] = await Promise.all([
-      axiosInstance.get('/api/user/stats'),
-      axiosInstance.get('/api/pet/stats').catch((err) => ({
-        data: { stats: {} },
-        error: err,
-      })),
-    ]);
+  const fetchStats = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      console.log('Fetching stats with token:', localStorage.getItem('token')?.substring(0, 10) + '...');
+      const [userStatsRes, petStatsRes, lostAndFoundStatsRes, appointmentStatsRes] = await Promise.all([
+        axiosInstance.get('/api/user/stats'),
+        axiosInstance.get('/api/pet/stats').catch((err) => ({
+          data: { stats: {} },
+          error: err,
+        })),
+        axiosInstance.get('/api/lostAndFound/stats').catch((err) => ({
+          data: { stats: {} },
+          error: err,
+        })),
+        axiosInstance.get('/api/appointment/stats').catch((err) => ({
+          data: { stats: {} },
+          error: err,
+        })),
+      ]);
 
-    const userStats = userStatsRes.data.stats || {};
-    const petStats = petStatsRes.error ? {} : petStatsRes.data.stats || {};
+      const userStats = userStatsRes.data.stats || {};
+      const petStats = petStatsRes.error ? {} : petStatsRes.data.stats || {};
+      const lostAndFoundStats = lostAndFoundStatsRes.error ? {} : lostAndFoundStatsRes.data.stats || {};
+      const appointmentStats = appointmentStatsRes.error ? {} : appointmentStatsRes.data.stats || {};
 
-    if (petStatsRes.error) {
-      const errorMessage = petStatsRes.error.response?.status === 403
-        ? 'You do not have permission to view pet statistics.'
-        : `Failed to fetch pet stats: ${petStatsRes.error.response?.data?.message || petStatsRes.error.message}`;
-      setError(errorMessage);
-      console.error('Pet stats error:', {
-        status: petStatsRes.error.response?.status,
-        data: petStatsRes.error.response?.data,
-        message: petStatsRes.error.message,
+      // Log errors for failed requests
+      if (petStatsRes.error) {
+        console.error('Pet stats error:', {
+          status: petStatsRes.error.response?.status,
+          data: petStatsRes.error.response?.data,
+          message: petStatsRes.error.message,
+        });
+      }
+
+      // Combine errors if any
+      const errors = [];
+      if (petStatsRes.error) errors.push('Failed to fetch pet stats.');
+      if (errors.length > 0) {
+        setError(errors.join(' '));
+      }
+
+      setStats({
+        totalUsers: userStats.totalUsers || 0,
+        activeUsers: userStats.activeUsers || 0,
+        inactiveUsers: userStats.inactiveUsers || 0,
+        pendingUsers: userStats.pendingUsers || 0,
+        roleDistribution: userStats.roleDistribution || {
+          PetOwner: 0,
+          Trainer: 0,
+          Vet: 0,
+          Admin: 0,
+          SuperAdmin: 0,
+        },
+        totalPets: petStats.totalPets || 0,
+        pendingPets: petStats.pendingPets || 0,
+        acceptedPets: petStats.acceptedPets || 0,
+        adoptionPendingPets: petStats.adoptionPendingPets || 0,
+        adoptedPets: petStats.adoptedPets || 0,
+        soldPets: petStats.soldPets || 0,
+        archivedPets: petStats.archivedPets || 0,
+        approvedPets: petStats.approvedPets || 0,
+        totalLostAndFound: lostAndFoundStats.totalReports || 0,
+        lostReports: lostAndFoundStats.lostReports || 0,
+        foundReports: lostAndFoundStats.foundReports || 0,
+        pendingReports: lostAndFoundStats.pendingReports || 0,
+        matchedReports: lostAndFoundStats.matchedReports || 0,
+        reunitedReports: lostAndFoundStats.reunitedReports || 0,
+        totalAppointments: appointmentStats.totalAppointments || 0,
+        pendingAppointments: appointmentStats.pendingAppointments || 0,
+        confirmedAppointments: appointmentStats.confirmedAppointments || 0,
+        completedAppointments: appointmentStats.completedAppointments || 0,
+        cancelledAppointments: appointmentStats.cancelledAppointments || 0,
+        notAvailableAppointments: appointmentStats.notAvailableAppointments || 0,
+        vetAppointments: appointmentStats.vetAppointments || 0,
+        trainerAppointments: appointmentStats.trainerAppointments || 0,
+        lastRefreshed: new Date().toLocaleTimeString(),
       });
+    } catch (err) {
+      const errorMessage = err.response?.status === 403
+        ? 'You do not have permission to view these statistics.'
+        : `Failed to fetch stats: ${err.response?.data?.message || err.message}`;
+      setError(errorMessage);
+      console.error('fetchStats error:', {
+        status: err.response?.status,
+        data: err.response?.data,
+        message: err.message,
+      });
+    } finally {
+      setLoading(false);
     }
-
-    setStats({
-      totalUsers: userStats.totalUsers || 0,
-      activeUsers: userStats.activeUsers || 0,
-      inactiveUsers: userStats.inactiveUsers || 0,
-      archivedUsers: userStats.archivedUsers || 0,
-      pendingUsers: userStats.pendingUsers || 0,
-      totalPets: petStats.totalPets || 0,
-      pendingPets: petStats.pendingPets || 0,
-      acceptedPets: petStats.acceptedPets || 0,
-      adoptionPendingPets: petStats.adoptionPendingPets || 0,
-      adoptedPets: petStats.adoptedPets || 0,
-      soldPets: petStats.soldPets || 0,
-      archivedPets: petStats.archivedPets || 0,
-      approvedPets: petStats.approvedPets || 0,
-      lastRefreshed: new Date().toLocaleTimeString(),
-    });
-  } catch (err) {
-    const errorMessage = err.response?.status === 403
-      ? 'You do not have permission to view these statistics.'
-      : `Failed to fetch stats: ${err.response?.data?.message || err.message}`;
-    setError(errorMessage);
-    console.error('fetchStats error:', {
-      status: err.response?.status,
-      data: err.response?.data,
-      message: err.message,
-    });
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   useEffect(() => {
     fetchStats();
@@ -108,16 +156,16 @@ const fetchStats = async () => {
 
   // User Bar Chart Data
   const userChartData = {
-    labels: ["Active", "Inactive", "Archived", "Pending"],
+    labels: ["Active", "Inactive",  "Pending"],
     datasets: [
       {
         label: "Users",
-        data: [stats.activeUsers, stats.inactiveUsers, stats.archivedUsers, stats.pendingUsers],
-        backgroundColor: ["#ffc929cc", "#f59e0bcc", "#ec4899cc", "#d97706cc"],
-        borderColor: ["#ffc929", "#f59e0b", "#ec4899", "#d97706"],
+        data: [stats.activeUsers, stats.inactiveUsers,stats.pendingUsers],
+        backgroundColor: ["#ffc929cc", "#f59e0bcc", "#d97706cc"],
+        borderColor: ["#ffc929", "#f59e0b", "#d97706"],
         borderWidth: 2,
         borderRadius: 6,
-        hoverBackgroundColor: ["#ffc929", "#f59e0b", "#ec4899", "#d97706"],
+        hoverBackgroundColor: ["#ffc929", "#f59e0b",  "#d97706"],
         hoverBorderWidth: 3,
       },
     ],
@@ -133,7 +181,7 @@ const fetchStats = async () => {
       },
       title: {
         display: true,
-        text: "User Distribution",
+        text: "User Status Distribution",
         font: { size: 18, weight: "bold" },
         color: "#1f2937",
         padding: { top: 10, bottom: 20 },
@@ -159,6 +207,59 @@ const fetchStats = async () => {
         title: { display: true, text: "User Status", font: { size: 14 }, color: "#6b7280" },
         grid: { display: false },
         ticks: { color: "#6b7280", font: { size: 12 } },
+      },
+    },
+    animation: {
+      duration: 1000,
+      easing: "easeOutQuart",
+    },
+  };
+
+  // User Role Pie Chart Data
+  const roleChartData = {
+    labels: ["Pet Owner", "Trainer", "Vet", "Admin", "Super Admin"],
+    datasets: [
+      {
+        label: "User Roles",
+        data: [
+          stats.roleDistribution.PetOwner,
+          stats.roleDistribution.Trainer,
+          stats.roleDistribution.Vet,
+          stats.roleDistribution.Admin,
+          stats.roleDistribution.SuperAdmin,
+        ],
+        backgroundColor: ["#f59e0b", "#10b981", "#3b82f6", "#ec4899", "#8b5cf6"],
+        borderColor: ["#fff"],
+        borderWidth: 2,
+        hoverOffset: 12,
+        hoverBorderWidth: 3,
+      },
+    ],
+  };
+
+  const roleChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: "top",
+        labels: { font: { size: 14, weight: "bold" }, color: "#374151" },
+      },
+      title: {
+        display: true,
+        text: "User Role Distribution",
+        font: { size: 18, weight: "bold" },
+        color: "#1f2937",
+        padding: { top: 10, bottom: 20 },
+      },
+      tooltip: {
+        backgroundColor: "#1f2937",
+        titleFont: { size: 14 },
+        bodyFont: { size: 12 },
+        callbacks: {
+          label: (context) =>
+            `${context.label}: ${context.raw} (${((context.raw / stats.totalUsers) * 100).toFixed(1)}%)`,
+        },
       },
     },
     animation: {
@@ -221,13 +322,133 @@ const fetchStats = async () => {
     },
   };
 
+  // Lost and Found Bar Chart Data
+  const lostAndFoundChartData = {
+    labels: ["Lost", "Found", "Pending", "Matched", "Reunited"],
+    datasets: [
+      {
+        label: "Reports",
+        data: [
+          stats.lostReports,
+          stats.foundReports,
+          stats.pendingReports,
+          stats.matchedReports,
+          stats.reunitedReports,
+        ],
+        backgroundColor: ["#f59e0bcc", "#10b981cc", "#3b82f6cc", "#ec4899cc", "#8b5cf6cc", "#6b7280cc"],
+        borderColor: ["#f59e0b", "#10b981", "#3b82f6", "#ec4899", "#8b5cf6", "#6b7280"],
+        borderWidth: 2,
+        borderRadius: 6,
+        hoverBackgroundColor: ["#f59e0b", "#10b981", "#3b82f6", "#ec4899", "#8b5cf6", "#6b7280"],
+        hoverBorderWidth: 3,
+      },
+    ],
+  };
+
+  const lostAndFoundChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: "top",
+        labels: { font: { size: 14, weight: "bold" }, color: "#374151" },
+      },
+      title: {
+        display: true,
+        text: "Lost and Found Report Distribution",
+        font: { size: 18, weight: "bold" },
+        color: "#1f2937",
+        padding: { top: 10, bottom: 20 },
+      },
+      tooltip: {
+        backgroundColor: "#1f2937",
+        titleFont: { size: 14 },
+        bodyFont: { size: 12 },
+        callbacks: {
+          label: (context) =>
+            `${context.label}: ${context.raw} (${((context.raw / stats.totalLostAndFound) * 100).toFixed(1)}%)`,
+        },
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        title: { display: true, text: "Number of Reports", font: { size: 14 }, color: "#6b7280" },
+        grid: { color: "#e5e7eb" },
+        ticks: { color: "#6b7280", font: { size: 12 } },
+      },
+      x: {
+        title: { display: true, text: "Report Status/Type", font: { size: 14 }, color: "#6b7280" },
+        grid: { display: false },
+        ticks: { color: "#6b7280", font: { size: 12 } },
+      },
+    },
+    animation: {
+      duration: 1000,
+      easing: "easeOutQuart",
+    },
+  };
+
+  // Appointment Pie Chart Data
+  const appointmentChartData = {
+    labels: ["Pending", "Confirmed", "Completed", "Cancelled", "Not Available"],
+    datasets: [
+      {
+        label: "Appointments",
+        data: [
+          stats.pendingAppointments,
+          stats.confirmedAppointments,
+          stats.completedAppointments,
+          stats.cancelledAppointments,
+          stats.notAvailableAppointments,
+        ],
+        backgroundColor: ["#f59e0b", "#10b981", "#3b82f6", "#ec4899", "#6b7280"],
+        borderColor: ["#fff"],
+        borderWidth: 2,
+        hoverOffset: 12,
+        hoverBorderWidth: 3,
+      },
+    ],
+  };
+
+  const appointmentChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: "top",
+        labels: { font: { size: 14, weight: "bold" }, color: "#374151" },
+      },
+      title: {
+        display: true,
+        text: "Appointment Status Distribution",
+        font: { size: 18, weight: "bold" },
+        color: "#1f2937",
+        padding: { top: 10, bottom: 20 },
+      },
+      tooltip: {
+        backgroundColor: "#1f2937",
+        titleFont: { size: 14 },
+        bodyFont: { size: 12 },
+        callbacks: {
+          label: (context) =>
+            `${context.label}: ${context.raw} (${((context.raw / stats.totalAppointments) * 100).toFixed(1)}%)`,
+        },
+      },
+    },
+    animation: {
+      duration: 1000,
+      easing: "easeOutQuart",
+    },
+  };
+
   return (
     <div className="relative overflow-hidden bg-white border border-gray-100 shadow-2xl rounded-2xl">
       {/* Header */}
       <div className="px-6 py-5 bg-gradient-to-r from-[#ffc929] via-[#f59e0b] to-[#ec4899] text-white">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Dashboard Statistics</h1>
+            <h1 className="text-2xl font-bold tracking-tight">Platform Dashboard</h1>
             <p className="text-sm opacity-90">
               Updated as of {stats.lastRefreshed} • {new Date().toLocaleDateString()}
             </p>
@@ -244,12 +465,13 @@ const fetchStats = async () => {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 gap-6 p-6 sm:grid-cols-2 lg:grid-cols-4 bg-gray-50">
+      <div className="grid grid-cols-1 gap-6 p-6 sm:grid-cols-2 lg:grid-cols-5 bg-gray-50">
         {[
           { icon: <Users className="w-6 h-6 text-[#ffc929]" />, label: "Total Users", value: stats.totalUsers, bg: "bg-yellow-50" },
-          { icon: <Shield className="w-6 h-6 text-[#ec4899]" />, label: "Total Pets", value: stats.totalPets, bg: "bg-pink-50" },
-          { icon: <PieChart className="w-6 h-6 text-[#ffc929]" />, label: "Pending Pets", value: stats.pendingPets, bg: "bg-yellow-50" },
-          { icon: <BarChart3 className="w-6 h-6 text-[#ec4899]" />, label: "Adopted Pets", value: stats.adoptedPets, bg: "bg-pink-50" },
+          { icon: <Dog className="w-6 h-6 text-[#ec4899]" />, label: "Total Pets", value: stats.totalPets, bg: "bg-pink-50" },
+          { icon: <FileText className="w-6 h-6 text-[#ffc929]" />, label: "Lost/Found Reports", value: stats.totalLostAndFound, bg: "bg-yellow-50" },
+          { icon: <Calendar className="w-6 h-6 text-[#ec4899]" />, label: "Total Appointments", value: stats.totalAppointments, bg: "bg-pink-50" },
+          { icon: <Heart className="w-6 h-6 text-[#ffc929]" />, label: "Reunited Pets", value: stats.reunitedReports, bg: "bg-yellow-50" },
         ].map((stat, index) => (
           <div
             key={index}
@@ -281,8 +503,15 @@ const fetchStats = async () => {
           className="p-6 bg-white border border-gray-200 shadow-sm rounded-xl animate-fade-in-up"
           style={{ height: "400px", animationDelay: "500ms" }}
         >
+          <Pie data={roleChartData} options={roleChartOptions} />
+        </div>
+        <div
+          className="p-6 bg-white border border-gray-200 shadow-sm rounded-xl animate-fade-in-up"
+          style={{ height: "400px", animationDelay: "600ms" }}
+        >
           <Pie data={petChartData} options={petChartOptions} />
         </div>
+
       </div>
 
       {/* Error Alert */}
@@ -304,16 +533,19 @@ const fetchStats = async () => {
       {loading && (
         <div className="absolute inset-0 flex flex-col gap-6 p-6 bg-opacity-75 bg-gray-50">
           <div className="h-20 bg-gray-200 rounded-lg animate-pulse" />
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {Array(4)
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
+            {Array(5)
               .fill()
               .map((_, index) => (
                 <div key={index} className="h-24 bg-gray-200 rounded-xl animate-pulse" />
               ))}
           </div>
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <div className="bg-gray-200 h-96 rounded-xl animate-pulse" />
-            <div className="bg-gray-200 h-96 rounded-xl animate-pulse" />
+            {Array(5)
+              .fill()
+              .map((_, index) => (
+                <div key={index} className="bg-gray-200 h-96 rounded-xl animate-pulse" />
+              ))}
           </div>
         </div>
       )}

@@ -53,7 +53,6 @@ petRouter.get("/my-adoption-requests", getMyAdoptionRequests); // Adoption reque
 petRouter.get("/my-adopted-pets", getMyAdoptedPets); 
 petRouter.get("/stats", getPetStats);
 // Routes pour l'admin
-petRouter.use(authorize(['Admin', 'SuperAdmin']));  // Appliquer le middleware d'autorisation pour les routes suivantes
 petRouter.put('/modifyStatus/:id', modifyPetStatus);  // Récupérer un pet par ID
 petRouter.delete('/deleteAdminPet/:id', deleteAdminPet);  // Supprimer un pet
 

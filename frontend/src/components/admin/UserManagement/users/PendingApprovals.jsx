@@ -1,13 +1,13 @@
-import React, { useEffect, useState, useMemo } from "react";
-import { Loader2, PawPrint, X, Check, Search, Users } from "lucide-react";
+import { Check, Loader2, PawPrint, Search, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { useApp } from "../../../../context/AppContext";
 import axiosInstance from "../../../../utils/axiosInstance";
+import ConfirmationModal from "../../../ConfirmationModal";
+import { ErrorAlert } from "../../common/ErrorAlert";
 import { PaginationControls } from "../../common/PaginationControls";
+import EmptyState from "../common/EmptyState";
 import { FilterSelect } from "../common/FilterSelect";
 import UserTable from "../common/UserTable";
-import { ErrorAlert } from "../../common/ErrorAlert";
-import ConfirmationModal from "../../../ConfirmationModal";
-import { useApp } from "../../../../context/AppContext";
-import EmptyState from "../common/EmptyState";
 
 const PendingApprovals = () => {
   const { allUsers: users, loading, error, user: currentUser, updateUsers, socket } = useApp();

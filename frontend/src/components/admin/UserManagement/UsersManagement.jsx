@@ -19,7 +19,7 @@ const UsersManagement = ({ hideHeader = false }) => {
   // Calculate user stats from allUsers
   const fetchUserStats = () => {
     setLoadingStats(true);
-    console.log("allUsers in UsersManagement:", allUsers.map(u => ({ id: u._id, role: u.role, isActive: u.isActive, isArchieve: u.isArchieve })));
+    console.log("allUsers in UsersManagement:", allUsers.map(u => ({ id: u._id, role: u.role, isActive: u.isActive, isArchieve: u.isArchieve, lastLogin: u.lastLogin })));
     try {
       const nonAdminUsers = allUsers.filter(
         (user) => !["Admin", "SuperAdmin"].includes(user.role)
@@ -28,13 +28,23 @@ const UsersManagement = ({ hideHeader = false }) => {
         (user) => user.isActive && !user.isArchieve
       ).length;
       const inactiveNonAdmins = nonAdminUsers.filter(
-        (user) => !user.isActive && !user.isArchieve
+        (user) =>
+          !user.isActive &&
+          !user.isArchieve &&
+          (user.role === "PetOwner" ||
+            (["Vet", "Trainer"].includes(user.role) &&
+              user.lastLogin !== null &&
+              user.lastLogin !== undefined))
       ).length;
       const archivedNonAdmins = nonAdminUsers.filter(
         (user) => user.isArchieve
       ).length;
       const pendingNonAdmins = nonAdminUsers.filter(
-        (user) => !user.isActive && user.role !== "PetOwner" // Assuming Vet/Trainer need approval
+        (user) =>
+          ["Vet", "Trainer"].includes(user.role) &&
+          !user.isActive &&
+          !user.isArchieve &&
+          (user.lastLogin === null || user.lastLogin === undefined)
       ).length;
 
       console.log("UsersManagement counts:", {

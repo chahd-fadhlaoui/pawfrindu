@@ -1072,3 +1072,90 @@ export const updateUnavailablePeriods = async (req, res) => {
     res.status(500).json({ message: "Failed to update unavailable periods", detail: error.message });
   }
 };
+
+export const getAppointmentStats = async (req, res) => {
+  try {
+    console.log('Fetching appointment stats:', {
+      userId: req.user?._id,
+      role: req.user?.role,
+      query: req.query,
+      headers: req.headers.authorization?.substring(0, 20) + '...',
+    });
+
+    const { startDate, endDate } = req.query;
+    let dateFilter = {};
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (isNaN(start) || isNaN(end)) {
+        console.error('Invalid date format:', { startDate, endDate });
+        return res.status(400).json({ success: false, message: 'Invalid date format' });
+      }
+      dateFilter = { createdAt: { $gte: start, $lte: end } };
+    }
+
+    const totalAppointments = await Appointment.countDocuments({ ...dateFilter });
+    const pendingAppointments = await Appointment.countDocuments({
+      ...dateFilter,
+      status: 'pending',
+    });
+    const confirmedAppointments = await Appointment.countDocuments({
+      ...dateFilter,
+      status: 'confirmed',
+    });
+    const completedAppointments = await Appointment.countDocuments({
+      ...dateFilter,
+      status: 'completed',
+    });
+    const cancelledAppointments = await Appointment.countDocuments({
+      ...dateFilter,
+      status: 'cancelled',
+    });
+    const notAvailableAppointments = await Appointment.countDocuments({
+      ...dateFilter,
+      status: 'notAvailable',
+    });
+    const vetAppointments = await Appointment.countDocuments({
+      ...dateFilter,
+      professionalType: 'Vet',
+    });
+    const trainerAppointments = await Appointment.countDocuments({
+      ...dateFilter,
+      professionalType: 'Trainer',
+    });
+
+    console.log('Appointment stats results:', {
+      totalAppointments,
+      pendingAppointments,
+      confirmedAppointments,
+      completedAppointments,
+      cancelledAppointments,
+      notAvailableAppointments,
+      vetAppointments,
+      trainerAppointments,
+    });
+
+    res.json({
+      success: true,
+      stats: {
+        totalAppointments,
+        pendingAppointments,
+        confirmedAppointments,
+        completedAppointments,
+        cancelledAppointments,
+        notAvailableAppointments,
+        vetAppointments,
+        trainerAppointments,
+      },
+    });
+  } catch (error) {
+    console.error('Get Appointment Stats Error:', {
+      message: error.message,
+      stack: error.stack,
+      userId: req.user?._id,
+      role: req.user?.role,
+      query: req.query,
+    });
+    res.status(500).json({ success: false, message: 'Failed to fetch appointment stats', error: error.message });
+  }
+};

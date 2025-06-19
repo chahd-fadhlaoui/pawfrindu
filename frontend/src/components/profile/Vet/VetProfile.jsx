@@ -1,8 +1,8 @@
 import { AlertCircle, Loader2, Sparkles } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import axiosInstance from "../../../utils/axiosInstance";
 import Step1 from "./steps/Step1";
-import Step2 from "./steps/Step3"; 
+import Step2 from "./steps/Step3";
 import Step4 from "./steps/Step4";
 import Step5 from "./steps/Step5";
 import Step6 from "./steps/Step6";

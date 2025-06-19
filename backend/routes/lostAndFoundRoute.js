@@ -16,7 +16,8 @@ import {
   updateReport,
   unmatchReport,
   updateFoundReport,
-  updateLostReport, 
+  updateLostReport,
+  getLostAndFoundStats, 
 } from "../controllers/lostAndFoundController.js";
 import { authenticate } from "../middlewares/authMiddleware.js";
 import { verifyToken } from "../controllers/userController.js";
@@ -95,5 +96,8 @@ lostAndFoundRouter.get("/potential-matches/:id", getPotentialMatches);
 
 // Match reports (authenticated, admin only)
 lostAndFoundRouter.post("/match", authenticate, matchReports);
+
+// route for the stats
+lostAndFoundRouter.get("/stats" , getLostAndFoundStats);
 
 export default lostAndFoundRouter;
