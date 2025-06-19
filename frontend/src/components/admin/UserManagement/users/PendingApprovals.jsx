@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Loader2, PawPrint, X, Check, Search, Users } from "lucide-react";
 import axiosInstance from "../../../../utils/axiosInstance";
 import { PaginationControls } from "../../common/PaginationControls";
@@ -10,7 +10,7 @@ import { useApp } from "../../../../context/AppContext";
 import EmptyState from "../common/EmptyState";
 
 const PendingApprovals = () => {
-  const { allUsers: users, loading, error, user: currentUser, updateUsers } = useApp();
+  const { allUsers: users, loading, error, user: currentUser, updateUsers, socket } = useApp();
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
@@ -29,13 +29,47 @@ const PendingApprovals = () => {
   ];
 
   useEffect(() => {
-    let filtered = users.filter(
+    if (socket) {
+      socket.onAny((event, ...args) => {
+        console.log('Socket.IO event received:', { event, args });
+      });
+      socket.on('userDeletedByAdmin', ({ userId }) => {
+        console.log('Socket.IO: User deleted by admin:', { userId });
+        setFilteredUsers((prev) => {
+          const updated = prev.filter((user) => user._id.toString() !== userId.toString());
+          console.log('Updated filteredUsers after deletion:', updated);
+          return updated;
+        });
+        setSelectedUsers((prev) => {
+          const updated = prev.filter((id) => id.toString() !== userId.toString());
+          console.log('Updated selectedUsers after deletion:', updated);
+          return updated;
+        });
+        updateUsers([{ _id: userId.toString(), _deleted: true }]);
+      });
+      socket.on('connect_error', (err) => {
+        console.error('Socket.IO connection error:', err);
+      });
+      socket.on('disconnect', () => {
+        console.log('Socket.IO disconnected');
+      });
+      return () => {
+        socket.offAny();
+        socket.off('userDeletedByAdmin');
+        socket.off('connect_error');
+        socket.off('disconnect');
+      };
+    }
+  }, [socket, updateUsers]);
+
+  useEffect(() => {
+    const filtered = users.filter(
       (user) =>
         (user.role === "Vet" || user.role === "Trainer") &&
         !user.isActive &&
         !user.isArchieve &&
         (user.lastLogin === null || user.lastLogin === undefined)
-    );
+    ).map(user => ({ ...user, _id: user._id.toString() })); // Normalize _id to string
 
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
@@ -55,18 +89,21 @@ const PendingApprovals = () => {
     setFilteredUsers(filtered);
     setCurrentPage(1);
     setSelectedUsers([]);
+    console.log('Filtered users updated:', filtered);
   }, [users, searchQuery, roleFilter]);
 
-  // Log pending Vet and Trainer users
   useEffect(() => {
     console.log("Pending Approvals - Vet and Trainer data:", filteredUsers);
   }, [filteredUsers]);
 
+  const currentUsers = useMemo(() => {
+    return filteredUsers.slice(
+      (currentPage - 1) * usersPerPage,
+      currentPage * usersPerPage
+    );
+  }, [filteredUsers, currentPage]);
+
   const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
-  const currentUsers = filteredUsers.slice(
-    (currentPage - 1) * usersPerPage,
-    currentPage * usersPerPage
-  );
 
   const handlePageChange = (page) => {
     if (page >= 1 && page <= totalPages) {
@@ -123,13 +160,15 @@ const PendingApprovals = () => {
 
   const confirmRejectUser = async () => {
     try {
+      console.log('Sending DELETE request for user:', selectedUserId);
       await axiosInstance.delete(`/api/user/users/${selectedUserId}`);
-      updateUsers([{ _id: selectedUserId, _deleted: true }]);
-      setFilteredUsers((prev) => prev.filter((user) => user._id !== selectedUserId));
-      setSelectedUsers((prev) => prev.filter((id) => id !== selectedUserId));
+      console.log('DELETE request successful for user:', selectedUserId);
       setIsConfirmModalOpen(false);
     } catch (err) {
-      setActionError(err.response?.data?.message || "Failed to delete user");
+      const message = err.response?.status === 404
+        ? "User not found. It may have been deleted already."
+        : err.response?.data?.message || "Failed to delete user";
+      setActionError(message);
       console.error("Reject (Delete) Error:", err);
       setIsConfirmModalOpen(false);
     }
@@ -167,17 +206,19 @@ const PendingApprovals = () => {
 
   const confirmBulkReject = async () => {
     try {
+      console.log('Sending bulk DELETE requests for users:', selectedUsers);
       await Promise.all(
         selectedUsers.map((userId) =>  
           axiosInstance.delete(`/api/user/users/${userId}`)
         )
       );
-      updateUsers(selectedUsers.map((userId) => ({ _id: userId, _deleted: true })));
-      setFilteredUsers((prev) => prev.filter((user) => !selectedUsers.includes(user._id)));
-      setSelectedUsers([]);
+      console.log('Bulk DELETE requests successful for users:', selectedUsers);
       setIsConfirmModalOpen(false);
     } catch (err) {
-      setActionError(err.response?.data?.message || "Failed to bulk delete users");
+      const message = err.response?.status === 404
+        ? "One or more users not found. They may have been deleted already."
+        : err.response?.data?.message || "Failed to bulk delete users";
+      setActionError(message);
       console.error("Bulk Reject (Delete) Error:", err);
       setIsConfirmModalOpen(false);
     }
@@ -209,7 +250,6 @@ const PendingApprovals = () => {
 
   return (
     <div className="space-y-6">
-      {/* Filters and Actions */}
       <div className="p-4 bg-white shadow-md rounded-xl">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="relative flex-1">
@@ -260,14 +300,12 @@ const PendingApprovals = () => {
         </div>
       </div>
 
-      {/* Error Alert */}
       {actionError && (
         <div className="animate-fadeIn">
           <ErrorAlert message={actionError} onDismiss={() => setActionError("")} />
         </div>
       )}
 
-      {/* Users Table or Empty State */}
       {filteredUsers.length === 0 ? (
         <EmptyState
           hasFilters={searchQuery || roleFilter}
@@ -310,6 +348,7 @@ const PendingApprovals = () => {
               </div>
             )}
             title="Pending Approvals"
+            key={filteredUsers.length} // Force re-render on length change
           />
           {totalPages > 1 && (
             <div className="flex justify-center mt-6">
@@ -324,7 +363,6 @@ const PendingApprovals = () => {
         </>
       )}
 
-      {/* Confirmation Modal */}
       <ConfirmationModal
         isOpen={isConfirmModalOpen}
         onClose={() => setIsConfirmModalOpen(false)}

@@ -1053,14 +1053,28 @@ export const getMyAdoptionRequests = async (req, res) => {
 // Get pet stats
 export const getPetStats = async (req, res) => {
   try {
+    console.log('Fetching pet stats:', {
+      userId: req.user?._id,
+      role: req.user?.role,
+      query: req.query,
+      headers: req.headers.authorization?.substring(0, 20) + '...',
+    });
+
     const { startDate, endDate, species } = req.query;
-    const dateFilter =
-      startDate && endDate
-        ? {
-            createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) },
-          }
-        : {};
-    const speciesFilter = species && species !== "all" ? { species } : {};
+    let dateFilter = {};
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (isNaN(start) || isNaN(end)) {
+        console.error('Invalid date format:', { startDate, endDate });
+        return res.status(400).json({ success: false, message: 'Invalid date format' });
+      }
+      dateFilter = { createdAt: { $gte: start, $lte: end } };
+    }
+
+    const speciesFilter = species && species !== 'all' ? { species } : {};
+
+    console.log('Pet stats filters:', { dateFilter, speciesFilter });
 
     const totalPets = await Pet.countDocuments({
       ...dateFilter,
@@ -1069,31 +1083,31 @@ export const getPetStats = async (req, res) => {
     const pendingPets = await Pet.countDocuments({
       ...dateFilter,
       ...speciesFilter,
-      status: "pending",
+      status: 'pending',
       isArchived: false,
     });
     const acceptedPets = await Pet.countDocuments({
       ...dateFilter,
       ...speciesFilter,
-      status: "accepted",
+      status: 'accepted',
       isArchived: false,
     });
     const adoptionPendingPets = await Pet.countDocuments({
       ...dateFilter,
       ...speciesFilter,
-      status: "adoptionPending",
+      status: 'adoptionPending',
       isArchived: false,
     });
     const adoptedPets = await Pet.countDocuments({
       ...dateFilter,
       ...speciesFilter,
-      status: "adopted",
+      status: 'adopted',
       isArchived: false,
     });
     const soldPets = await Pet.countDocuments({
       ...dateFilter,
       ...speciesFilter,
-      status: "sold",
+      status: 'sold',
       isArchived: false,
     });
     const archivedPets = await Pet.countDocuments({
@@ -1106,6 +1120,17 @@ export const getPetStats = async (req, res) => {
       ...speciesFilter,
       isApproved: true,
       isArchived: false,
+    });
+
+    console.log('Pet stats results:', {
+      totalPets,
+      pendingPets,
+      acceptedPets,
+      adoptionPendingPets,
+      adoptedPets,
+      soldPets,
+      archivedPets,
+      approvedPets,
     });
 
     res.json({
@@ -1122,10 +1147,14 @@ export const getPetStats = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Get Pet Stats Error:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Failed to fetch pet stats" });
+    console.error('Get Pet Stats Error:', {
+      message: error.message,
+      stack: error.stack,
+      userId: req.user?._id,
+      role: req.user?.role,
+      query: req.query,
+    });
+    res.status(500).json({ success: false, message: 'Failed to fetch pet stats', error: error.message });
   }
 };
 

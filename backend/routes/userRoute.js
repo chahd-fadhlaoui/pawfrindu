@@ -2,6 +2,7 @@ import express from "express";
 import {
   approveUser,
   createProfile,
+  deleteUserByAdmin,
   forgotPassword,
   getAllUsers,
   getCurrentUser,
@@ -51,6 +52,7 @@ userRouter.put("/updateTrainerProfile", authenticate, updateTrainerProfile);
 // Admin-Only Route
 userRouter.get('/getAllUsers', authenticate, authorize('Admin'), getAllUsers);
 userRouter.put("/users/:userId", authenticate, authorize("Admin"), updateUserByAdmin); // update the role / adminType / isActive / isArchieve
+userRouter.delete("/users/:userId", authenticate, authorize("Admin"), deleteUserByAdmin); // update the role / adminType / isActive / isArchieve
 userRouter.put("/users/:userId/approve", authenticate, authorize("Admin"), approveUser); // an endpoint for admins to activate accounts
 userRouter.get("/stats", authenticate, authorize("Admin"), getUserStats);
 

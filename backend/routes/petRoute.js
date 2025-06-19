@@ -51,13 +51,14 @@ petRouter.post('/:petId/approve-adoption/:adopterId', approveAdoption);  // Appr
 
 petRouter.get("/my-adoption-requests", getMyAdoptionRequests); // Adoption requests for Adopters 
 petRouter.get("/my-adopted-pets", getMyAdoptedPets); 
+petRouter.get("/stats", getPetStats);
 // Routes pour l'admin
 petRouter.use(authorize(['Admin', 'SuperAdmin']));  // Appliquer le middleware d'autorisation pour les routes suivantes
 petRouter.put('/modifyStatus/:id', modifyPetStatus);  // Récupérer un pet par ID
 petRouter.delete('/deleteAdminPet/:id', deleteAdminPet);  // Supprimer un pet
 
 petRouter.put('/unarchivePet/:id',unarchivePet); 
-petRouter.get("/stats", getPetStats);
+
 petRouter.post("/send-rejection-email", authenticate, authorize("Admin"), sendRejectionEmail);
 
 

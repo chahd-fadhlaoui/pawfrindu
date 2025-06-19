@@ -1,17 +1,17 @@
-import React, { useEffect, useState } from "react";
-import { Users, Shield, PieChart, BarChart3, RefreshCw, AlertCircle, X } from "lucide-react";
-import axiosInstance from "../../utils/axiosInstance";
-import { Bar, Pie } from "react-chartjs-2";
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
   ArcElement,
+  BarElement,
+  CategoryScale,
+  Chart as ChartJS,
+  Legend,
+  LinearScale,
   Title,
   Tooltip,
-  Legend,
 } from "chart.js";
+import { AlertCircle, BarChart3, PieChart, RefreshCw, Shield, Users, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Bar, Pie } from "react-chartjs-2";
+import axiosInstance from "../../utils/axiosInstance";
 
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
@@ -36,40 +36,64 @@ const DashboardStats = ({ onRefresh }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchStats = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [userStatsRes, petStatsRes] = await Promise.all([
-        axiosInstance.get("/api/user/stats"),
-        axiosInstance.get("/api/pet/stats"),
-      ]);
+const fetchStats = async () => {
+  setLoading(true);
+  setError(null);
+  try {
+    console.log('Fetching stats with token:', localStorage.getItem('token')?.substring(0, 10) + '...');
+    const [userStatsRes, petStatsRes] = await Promise.all([
+      axiosInstance.get('/api/user/stats'),
+      axiosInstance.get('/api/pet/stats').catch((err) => ({
+        data: { stats: {} },
+        error: err,
+      })),
+    ]);
 
-      const userStats = userStatsRes.data.stats || {};
-      const petStats = petStatsRes.data.stats || {};
+    const userStats = userStatsRes.data.stats || {};
+    const petStats = petStatsRes.error ? {} : petStatsRes.data.stats || {};
 
-      setStats({
-        totalUsers: userStats.totalUsers || 0,
-        activeUsers: userStats.activeUsers || 0,
-        inactiveUsers: userStats.inactiveUsers || 0,
-        archivedUsers: userStats.archivedUsers || 0,
-        pendingUsers: userStats.pendingUsers || 0,
-        totalPets: petStats.totalPets || 0,
-        pendingPets: petStats.pendingPets || 0,
-        acceptedPets: petStats.acceptedPets || 0,
-        adoptionPendingPets: petStats.adoptionPendingPets || 0,
-        adoptedPets: petStats.adoptedPets || 0,
-        soldPets: petStats.soldPets || 0,
-        archivedPets: petStats.archivedPets || 0,
-        approvedPets: petStats.approvedPets || 0,
-        lastRefreshed: new Date().toLocaleTimeString(),
+    if (petStatsRes.error) {
+      const errorMessage = petStatsRes.error.response?.status === 403
+        ? 'You do not have permission to view pet statistics.'
+        : `Failed to fetch pet stats: ${petStatsRes.error.response?.data?.message || petStatsRes.error.message}`;
+      setError(errorMessage);
+      console.error('Pet stats error:', {
+        status: petStatsRes.error.response?.status,
+        data: petStatsRes.error.response?.data,
+        message: petStatsRes.error.message,
       });
-    } catch (err) {
-      setError("Failed to fetch stats: " + (err.response?.data?.message || err.message));
-    } finally {
-      setLoading(false);
     }
-  };
+
+    setStats({
+      totalUsers: userStats.totalUsers || 0,
+      activeUsers: userStats.activeUsers || 0,
+      inactiveUsers: userStats.inactiveUsers || 0,
+      archivedUsers: userStats.archivedUsers || 0,
+      pendingUsers: userStats.pendingUsers || 0,
+      totalPets: petStats.totalPets || 0,
+      pendingPets: petStats.pendingPets || 0,
+      acceptedPets: petStats.acceptedPets || 0,
+      adoptionPendingPets: petStats.adoptionPendingPets || 0,
+      adoptedPets: petStats.adoptedPets || 0,
+      soldPets: petStats.soldPets || 0,
+      archivedPets: petStats.archivedPets || 0,
+      approvedPets: petStats.approvedPets || 0,
+      lastRefreshed: new Date().toLocaleTimeString(),
+    });
+  } catch (err) {
+    const errorMessage = err.response?.status === 403
+      ? 'You do not have permission to view these statistics.'
+      : `Failed to fetch stats: ${err.response?.data?.message || err.message}`;
+    setError(errorMessage);
+    console.error('fetchStats error:', {
+      status: err.response?.status,
+      data: err.response?.data,
+      message: err.message,
+    });
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     fetchStats();
