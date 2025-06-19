@@ -10,6 +10,7 @@ import HelpSection from "../components/common/HelpSection";
 import ImageUpload from "../components/ImageUpload";
 import { useApp } from "../context/AppContext";
 import axiosInstance from "../utils/axiosInstance";
+import { governorates, delegationsByGovernorate } from "../assets/locations";
 
 const CreatePet = () => {
   const navigate = useNavigate();
@@ -18,6 +19,8 @@ const CreatePet = () => {
     name: "",
     breed: "",
     age: "adult",
+    governorate: "",
+    delegation: "",
     city: "",
     gender: "male",
     species: "dog",
@@ -32,6 +35,7 @@ const CreatePet = () => {
   const [availableBreeds, setAvailableBreeds] = useState(breeds.dog);
   const [availableAges, setAvailableAges] = useState(ageRanges.dog);
   const [isFormDirty, setIsFormDirty] = useState(false);
+  const [availableDelegations, setAvailableDelegations] = useState([]);
 
   useEffect(() => {
     if (formData.species === "dog") {
@@ -61,6 +65,31 @@ const CreatePet = () => {
     }
   }, [formData.species]);
 
+  useEffect(() => {
+    if (formData.governorate) {
+      setAvailableDelegations(delegationsByGovernorate[formData.governorate] || []);
+      setFormData((prev) => ({
+        ...prev,
+        delegation: "",
+        city: "",
+      }));
+    } else {
+      setAvailableDelegations([]);
+      setFormData((prev) => ({ ...prev, delegation: "", city: "" }));
+    }
+  }, [formData.governorate]);
+
+  useEffect(() => {
+    if (formData.governorate && formData.delegation) {
+      setFormData((prev) => ({
+        ...prev,
+        city: `${formData.delegation}, ${formData.governorate}`,
+      }));
+    } else {
+      setFormData((prev) => ({ ...prev, city: "" }));
+    }
+  }, [formData.governorate, formData.delegation]);
+
   const handleImageSelected = (imageUrl) => {
     setFormData((prev) => ({ ...prev, image: imageUrl }));
     setIsFormDirty(true);
@@ -76,7 +105,7 @@ const CreatePet = () => {
       return false;
     }
     if (!formData.city.trim()) {
-      setError("City is required");
+      setError("Please select a governorate and delegation");
       return false;
     }
     if (!formData.age) {
@@ -127,6 +156,8 @@ const CreatePet = () => {
         isTrained: Boolean(formData.isTrained),
       };
       delete petData.feeOption;
+      delete petData.governorate;
+      delete petData.delegation;
 
       const result = await axiosInstance.post("/api/pet/addpet", petData);
 
@@ -186,7 +217,7 @@ const CreatePet = () => {
             <span className="block text-pink-500">Pet Profile</span>
           </h1>
           <p className="max-w-2xl mx-auto text-lg leading-relaxed text-gray-600">
-            Share your pet’s details to find them a loving forever home.
+            Share your pet's details to find them a loving forever home.
           </p>
         </div>
 
@@ -318,21 +349,42 @@ const CreatePet = () => {
                     </select>
                   </div>
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700" htmlFor="city">
-                      City <span className="text-red-500">*</span>
+                    <label className="block text-sm font-medium text-gray-700" htmlFor="governorate">
+                      Governorate <span className="text-red-500">*</span>
                     </label>
                     <select
-                      id="city"
+                      id="governorate"
                       className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#ffc929] focus:border-transparent transition-all duration-200"
-                      value={formData.city}
-                      onChange={(e) => handleInputChange("city", e.target.value)}
+                      value={formData.governorate}
+                      onChange={(e) => handleInputChange("governorate", e.target.value)}
                       required
                       aria-required="true"
                     >
-                      <option value="">Select a city</option>
-                      {tunisianCities.map((city) => (
-                        <option key={city} value={city}>
-                          {city}
+                      <option value="">Select a governorate</option>
+                      {governorates.map((gov) => (
+                        <option key={gov} value={gov}>
+                          {gov}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700" htmlFor="delegation">
+                      Delegation <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      id="delegation"
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#ffc929] focus:border-transparent transition-all duration-200"
+                      value={formData.delegation}
+                      onChange={(e) => handleInputChange("delegation", e.target.value)}
+                      required
+                      aria-required="true"
+                      disabled={!formData.governorate}
+                    >
+                      <option value="">Select a delegation</option>
+                      {availableDelegations.map((del) => (
+                        <option key={del} value={del}>
+                          {del}
                         </option>
                       ))}
                     </select>
@@ -384,6 +436,23 @@ const CreatePet = () => {
                     </div>
                   )}
                 </div>
+
+                {/* Donation Information Text */}
+                {formData.feeOption === "With Fee" && (
+                  <div className="flex items-start p-4 space-x-3 border-l-4 border-[#ffc929] bg-gradient-to-r from-[#ffc929]/5 to-pink-50/50 rounded-xl">
+                    <Heart className="w-6 h-6 text-[#ffc929] flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-800 mb-1">
+                        💝 Supporting Animal Welfare
+                      </p>
+                      <p className="text-sm text-gray-600 leading-relaxed">
+                        The adoption fee you set will go towards supporting local animal shelters and rescue organizations. 
+                        Your contribution helps provide food, medical care, and shelter for animals in need. 
+                        Thank you for making a difference! 🐾
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {error && (
                   <div className="flex items-center p-4 space-x-3 border-l-4 border-red-500 bg-red-50 rounded-xl">
@@ -439,7 +508,7 @@ const CreatePet = () => {
                       Creating...
                     </span>
                   ) : (
-                    "Create Pet Profile"
+                    "Create Your Pet"
                   )}
                 </button>
               </form>
@@ -452,23 +521,43 @@ const CreatePet = () => {
             title="How to Create a Pet Profile"
             className="max-w-4xl mx-auto bg-white rounded-3xl shadow-lg p-6 border border-[#ffc929]/10"
           >
-            <li>Upload a clear photo of your pet using the image uploader on the left.</li>
-            <li>
-              Fill in all required fields marked with <span className="text-red-500">*</span> (e.g.,{" "}
-              <span className="font-medium">name</span>,{" "}
-              <span className="font-medium">breed</span>,{" "}
-              <span className="font-medium">city</span>).
-            </li>
-            <li>
-              Write a brief <span className="font-medium">description</span> to share your pet’s personality.
-            </li>
-            <li>
-              Choose <span className="font-medium">Free</span> or{" "}
-              <span className="font-medium">With Fee</span> and set a fee if needed.
-            </li>
-            <li>
-              Click <span className="font-medium">Create Pet Profile</span> to submit your listing.
-            </li>
+            <ul className="space-y-4">
+              <li className="flex items-start gap-3">
+                <div className="text-gray-700">
+                  Upload a clear photo of your pet using the image uploader on the left.
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <div className="text-gray-700">
+                  Fill in all required fields marked with <span className="text-red-500">*</span> (e.g.,{" "}
+                  <span className="font-medium">name</span>,{" "}
+                  <span className="font-medium">breed</span>,{" "}
+                  <span className="font-medium">governorate</span>,{" "}
+                  <span className="font-medium">delegation</span>).
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <div className="text-gray-700">
+                  Write a brief <span className="font-medium">description</span> to share your pet's personality.
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <div className="text-gray-700">
+                  Choose <span className="font-medium">Free</span> or{" "}
+                  <span className="font-medium">With Fee</span> and set a fee if needed.
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <div className="text-gray-700">
+                  If you set a fee, the money will go to support local animal welfare organizations.
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <div className="text-gray-700">
+                  Click <span className="font-medium">Create Pet Profile</span> to submit your listing.
+                </div>
+              </li>
+            </ul>
           </HelpSection>
         </main>
       </div>
@@ -477,22 +566,3 @@ const CreatePet = () => {
 };
 
 export default CreatePet;
-
-// Tunisian cities (unchanged)
-const tunisianCities = [
-  "Tunis",
-  "Sfax",
-  "Sousse",
-  "Kairouan",
-  "Bizerte",
-  "Gabès",
-  "Ariana",
-  "Gafsa",
-  "Monastir",
-  "Nabeul",
-  "Ben Arous",
-  "La Marsa",
-  "Kasserine",
-  "Médenine",
-  "Hammamet",
-];
