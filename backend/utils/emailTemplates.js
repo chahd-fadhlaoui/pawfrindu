@@ -217,5 +217,39 @@ reportMatched: (data) => ({
         </div>
       `,
   }),
+  reportApproved: (data) => ({
+    subject: "Your Report Has Been Approved!",
+    html: `
+        ${emailStyles}
+        <div class="email-container">
+          <h1>Your Report Has Been Approved! 🐾</h1>
+          <p>Hello ${data.fullName || "User"},</p>
+          <p>We are pleased to inform you that your ${data.reportType} report${data.petName ? ` for <strong>${data.petName}</strong>` : ""} has been approved by our team.</p>
+          <p>Your report is now active and await further details from our team if we find a match.</p>
+          <p>You can view and manage your report details in your PawFrindu account if needed.</p>
+          <a href="${process.env.FRONTEND_URL}/reports" class="button" style="background-color: #4CAF50;">View Report</a>
+          <div class="footer">
+            <p>If you have any questions, please contact our support team.</p>
+            <p>Best regards,<br>The PawFrindu Team</p>
+          </div>
+        </div>
+      `,
+  }),
 
+  reportRejected: (data) => ({
+    subject: "Your Report Has Been Rejected",
+    html: `
+        ${emailStyles}
+        <div class="email-container">
+          <h1>Your Report Has Been Rejected</h1>
+          <p>Hello ${data.fullName || "User"},</p>
+          <p>We regret to inform you that your ${data.reportType} report${data.petName ? ` for <strong>${data.petName}</strong>` : ""} has been rejected by our team.</p>
+          <p>This could be due to incomplete information, policy violations, or other reasons.</p>
+          <div class="footer">
+            <p>We apologize for any inconvenience this may cause.</p>
+            <p>Best regards,<br>The PawFrindu Team</p>
+          </div>
+        </div>
+      `,
+  }),
 };

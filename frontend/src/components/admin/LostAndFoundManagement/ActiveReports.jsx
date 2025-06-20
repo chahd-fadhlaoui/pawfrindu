@@ -48,12 +48,10 @@ const ActiveReports = () => {
   const [isMatchModalOpen, setIsMatchModalOpen] = useState(false);
   const [potentialMatches, setPotentialMatches] = useState([]);
   const [selectedReport, setSelectedReport] = useState(null);
-  const [expandedMatches, setExpandedMatches] = useState({}); // Added missing state
+  const [expandedMatches, setExpandedMatches] = useState({});
   const reportsPerPage = 10;
 
-  const statusOptions = [
-    { value: "Pending", label: "Pending" },
-  ];
+  const statusOptions = [{ value: "Pending", label: "Pending" }];
 
   const bulkActionOptions = [
     { value: "approve", label: "Approve" },
@@ -62,11 +60,17 @@ const ActiveReports = () => {
 
   const getStatusBadgeStyle = (status) => {
     const styles = {
-      Pending: "bg-gradient-to-r from-amber-100 to-amber-200 text-amber-800 border border-amber-300 shadow-sm",
-      Matched: "bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border border-blue-300 shadow-sm",
-      Reunited: "bg-gradient-to-r from-green-100 to-teal-200 text-green-800 border border-green-300 shadow-sm",
+      Pending:
+        "bg-gradient-to-r from-amber-100 to-amber-200 text-amber-800 border border-amber-300 shadow-sm",
+      Matched:
+        "bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border border-blue-300 shadow-sm",
+      Reunited:
+        "bg-gradient-to-r from-green-100 to-teal-200 text-green-800 border border-green-300 shadow-sm",
     };
-    return styles[status] || "bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 border border-gray-300 shadow-sm";
+    return (
+      styles[status] ||
+      "bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 border border-gray-300 shadow-sm"
+    );
   };
 
   const canPerformAction = (report, action) => {
@@ -77,7 +81,11 @@ const ActiveReports = () => {
       case "delete":
         return !report.isApproved;
       case "match":
-        return report.isApproved && !report.matchedReport && report.status === "Pending";
+        return (
+          report.isApproved &&
+          !report.matchedReport &&
+          report.status === "Pending"
+        );
       default:
         return false;
     }
@@ -87,7 +95,9 @@ const ActiveReports = () => {
     setLoading(true);
     try {
       const response = await axiosInstance.get("/api/lost-and-found");
-      const activeReports = response.data.data.filter((r) => r.status === "Pending");
+      const activeReports = response.data.data.filter(
+        (r) => r.status === "Pending"
+      );
       setReports(activeReports);
       setLocalReports(activeReports);
       setCurrentPage(1);
@@ -182,7 +192,9 @@ const ActiveReports = () => {
       await fetchReports();
       setIsConfirmModalOpen(false);
     } catch (error) {
-      setActionError(error.response?.data?.message || `Failed to ${action} report`);
+      setActionError(
+        error.response?.data?.message || `Failed to ${action} report`
+      );
       setLocalReports(reports);
     } finally {
       setIsActionLoading(false);
@@ -194,7 +206,10 @@ const ActiveReports = () => {
     setIsActionLoading(true);
     try {
       const eligibleReports = selectedReports.filter((id) =>
-        canPerformAction(localReports.find((r) => r._id === id), bulkAction)
+        canPerformAction(
+          localReports.find((r) => r._id === id),
+          bulkAction
+        )
       );
       if (eligibleReports.length === 0) {
         setActionError(`No reports eligible for ${bulkAction}.`);
@@ -212,7 +227,9 @@ const ActiveReports = () => {
               }
             : r
         )
-        .filter((r) => bulkAction !== "delete" || !eligibleReports.includes(r._id));
+        .filter(
+          (r) => bulkAction !== "delete" || !eligibleReports.includes(r._id)
+        );
       setLocalReports(optimisticReports);
       setSelectedReports([]);
 
@@ -239,7 +256,9 @@ const ActiveReports = () => {
       await fetchReports();
       setIsConfirmModalOpen(false);
     } catch (error) {
-      setActionError(error.response?.data?.message || "Failed to perform bulk action");
+      setActionError(
+        error.response?.data?.message || "Failed to perform bulk action"
+      );
       setLocalReports(reports);
     } finally {
       setIsActionLoading(false);
@@ -255,12 +274,16 @@ const ActiveReports = () => {
   const fetchPotentialMatches = async (reportId) => {
     setLoading(true);
     try {
-      const response = await axiosInstance.get(`/api/lost-and-found/potential-matches/${reportId}`);
+      const response = await axiosInstance.get(
+        `/api/lost-and-found/potential-matches/${reportId}`
+      );
       setPotentialMatches(response.data.data);
       setExpandedMatches({}); // Reset expanded state
       setIsMatchModalOpen(true);
     } catch (error) {
-      setActionError(error.response?.data?.message || "Failed to fetch potential matches");
+      setActionError(
+        error.response?.data?.message || "Failed to fetch potential matches"
+      );
     } finally {
       setLoading(false);
     }
@@ -274,7 +297,10 @@ const ActiveReports = () => {
   const handleMatchAction = async (reportId, matchedReportId) => {
     setIsActionLoading(true);
     try {
-      await axiosInstance.post("/api/lost-and-found/match", { reportId, matchedReportId });
+      await axiosInstance.post("/api/lost-and-found/match", {
+        reportId,
+        matchedReportId,
+      });
       await fetchReports();
       setIsMatchModalOpen(false);
     } catch (error) {
@@ -366,29 +392,31 @@ const ActiveReports = () => {
           )}
         </div>
       )}
-      {report.isApproved && !report.matchedReport && report.status === "Pending" && (
-        <div
-          className="relative"
-          onMouseEnter={() => setHoveredAction(`match-${report._id}`)}
-          onMouseLeave={() => setHoveredAction(null)}
-        >
-          <button
-            onClick={() => openMatchModal(report)}
-            disabled={isActionLoading}
-            className="flex items-center gap-1 px-3 py-1 text-xs font-semibold text-white rounded-lg bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800"
+      {report.isApproved &&
+        !report.matchedReport &&
+        report.status === "Pending" && (
+          <div
+            className="relative"
+            onMouseEnter={() => setHoveredAction(`match-${report._id}`)}
+            onMouseLeave={() => setHoveredAction(null)}
           >
-            <Link className="w-3 h-3" />
-            Match
-          </button>
-          {hoveredAction === `match-${report._id}` && (
-            <div className="absolute right-0 z-10 px-3 py-2 mt-2 text-xs text-white bg-gray-800 rounded-md shadow-lg top-full animate-fade-in-up">
-              <div className="flex items-center gap-1">
-                <span>Find potential matches</span>
+            <button
+              onClick={() => openMatchModal(report)}
+              disabled={isActionLoading}
+              className="flex items-center gap-1 px-3 py-1 text-xs font-semibold text-white rounded-lg bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800"
+            >
+              <Link className="w-3 h-3" />
+              Match
+            </button>
+            {hoveredAction === `match-${report._id}` && (
+              <div className="absolute right-0 z-10 px-3 py-2 mt-2 text-xs text-white bg-gray-800 rounded-md shadow-lg top-full animate-fade-in-up">
+                <div className="flex items-center gap-1">
+                  <span>Find potential matches</span>
+                </div>
               </div>
-            </div>
-          )}
-        </div>
-      )}
+            )}
+          </div>
+        )}
     </div>
   );
 
@@ -440,7 +468,9 @@ const ActiveReports = () => {
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <>
-                    {bulkAction === "approve" && <CheckCircle className="w-4 h-4" />}
+                    {bulkAction === "approve" && (
+                      <CheckCircle className="w-4 h-4" />
+                    )}
                     {bulkAction === "delete" && <Trash2 className="w-4 h-4" />}
                   </>
                 )}
@@ -464,7 +494,9 @@ const ActiveReports = () => {
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="w-8 h-8 text-[#ffc929] animate-spin" />
             <PawPrint className="w-8 h-8 text-[#ec4899] animate-pulse" />
-            <p className="text-lg font-semibold text-gray-700">Loading reports...</p>
+            <p className="text-lg font-semibold text-gray-700">
+              Loading reports...
+            </p>
           </div>
         </div>
       ) : error ? (
@@ -514,24 +546,33 @@ const ActiveReports = () => {
         isOpen={isConfirmModalOpen}
         onClose={() => setIsConfirmModalOpen(false)}
         onConfirm={() =>
-          confirmAction === "bulk" ? handleBulkAction() : handleAction(confirmAction, selectedReportId)
+          confirmAction === "bulk"
+            ? handleBulkAction()
+            : handleAction(confirmAction, selectedReportId)
         }
         action={confirmAction === "bulk" ? bulkAction : confirmAction}
         itemName={
           confirmAction === "bulk"
             ? `${selectedReports.length} reports`
-            : localReports.find((r) => r._id === selectedReportId)?.name || "this report"
+            : localReports.find((r) => r._id === selectedReportId)?.name ||
+              "this report"
         }
         additionalMessage={
-          confirmAction === "delete" || (confirmAction === "bulk" && bulkAction === "delete") ? (
-            <p className="text-sm text-gray-600">This will permanently delete the report(s).</p>
-          ) : confirmAction === "approve" || (confirmAction === "bulk" && bulkAction === "approve") ? (
-            <p className="text-sm text-gray-600">This will approve the report(s).</p>
+          confirmAction === "delete" ||
+          (confirmAction === "bulk" && bulkAction === "delete") ? (
+            <p className="text-sm text-gray-600">
+              This will permanently delete the report(s).
+            </p>
+          ) : confirmAction === "approve" ||
+            (confirmAction === "bulk" && bulkAction === "approve") ? (
+            <p className="text-sm text-gray-600">
+              This will approve the report(s).
+            </p>
           ) : null
         }
         className="shadow-xl rounded-xl"
       />
-<Modal
+      <Modal
         isOpen={isMatchModalOpen}
         onClose={() => setIsMatchModalOpen(false)}
         title="Find Potential Matches"
@@ -547,7 +588,9 @@ const ActiveReports = () => {
         ) : potentialMatches.length === 0 ? (
           <div className="p-6 text-center">
             <PawPrint className="w-12 h-12 mx-auto mb-4 text-gray-500" />
-            <p className="text-sm font-semibold text-gray-500">No matches found.</p>
+            <p className="text-sm font-semibold text-gray-500">
+              No matches found.
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-2">
@@ -574,10 +617,13 @@ const ActiveReports = () => {
 
               const isExpanded = expandedMatches[match._id] || false;
 
-              // MapViewer coordinates logic (mirroring ReportTable)
+              // MapViewer coordinates logic
               let position = null;
               let coordinates = null;
-              if (match.location?.coordinates?.type === "Point" && Array.isArray(match.location.coordinates.coordinates)) {
+              if (
+                match.location?.coordinates?.type === "Point" &&
+                Array.isArray(match.location.coordinates.coordinates)
+              ) {
                 coordinates = match.location.coordinates.coordinates;
               } else if (Array.isArray(match.location?.coordinates)) {
                 coordinates = match.location.coordinates;
@@ -597,7 +643,6 @@ const ActiveReports = () => {
                   position = { lat: latitude, lng: longitude };
                 }
               }
-              console.log(`Match ${match._id} MapViewer props:`, { position, location: match.location, coordinates });
 
               return (
                 <div
@@ -606,12 +651,23 @@ const ActiveReports = () => {
                   role="region"
                   aria-labelledby={`match-title-${match._id}`}
                 >
-                  <h3
-                    className="mb-2 text-lg font-semibold text-gray-800"
-                    id={`match-title-${match._id}`}
-                  >
-                    {match.name || "Unnamed"} ({match.type})
-                  </h3>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3
+                      className="text-lg font-semibold text-gray-800"
+                      id={`match-title-${match._id}`}
+                    >
+                      {match.name || "Unnamed"} ({match.type})
+                    </h3>
+                    {/* Display Match Score */}
+                    <span
+                      className="px-3 py-1 text-sm font-semibold text-blue-800 border border-blue-300 rounded-full shadow-sm bg-gradient-to-r from-blue-100 to-blue-200"
+                      aria-label={`Match confidence score: ${Math.round(
+                        match.matchScore * 100
+                      )}%`}
+                    >
+                      {Math.round(match.matchScore * 100)}% Match
+                    </span>
+                  </div>
 
                   {/* Primary Photo and Basic Info */}
                   <div className="space-y-4">
@@ -631,15 +687,25 @@ const ActiveReports = () => {
 
                     <div className="space-y-2 text-sm">
                       <div className="flex items-center justify-between">
-                        <span className="font-medium text-gray-600">Species:</span>
-                        <span className="text-gray-600">{match.species || "N/A"}</span>
+                        <span className="font-medium text-gray-600">
+                          Species:
+                        </span>
+                        <span className="text-gray-600">
+                          {match.species || "N/A"}
+                        </span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="font-medium text-gray-600">Family:</span>
-                        <span className="text-gray-600">{match.breed || "N/A"}</span>
+                        <span className="font-medium text-gray-600">
+                          Family:
+                        </span>
+                        <span className="text-gray-600">
+                          {match.breed || "N/A"}
+                        </span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="font-medium text-gray-600">Colors:</span>
+                        <span className="font-medium text-gray-600">
+                          Colors:
+                        </span>
                         <span className="text-gray-600">
                           {Array.isArray(match.color) && match.color.length > 0
                             ? match.color.join(", ")
@@ -647,8 +713,12 @@ const ActiveReports = () => {
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="font-medium text-gray-600">Location:</span>
-                        <span className="text-gray-600">{match.location?.governorate || "Unknown"}</span>
+                        <span className="font-medium text-gray-600">
+                          Location:
+                        </span>
+                        <span className="text-gray-600">
+                          {match.location?.governorate || "Unknown"}
+                        </span>
                       </div>
                     </div>
 
@@ -664,10 +734,14 @@ const ActiveReports = () => {
 
                     {/* Confirm Match Button */}
                     <button
-                      onClick={() => handleMatchAction(selectedReport?._id, match._id)}
+                      onClick={() =>
+                        handleMatchAction(selectedReport?._id, match._id)
+                      }
                       className="flex items-center justify-center w-full px-4 py-2 text-sm font-semibold text-white transition-colors rounded-lg bg-gradient-to-r from-yellow-500 to-pink-500 hover:from-yellow-600 hover:to-pink-600 focus:ring-2 focus:ring-pink-400 disabled:opacity-50"
                       disabled={isActionLoading}
-                      aria-label={`Confirm match with ${match.name || "Unnamed"}`}
+                      aria-label={`Confirm match with ${
+                        match.name || "Unnamed"
+                      }`}
                     >
                       {isActionLoading ? (
                         <Loader2 className="w-5 h-5 mr-2 animate-spin" />
@@ -680,7 +754,10 @@ const ActiveReports = () => {
 
                   {/* Expanded Details */}
                   {isExpanded && (
-                    <div id={`match-details-${match._id}`} className="pt-4 mt-6 space-y-6 border-t border-gray-200">
+                    <div
+                      id={`match-details-${match._id}`}
+                      className="pt-4 mt-6 space-y-6 border-t border-gray-200"
+                    >
                       {/* Pet Information */}
                       <div>
                         <h4 className="flex items-center mb-3 text-base font-semibold text-gray-800">
@@ -690,23 +767,33 @@ const ActiveReports = () => {
                         <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
                           <div>
                             <span className="font-medium">Age:</span>
-                            <span className="ml-2 text-gray-600">{match.age || "Unknown"}</span>
+                            <span className="ml-2 text-gray-600">
+                              {match.age || "Unknown"}
+                            </span>
                           </div>
                           <div>
                             <span className="font-medium">Gender:</span>
-                            <span className="ml-2 text-gray-600">{match.gender || "Unknown"}</span>
+                            <span className="ml-2 text-gray-600">
+                              {match.gender || "Unknown"}
+                            </span>
                           </div>
                           <div>
                             <span className="font-medium">Size:</span>
-                            <span className="ml-2 text-gray-600">{match.size || "Not specified"}</span>
+                            <span className="ml-2 text-gray-600">
+                              {match.size || "Not specified"}
+                            </span>
                           </div>
                           <div>
                             <span className="font-medium">Microchip:</span>
-                            <span className="ml-2 text-gray-600">{match.microchipNumber || "None"}</span>
+                            <span className="ml-2 text-gray-600">
+                              {match.microchipNumber || "None"}
+                            </span>
                           </div>
                           <div>
                             <span className="font-medium">Pregnancy:</span>
-                            <span className="ml-2 text-gray-600">{match.isPregnant ? "Yes" : "No"}</span>
+                            <span className="ml-2 text-gray-600">
+                              {match.isPregnant ? "Yes" : "No"}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -721,17 +808,25 @@ const ActiveReports = () => {
                           <div className="flex items-center gap-2">
                             <User className="w-4 h-4 mr-2 text-gray-400" />
                             <span className="font-medium">Name:</span>
-                            <span className="ml-2 text-gray-600">{match.owner?.fullName || match.email || "Not provided"}</span>
+                            <span className="ml-2 text-gray-600">
+                              {match.owner?.fullName ||
+                                match.email ||
+                                "Not provided"}
+                            </span>
                           </div>
                           <div className="flex items-center gap-2">
                             <Phone className="w-4 h-4 mr-2 text-gray-400" />
                             <span className="font-medium">Phone:</span>
-                            <span className="ml-2 text-gray-600">{match.phoneNumber || "Not provided"}</span>
+                            <span className="ml-2 text-gray-600">
+                              {match.phoneNumber || "Not provided"}
+                            </span>
                           </div>
                           <div className="flex items-center gap-2">
                             <Mail className="w-4 h-4 mr-2 text-gray-400" />
                             <span className="font-medium">Email:</span>
-                            <span className="ml-2 text-gray-600 break-words">{match.email || "Not provided"}</span>
+                            <span className="ml-2 text-gray-600 break-words">
+                              {match.email || "Not provided"}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -745,16 +840,22 @@ const ActiveReports = () => {
                         <div className="space-y-2 text-sm">
                           <div>
                             <span className="font-medium">Delegation:</span>
-                            <span className="ml-2 text-gray-600">{match.location?.delegation || "Not provided"}</span>
+                            <span className="ml-2 text-gray-600">
+                              {match.location?.delegation || "Not provided"}
+                            </span>
                           </div>
                           <div>
                             <span className="font-medium">Governorate:</span>
-                            <span className="ml-2 text-gray-600">{match.location?.governorate || "Not provided"}</span>
+                            <span className="ml-2 text-gray-600">
+                              {match.location?.governorate || "Not provided"}
+                            </span>
                           </div>
                           <div>
                             <span className="font-medium">Coordinates:</span>
                             <span className="ml-2 text-gray-600">
-                              {coordinates ? `[${coordinates.join(", ")}]` : "Not available"}
+                              {coordinates
+                                ? `[${coordinates.join(", ")}]`
+                                : "Not available"}
                             </span>
                           </div>
                           <div className="p-4 mt-2 border border-pink-200 rounded-lg shadow-sm bg-white/70">
@@ -779,7 +880,10 @@ const ActiveReports = () => {
                               </div>
                             ) : (
                               <p className="italic text-red-600">
-                                Unable to display map: {coordinates ? "Invalid coordinates format" : "No coordinates provided"}
+                                Unable to display map:{" "}
+                                {coordinates
+                                  ? "Invalid coordinates format"
+                                  : "No coordinates provided"}
                               </p>
                             )}
                           </div>
@@ -809,7 +913,9 @@ const ActiveReports = () => {
                           <div>
                             <span className="font-medium">Status:</span>
                             <span
-                              className={`ml-2 px-3 py-1 text-sm font-semibold rounded-full ${getStatusBadgeStyle(match.status)}`}
+                              className={`ml-2 px-3 py-1 text-sm font-semibold rounded-full ${getStatusBadgeStyle(
+                                match.status
+                              )}`}
                             >
                               {match.status}
                             </span>
@@ -827,13 +933,22 @@ const ActiveReports = () => {
                             </span>
                           </div>
                           <div>
-                            <span className="font-medium">{match.type === "Lost" ? "Last Seen" : "Found Date"}:</span>
-                            <span className="ml-2 text-gray-600">{formatDate(match.date)}</span>
+                            <span className="font-medium">
+                              {match.type === "Lost"
+                                ? "Last Seen"
+                                : "Found Date"}
+                              :
+                            </span>
+                            <span className="ml-2 text-gray-600">
+                              {formatDate(match.date)}
+                            </span>
                           </div>
                           {match.updatedAt && (
                             <div>
                               <span className="font-medium">Last Updated:</span>
-                              <span className="ml-2 text-gray-600">{formatDate(match.updatedAt)}</span>
+                              <span className="ml-2 text-gray-600">
+                                {formatDate(match.updatedAt)}
+                              </span>
                             </div>
                           )}
                         </div>
@@ -853,7 +968,9 @@ const ActiveReports = () => {
                                 src={photo}
                                 alt={`Match photo ${index + 1}`}
                                 className="object-cover w-24 h-24 border border-gray-300 rounded-lg"
-                                onError={(e) => (e.target.src = DEFAULT_PET_IMAGE)}
+                                onError={(e) =>
+                                  (e.target.src = DEFAULT_PET_IMAGE)
+                                }
                               />
                             ))}
                           </div>

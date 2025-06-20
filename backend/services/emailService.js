@@ -17,7 +17,6 @@ export const sendEmail = async ({ to, template, data }) => {
     return true;
   } catch (error) {
     console.error("Email sending failed:", error);
-    //throw new Error("Failed to send email");
     return false;
   }
 };

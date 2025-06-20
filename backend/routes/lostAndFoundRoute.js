@@ -1,4 +1,5 @@
 import express from "express";
+import multer from "multer";
 import {
   approveReport,
   archiveReport,
@@ -6,6 +7,7 @@ import {
   createLostReport,
   deleteReport,
   getAllReports,
+  getLostAndFoundStats,
   getMyReports,
   getPotentialMatches,
   getReportById,
@@ -13,20 +15,17 @@ import {
   markReunited,
   matchReports,
   unarchiveReport,
-  updateReport,
   unmatchReport,
   updateFoundReport,
   updateLostReport,
-  getLostAndFoundStats, 
+  updateReport,
 } from "../controllers/lostAndFoundController.js";
-import { authenticate } from "../middlewares/authMiddleware.js";
 import { verifyToken } from "../controllers/userController.js";
-import multer from "multer";
+import { authenticate } from "../middlewares/authMiddleware.js";
 
 const lostAndFoundRouter = express.Router();
 
 const upload = multer();
-// version chahd 
 
 lostAndFoundRouter.put(
   "/:id/update-lost",
@@ -65,7 +64,7 @@ lostAndFoundRouter.get("/my-reports", authenticate, getMyReports);
 lostAndFoundRouter.get("/:id", getReportById);
 
 // Update a report (authenticated, owner or admin)
-lostAndFoundRouter.put("/:id", authenticate, upload.none(), updateReport); // Add upload.none()
+lostAndFoundRouter.put("/:id", authenticate, upload.none(), updateReport); 
 
 
 // Delete a report (authenticated, owner or admin)
@@ -84,7 +83,7 @@ lostAndFoundRouter.put("/:id/unarchive", authenticate, unarchiveReport);
 lostAndFoundRouter.put("/:id/reunited", authenticate, markReunited);
 
 // Unmatch a report (authenticated, admin only)
-lostAndFoundRouter.put("/:id/unmatch", authenticate, unmatchReport); // New route
+lostAndFoundRouter.put("/:id/unmatch", authenticate, unmatchReport);
 
 // Get reports by status (public)
 lostAndFoundRouter.get("/status/:status", getReportsByStatus);

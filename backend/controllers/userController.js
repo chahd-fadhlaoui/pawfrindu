@@ -6,7 +6,7 @@ import User from "../models/userModel.js";
 import { io } from "../server.js"; 
 import { sendEmail } from "../services/emailService.js";
 
-// 🚀 Étape 1: Enregistrement de l'utilisateur sans détails spécifiques
+// Étape 1: Enregistrement de l'utilisateur sans détails spécifiques
 const register = async (req, res) => {
   console.log("Received registration request with body:", req.body);
   const { fullName, email, password, role } = req.body;
@@ -90,7 +90,7 @@ const register = async (req, res) => {
   }
 };  
 
-// 🚀 Étape 2: Complétion du profil et génération du token
+// Étape 2: Complétion du profil et génération du token
 const createProfile = async (req, res) => {
   const {
     userId,
@@ -206,7 +206,7 @@ const createProfile = async (req, res) => {
   }
 };
  
-// 🚀 Étape 3: Connexion après enregistrement et complétion du profil
+// Étape 3: Connexion après enregistrement et complétion du profil
 const login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -327,7 +327,7 @@ const login = async (req, res) => {
   }
 };
 
-// 🚀 Get current user profile
+//  Get current user profile
 const getCurrentUser = async (req, res) => {
   console.log("Handling GET /api/user/me for user:", req.user._id);
   try {
@@ -557,7 +557,7 @@ const validateResetToken = async (req, res) => {
     });
   }
 };
-// 🚀 Get all users - simple version
+//  Get all users - simple version
 const getAllUsers = async (req, res) => {
   try {
     const users = await User.find().select(

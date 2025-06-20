@@ -1,4 +1,4 @@
-import { Archive, CheckCircle, PawPrint, RefreshCw, Shield } from "lucide-react";
+import { CheckCircle, PawPrint, RefreshCw, Shield } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useApp } from "../../../context/AppContext";
 import ActiveReports from "./ActiveReports";

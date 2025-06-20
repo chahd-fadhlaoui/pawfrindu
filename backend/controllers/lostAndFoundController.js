@@ -1,10 +1,10 @@
-
 import LostAndFound from "../models/lostAndFoundModel.js";
 import User from "../models/userModel.js";
 import { io } from "../server.js";
+import mongoose from "mongoose";
 import { sendEmail } from "../services/emailService.js";
 
-// Create a new found report 
+// Create a new found report
 export const createFoundReport = async (req, res) => {
   try {
     const {
@@ -92,7 +92,8 @@ export const createFoundReport = async (req, res) => {
       if (!email || !phoneNumber) {
         return res.status(400).json({
           success: false,
-          message: "Email and phone number are required for unauthenticated users",
+          message:
+            "Email and phone number are required for unauthenticated users",
         });
       }
     }
@@ -147,7 +148,7 @@ export const createFoundReport = async (req, res) => {
   }
 };
 
-// Get all lost and found reports 
+// Get all lost and found reports
 export const getAllReports = async (req, res) => {
   try {
     const reports = await LostAndFound.find()
@@ -163,10 +164,10 @@ export const getAllReports = async (req, res) => {
       location: {
         governorate: report.location?.governorate || "Unknown",
         delegation: report.location?.delegation || "Unknown",
-        coordinates: report.location?.coordinates?.coordinates || [0, 0], 
-},
-        status: report.status || "Pending",
-      }));
+        coordinates: report.location?.coordinates?.coordinates || [0, 0],
+      },
+      status: report.status || "Pending",
+    }));
 
     return res.status(200).json({
       success: true,
@@ -183,7 +184,7 @@ export const getAllReports = async (req, res) => {
   }
 };
 
-// Get a single report by ID 
+// Get a single report by ID
 export const getReportById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -213,7 +214,7 @@ export const getReportById = async (req, res) => {
   }
 };
 
-// Update a report 
+// Update a report
 export const updateReport = async (req, res) => {
   try {
     const { id } = req.params;
@@ -239,7 +240,10 @@ export const updateReport = async (req, res) => {
     }
 
     // Validate coordinates if provided
-    if (updateData.location?.coordinates?.type === "Point" && Array.isArray(updateData.location.coordinates.coordinates)) {
+    if (
+      updateData.location?.coordinates?.type === "Point" &&
+      Array.isArray(updateData.location.coordinates.coordinates)
+    ) {
       const [longitude, latitude] = updateData.location.coordinates.coordinates;
       if (latitude < -90 || latitude > 90) {
         return res.status(400).json({
@@ -316,7 +320,10 @@ export const updateFoundReport = async (req, res) => {
   const { id } = req.params; // Declare id at function scope
   try {
     // Log incoming request
-    console.log(`Received request to update Found report ${id} with payload:`, JSON.stringify(req.body, null, 2));
+    console.log(
+      `Received request to update Found report ${id} with payload:`,
+      JSON.stringify(req.body, null, 2)
+    );
 
     // Check if the report exists
     const report = await LostAndFound.findById(id);
@@ -343,7 +350,9 @@ export const updateFoundReport = async (req, res) => {
       report.owner.toString() !== req.user?._id.toString() &&
       req.user?.role !== "Admin"
     ) {
-      console.error(`Unauthorized update attempt for report ${id} by user ${req.user?._id}`);
+      console.error(
+        `Unauthorized update attempt for report ${id} by user ${req.user?._id}`
+      );
       return res.status(403).json({
         success: false,
         message: "Unauthorized: You can only update your own reports",
@@ -361,10 +370,15 @@ export const updateFoundReport = async (req, res) => {
           await deleteFromS3(key);
           console.log(`Deleted photo from S3: ${photoUrl}`);
         } catch (s3Error) {
-          console.error(`Failed to delete photo from S3: ${photoUrl}`, s3Error.message);
+          console.error(
+            `Failed to delete photo from S3: ${photoUrl}`,
+            s3Error.message
+          );
         }
       }
-      report.photos = report.photos.filter((photo) => !photosToRemove.includes(photo));
+      report.photos = report.photos.filter(
+        (photo) => !photosToRemove.includes(photo)
+      );
     }
 
     // Prepare update data
@@ -386,11 +400,16 @@ export const updateFoundReport = async (req, res) => {
         : report.color,
       date: req.body.date ? new Date(req.body.date) : report.date,
       location: {
-        governorate: req.body["location[governorate]"] || report.location.governorate,
-        delegation: req.body["location[delegation]"] || report.location.delegation,
+        governorate:
+          req.body["location[governorate]"] || report.location.governorate,
+        delegation:
+          req.body["location[delegation]"] || report.location.delegation,
         coordinates: req.body["location[coordinates]"]
           ? JSON.parse(req.body["location[coordinates]"])
-          : report.location.coordinates || { type: "Point", coordinates: [0, 0] },
+          : report.location.coordinates || {
+              type: "Point",
+              coordinates: [0, 0],
+            },
       },
       microchipNumber: req.body.microchipNumber || report.microchipNumber,
       isPregnant:
@@ -406,7 +425,9 @@ export const updateFoundReport = async (req, res) => {
 
     // Handle new photo URLs from request body
     if (req.body.photos) {
-      const newPhotos = Array.isArray(req.body.photos) ? req.body.photos : [req.body.photos];
+      const newPhotos = Array.isArray(req.body.photos)
+        ? req.body.photos
+        : [req.body.photos];
       updateData.photos = [
         ...updateData.photos,
         ...newPhotos.filter((url) => typeof url === "string"),
@@ -414,11 +435,26 @@ export const updateFoundReport = async (req, res) => {
     }
 
     // Validate required fields
-    const requiredFields = ["name", "species", "color", "date", "location.governorate", "location.delegation", "gender"];
+    const requiredFields = [
+      "name",
+      "species",
+      "color",
+      "date",
+      "location.governorate",
+      "location.delegation",
+      "gender",
+    ];
     for (const field of requiredFields) {
-      const fieldValue = field.includes("location.") ? updateData.location[field.split(".")[1]] : updateData[field];
-      if (!fieldValue || (typeof fieldValue === "string" && fieldValue.trim() === "")) {
-        console.error(`Missing or invalid required field ${field} for report ${id}`);
+      const fieldValue = field.includes("location.")
+        ? updateData.location[field.split(".")[1]]
+        : updateData[field];
+      if (
+        !fieldValue ||
+        (typeof fieldValue === "string" && fieldValue.trim() === "")
+      ) {
+        console.error(
+          `Missing or invalid required field ${field} for report ${id}`
+        );
         return res.status(400).json({
           success: false,
           message: `Missing or invalid required field: ${field}`,
@@ -427,7 +463,10 @@ export const updateFoundReport = async (req, res) => {
     }
 
     // Log update data
-    console.log(`Updating Found report ${id} with data:`, JSON.stringify(updateData, null, 2));
+    console.log(
+      `Updating Found report ${id} with data:`,
+      JSON.stringify(updateData, null, 2)
+    );
 
     // Update the report
     const updatedReport = await LostAndFound.findByIdAndUpdate(
@@ -446,7 +485,9 @@ export const updateFoundReport = async (req, res) => {
 
     // Verify database state
     const dbReport = await LostAndFound.findById(id).lean();
-    console.log(`Post-update database check for ${id}:`, { type: dbReport.type });
+    console.log(`Post-update database check for ${id}:`, {
+      type: dbReport.type,
+    });
 
     // Emit socket event
     if (global.io) {
@@ -482,10 +523,13 @@ export const updateFoundReport = async (req, res) => {
 
 // Update Lost Report
 export const updateLostReport = async (req, res) => {
-  const { id } = req.params; // Declare id at function scope
+  const { id } = req.params;
   try {
     // Log incoming request
-    console.log(`Received request to update Lost report ${id} with payload:`, JSON.stringify(req.body, null, 2));
+    console.log(
+      `Received request to update Lost report ${id} with payload:`,
+      JSON.stringify(req.body, null, 2)
+    );
 
     // Check if the report exists and is a Lost report
     const report = await LostAndFound.findById(id);
@@ -517,7 +561,9 @@ export const updateLostReport = async (req, res) => {
       report.owner.toString() !== req.user?._id.toString() &&
       req.user?.role !== "Admin"
     ) {
-      console.error(`Unauthorized update attempt for report ${id} by user ${req.user?._id}`);
+      console.error(
+        `Unauthorized update attempt for report ${id} by user ${req.user?._id}`
+      );
       return res.status(403).json({
         success: false,
         message: "Unauthorized: You can only update your own reports",
@@ -535,10 +581,15 @@ export const updateLostReport = async (req, res) => {
           await deleteFromS3(key);
           console.log(`Deleted photo from S3: ${photoUrl}`);
         } catch (s3Error) {
-          console.error(`Failed to delete photo from S3: ${photoUrl}`, s3Error.message);
+          console.error(
+            `Failed to delete photo from S3: ${photoUrl}`,
+            s3Error.message
+          );
         }
       }
-      report.photos = report.photos.filter((photo) => !photosToRemove.includes(photo));
+      report.photos = report.photos.filter(
+        (photo) => !photosToRemove.includes(photo)
+      );
     }
 
     // Prepare update data
@@ -550,7 +601,10 @@ export const updateLostReport = async (req, res) => {
       size: req.body.size !== undefined ? req.body.size : report.size,
       gender: req.body.gender !== undefined ? req.body.gender : report.gender,
       age: req.body.age !== undefined ? req.body.age : report.age,
-      description: req.body.description !== undefined ? req.body.description : report.description,
+      description:
+        req.body.description !== undefined
+          ? req.body.description
+          : report.description,
       email: req.body.email || report.email || undefined,
       phoneNumber: req.body.phoneNumber || report.phoneNumber || undefined,
       color: req.body.color
@@ -560,11 +614,19 @@ export const updateLostReport = async (req, res) => {
         : report.color || [],
       date: req.body.date ? new Date(req.body.date) : report.date,
       location: {
-        governorate: req.body["location[governorate]"] || report.location.governorate,
-        delegation: req.body["location[delegation]"] || report.location.delegation,
-        coordinates: report.location.coordinates || { type: "Point", coordinates: [0, 0] },
+        governorate:
+          req.body["location[governorate]"] || report.location.governorate,
+        delegation:
+          req.body["location[delegation]"] || report.location.delegation,
+        coordinates: report.location.coordinates || {
+          type: "Point",
+          coordinates: [0, 0],
+        },
       },
-      microchipNumber: req.body.microchipNumber !== undefined ? req.body.microchipNumber : report.microchipNumber,
+      microchipNumber:
+        req.body.microchipNumber !== undefined
+          ? req.body.microchipNumber
+          : report.microchipNumber,
       isPregnant:
         req.body.isPregnant !== undefined
           ? req.body.isPregnant === "true" || req.body.isPregnant === true
@@ -580,7 +642,9 @@ export const updateLostReport = async (req, res) => {
 
     // Ignore req.body.type if sent
     if (req.body.type && req.body.type !== "Lost") {
-      console.warn(`Attempt to set invalid type ${req.body.type} for Lost report ${id}, ignoring`);
+      console.warn(
+        `Attempt to set invalid type ${req.body.type} for Lost report ${id}, ignoring`
+      );
     }
 
     // Handle coordinates parsing
@@ -595,19 +659,39 @@ export const updateLostReport = async (req, res) => {
         ) {
           updateData.location.coordinates = parsedCoordinates;
         } else {
-          console.warn(`Invalid coordinates format for report ${id}, using existing coordinates`);
+          console.warn(
+            `Invalid coordinates format for report ${id}, using existing coordinates`
+          );
         }
       } catch (parseError) {
-        console.error(`Error parsing coordinates for report ${id}:`, parseError.message);
+        console.error(
+          `Error parsing coordinates for report ${id}:`,
+          parseError.message
+        );
       }
     }
 
     // Validate required fields
-    const requiredFields = ["name", "species", "color", "date", "location.governorate", "location.delegation", "gender"];
+    const requiredFields = [
+      "name",
+      "species",
+      "color",
+      "date",
+      "location.governorate",
+      "location.delegation",
+      "gender",
+    ];
     for (const field of requiredFields) {
-      const fieldValue = field.includes("location.") ? updateData.location[field.split(".")[1]] : updateData[field];
-      if (!fieldValue || (typeof fieldValue === "string" && fieldValue.trim() === "")) {
-        console.error(`Missing or invalid required field ${field} for report ${id}`);
+      const fieldValue = field.includes("location.")
+        ? updateData.location[field.split(".")[1]]
+        : updateData[field];
+      if (
+        !fieldValue ||
+        (typeof fieldValue === "string" && fieldValue.trim() === "")
+      ) {
+        console.error(
+          `Missing or invalid required field ${field} for report ${id}`
+        );
         return res.status(400).json({
           success: false,
           message: `Missing or invalid required field: ${field}`,
@@ -634,7 +718,10 @@ export const updateLostReport = async (req, res) => {
     }
 
     // Log update data
-    console.log(`Updating Lost report ${id} with data:`, JSON.stringify(updateData, null, 2));
+    console.log(
+      `Updating Lost report ${id} with data:`,
+      JSON.stringify(updateData, null, 2)
+    );
 
     // Update the report
     const updatedReport = await LostAndFound.findByIdAndUpdate(
@@ -652,14 +739,21 @@ export const updateLostReport = async (req, res) => {
     }
 
     // Log updated report
-    console.log(`Successfully updated Lost report ${id} with fields:`, JSON.stringify(updatedReport, null, 2));
+    console.log(
+      `Successfully updated Lost report ${id} with fields:`,
+      JSON.stringify(updatedReport, null, 2)
+    );
 
     // Verify database state
     const dbReport = await LostAndFound.findById(id).lean();
-    console.log(`Post-update database check for ${id}:`, { type: dbReport.type });
+    console.log(`Post-update database check for ${id}:`, {
+      type: dbReport.type,
+    });
 
     if (dbReport.type !== "Lost") {
-      console.error(`Type mismatch after update for ${id}: expected Lost, got ${dbReport.type}`);
+      console.error(
+        `Type mismatch after update for ${id}: expected Lost, got ${dbReport.type}`
+      );
       return res.status(500).json({
         success: false,
         message: "Type mismatch after update",
@@ -732,6 +826,16 @@ export const deleteReport = async (req, res) => {
 
     await LostAndFound.findByIdAndDelete(id);
 
+    await sendEmail({
+      to: report.email,
+      template: "reportRejected",
+      data: {
+        fullName: report.owner?.fullName || "User",
+        reportType: report.type,
+        petName: report.name || "",
+      },
+    });
+
     io.emit("reportDeleted", {
       reportId: id,
       message: "Report deleted successfully",
@@ -775,6 +879,16 @@ export const approveReport = async (req, res) => {
     report.status = "Pending";
     await report.save();
 
+    await sendEmail({
+      to: report.email,
+      template: "reportApproved",
+      data: {
+        fullName: report.owner?.fullName || "User",
+        reportType: report.type,
+        petName: report.name || "",
+      },
+    });
+
     // Emit Socket.IO event
     io.emit("reportApproved", {
       reportId: id,
@@ -797,7 +911,7 @@ export const approveReport = async (req, res) => {
   }
 };
 
-// Archive a report 
+// Archive a report
 export const archiveReport = async (req, res) => {
   try {
     const { id } = req.params;
@@ -851,7 +965,7 @@ export const archiveReport = async (req, res) => {
   }
 };
 
-// Unarchive a report 
+// Unarchive a report
 export const unarchiveReport = async (req, res) => {
   try {
     const { id } = req.params;
@@ -904,7 +1018,7 @@ export const unarchiveReport = async (req, res) => {
   }
 };
 
-// Get reports by status 
+// Get reports by status
 export const getReportsByStatus = async (req, res) => {
   try {
     const { status } = req.params;
@@ -948,7 +1062,7 @@ export const getMyReports = async (req, res) => {
     }
     const reports = await LostAndFound.find({ owner: ownerId }).populate(
       "pet",
-      "name species breed", 
+      "name species breed",
       null,
       { strictPopulate: false }
     );
@@ -980,7 +1094,9 @@ export const matchReports = async (req, res) => {
     }
 
     const report = await LostAndFound.findById(reportId).populate("owner");
-    const matchedReport = await LostAndFound.findById(matchedReportId).populate("owner");
+    const matchedReport = await LostAndFound.findById(matchedReportId).populate(
+      "owner"
+    );
 
     if (!report || !matchedReport) {
       return res.status(404).json({
@@ -1020,15 +1136,16 @@ export const matchReports = async (req, res) => {
           fullName: report.owner?.fullName || "User",
           reportType: report.type,
           petName: report.name || null,
-          matchedUserFullName: matchedReport.owner?.fullName || "Anonymous User",
+          matchedUserFullName:
+            matchedReport.owner?.fullName || "Anonymous User",
           matchedUserEmail: matchedReport.owner?.email || matchedReport.email,
           matchedUserPhone: matchedReport.owner
-            ? (matchedReport.owner.petOwnerDetails?.phone ||
-               matchedReport.owner.trainerDetails?.phone ||
-               matchedReport.owner.veterinarianDetails?.phone ||
-               matchedReport.phoneNumber ||
-               "Not provided")
-            : (matchedReport.phoneNumber || "Not provided"),
+            ? matchedReport.owner.petOwnerDetails?.phone ||
+              matchedReport.owner.trainerDetails?.phone ||
+              matchedReport.owner.veterinarianDetails?.phone ||
+              matchedReport.phoneNumber ||
+              "Not provided"
+            : matchedReport.phoneNumber || "Not provided",
         };
         await sendEmail({
           to: report.owner?.email || report.email,
@@ -1036,7 +1153,11 @@ export const matchReports = async (req, res) => {
           data: emailData,
         });
       } catch (emailError) {
-        console.error("Failed to send report matched email for report:", reportId, emailError.message);
+        console.error(
+          "Failed to send report matched email for report:",
+          reportId,
+          emailError.message
+        );
       }
     }
 
@@ -1050,12 +1171,12 @@ export const matchReports = async (req, res) => {
           matchedUserFullName: report.owner?.fullName || "Anonymous User",
           matchedUserEmail: report.owner?.email || report.email,
           matchedUserPhone: report.owner
-            ? (report.owner.petOwnerDetails?.phone ||
-               report.owner.trainerDetails?.phone ||
-               report.owner.veterinarianDetails?.phone ||
-               report.phoneNumber ||
-               "Not provided")
-            : (report.phoneNumber || "Not provided"),
+            ? report.owner.petOwnerDetails?.phone ||
+              report.owner.trainerDetails?.phone ||
+              report.owner.veterinarianDetails?.phone ||
+              report.phoneNumber ||
+              "Not provided"
+            : report.phoneNumber || "Not provided",
         };
         await sendEmail({
           to: matchedReport.owner?.email || matchedReport.email,
@@ -1063,7 +1184,11 @@ export const matchReports = async (req, res) => {
           data: emailData,
         });
       } catch (emailError) {
-        console.error("Failed to send report matched email for matched report:", matchedReportId, emailError.message);
+        console.error(
+          "Failed to send report matched email for matched report:",
+          matchedReportId,
+          emailError.message
+        );
       }
     }
 
@@ -1198,7 +1323,10 @@ export const createLostReport = async (req, res) => {
     }
 
     // Validate photos
-    if (!Array.isArray(photos) || photos.some((url) => typeof url !== "string")) {
+    if (
+      !Array.isArray(photos) ||
+      photos.some((url) => typeof url !== "string")
+    ) {
       return res.status(400).json({
         success: false,
         message: "Photos must be an array of valid URLs",
@@ -1207,7 +1335,10 @@ export const createLostReport = async (req, res) => {
 
     // Validate and format coordinates
     let coordinates = undefined;
-    if (location?.coordinates?.type === "Point" && Array.isArray(location.coordinates.coordinates)) {
+    if (
+      location?.coordinates?.type === "Point" &&
+      Array.isArray(location.coordinates.coordinates)
+    ) {
       const [longitude, latitude] = location.coordinates.coordinates;
       if (
         latitude >= -90 &&
@@ -1234,7 +1365,9 @@ export const createLostReport = async (req, res) => {
       species,
       gender,
       isPregnant:
-        gender === "Female" && isPregnant !== undefined ? isPregnant : undefined,
+        gender === "Female" && isPregnant !== undefined
+          ? isPregnant
+          : undefined,
       color,
       colorType,
       breed,
@@ -1302,7 +1435,9 @@ export const unmatchReport = async (req, res) => {
     }
 
     const matchedReportId = report.matchedReport;
-    const matchedReport = await LostAndFound.findById(matchedReportId).populate("owner");
+    const matchedReport = await LostAndFound.findById(matchedReportId).populate(
+      "owner"
+    );
 
     // Update both reports
     report.status = "Pending";
@@ -1328,7 +1463,11 @@ export const unmatchReport = async (req, res) => {
             data: emailData,
           });
         } catch (emailError) {
-          console.error("Failed to send report unmatched email for matched report:", matchedReportId, emailError.message);
+          console.error(
+            "Failed to send report unmatched email for matched report:",
+            matchedReportId,
+            emailError.message
+          );
         }
       }
     }
@@ -1347,7 +1486,11 @@ export const unmatchReport = async (req, res) => {
           data: emailData,
         });
       } catch (emailError) {
-        console.error("Failed to send report unmatched email for report:", id, emailError.message);
+        console.error(
+          "Failed to send report unmatched email for report:",
+          id,
+          emailError.message
+        );
       }
     }
 
@@ -1374,7 +1517,7 @@ export const unmatchReport = async (req, res) => {
 
 // Calculate Haversine distance between two coordinates (explain : someone in nasa told that if the distance is more then 20km we have to use haversine because otherwise we will get wrong results, i found it in this discussion: https://stackoverflow.com/questions/27928/calculate-distance-between-two-latitude-longitude-points-haversine-formula and here if u really want to read what the nasa guy said: https://cs.nyu.edu/~visual/home/proj/tiger/gisfaq.html)
 const haversineDistance = (coords1, coords2) => {
-  const toRad = (x) => x * Math.PI / 180;
+  const toRad = (x) => (x * Math.PI) / 180;
   const [lon1, lat1] = coords1;
   const [lon2, lat2] = coords2;
   const R = 6371; // Earth's radius in km
@@ -1382,52 +1525,60 @@ const haversineDistance = (coords1, coords2) => {
   const dLon = toRad(lon2 - lon1);
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * 
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    Math.cos(toRad(lat1)) *
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 };
 
 // Get potential matches for a report
+
 export const getPotentialMatches = async (req, res) => {
   try {
+    console.log("Starting getPotentialMatches function");
+    // Validate input ID
     const { id } = req.params;
-    console.log(`Searching for report with ID: ${id}`);
+    console.log(`Received ID: ${id}`);
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      console.log(`Invalid report ID: ${id}`);
+      return res.status(400).json({
+        success: false,
+        message: "Invalid report ID",
+      });
+    }
+
+    // Fetch the report
+    console.log(`Fetching report for ID: ${id}`);
     const report = await LostAndFound.findById(id).lean();
     if (!report) {
-      console.error(`Report not found for ID: ${id}`);
+      console.log(`Report not found for ID: ${id}`);
       return res.status(404).json({
         success: false,
         message: "Report not found",
       });
     }
+    console.log(`Found report:`, JSON.stringify(report, null, 2));
 
-    console.log("Report Details:", {
-      species: report.species,
-      breed: report.breed,
-      size: report.size,
-      gender: report.gender,
-      isPregnant: report.isPregnant,
-      microchip: report.microchipNumber,
-      location: report.location,
-      date: report.date,
-      color: report.color,
-    });
+    // Validate required fields
+    console.log("Validating required fields");
+    if (!report.species || !report.date || !report.type) {
+      console.error(`Invalid report data for ID: ${id}`, report);
+      return res.status(400).json({
+        success: false,
+        message: "Report missing required fields",
+      });
+    }
 
+    // Determine opposite type
     const oppositeType = report.type === "Lost" ? "Found" : "Lost";
+    console.log(`Report type: ${report.type}, Opposite type: ${oppositeType}`);
 
-    const daysSinceReport = Math.min(
-      Math.abs((new Date() - new Date(report.date)) / (1000 * 60 * 60 * 24)),
-      14
-    );
-    const maxDistance = Math.max(
-      report.species.toLowerCase() === "dog" ? 7230 * daysSinceReport : 500 * daysSinceReport,
-      report.species.toLowerCase() === "dog" ? 5000 : 1000
-    );
-
+    // 1. Microchip matching (high priority)
     let potentialMatches = [];
-
     if (report.microchipNumber) {
+      console.log(`Searching for microchip matches with number: ${report.microchipNumber}`);
       const microchipMatches = await LostAndFound.find({
         type: oppositeType,
         microchipNumber: report.microchipNumber,
@@ -1435,56 +1586,42 @@ export const getPotentialMatches = async (req, res) => {
         isApproved: true,
         isArchived: false,
       })
-        .populate("owner", "fullName email", null, { strictPopulate: false })
+        .populate("owner", "fullName email")
         .lean()
-        .limit(5);
-      console.log("Microchip Matches:", microchipMatches.length);
+        .limit(3);
+
+      console.log(`Found ${microchipMatches.length} microchip matches:`, 
+        microchipMatches.map(m => m._id));
       potentialMatches = microchipMatches.map((match) => ({
         ...match,
         matchScore: 0.95,
       }));
+    } else {
+      console.log("No microchip number provided, skipping microchip matching");
     }
 
+    // 2. Attribute-based matching
+    console.log("Building attribute-based matching query");
     const baseQuery = {
       type: oppositeType,
       species: report.species.toLowerCase(),
       status: "Pending",
       isApproved: true,
       isArchived: false,
+      date: {
+        $gte: new Date(
+          new Date(report.date).setDate(new Date(report.date).getDate() - 14)
+        ),
+        $lte: new Date(
+          new Date(report.date).setDate(new Date(report.date).getDate() + 14)
+        ),
+      },
     };
+    console.log("Base query:", JSON.stringify(baseQuery, null, 2));
 
-    const hasValidCoordinates =
-      report.location?.coordinates?.type === "Point" &&
-      Array.isArray(report.location.coordinates?.coordinates) &&
-      report.location.coordinates.coordinates.length === 2 &&
-      report.location.coordinates.coordinates[0] >= -180 &&
-      report.location.coordinates.coordinates[0] <= 180 &&
-      report.location.coordinates.coordinates[1] >= -90 &&
-      report.location.coordinates.coordinates[1] <= 90;
-
-    console.log("Has Valid Coordinates:", hasValidCoordinates);
-
-    if (hasValidCoordinates) {
-      const geoJSONCount = await LostAndFound.countDocuments({ "location.coordinates.type": "Point" });
-      const totalCount = await LostAndFound.countDocuments({ "location.coordinates": { $exists: true } });
-      console.log(`GeoJSON documents: ${geoJSONCount}/${totalCount}`);
-      if (geoJSONCount === 0 && totalCount > 0) {
-        console.warn("No GeoJSON documents found. Geospatial queries may fail.");
-      }
-
-      baseQuery["location.coordinates"] = {
-        $near: {
-          $geometry: {
-            type: "Point",
-            coordinates: report.location.coordinates.coordinates,
-          },
-          $maxDistance: maxDistance,
-        },
-      };
-    }
-
+    // Optional conditions for flexible matching
     const optionalConditions = [];
-    if (report.type === "Lost" && report.breed) {
+    if (report.breed) {
       optionalConditions.push({
         $or: [
           { breed: { $regex: `^${report.breed}$`, $options: "i" } },
@@ -1492,6 +1629,7 @@ export const getPotentialMatches = async (req, res) => {
           { breed: null },
         ],
       });
+      console.log(`Added breed condition for: ${report.breed}`);
     }
     if (report.size) {
       optionalConditions.push({
@@ -1501,6 +1639,7 @@ export const getPotentialMatches = async (req, res) => {
           { size: null },
         ],
       });
+      console.log(`Added size condition for: ${report.size}`);
     }
     if (report.gender) {
       optionalConditions.push({
@@ -1510,146 +1649,159 @@ export const getPotentialMatches = async (req, res) => {
           { gender: null },
         ],
       });
+      console.log(`Added gender condition for: ${report.gender}`);
     }
-    if (optionalConditions.length > 0) baseQuery.$and = optionalConditions;
+    if (optionalConditions.length > 0) {
+      baseQuery.$and = optionalConditions;
+      console.log("Optional conditions added:", JSON.stringify(optionalConditions, null, 2));
+    }
 
-    const dateRangeDays = 14;
-    const baseDate = new Date(report.date);
-    const startDate = new Date(baseDate);
-    startDate.setDate(baseDate.getDate() - dateRangeDays);
-    const endDate = new Date(baseDate);
-    endDate.setDate(baseDate.getDate() + dateRangeDays);
-    baseQuery.date = { $gte: startDate, $lte: endDate };
-
-    console.log("Query:", JSON.stringify(baseQuery, null, 2));
-
-    const indexes = await LostAndFound.collection.getIndexes();
-    console.log("Collection Indexes:", JSON.stringify(indexes, null, 2));
-
+    // Execute primary query
+    console.log("Executing primary attribute-based query");
     let attributeMatches = await LostAndFound.find(baseQuery)
-      .populate("owner", "fullName email", null, { strictPopulate: false })
+      .populate("owner", "fullName email")
       .lean()
       .limit(10);
-    console.log("Attribute Matches:", attributeMatches.length);
 
-    if (attributeMatches.length === 0 && hasValidCoordinates) {
-      delete baseQuery["location.coordinates"];
+    console.log(`Found ${attributeMatches.length} attribute matches:`, 
+      attributeMatches.map(m => m._id));
+
+    // 3. Fallback query if no matches
+    if (attributeMatches.length === 0 && optionalConditions.length > 0) {
+      console.log("No matches found, executing fallback query");
+      delete baseQuery.$and;
+      console.log("Fallback query:", JSON.stringify(baseQuery, null, 2));
       attributeMatches = await LostAndFound.find(baseQuery)
-        .populate("owner", "fullName email", null, { strictPopulate: false })
+        .populate("owner", "fullName email")
         .lean()
-        .limit(20);
-      console.log("Fallback Attribute Matches:", attributeMatches.length);
+        .limit(10);
+      console.log(`Found ${attributeMatches.length} fallback attribute matches:`, 
+        attributeMatches.map(m => m._id));
     }
 
-    attributeMatches.forEach((match) => {
-      const distance =
-        hasValidCoordinates && match.location?.coordinates?.type === "Point"
-          ? haversineDistance(
-              report.location.coordinates.coordinates,
-              match.location.coordinates.coordinates
-            )
-          : null;
-      console.log("Match Details:", {
-        id: match._id,
-        breed: match.breed,
-        size: match.size,
-        gender: match.gender,
-        isPregnant: match.isPregnant,
-        coordinates: match.location?.coordinates,
-        color: match.color,
-        distance: distance != null ? `${distance.toFixed(1)} km` : "N/A",
-      });
-    });
+    // 4. Score matches
 
+  console.log("Scoring attribute matches");
+  const scoredMatches = attributeMatches.map((match, index) => {
+  console.log(`Scoring match ${index + 1}/${attributeMatches.length}`);
+  let score = 0;
+
+  // Breed match
+  if (
+    report.breed &&
+    match.breed &&
+    match.breed.toLowerCase() === report.breed.toLowerCase()
+  ) {
+    score += 0.15;
+    console.log(`Breed match: +0.15, Current score: ${score}`);
+  }
+
+  // Size match
+  if (
+    report.size &&
+    match.size &&
+    match.size.toLowerCase() === report.size.toLowerCase()
+  ) {
+    score += 0.12;
+    console.log(`Size match: +0.12, Current score: ${score}`);
+  }
+
+  // Gender match
+  if (
+    report.gender &&
+    match.gender &&
+    match.gender.toLowerCase() === report.gender.toLowerCase()
+  ) {
+    score += 0.12;
+    console.log(`Gender match: +0.12, Current score: ${score}`);
+  }
+
+  // Pregnancy match (for female pets)
+  if (
+    report.gender === "Female" &&
+    match.gender === "Female" &&
+    report.isPregnant === true &&
+    match.isPregnant === true
+  ) {
+    score += 0.05;
+    console.log(`Pregnancy match: +0.05, Current score: ${score}`);
+  } else if (
+    report.gender === "Female" &&
+    match.gender === "Female" &&
+    report.isPregnant === true &&
+    match.isPregnant == null
+  ) {
+    score += 0.025;
+    console.log(`Partial pregnancy match: +0.025, Current score: ${score}`);
+  }
+
+  // Color match
+  if (
+    Array.isArray(report.color) &&
+    Array.isArray(match.color) &&
+    match.color.some((c) => report.color.includes(c))
+  ) {
+    score += 0.15;
+    console.log(`Color match: +0.15, Current score: ${score}`);
+  }
+
+  // Location match or penalty
+  if (
+    report.location?.governorate &&
+    match.location?.governorate
+  ) {
+    if (
+      report.location.governorate.toLowerCase() ===
+      match.location.governorate.toLowerCase()
+    ) {
+      score += 0.1;
+      console.log(`Governorate match: +0.1, Current score: ${score}`);
+      if (
+        report.location?.delegation &&
+        match.location?.delegation
+      ) {
+        if (
+          report.location.delegation.toLowerCase() ===
+          match.location.delegation.toLowerCase()
+        ) {
+          score += 0.1;
+          console.log(`Delegation match: +0.1, Current score: ${score}`);
+        } else {
+          score -= 0.05;
+          console.log(`Different delegation penalty: -0.05, Current score: ${score}`);
+        }
+      } else {
+        console.log(`Delegation missing in report or match, no delegation scoring`);
+      }
+    } else {
+      score -= 0.3;
+      console.log(`Different governorate penalty: -0.1, Current score: ${score}`);
+    }
+  } else {
+    console.log(`Governorate missing in report or match, no location scoring`);
+  }
+
+
+  return { ...match, matchScore: Math.max(0, Math.min(score, 1)) };
+});
+
+    // Combine matches, remove duplicates, and filter by score
+    console.log("Combining matches and removing duplicates");
     const matchIds = new Set(potentialMatches.map((m) => m._id.toString()));
     potentialMatches = [
       ...potentialMatches,
-      ...attributeMatches.filter((m) => !matchIds.has(m._id.toString())),
+      ...scoredMatches.filter(
+        (m) => !matchIds.has(m._id.toString()) && m.matchScore >= 0.2
+      ),
     ];
+    console.log(`Total matches after combining: ${potentialMatches.length}`);
 
-    const scoredMatches = potentialMatches
-      .map((match) => {
-        let score = match.matchScore || 0;
-        if (match.microchipNumber && match.microchipNumber === report.microchipNumber) {
-          score = 0.95;
-        } else {
-          const hasCommonColor =
-            match.color?.length &&
-            report.color?.length &&
-            match.color.some((c) => report.color.includes(c));
-          if (hasCommonColor) {
-            console.log(`Color match for ${match._id}: ${match.color}, score += 0.15`);
-            score += 0.15;
-          }
-          if (
-            report.type === "Lost" &&
-            report.breed &&
-            match.breed?.toLowerCase() === report.breed.toLowerCase()
-          ) {
-            console.log(`Breed match for ${match._id}: ${match.breed}, score += 0.15`);
-            score += 0.15;
-          }
-          if (match.gender?.toLowerCase() === report.gender?.toLowerCase()) {
-            console.log(`Gender match for ${match._id}: ${match.gender}, score += 0.10`);
-            score += 0.10;
-          }
-          if (match.size?.toLowerCase() === report.size?.toLowerCase()) {
-            console.log(`Size match for ${match._id}: ${match.size}, score += 0.10`);
-            score += 0.10;
-          }
-          if (report.gender === "Female" && match.gender === "Female") {
-            if (report.isPregnant === true && match.isPregnant === true) {
-              console.log(`Pregnancy match for ${match._id}, score += 0.05`);
-              score += 0.05;
-            } else if (report.isPregnant === true && match.isPregnant == null) {
-              console.log(`Partial pregnancy match for ${match._id} (null), score += 0.025`);
-              score += 0.025;
-            }
-          }
-          const dateDiff = Math.abs(new Date(match.date) - new Date(report.date)) / (1000 * 60 * 60 * 24);
-          score -= dateDiff * 0.005;
-          score += (match.photoScore || 0) * 0.25;
-          if (
-            match.location?.governorate &&
-            report.location?.governorate &&
-            match.location.governorate === report.location.governorate
-          ) {
-            console.log(`Governorate match for ${match._id}: ${match.location.governorate}, score += 0.05`);
-            score += 0.05;
-            if (
-              match.location?.delegation &&
-              report.location?.delegation &&
-              match.location.delegation === report.location.delegation
-            ) {
-              console.log(`Delegation match for ${match._id}: ${match.location.delegation}, score += 0.10`);
-              score += 0.10;
-            }
-          }
-        }
-        return { ...match, matchScore: Math.max(0, Math.min(score, 1)) };
-      })
-      .filter((match) => match.matchScore >= 0.20);
-
-    console.log(
-      "Scored Matches:",
-      scoredMatches.map((m) => ({
-        id: m._id.toString(),
-        matchScore: m.matchScore,
-        photoScore: m.photoScore,
-      }))
-    );
-
-    scoredMatches.sort((a, b) => b.matchScore - a.matchScore);
-    const finalMatches = scoredMatches.slice(0, 10);
-
-    console.log(
-      "Final Matches:",
-      finalMatches.map((m) => ({
-        id: m._id.toString(),
-        matchScore: m.matchScore,
-        photoScore: m.photoScore,
-      }))
-    );
+    // Sort and limit results
+    console.log("Sorting matches by score");
+    potentialMatches.sort((a, b) => b.matchScore - a.matchScore);
+    const finalMatches = potentialMatches.slice(0, 10);
+    console.log(`Returning ${finalMatches.length} final matches:`, 
+      finalMatches.map(m => ({ id: m._id, score: m.matchScore })));
 
     return res.status(200).json({
       success: true,
@@ -1657,7 +1809,7 @@ export const getPotentialMatches = async (req, res) => {
       data: finalMatches,
     });
   } catch (error) {
-    console.error("Error fetching potential matches:", error.message);
+    console.error("Error fetching potential matches:", error.message, error.stack);
     return res.status(500).json({
       success: false,
       message: "Error fetching potential matches",
@@ -1668,11 +1820,11 @@ export const getPotentialMatches = async (req, res) => {
 
 export const getLostAndFoundStats = async (req, res) => {
   try {
-    console.log('Fetching lost and found stats:', {
+    console.log("Fetching lost and found stats:", {
       userId: req.user?._id,
       role: req.user?.role,
       query: req.query,
-      headers: req.headers.authorization?.substring(0, 20) + '...',
+      headers: req.headers.authorization?.substring(0, 20) + "...",
     });
 
     const { startDate, endDate } = req.query;
@@ -1681,8 +1833,10 @@ export const getLostAndFoundStats = async (req, res) => {
       const start = new Date(startDate);
       const end = new Date(endDate);
       if (isNaN(start) || isNaN(end)) {
-        console.error('Invalid date format:', { startDate, endDate });
-        return res.status(400).json({ success: false, message: 'Invalid date format' });
+        console.error("Invalid date format:", { startDate, endDate });
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid date format" });
       }
       dateFilter = { createdAt: { $gte: start, $lte: end } };
     }
@@ -1690,30 +1844,29 @@ export const getLostAndFoundStats = async (req, res) => {
     const totalReports = await LostAndFound.countDocuments({ ...dateFilter });
     const lostReports = await LostAndFound.countDocuments({
       ...dateFilter,
-      type: 'Lost',
+      type: "Lost",
     });
     const foundReports = await LostAndFound.countDocuments({
       ...dateFilter,
-      type: 'Found',
+      type: "Found",
     });
     const pendingReports = await LostAndFound.countDocuments({
       ...dateFilter,
-      status: 'Pending',
+      status: "Pending",
       isArchived: false,
     });
     const matchedReports = await LostAndFound.countDocuments({
       ...dateFilter,
-      status: 'Matched',
+      status: "Matched",
       isArchived: false,
     });
     const reunitedReports = await LostAndFound.countDocuments({
       ...dateFilter,
-      status: 'Reunited',
+      status: "Reunited",
       isArchived: false,
     });
 
-
-    console.log('Lost and Found stats results:', {
+    console.log("Lost and Found stats results:", {
       totalReports,
       lostReports,
       foundReports,
@@ -1734,13 +1887,19 @@ export const getLostAndFoundStats = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Get Lost and Found Stats Error:', {
+    console.error("Get Lost and Found Stats Error:", {
       message: error.message,
       stack: error.stack,
       userId: req.user?._id,
       role: req.user?.role,
       query: req.query,
     });
-    res.status(500).json({ success: false, message: 'Failed to fetch lost and found stats', error: error.message });
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: "Failed to fetch lost and found stats",
+        error: error.message,
+      });
   }
 };
